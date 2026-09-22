@@ -260,3 +260,60 @@ bölmek kayıpsız, bedava ve anlık olurdu. Bir LLM çağrısı eksilirdi: yakl
 kalkması. Eval'de bölümleme kaynaklı kayıp tekrar görülürse ilk başvurulacak
 çözüm budur. Onun da tutmadığı yerde (başlıksız CV'ler) geri çekilme yolu,
 bölümlemeyi tümüyle bırakıp her çıkarıcıya ham CV'yi vermektir.
+
+---
+
+## K-11 · İlan çıkarımı iki çağrı: gereksinimler, sonra anahtar kelimeler
+
+**Tarih:** 23 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1, Görev 7
+
+İlan çıkarımı tek çağrı değil iki çağrı olacak. Birincisi gereksinim listesini
+çıkarır (`text`, `type`, `importance`), ikincisi o listeye hizalı anahtar
+kelime listeleri üretir.
+
+**Bulgu:** Tek çağrılı tasarımda model altı gereksinimin yalnızca dördünü
+döndürüyordu ve düşenler **her seferinde "Tercihen" bölümündekiler**, yani
+tüm `nice` gereksinimlerdi. Hem skor yanlış hesaplanır hem eksik anahtar
+kelime listesi eksik kalırdı.
+
+**Kök neden izolasyonu:** İlk hipotez ("model tercihen bölümünü gereksinim
+saymıyor") çürüdü — prompt'a açık talimat eklemek hiçbir şeyi değiştirmedi ve
+yalnızca "Tercihen" bölümü verildiğinde model ikisini de doğru `nice` olarak
+çıkardı. İkinci hipotez (`max_tokens` sınırı) de çürüdü: `finish_reason: stop`
+geliyordu ve açık `max_tokens` sonucu değiştirmedi. Şema karmaşıklığını
+değiştirerek ölçüldü:
+
+| Deneme | Sonuç |
+|---|---|
+| Basit şema + kısa prompt | 6/6 |
+| Basit şema + uzun prompt | 6/6 |
+| Ara şema, `keywords` çıkarılmış + uzun prompt | 6/6 |
+| Tam şema + kısa prompt | 4/6, hiç `nice` yok |
+| Tam şema + uzun prompt | 4/6, hiç `nice` yok |
+
+Prompt uzunluğu alakasızdı. Kırılma noktası tek bir alandı: **gereksinim
+nesnesinin içindeki `keywords` dizisi.** Dizi içinde dizi, küçük model için
+fazla geliyor ve dış liste erken kapanıyor. Spec §11'in öngördüğü durum:
+"şemanın küçük model için fazla karmaşık olduğunun sinyali."
+
+**İkinci çağrının biçimi de ölçülerek seçildi.** İki aday karşılaştırıldı:
+`items[{text, keywords}]` 200 token harcadı ve gürültü üretti (`"3 yıl
+deneyim"`, `"strong typescript knowledge"`, `"typesript"`); düz
+`keywords: string[][]` 83 token harcadı, terimler daha temiz çıktı ve Türkçe
+karşılıklar korundu. Düz biçim seçildi.
+
+**Hizalama:** İkinci çağrının sıra ve sayıyı koruması garanti değil. Eksik
+kalan gereksinim anahtar kelimesiz bırakılıyor; skorlamada anlamsal
+eşleşmeye düşüyor, sessizce yanlış eşleşmiyor. Birim testi bunu kapsıyor.
+
+**Değerlendirilen alternatif (B):** Anahtar kelimeleri LLM'den hiç almayıp
+gereksinim metnini Türkçe normalleştirmeden geçirerek kodla türetmek. Ek
+çağrı gerekmezdi, ama `"En az 3 yıl React deneyimi"` → `[react, deneyim, yıl]`
+gibi bir liste çıkar ve "deneyim" hemen her CV'de geçtiği için yanlış pozitif
+üretirdi — uydurma eşleşme, kaçırmadan zararlıdır. Ayrıca modelin ürettiği
+çapraz dilli varyantlar (`versiyon kontrol` ↔ `version control`) ürünün çift
+dil vaadine doğrudan hizmet ediyor; kodla türetilen köklerle elde edilemezdi.
+
+**Süre etkisi:** İlan çıkarımı 10,8 sn → 21,1 sn. K-09'daki süre baskısını
+artırıyor; oradaki ikinci önlem (CV ve ilan çıkarımını paralelleştirmek) bu
+ek çağrıyı toplama hiç eklemeyeceği için etkisi telafi edilebilir.

@@ -39,13 +39,29 @@ Her beceriyi metinde yazıldığı gibi yaz. CV'de olmayan hiçbir beceri ekleme
 export const JOB_PROMPT = `Sana bir iş ilanının metni verilecek.
 Pozisyon adını, şirketi, kıdem seviyesini ve ilanın dilini belirle.
 
-İlandaki her gereksinimi ayrı bir madde olarak çıkar:
+İlandaki HER gereksinimi ayrı bir madde olarak çıkar:
 - text: gereksinimin ilandaki hâli
 - type: skill (teknik beceri), experience (deneyim), education (eğitim), soft (kişisel özellik)
 - importance: "aranan", "şart", "zorunlu", "olmalı" gibi ifadeler must; "tercihen",
-  "artı olur", "avantaj" gibi ifadeler nice
-- keywords: o gereksinimi CV'de ararken kullanılacak kelimeler. Eş anlamlıları da ekle.
-  Örnek: "3 yıl React deneyimi" için ["react", "react.js", "reactjs"]
+  "artı olur", "avantaj", "nice to have" gibi ifadeler nice
+
+Gereksinimler birden çok başlık altında olabilir ("Aradığımız nitelikler",
+"Gereksinimler", "Tercihen", "Artı olur"). Tüm başlıkların altındaki maddeleri
+çıkar, hiçbir bölümü atlama.
 
 Şirket adı ilanda yoksa null yaz. Kıdem belirtilmemişse null yaz.
 İlanda olmayan hiçbir gereksinim ekleme.`
+
+export const KEYWORDS_PROMPT = `Sana bir iş ilanındaki gereksinimlerin
+numaralı listesi verilecek. Her gereksinim için, o gereksinimi bir CV'de
+ararken kullanılacak anahtar kelimeleri üret.
+
+Sırayı ve sayıyı koru: kaç gereksinim verildiyse o kadar liste döndür.
+
+Anahtar kelimeler kısa terim olmalı, cümle değil. Eş anlamlılarını ve yaygın
+yazım varyantlarını da ekle; Türkçe bir terimin İngilizce karşılığını, İngilizce
+bir terimin Türkçe karşılığını da yaz.
+
+Örnek: "En az 3 yıl React deneyimi" -> ["react", "react.js", "reactjs"]
+Örnek: "Git ile versiyon kontrolü" -> ["git", "versiyon kontrol", "version control"]
+Örnek: "Takım çalışmasına yatkın" -> ["takım çalışması", "teamwork", "collaboration"]`
