@@ -180,3 +180,43 @@ arayüzünün arkasına takılır, çağıran kod değişmez. Dar ve geri alına
 ile ayrı TypeScript backend servisi (tek dil korunur ama bir servis, bir
 Dockerfile ve bir API sözleşmesi daha; `core` framework'süz olduğu için
 ileride mobil/üçüncü taraf API gerekirse etrafına sarmak birkaç saatlik iş).
+
+---
+
+## K-09 · Çıkarım çağrıları şimdilik sıralı kalıyor
+
+**Tarih:** 23 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1, Görev 6–13
+
+CV çıkarımının dört çağrısı (bölümleme, deneyim, eğitim, beceri) ve ilan
+çıkarımı sırayla çalışacak. Paralelleştirme Görev 13'te, değerlendirme
+setinin süre verisine bakılarak yeniden değerlendirilecek.
+
+**Bağlam:** Görev 4'te gerçek modelle iki ölçüm yapıldı — 3 alanlık basit bir
+çıkarım 10,0 sn, gerçek bir CV'nin deneyim bloğu 17,6 sn (610 token). Bu
+hızla beş ardışık çağrının toplamı kabaca 50 saniye; spec §13'teki
+tamamlanma tanımı 30 saniye diyor.
+
+**Gerekçe:** İki noktalı elle ölçümle optimizasyon kararı vermek erken.
+Değerlendirme seti (Görev 13) zaten çift başına süre ölçüyor ve 10 gerçek
+çiftte çalışacak; karar o veriyle verilecek. Erken paralelleştirme, kazancı
+doğrulanmadan hatta eşzamanlılık karmaşıklığı ekler.
+
+**Bilinen risk:** K1 karar kapısına (25 Ekim) 30 saniyenin üzerinde bir
+süreyle gidilebilir. Bu durumda kapı "düzelt ve tekrar dene" verir ve
+aşağıdaki sıradaki önlemler uygulanır.
+
+**Hazır duran çözümler, sırasıyla:**
+
+1. **Blok çağrılarını paralelleştir.** Bölümlemeden sonra deneyim, eğitim ve
+   beceri çağrıları birbirini beklemiyor → `Promise.all`.
+2. **CV ve ilan çıkarımını paralelleştir.** İkisi birbirinden tamamen
+   bağımsız; hat ikisini aynı anda başlatabilir.
+3. **Çağrı sayısını azalt.** Eğitim ve beceri tek çağrıda birleştirilebilir;
+   ikisi de kısa bloklar.
+4. **Model değiştir.** Sağlayıcı soyutlaması (K-03) bunu ucuz kılıyor.
+
+Birinci ve ikinci maddeyle tahmin ~28 saniyeye iniyor. Ancak bu, LM Studio'nun
+eşzamanlı istekleri gerçekten paralel işlemesine bağlı — tek modelli bir
+örnekte istekler kuyruğa alınıyorsa kazanç gerçekleşmez. Paralelleştirmeye
+geçilirse sıralı ve paralel hâl bir kez karşılaştırılmalı, kazanç
+varsayılmamalı.
