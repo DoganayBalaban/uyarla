@@ -194,13 +194,14 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: uyarla
-      POSTGRES_PASSWORD: uyarla
-      POSTGRES_DB: uyarla
+      # Değerler .env'den okunur; varsayılan yok ki eksikse gürültüyle dursun.
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER gerekli}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD gerekli}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB gerekli}
     ports: ["5432:5432"]
     volumes: ["pgdata:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U uyarla"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 5s
       retries: 10
   redis:
@@ -212,8 +213,18 @@ volumes:
 
 `.env.example`:
 
+Kimlik bilgisi şeklindeki hiçbir dize depoya girmez; parola yerel olarak
+üretilir (`openssl rand -hex 16`) ve yalnızca `.env` içinde kalır.
+
 ```bash
-DATABASE_URL="postgresql://uyarla:uyarla@localhost:5432/uyarla"
+# --- Postgres --- (docker-compose bu üçünü okur)
+POSTGRES_USER=uyarla
+POSTGRES_DB=uyarla
+POSTGRES_PASSWORD=
+
+# Biçim: postgresql://<KULLANICI>:<PAROLA>@localhost:5432/<VERITABANI>
+DATABASE_URL=
+
 REDIS_URL="redis://localhost:6379"
 
 # LM Studio — OpenAI uyumlu yerel endpoint (K-03)
@@ -313,6 +324,8 @@ Beklenen: `postgres` ve `redis` servisleri `running` durumunda; postgres sağlı
 
 ```bash
 cp .env.example .env
+# POSTGRES_PASSWORD ve DATABASE_URL alanlarını doldur:
+#   openssl rand -hex 16
 git add package.json pnpm-workspace.yaml tsconfig.base.json docker-compose.yml .env.example packages/core
 git commit -m "chore: pnpm monorepo iskeleti, Docker Compose ve core paketi"
 ```
