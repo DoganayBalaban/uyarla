@@ -1,0 +1,10 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+allowBuilds:
+  esbuild: true
+
+# vitest'in esbuild ikilisini kurabilmesi için (pnpm 11 varsayılan olarak engelliyor)
+onlyBuiltDependencies:
+  - esbuild
