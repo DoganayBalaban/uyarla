@@ -6,3 +6,5 @@ node_modules/
 
 # Prisma
 packages/db/generated/
+.tmp-test-storage/
+storage/
