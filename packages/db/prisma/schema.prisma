@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  resumes   Resume[]
+}
+
+model Resume {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  filePath  String
+  rawText   String          @db.Text
+  status    ResumeStatus    @default(uploaded)
+  createdAt DateTime        @default(now())
+  versions  ResumeVersion[]
+}
+
+enum ResumeStatus {
+  uploaded
+  parsed
+  failed
+}
+
+model ResumeVersion {
+  id        String              @id @default(cuid())
+  resumeId  String
+  resume    Resume              @relation(fields: [resumeId], references: [id])
+  profile   Json
+  source    ResumeVersionSource
+  versionNo Int
+  createdAt DateTime            @default(now())
+  analyses  Analysis[]
+
+  @@unique([resumeId, versionNo])
+}
+
+enum ResumeVersionSource {
+  parsed
+  adapted
+}
+
+model JobPosting {
+  id           String     @id @default(cuid())
+  rawText      String     @db.Text
+  requirements Json
+  language     String
+  seniority    String?
+  createdAt    DateTime   @default(now())
+  analyses     Analysis[]
+}
+
+model Analysis {
+  id String @id @default(cuid())
+
+  // Nullable: CV çıkarımı başarısız olursa ResumeVersion hiç oluşmaz, ama
+  // spec §11 başarısız işlerin de Analysis kaydı yazmasını istiyor.
+  resumeVersionId String?
+  resumeVersion   ResumeVersion? @relation(fields: [resumeVersionId], references: [id])
+
+  jobPostingId String
+  jobPosting   JobPosting @relation(fields: [jobPostingId], references: [id])
+
+  score  Float?
+  result Json?
+
+  // Ölçüm alanları (K-03): model değiştiğinde karşılaştırma verisi
+  // kendiliğinden birikir.
+  modelId    String
+  durationMs Int?
+  tokenUsage Int?
+
+  status     AnalysisStatus @default(running)
+  errorClass String?
+  createdAt  DateTime       @default(now())
+
+  @@index([resumeVersionId, jobPostingId])
+}
+
+enum AnalysisStatus {
+  running
+  done
+  failed
+}
