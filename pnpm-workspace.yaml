@@ -3,8 +3,14 @@ packages:
   - "packages/*"
 
 allowBuilds:
-  esbuild: true
+  '@prisma/client': true
+  '@prisma/engines': true
+  prisma: true
 
-# vitest'in esbuild ikilisini kurabilmesi için (pnpm 11 varsayılan olarak engelliyor)
+# pnpm 11 bağımlılıkların kurulum betiklerini varsayılan olarak engelliyor.
+# Bu üçü ikili indirmek zorunda: esbuild (vitest), prisma (sorgu motoru).
 onlyBuiltDependencies:
   - esbuild
+  - prisma
+  - "@prisma/client"
+  - "@prisma/engines"
