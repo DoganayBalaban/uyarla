@@ -220,3 +220,43 @@ eşzamanlı istekleri gerçekten paralel işlemesine bağlı — tek modelli bir
 örnekte istekler kuyruğa alınıyorsa kazanç gerçekleşmez. Paralelleştirmeye
 geçilirse sıralı ve paralel hâl bir kez karşılaştırılmalı, kazanç
 varsayılmamalı.
+
+---
+
+## K-10 · Bölümleme LLM'de kalıyor, prompt sıkılaştırıldı
+
+**Tarih:** 23 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1, Görev 6
+
+CV'yi bölümlere ayırma işi LLM'de kalacak. Bölümleme prompt'u, başlık
+satırlarının da bölüme ait olduğunu açıkça söyleyecek şekilde sıkılaştırıldı.
+
+**Bulgu:** Görev 6'nın ilk tümleşik testinde model, ilk işin kurumunu
+`"Kurum bilgisi yok"` olarak döndürdü — oysa CV'de "Acme Teknoloji" açıkça
+yazılıydı. Katman katman tanı, sorunun çıkarımda değil **bölümlemede**
+olduğunu gösterdi: `experienceBlock` yalnızca madde satırlarını içeriyordu,
+kurum/unvan/tarih başlık satırı bloğa hiç girmemişti. İkinci aşama aslında
+dürüst davranmıştı — olmayan bilgiyi uydurmak yerine yokluğunu bildirmişti
+(şema `string` istediği için `null` yerine yer tutucu metin yazarak).
+
+Kontrol deneyi kesindi: aynı prompt'a ham CV verildiğinde çıktı kusursuzdu
+(`"Acme Teknoloji"`, `"Frontend Geliştirici"`, `"Ocak 2022"`, `"halen"`).
+Yani model yetersiz değildi; spec §6.3'ün "bölme kayıpsızdır" varsayımı
+tutmuyordu.
+
+**Gerekçe:** En küçük müdahale seçildi. Prompt artık işin bir *kesme* işi
+olduğunu, seçme işi olmadığını ve başlık satırlarının bölüme dahil olduğunu
+örnekle söylüyor. Tümleşik test kurumun "Acme" olduğunu doğruluyor; bu bir
+gerileme koruması olarak duruyor.
+
+**Kabul edilen risk:** Çözüm modelin talimatı izlemesine bağlı kalıyor. Başka
+bir CV'de başka bir bilginin düşmesi mümkün ve bunu ancak Görev 13'teki
+değerlendirme setinde fark ederiz — 10 çiftin çeşitliliği bu yüzden önemli.
+
+**Değerlendirilen ve saklanan alternatif (A):** Bölümlemeyi kodla yapmak.
+CV bölüm başlıkları sayılabilir bir küme (`DENEYİM / TECRÜBE / EXPERIENCE`,
+`EĞİTİM / EDUCATION`, `BECERİLER / YETKİNLİKLER / SKILLS`); düzenli ifadeyle
+bölmek kayıpsız, bedava ve anlık olurdu. Bir LLM çağrısı eksilirdi: yaklaşık
+10 saniye kazanç (bkz. K-09) ve bir uydurma kaynağının tümden ortadan
+kalkması. Eval'de bölümleme kaynaklı kayıp tekrar görülürse ilk başvurulacak
+çözüm budur. Onun da tutmadığı yerde (başlıksız CV'ler) geri çekilme yolu,
+bölümlemeyi tümüyle bırakıp her çıkarıcıya ham CV'yi vermektir.
