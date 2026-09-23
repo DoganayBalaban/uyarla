@@ -501,3 +501,169 @@ hata: tek süreçte hiç görünmezdi.
   Paketlenmeleri hâlinde yerel eklenti ve CJS/ESM karışımı yüzünden
   düşüyorlar. `mammoth` bu listede değil — saf JavaScript ve dışarıda
   bırakılınca ara katman bozuluyor.
+
+---
+
+## K-15 · Anlamsal eşleşme eşiği 0.65'te kalıyor
+
+**Tarih:** 24 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1+
+
+`semanticThreshold` 0.65 olarak kalıyor. K-12'deki "muhtemelen yüksek,
+düşürülmeli" beklentisi **değerlendirme verisiyle çürüdü**.
+
+**Ölçüm:** Eşik taraması (`pnpm eval:sweep`) — çıkarım ve gömme her çift için
+bir kez yapılıp skor fonksiyonu farklı eşiklerle tekrar çalıştırıldı.
+
+| Eşik | İsabet % | Kaçırma | Uydurma | Anlamsal eşleşme |
+|---|---|---|---|---|
+| 0.35 | 71.4 | 0 | **4** | 6 |
+| 0.45 | 78.6 | 0 | **3** | 5 |
+| 0.50 | 71.4 | 1 | **3** | 4 |
+| 0.55 | 85.7 | 1 | **1** | 2 |
+| 0.60 | 78.6 | 2 | 1 | 1 |
+| **0.65** | **85.7** | 2 | **0** | 0 |
+| 0.70 | 85.7 | 2 | 0 | 0 |
+
+Eşiği düşürmek anlamsal eşleşme kazandırıyor ama **uydurma ödetiyor** ve net
+isabet artmıyor. 0.65 en iyi isabeti sıfır uydurmayla veriyor.
+
+K-12'deki hata tek yönlü bakmaktı: kaçırılan eşleşmeler görülüyordu ("Takım
+çalışmasına yatkın" 0.5049), kazanılan yanlış eşleşmeler görülmüyordu.
+Değerlendirme seti ikisini birden saydığı için tabloyu tersine çevirdi.
+
+**Rahatsız edici sonuç:** Anlamsal katman bu veriyle **hiçbir katkı
+yapmıyor** — 0.65'te sıfır eşleşme üretiyor. Skorun tamamı şu an kelime
+eşleşmesinden geliyor. Katmanın hak ettiği yeri kazanması için ya daha iyi
+bir sinyale ya da farklı bir kullanıma ihtiyacı var; örneğin yalnızca `soft`
+türü gereksinimlerde devreye girmesi. Karar daha fazla çiftle verilmeli.
+
+**Örneklem uyarısı:** 2 çift, 14 beklenti. Bu sayıyla eşik kararı geçicidir.
+Set 10 çifte çıktığında tarama tekrarlanmalı.
+
+---
+
+## K-16 · 30 saniye hedefi yerel modelle ölçülemez
+
+**Tarih:** 24 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1, K1
+
+Spec §13'teki "30 saniyenin altında skor dönüyor" ölçütü, geliştirme
+ortamındaki yerel modelle değerlendirilemez. Ölçüt üretim modeline taşınıyor.
+
+**Ölçüm:** Gerçek bir CV (3144 karakter) ve gerçek bir ilan (10.293 karakter)
+için:
+
+```
+CV çıkarımı   : 68,5 sn (53%)  3270 token
+ilan çıkarımı : 59,3 sn (46%)  4520 token · 15 gereksinim
+embedding     :  1,0 sn  (1%)
+TOPLAM        : 128,9 sn
+```
+
+**Darboğaz çağrı sayısı değil, modelin ham hızı:** ~7800 token / 129 saniye
+≈ **61 token/saniye**. Bu, `google/gemma-4-e4b`'nin bu makinedeki hızı.
+
+**K-09'daki paralelleştirme çözümü ölçüldü ve yetersiz çıktı.** Üç eşzamanlı
+çağrı sıralıya göre yalnızca **1,29x** kazandırıyor — LM Studio istekleri
+büyük ölçüde kuyruğa alıyor. K-09'da bu belirsizlik kayıtlıydı ("kazanç
+gerçekleşmeyebilir"); gerçekleşmiyor. 30 saniyeye inmek için ~4x gerekiyor.
+
+**Gerekçe:** Yerel model K-03 gereği *iterasyon* için seçildi, performans
+doğrulaması için değil. Üretimde barındırılan bir model bu token hacmini
+saniyeler içinde işler. Yerel hızı ürün ölçütü saymak, ölçütü yanlış yerde
+ölçmek olur.
+
+**Sonuç:** 30 saniye ölçütü üretim modeline geçildiğinde ölçülecek, o zamana
+kadar açık kalıyor. Değerlendirme betiği süreyi raporlamaya devam ediyor;
+asıl işlevi mutlak hedef değil, **model ve prompt değişikliklerinin göreli
+etkisini** göstermek.
+
+**Yine de uygulanabilir iyileştirmeler (üretim modelinde de değerli):**
+
+1. Eğitim ve beceri çıkarımını tek çağrıda birleştirmek — ikisi de kısa
+   bloklar; 5 çağrı 4'e iner.
+2. İlan çıkarımına ilanın tamamı yerine gereksinim bölümlerini vermek —
+   10.293 karakterin önemli kısmı şirket tanıtımı ve yan haklar.
+3. Prompt'ları kısaltmak; her çağrıda sistem yönergesi de token harcıyor.
+
+---
+
+## K-17 · Beceri çıkarımı kategorili CV'lerde kırılıyordu
+
+**Tarih:** 24 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1, Görev 6
+
+`SKILLS_PROMPT` kategori başlıklarını değil, altlarındaki becerileri
+çıkaracak şekilde düzeltildi.
+
+**Bulgu:** Gerçek bir CV ilk kez test edildiğinde skor **14** çıktı. Sebebi
+çıkarımdı: CV'nin beceri bölümü kategorilere ayrılmıştı ve model yalnızca
+başlıkları döndürüyordu.
+
+```
+CV'de:    AI / LLM
+          LLMs, Generative AI, RAG, AI Agents, MCP, prompt engineering, tool calling
+          Backend
+          Python, FastAPI, REST APIs, SSE, PostgreSQL
+
+Çıkarılan: ["AI / LLM", "Backend", "Frontend", "DevOps / Tools"]
+```
+
+İlan tam olarak `RAG`, `MCP` ve `tool calling` arıyordu; üçü de CV'de vardı ve
+üçü de atılmıştı.
+
+**Düzeltme:** Prompt artık kategori başlıklarını yazmamayı örnekle söylüyor.
+Ölçüldü: aynı blokta **4 beceri → 21 beceri**. Gerileme koruması olarak
+gerçek CV bloğuyla bir tümleşik test eklendi.
+
+**Ders:** Sentetik test verisi bu hatayı hiç göstermemişti; benim yazdığım
+örnek CV'lerin beceri bölümü düz listeydi. Gerçek CV'ler biçim olarak çok
+daha çeşitli ve değerlendirme setinin gerçek veriden kurulması bu yüzden
+şart.
+
+---
+
+## K1 · Karar kapısı değerlendirmesi
+
+**Tarih:** 24 Eylül 2026 · **Karar: DÜZELT VE TEKRAR DENE**
+
+Yol haritası §4'teki geçiş ölçütü: *"10 test CV–ilan çiftinde çıkarım
+doğruluğu elle kontrolde tatmin edici, uydurma içerik yok."*
+
+### Ölçüt karşılandı mı
+
+| Ölçüt | Durum | Kanıt |
+|---|---|---|
+| Uydurma içerik yok | **✓ Karşılandı** | Eval'de uydurma **0**; eşik taraması uydurmayı sıfırda tutan değeri seçti |
+| Çıkarım doğruluğu tatmin edici | **Kısmen** | İsabet %85,7 — ama 14 beklenti üzerinden |
+| 10 çift | **✗ Karşılanmadı** | Elde **2** çift var |
+| 30 saniye altı | **✗ Ölçülemedi** | Yerel modelle 129 sn; ölçüt üretim modeline taşındı (K-16) |
+| Birim testleri geçiyor | **✓** | 139 birim + 11 tümleşik test |
+
+### Karar
+
+**Devam değil, "düzelt ve tekrar dene".** Sprintin teknik iskeleti ayakta ve
+uçtan uca çalışıyor; eksik olan **veri**. İki çiftle alınan kalite kararları
+(özellikle eşik) istatistiksel olarak anlamsız ve bunu K-15'te kayda geçtik.
+
+Sprint 1'in asıl çıktısı hedeflenen "kalite doğrulandı" değil, şu oldu:
+**ölçüm altyapısı kuruldu ve ilk gerçek veri dört hata ortaya çıkardı.** Bu
+kötü bir sonuç değil; sentetik veriyle hiçbiri görünmüyordu.
+
+### Sonraki adımlar, öncelik sırasıyla
+
+1. **Değerlendirme setini 10 çifte çıkar.** Gerçek, izinli ve anonimleştirilmiş
+   CV–ilan çiftleri. Meslek çeşitliliği şart: sentetik verinin gösteremediği
+   biçim çeşitliliği (kategorili beceri bölümleri, düzyazı üsluplu ilanlar,
+   iki sütunlu şablonlar) asıl risk kaynağı.
+2. **Eşik taramasını tekrarla.** 10 çiftle K-15 yeniden değerlendirilmeli.
+3. **Anlamsal katmanın kaderine karar ver.** Şu an sıfır katkı yapıyor.
+   Ya kapsamı daralacak (yalnızca `soft` gereksinimler) ya sinyali değişecek
+   ya da kaldırılacak — üçü de veriyle kararlaştırılmalı.
+4. **Üretim modeliyle bir ölçüm al.** 30 saniye ölçütü ancak orada anlamlı
+   (K-16). Sağlayıcı soyutlaması (K-03) bunu ucuz kılıyor.
+
+### K1'de öğrenilen
+
+Sentetik test verisi biçim çeşitliliğini göstermiyor. Dört hatanın üçü
+(K-13 yanlış kanıt, K-17 beceri çıkarımı, K-11 eksik gereksinimler) ancak
+gerçek veriyle ortaya çıktı. Değerlendirme setinin gerçek veriden kurulması
+bir tercih değil, ön koşul.

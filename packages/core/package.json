@@ -11,9 +11,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "eval": "dotenv -e ../../.env -- tsx eval/run.ts",
+    "eval:sweep": "dotenv -e ../../.env -- tsx eval/sweep.ts"
   },
   "devDependencies": {
+    "dotenv-cli": "^11.0.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
   },

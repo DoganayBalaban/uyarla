@@ -1,0 +1,43 @@
+{
+  "model": "google/gemma-4-e4b",
+  "embeddingModel": "bge-m3",
+  "config": {
+    "mustWeight": 2,
+    "niceWeight": 1,
+    "semanticThreshold": 0.65
+  },
+  "totals": {
+    "hits": 12,
+    "misses": 2,
+    "fabrications": 0,
+    "notExtracted": 0,
+    "byKeyword": 8,
+    "bySemantic": 0
+  },
+  "accuracy": 0.8571428571428571,
+  "avgDurationMs": 90480,
+  "metrics": [
+    {
+      "id": "01-frontend",
+      "hits": 6,
+      "misses": 1,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 75,
+      "durationMs": 49630,
+      "byKeyword": 5,
+      "bySemantic": 0
+    },
+    {
+      "id": "02-ai-engineer",
+      "hits": 6,
+      "misses": 1,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 17,
+      "durationMs": 131330,
+      "byKeyword": 3,
+      "bySemantic": 0
+    }
+  ]
+}
