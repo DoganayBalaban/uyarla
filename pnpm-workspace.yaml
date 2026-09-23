@@ -5,6 +5,8 @@ packages:
 allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
+  esbuild: true
+  msgpackr-extract: true
   prisma: true
 
 # pnpm 11 bağımlılıkların kurulum betiklerini varsayılan olarak engelliyor.
@@ -14,3 +16,5 @@ onlyBuiltDependencies:
   - prisma
   - "@prisma/client"
   - "@prisma/engines"
+  # bullmq bağımlılığı; ikili derleme gerektiriyor
+  - msgpackr-extract
