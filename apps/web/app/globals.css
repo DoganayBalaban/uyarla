@@ -1,0 +1,30 @@
+/* Sprint 1: markasız test arayüzü (K-01). Marka giydirmesi Sprint 2'de. */
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  margin: 2rem auto;
+  max-width: 56rem;
+  padding: 0 1rem;
+  line-height: 1.5;
+  color: #111;
+}
+textarea { width: 100%; font-family: inherit; font-size: 0.9rem; padding: 0.5rem; }
+label { display: block; margin-bottom: 0.25rem; font-weight: 600; }
+button { padding: 0.6rem 1.2rem; font-size: 1rem; cursor: pointer; }
+button:disabled { cursor: wait; opacity: 0.6; }
+
+.score { font-size: 3.5rem; font-weight: 700; line-height: 1; }
+.matched { color: #16a34a; }
+.missing { color: #dc2626; }
+.meta { color: #64748b; font-size: 0.85rem; }
+
+ul.requirements { list-style: none; padding: 0; }
+ul.requirements li { border-bottom: 1px solid #eee; padding: 0.6rem 0; }
+
+details { margin-top: 2rem; }
+pre {
+  background: #f5f5f5;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.75rem;
+  max-height: 32rem;
+}

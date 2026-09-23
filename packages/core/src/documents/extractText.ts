@@ -1,4 +1,3 @@
-import { PDFParse } from "pdf-parse"
 import mammoth from "mammoth"
 import { PermanentError } from "../errors.js"
 
@@ -28,6 +27,12 @@ export async function extractText(
 }
 
 async function extractFromPdf(buffer: Buffer): Promise<string> {
+  // Tembel yükleniyor: pdf-parse'ın ESM derlemesi (pdfjs-dist) Next'in
+  // sunucu katmanında değerlendirilemiyor ("Object.defineProperty called on
+  // non-object"). Üst seviyede import edilirse @uyarla/core'u import eden
+  // her Next dosyası bu hatayı alır. Ayrıca pdfjs ağır bir bağımlılık;
+  // yalnızca PDF işlenirken yüklenmesi doğru.
+  const { PDFParse } = await import("pdf-parse")
   const parser = new PDFParse({ data: buffer })
   let text: string
   try {

@@ -1,10 +1,20 @@
 .DS_Store
 node_modules/
-.env
-.env*.local
 ~$*
 
-# Prisma
+# Ortam değişkenleri — gerçek değerler asla depoya girmez
+.env
+.env*.local
+
+# Derleme çıktıları
+.next/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma üretilen dosyalar
 packages/db/generated/
-.tmp-test-storage/
+
+# Yerel dosya depolama ve test kalıntıları
 storage/
+.tmp-test-storage/
