@@ -317,3 +317,69 @@ dil vaadine doğrudan hizmet ediyor; kodla türetilen köklerle elde edilemezdi.
 **Süre etkisi:** İlan çıkarımı 10,8 sn → 21,1 sn. K-09'daki süre baskısını
 artırıyor; oradaki ikinci önlem (CV ve ilan çıkarımını paralelleştirmek) bu
 ek çağrıyı toplama hiç eklemeyeceği için etkisi telafi edilebilir.
+
+---
+
+## K-12 · Embedding ayrı sunucuda: Ollama + BGE-M3
+
+**Tarih:** 23 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1+
+
+Embedding modeli üretken modelden ayrı bir sunucuda çalışacak: BGE-M3,
+Ollama üzerinden (`http://localhost:11434/v1`). Üretken model LM Studio'da
+kalıyor. Yapılandırmada `EMBEDDING_BASE_URL` ayrı bir değişken olarak duruyor.
+
+**Bağlam:** K-05 embedding modeli olarak BGE-M3'e karar vermişti, ama LM
+Studio'nun model aramasında "bge-m3" terimiyle çıkmıyor (GGUF sürümleri
+HuggingFace'te `gpustack/bge-m3-GGUF` gibi depolarda mevcut ve `lms get`
+doğrudan URL ile indirebiliyor). Ollama'nın kütüphanesinde ise tek komutla
+duruyor.
+
+**Gerekçe:**
+
+1. **Kuantizasyon tuzağı ortadan kalkıyor.** LM Studio yolunda Q2'den FP16'ya
+   altı varyant arasından seçim yapmak gerekiyordu. Embedding modellerinde
+   kuantizasyon üretken modellere göre çok daha fazla zarar verir — vektör
+   uzayı bozulur ve benzerlik eşiği yanıltıcı hâle gelir. `ollama pull bge-m3`
+   doğru varyantı getiriyor.
+2. **İki sunucuyu ayırmak doğru mimari.** Önceki hâlde
+   `embeddingConfigFromEnv()` `LLM_BASE_URL`'i yeniden kullanıyordu; bu sessiz
+   bir kuplajdı. K-09'daki süre baskısı nedeniyle üretken modeli değiştirmemiz
+   gayet olası ve o değişikliğin embedding tarafına dokunmaması gerekiyor.
+
+**Bedeli:** Geliştirirken iki süreç ayakta olmalı (LM Studio + Ollama).
+Dağıtım açısından fark yok; ikisi de yalnızca geliştirme ortamında.
+
+**Reddedilen alternatif:** HuggingFace + sentence-transformers ile ayrı bir
+Python servisi. K-08 tam olarak bunu dışlıyor ve burada hiçbir kazancı yok —
+embedding zaten HTTP üzerinden servis edilen bir şey, çağıran dilin önemi yok.
+
+### Ölçüm: eşik 0.65 büyük ihtimalle yüksek
+
+Gerçek BGE-M3 ile ölçülen gereksinim ↔ kanıt benzerlikleri:
+
+| Çift | Benzerlik | Beklenen |
+|---|---|---|
+| "React deneyimi" ↔ "React ve TypeScript ile panel geliştirdim" | 0.6383 | eşleşme |
+| "Takım çalışmasına yatkın" ↔ "4 kişilik ekipte kod inceleme sürecini kurdum" | 0.5049 | eşleşme |
+| "Bilgisayar mühendisliği mezunu" ↔ "İTÜ, Bilgisayar Mühendisliği" | 0.6716 | eşleşme |
+| "Kubernetes ile konteyner yönetimi" ↔ "React ile arayüz geliştirdim" | 0.4445 | eşleşmeme |
+| "SAP deneyimi" ↔ "Sayfa yüklenme süresini düşürdüm" | 0.4585 | eşleşmeme |
+
+Ayrım mevcut (eşleşenler 0.50–0.67, eşleşmeyenler 0.44–0.46) ama marj ince
+(0.046) ve eşik 0.65 gerçek eşleşmelerin çoğunun üstünde kalıyor. Değer
+**şimdilik değiştirilmedi**: beş elle üretilmiş çifte göre ayar yapmak, Görev
+13'teki 10 gerçek çifte göre ayar yapmanın yerini tutmaz ve aşırı uyum
+riski taşır. Eşiğin düşürülmesi (muhtemelen 0.50 civarına) Görev 13'ün işi.
+
+Not: "React deneyimi" gibi vakalar zaten birinci aşamada — tam kelime
+eşleşmesinde — yakalanıyor. Anlamsal katman esas olarak kişisel özellik
+(soft) gereksinimlerinde devreye giriyor ve marjın en ince olduğu yer de
+orası.
+
+### Ek ölçüm
+
+- Embedding çağrıları hızlı: üç testin tamamı 761 ms. LLM çağrılarının
+  yanında ihmal edilebilir; K-09'daki süre sorununa katkısı yok.
+- Çapraz dilli eşleşme çalışıyor: "experience with version control systems"
+  ↔ "Git ile versiyon kontrolü kullandım" = 0.6840. Ürünün çift dil vaadi
+  bu davranışa dayanıyor.
