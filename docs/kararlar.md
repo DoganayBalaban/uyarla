@@ -383,3 +383,59 @@ orası.
 - Çapraz dilli eşleşme çalışıyor: "experience with version control systems"
   ↔ "Git ile versiyon kontrolü kullandım" = 0.6840. Ürünün çift dil vaadi
   bu davranışa dayanıyor.
+
+---
+
+## K-13 · Kanıt metni ikiye ayrıldı; anahtar kelimeler daraltıldı
+
+**Tarih:** 23 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1, Görev 7 ve 10
+
+`Evidence` artık iki metin taşıyor: `text` (gömme ve kullanıcıya gösterim,
+bağlamlı) ve `matchText` (tam kelime eşleşmesi, bağlamsız). Ayrıca her iş için
+unvan kendi kanıt kaydına sahip (`kind: "role"`). Anahtar kelime üretimi
+prompt'u, üst kategori ve ekosistem sızıntısını yasaklayacak şekilde
+daraltıldı.
+
+**Bulgu:** İlk uçtan uca çalıştırmada "Next.js deneyimi" gereksinimi
+eşleşmişti ama kanıt olarak Next.js'ten hiç bahsetmeyen bir madde
+gösteriliyordu:
+
+```
+✓ [nice] Next.js deneyimi  (keyword 1.00)
+    kanıt: Frontend Geliştirici · Acme Teknoloji: React ve TypeScript ile
+           müşteri self servis panelini sıfırdan geliştirdim
+```
+
+**İki ayrı sorun üst üste binmişti.**
+
+*Birincisi, modelin ürettiği anahtar kelimeler:*
+`["next.js","nextjs","fullstack","frontend","backend"]`. `frontend`, Next.js'in
+eş anlamlısı değil üst kategorisi; bu liste "frontend geliştiricisi olan
+herkes Next.js biliyor" demeye geliyor.
+
+*İkincisi, bizim kanıt yapımız:* Deneyim maddelerine anlamsal eşleşme kalitesi
+için unvan ön eki ekliyorduk (`"Frontend Geliştirici · Acme: ..."`). Ön ek her
+maddenin başında tekrarlandığı için, unvana denk gelen bir anahtar kelime
+CV'deki TÜM maddelerle eşleşiyor ve kanıt olarak ilki — yani rastgele biri —
+gösteriliyordu.
+
+**İkisi de düzeltildi, çünkü biri tek başına yetmiyordu.** Yalnızca prompt
+düzeltilseydi, model yarın başka bir geniş kelime ürettiğinde aynı
+rastgele-kanıt davranışı tekrarlardı. Yalnızca yapı düzeltilseydi, `frontend`
+anahtar kelimesi bu sefer CV'deki "frontend" becerisiyle eşleşir ve yine
+yanlış pozitif üretirdi.
+
+**Prompt iki turda daraltıldı.** İlk tur üst kategorileri yasakladı; Next.js
+düzeldi ama React için `["react","javascript","js"]` üretmeye devam etti —
+yani ekosistem sızıntısı sürüyordu. İkinci tur bunu da yasakladı ("React için
+javascript yazma, Django için python yazma, Spring için java yazma: o dili
+bilen herkes o teknolojiyi biliyor sayılamaz"). Sonuç temiz.
+
+**Gerileme koruması:** Üç birim testi bu davranışı kilitliyor — unvanın ayrı
+kanıt olduğu, madde kanıtının eşleşme metninin ön ek taşımadığı, ve bağlam
+ön ekindeki bir kelimeyle eşleşen gereksinimin kanıt olarak rol kaydını
+göstermesi.
+
+**Ölçüm:** Düzeltme sonrası uçtan uca skor 75; "Next.js deneyimi" artık kanıt
+olarak CV'deki `Next.js` becerisini gösteriyor. Kalan tek kaçırma "Takım
+çalışmasına yatkın" ve sebebi bilinen eşik sorunu (K-12).

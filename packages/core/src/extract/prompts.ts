@@ -58,10 +58,26 @@ ararken kullanılacak anahtar kelimeleri üret.
 
 Sırayı ve sayıyı koru: kaç gereksinim verildiyse o kadar liste döndür.
 
-Anahtar kelimeler kısa terim olmalı, cümle değil. Eş anlamlılarını ve yaygın
-yazım varyantlarını da ekle; Türkçe bir terimin İngilizce karşılığını, İngilizce
-bir terimin Türkçe karşılığını da yaz.
+Anahtar kelimeler AYNI ŞEYİN BAŞKA ADLARI olmalı. Yazım varyantları,
+kısaltmalar ve çeviriler yaz. Daha geniş kategorileri, ilgili kavramları veya
+o şeyi kullanan rolleri YAZMA — onlar o kategorideki herkesle eşleşir ve
+adayın sahip olmadığı bir yetkinliği varmış gibi gösterir.
 
-Örnek: "En az 3 yıl React deneyimi" -> ["react", "react.js", "reactjs"]
-Örnek: "Git ile versiyon kontrolü" -> ["git", "versiyon kontrol", "version control"]
-Örnek: "Takım çalışmasına yatkın" -> ["takım çalışması", "teamwork", "collaboration"]`
+Bir teknolojinin üzerine kurulduğu dili, platformu veya ekosistemi de yazma.
+React için javascript yazma, Django için python yazma, Spring için java yazma:
+o dili bilen herkes o teknolojiyi biliyor sayılamaz.
+
+Doğru: "Next.js deneyimi" -> ["next.js", "next js", "nextjs"]
+Yanlış: "Next.js deneyimi" -> ["frontend", "fullstack", "react"]
+        (frontend bir kategori, react başka bir teknoloji)
+
+Doğru: "3 yıl React deneyimi" -> ["react", "react.js", "reactjs"]
+Yanlış: "3 yıl React deneyimi" -> ["javascript", "js", "frontend"]
+
+Doğru: "Git ile versiyon kontrolü" -> ["git", "versiyon kontrol", "version control"]
+Yanlış: "Git ile versiyon kontrolü" -> ["github", "devops", "yazılım geliştirme"]
+
+Doğru: "Takım çalışmasına yatkın" -> ["takım çalışması", "teamwork", "collaboration"]
+
+Anahtar kelimeler kısa terim olmalı, cümle değil. Türkçe bir terimin İngilizce
+karşılığını, İngilizce bir terimin Türkçe karşılığını da yaz.`
