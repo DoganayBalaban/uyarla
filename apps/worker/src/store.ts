@@ -1,4 +1,4 @@
-import { PermanentError } from "@uyarla/core"
+import { LocalFileStore, PermanentError, extractText } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import type { AnalysisStore } from "./types.js"
 
@@ -7,10 +7,25 @@ import type { AnalysisStore } from "./types.js"
  * arayüz üzerinden çağırıyor (bkz. types.ts).
  */
 export const prismaStore: AnalysisStore = {
+  /**
+   * CV'nin ham metnini döndürür; henüz çıkarılmamışsa dosyadan çıkarıp
+   * kaydeder.
+   *
+   * Çıkarma web katmanında değil burada yapılıyor: route'ların tek işi
+   * doğrulama ve kuyruğa devretmek (spec §4.2). Teknik zorunluluk da var —
+   * pdf-parse'ın kullandığı pdfjs Next'in sunucu katmanında yüklenemiyor.
+   */
   async getResumeText(resumeId) {
     const resume = await prisma.resume.findUnique({ where: { id: resumeId } })
     if (!resume) throw new PermanentError("CV bulunamadı", "resume_not_found")
-    return resume.rawText
+    if (resume.rawText.trim()) return resume.rawText
+
+    const store = new LocalFileStore(process.env.STORAGE_DIR ?? "./storage")
+    const buffer = await store.read(resume.filePath)
+    const rawText = await extractText(buffer, resume.filePath)
+
+    await prisma.resume.update({ where: { id: resumeId }, data: { rawText } })
+    return rawText
   },
 
   async getJobPostingText(jobPostingId) {

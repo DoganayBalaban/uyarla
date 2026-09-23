@@ -439,3 +439,65 @@ göstermesi.
 **Ölçüm:** Düzeltme sonrası uçtan uca skor 75; "Next.js deneyimi" artık kanıt
 olarak CV'deki `Next.js` becerisini gösteriyor. Kalan tek kaçırma "Takım
 çalışmasına yatkın" ve sebebi bilinen eşik sorunu (K-12).
+
+---
+
+## K-14 · Metin çıkarma worker'da, web katmanında değil
+
+**Tarih:** 24 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1, Görev 12
+
+PDF/DOCX metin çıkarma işi worker'da yapılıyor. API route dosyayı kaydedip
+kuyruğa devrediyor; `Resume.rawText` boş oluşturuluyor ve worker ilk
+ihtiyaç duyduğunda dosyadan çıkarıp kaydediyor.
+
+**Gerekçe:** Spec §4.2 zaten bunu söylüyordu — "İş mantığı API route'larında
+bulunmaz; route'ların tek işi doğrulama ve kuyruğa devretmektir." İlk
+uygulamada çıkarmayı route'a koymuştum, gerekçem kullanıcı deneyimiydi:
+okunamayan dosyayı kuyruğa atmadan bildirmek. Gerekçe makuldü ama ilkeden
+sapmaydı ve teknik bir duvara çarptı.
+
+**Teknik zorunluluk:** `pdf-parse`'ın kullandığı `pdfjs-dist`, Next'in RSC
+sunucu katmanında yüklenemiyor — `Object.defineProperty called on non-object`
+ile düşüyor. İzole edilerek doğrulandı: aynı katmanda `mammoth` sorunsuz
+yükleniyor, `pdf-parse` yüklenmiyor. `serverExternalPackages` listesine
+eklemek de çözmüyor.
+
+**İki değişiklik yapıldı:**
+
+1. `extractText` içinde `pdf-parse` artık tembel yükleniyor
+   (`await import("pdf-parse")` fonksiyon gövdesinde). Üst seviyede import
+   edilirse `@uyarla/core`'un barrel export'unu import eden HER Next dosyası
+   bu hatayı alır — yalnızca PDF işleyenler değil. Yan fayda: pdfjs ağır bir
+   bağımlılık, yalnızca gerektiğinde yükleniyor.
+2. Çıkarma `prismaStore.getResumeText` içine taşındı: metin boşsa dosyadan
+   çıkarılıp kaydediliyor. Hat (pipeline) değişmedi — metnin nereden geldiği
+   zaten port'un arkasında.
+
+**Kabul edilen değişim:** Okunamayan dosya artık anında değil, iş başarısız
+olduğunda bildiriliyor. Kullanıcı birkaç saniye daha bekliyor ama mesaj aynı
+ve arayüz `failed` durumunu zaten gösteriyor.
+
+### Yan bulgu: dosya yolları mutlak olmalı
+
+İlk denemede worker dosyayı bulamadı: `ENOENT: no such file or directory,
+open 'storage/6e01f0b9-....pdf'`. `STORAGE_DIR=./storage` göreli bir yol ve
+iki süreç farklı çalışma dizinlerinde çalışıyor — web `apps/web/` altına
+yazıyor, worker `apps/worker/` altında arıyordu.
+
+`LocalFileStore.save` artık `resolve()` kullanıp mutlak yol döndürüyor;
+`Resume.filePath` mutlak saklanıyor ve hangi dizinden okunduğu fark etmiyor.
+Testi var. Bu, K-02'deki iki süreçli mimarinin ortaya çıkardığı türden bir
+hata: tek süreçte hiç görünmezdi.
+
+### Yan bulgu: Next yapılandırması
+
+- `transpilePackages`: `@uyarla/core`, `@uyarla/db`, `@uyarla/worker` kaynak
+  TypeScript olarak yayımlanıyor.
+- `webpack.resolve.extensionAlias`: TypeScript ESM'de kaynak dosyalar
+  birbirine `.js` uzantısıyla import edilir (`./errors.js` aslında
+  `errors.ts`). `tsx` ve `vitest` bunu kendiliğinden çözüyor, webpack
+  çözmüyor.
+- `serverExternalPackages`: `@prisma/client`, `bullmq`, `ioredis`.
+  Paketlenmeleri hâlinde yerel eklenti ve CJS/ESM karışımı yüzünden
+  düşüyorlar. `mammoth` bu listede değil — saf JavaScript ve dışarıda
+  bırakılınca ara katman bozuluyor.
