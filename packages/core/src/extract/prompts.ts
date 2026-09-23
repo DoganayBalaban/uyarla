@@ -34,6 +34,18 @@ Bilgi yoksa null yaz. CV'de olmayan hiçbir bilgi ekleme.`
 
 export const SKILLS_PROMPT = `Sana bir CV'nin beceriler bölümü verilecek.
 Becerileri, bilinen dilleri ve sertifikaları ayrı dizilere ayır.
+
+Beceri bölümü kategorilere ayrılmış olabilir ("AI / LLM", "Backend",
+"Frontend", "DevOps / Tools" gibi). Kategori BAŞLIKLARINI yazma — onların
+ALTINDAKİ tek tek becerileri yaz. Her beceri ayrı bir dizi elemanı olmalı,
+virgülle ayrılmış tek bir metin değil.
+
+Örnek girdi:
+  Backend
+  Python, FastAPI, PostgreSQL
+Örnek çıktı:
+  ["Python", "FastAPI", "PostgreSQL"]     ("Backend" yazılmaz)
+
 Her beceriyi metinde yazıldığı gibi yaz. CV'de olmayan hiçbir beceri ekleme.`
 
 export const JOB_PROMPT = `Sana bir iş ilanının metni verilecek.
