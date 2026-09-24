@@ -15,7 +15,7 @@ const MAX_BECERI_UZUNLUGU = 40
  * eşleşme tutmuyor.
  */
 const BOLUM_BASLIGI =
-  /^(core|technical|teknik|genel|other|diğer)?\s*(skills?|beceriler|yetkinlikler|araçlar|tools)$/
+  /^(core|technical|teknik|genel|other|diğer)?\s*(skills?|beceriler|yetkinlikler|araçlar|tools|diller|languages|sertifikalar?|belgeler|certifications?|sertifikalar belgeler|eğitim|education|deneyim|experience)$/
 
 /**
  * Satır transkripsiyonunu beceri listesine çevirir.
@@ -35,7 +35,10 @@ export function flattenSkillLines(data: SkillLines): string[] {
 
   for (const line of data.lines) {
     const terimler = line.items.filter(
-      (item) => item.length <= MAX_BECERI_UZUNLUGU && !item.includes("."),
+      (item) =>
+        item.length <= MAX_BECERI_UZUNLUGU &&
+        !item.includes(".") &&
+        !bolumBasligiMi(item),
     )
 
     if (terimler.length > 0) {
@@ -44,9 +47,28 @@ export function flattenSkillLines(data: SkillLines): string[] {
     }
 
     const etiket = line.label.trim()
-    if (etiket && !BOLUM_BASLIGI.test(normalizeText(etiket))) beceriler.push(etiket)
+    if (etiket && !bolumBasligiMi(etiket)) beceriler.push(etiket)
   }
 
-  // Aynı beceri iki bölümde birden geçebiliyor.
-  return [...new Set(beceriler)]
+  // Dil ve sertifikalar kendi alanlarında zaten var; beceri sayılmamalılar.
+  // Beceri bölümü olmayan CV'lerde bölümleme diller ve sertifikaları
+  // skillsBlock'a koyuyor ve bunlar beceri gibi görünüyor. Bir katılım
+  // belgesinin "Bilgisayar Mühendisliği mezunu" gereksinimiyle eşleşmesi
+  // uydurma eşleşmedir (K-20).
+  const digerleri = new Set(
+    [...data.languages, ...data.certifications].map((x) => normalizeText(x)),
+  )
+
+  return [
+    ...new Set(
+      beceriler.filter((b) => {
+        const n = normalizeText(b)
+        return n.length > 0 && !digerleri.has(n)
+      }),
+    ),
+  ]
+}
+
+function bolumBasligiMi(metin: string): boolean {
+  return BOLUM_BASLIGI.test(normalizeText(metin))
 }

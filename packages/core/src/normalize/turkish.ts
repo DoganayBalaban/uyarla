@@ -39,14 +39,32 @@ const SUFFIXES = [
   "sı", "si", "su", "sü",
   "ım", "im", "um", "üm",
   "ı", "i", "u", "ü",
-].sort((a, b) => b.length - a.length)
+]
+  // normalizeText "ı"yı "i"ye katladığı için ek listesi de katlanmalı;
+  // aksi hâlde "sına" eki "çalişmasina" köküyle eşleşmez. Kaynakta okunabilir
+  // Türkçe biçimde duruyor, karşılaştırma biçimine burada çevriliyor.
+  .map((ek) => ek.replace(/ı/g, "i"))
+  .sort((a, b) => b.length - a.length)
 
-/** Türkçe duyarlı küçültme, noktalama temizliği, boşluk tekleme. */
+/**
+ * Türkçe duyarlı küçültme, noktalama temizliği, boşluk tekleme.
+ *
+ * Sonda "ı" harfi "i"ye katlanıyor. Sebebi somut: Türkçe küçültme "I"yı
+ * noktasız "ı" yapıyor — Türkçe için doğru, ama CV'lerdeki büyük harfli
+ * İngilizce terimleri bozuyor. "API VALIDATION" → "apı valıdatıon" olurken
+ * ilandaki anahtar kelime "api validation" kalıyor ve iki taraf buluşamıyor.
+ * Altı örnekten beşi bu yüzden eşleşmiyordu (K-21).
+ *
+ * Katlama her iki tarafa da uygulandığı için eşleştirme simetrisi korunuyor.
+ * Kaybedilen tek şey Türkçe'de ı/i ayrımı; iş ilanı ve CV sözlüğünde bu
+ * ayrımın anlam değiştirdiği bir çift pratikte görülmüyor.
+ */
 export function normalizeText(text: string): string {
   return text
-    // Türkçe kritik: "I".toLowerCase() İngilizce kurallarla "i" verir,
-    // oysa Türkçede "ı" olmalı. Yerel belirtmek şart.
+    // "İ".toLowerCase() İngilizce kurallarla birleşik noktalı "i̇" verir;
+    // yerel belirtmek şart.
     .toLocaleLowerCase("tr")
+    .replace(/ı/g, "i")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim()
     .replace(/\s+/g, " ")
@@ -57,13 +75,18 @@ export function normalizeText(text: string): string {
  * Eş anlamlı sözlüğü hem soymadan önce hem sonra denenir: "reactjs" doğrudan
  * eşleşir, "yazılımcıyım" ise önce "yazılım" köküne inip sonra eşleşebilir.
  */
+/** Sözlük anahtarları normalizeText biçimine çevrilmiş hâlde tutulur. */
+const SYNONYMS = new Map(
+  Object.entries(TITLE_SYNONYMS).map(([k, v]) => [normalizeText(k), normalizeText(v)]),
+)
+
 export function normalizeToken(word: string): string {
   let stem = normalizeText(word)
 
   // Sözlük her adımda denenir, yalnızca başta ve sonda değil. Aksi hâlde
   // "geliştirici" sözlükten doğrudan eşleşirken "geliştiricisiniz" soyulmaya
   // devam edip başka bir köke iner — iki biçim buluşamaz.
-  const dogrudan = TITLE_SYNONYMS[stem]
+  const dogrudan = SYNONYMS.get(stem)
   if (dogrudan) return dogrudan
 
   // Kök artık kısalmayana kadar ek soyulur. Tek ek soymak simetriyi bozuyor:
@@ -83,7 +106,7 @@ export function normalizeToken(word: string): string {
         break
       }
     }
-    const eslesme = TITLE_SYNONYMS[stem]
+    const eslesme = SYNONYMS.get(stem)
     if (eslesme) return eslesme
   }
 

@@ -790,3 +790,79 @@ sızıyordu — K-13'te uğraştığımız yanlış pozitif kaynağının aynıs
 transkripsiyon istenip yorum kodda yapılırsa hata testle yakalanır. Bu
 projede aynı desen üç kez çıktı: gereksinim listesinin erken kapanması
 (K-11), anahtar kelime hizalaması (K-18), beceri çıkarımı (K-19).
+
+---
+
+## K-20 · Dil ve sertifikalar beceri sayılmıyor
+
+**Tarih:** 24 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1, Görev 6
+
+`flattenSkillLines` artık üç şeyi eliyor: bölüm başlıklarını (etiketin yanı
+sıra **öğe** olarak geldiklerinde de), dil listesinde geçen değerleri ve
+sertifika listesinde geçen değerleri.
+
+**Bulgu:** Değerlendirme setindeki yeni mezun CV'sinin becerileri şöyleydi:
+
+```
+['DİLLER', 'B1 seviye İngilizce', 'SERTİFİKALAR / BELGELER',
+ 'Siber Güvenlik Programı Katılım Belgesi',
+ 'Bir Yazılım Etkinliği – Modern Yazılım Mühendisliği (2026)', ...]
+```
+
+O CV'de beceri bölümü **yok**. Bölümleme, diller ve sertifikalar bloklarını
+`skillsBlock`'a koymuş, düzleştirme de hepsini beceriye çevirmişti.
+
+**Doğrudan sonucu bir uydurma eşleşmeydi:** "Bilgisayar Mühendisliği veya
+ilgili bölümlerden mezun" gereksinimi, `"Bir Yazılım Etkinliği – Modern
+Yazılım Mühendisliği (2026)"` **katılım belgesiyle** eşleşti. Bir etkinlik
+belgesi diploma değildir; bu tam olarak ürünün dürüstlük ilkesini çiğneyen
+davranış.
+
+Ayrıca `TECHNICAL SKILLS` başlığı beceri olarak sızıyordu — başlık filtresi
+yalnızca `label` alanına bakıyordu, `items` içinde geldiğinde kaçırıyordu.
+
+---
+
+## K-21 · normalizeText "ı" harfini "i"ye katlıyor
+
+**Tarih:** 24 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1+
+
+`normalizeText` Türkçe küçültmeden sonra "ı" harfini "i"ye katlıyor.
+Ek listesi ve unvan sözlüğünün anahtarları da aynı katlamadan geçiyor.
+
+**Bulgu:** K-20'yi düzeltirken `TECHNICAL SKILLS` başlığının filtreye
+takılmadığı görüldü. Sebebi beklenmedikti:
+
+```
+"TECHNICAL SKILLS".toLocaleLowerCase("tr")  →  "technıcal skılls"
+```
+
+Türkçe küçültme "I"yı noktasız "ı" yapıyor. Türkçe için doğru davranış, ama
+**CV'lerdeki büyük harfli İngilizce terimleri bozuyor.** CV'ler başlıkları ve
+sık sık terimleri büyük harfle yazar; ilanlar küçük harfle. İki taraf
+buluşamıyordu:
+
+| CV'deki | İlandaki | Eşleşiyor muydu |
+|---|---|---|
+| `API VALIDATION` → `apı valıdatıon` | `api validation` | ✗ |
+| `MANUAL TESTING` → `manual testıng` | `manual testing` | ✗ |
+| `MICROSERVICES` → `mıcroservıces` | `microservices` | ✗ |
+| `JIRA` → `jıra` | `jira` | ✗ |
+| `CI/CD` → `cı cd` | `ci cd` | ✗ |
+| `BİLGİSAYAR MÜHENDİSLİĞİ` | `bilgisayar mühendisliği` | ✓ |
+
+Altı örnekten beşi kaçıyordu — ve bu hata **her CV'de** çalışıyordu, yalnızca
+belirli biçimlerde değil.
+
+**Çözüm:** Karşılaştırma amacıyla "ı" → "i". Katlama her iki tarafa da
+uygulandığı için eşleştirme simetrisi korunuyor (K-08'deki simetri ilkesi).
+Kaybedilen tek şey Türkçe'de ı/i ayrımı; iş ilanı ve CV sözlüğünde bu ayrımın
+anlam değiştirdiği bir çift pratikte görülmüyor.
+
+Ek listesi de katlanmak zorundaydı: aksi hâlde "sına" eki, katlanmış
+"çalişmasina" köküyle eşleşmiyordu. Kaynakta okunabilir Türkçe biçimde
+duruyor, karşılaştırma biçimine modül yüklenirken çevriliyor.
+
+**Ders:** Yerel duyarlı küçültme, tek dilli bir varsayımdır. İki dilli veri
+işleyen her yerde — ki bu ürünün tamamı öyle — her iki dilin kurallarının
+birbirini nasıl bozduğu ayrıca düşünülmeli.

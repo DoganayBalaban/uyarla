@@ -103,3 +103,47 @@ describe("flattenSkillLines", () => {
     expect(flattenSkillLines({ lines: [], languages: [], certifications: [] })).toEqual([])
   })
 })
+
+describe("flattenSkillLines · gerçek CV'lerden çıkan kirlilikler", () => {
+  it("bölüm başlığı öğe olarak geldiğinde de eler", () => {
+    // Gerçek vaka: "TECHNICAL SKILLS" label değil item olarak gelmişti ve
+    // beceri listesine sızmıştı.
+    expect(
+      flattenSkillLines({
+        lines: [{ label: "", items: ["TECHNICAL SKILLS", "LLMs", "RAG"] }],
+        languages: [], certifications: [],
+      }),
+    ).toEqual(["LLMs", "RAG"])
+  })
+
+  it("dil ve sertifika başlıklarını beceri saymaz", () => {
+    // Beceri bölümü olmayan CV'lerde bölümleme bunları skillsBlock'a koyuyor.
+    expect(
+      flattenSkillLines({
+        lines: [
+          { label: "DİLLER", items: [] },
+          { label: "SERTİFİKALAR / BELGELER", items: [] },
+          { label: "EĞİTİM", items: [] },
+          { label: "Python", items: [] },
+        ],
+        languages: [], certifications: [],
+      }),
+    ).toEqual(["Python"])
+  })
+
+  it("dil ve sertifika değerlerini beceri listesinden çıkarır", () => {
+    // Bir katılım belgesinin "Bilgisayar Mühendisliği mezunu" gereksinimiyle
+    // eşleşmesi uydurma eşleşmedir (K-20).
+    expect(
+      flattenSkillLines({
+        lines: [
+          { label: "B1 seviye İngilizce", items: [] },
+          { label: "Modern Yazılım Mühendisliği Katılım Belgesi", items: [] },
+          { label: "Python", items: [] },
+        ],
+        languages: ["B1 seviye İngilizce"],
+        certifications: ["Modern Yazılım Mühendisliği Katılım Belgesi"],
+      }),
+    ).toEqual(["Python"])
+  })
+})
