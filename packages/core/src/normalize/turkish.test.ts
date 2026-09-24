@@ -2,9 +2,23 @@ import { describe, it, expect } from "vitest"
 import { containsKeyword, normalizeText, normalizeToken, normalizeTokens } from "./turkish.js"
 
 describe("normalizeText", () => {
-  it("Türkçe büyük İ ve I harflerini doğru küçültür", () => {
+  it("Türkçe büyük İ harfini doğru küçültür", () => {
     expect(normalizeText("İSTANBUL")).toBe("istanbul")
-    expect(normalizeText("IŞIK")).toBe("ışık")
+  })
+
+  it("büyük harfli İngilizce terimi küçük hâliyle aynı köke indirir", () => {
+    // CV'lerde başlıklar ve terimler büyük harfle yazılır, ilanlarda küçük.
+    // Türkçe küçültme "I"yı "ı" yaptığı için bunlar eşleşmiyordu (K-21).
+    for (const terim of ["API VALIDATION", "MANUAL TESTING", "MICROSERVICES", "JIRA", "CI/CD"]) {
+      expect(normalizeText(terim)).toBe(normalizeText(terim.toLowerCase()))
+    }
+  })
+
+  it("Türkçe terimlerde de büyük-küçük tutarlılığı korunur", () => {
+    expect(normalizeText("BİLGİSAYAR MÜHENDİSLİĞİ")).toBe(
+      normalizeText("Bilgisayar Mühendisliği"),
+    )
+    expect(normalizeText("YAZILIM GELİŞTİRİCİ")).toBe(normalizeText("yazılım geliştirici"))
   })
 
   it("noktalama işaretlerini boşluğa çevirir", () => {
