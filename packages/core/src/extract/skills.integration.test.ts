@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { LmStudioProvider } from "../llm/lmstudio.js"
 import { llmConfigFromEnv } from "../llm/types.js"
-import { SkillsSchema, skillsJsonSchema } from "../schemas/resume.js"
+import { SkillLinesSchema, skillLinesJsonSchema } from "../schemas/resume.js"
+import { flattenSkillLines } from "./skills.js"
 import { SKILLS_PROMPT } from "./prompts.js"
 
 /**
@@ -27,16 +28,50 @@ React, ReactFlow, Zustand, JavaScript/TypeScript
 DevOps / Tools
 Docker, Git, GitHub Actions, Linux`
 
+/**
+ * İki alt başlıklı gerçek bir CV bölümü. Model bu biçimde iki bölümden
+ * yalnızca birini döndürüyor, diğerini tümüyle atıyordu (K-19).
+ */
+const IKI_BOLUMLU = `Core Skills
+Test Case Design & Execution: Creating and executing structured test scenarios.
+Manual Testing: Performing functional, regression, and integration testing.
+Technical Skills
+Programming & Query Languages: Java, SQL Queries
+Automation Testing Tools: Selenium WebDriver, TestNG
+QA & Collaboration Tools: JIRA, Postman`
+
 describe("beceri çıkarımı · gerçek model", () => {
+  it("iki alt başlıklı bölümde hiçbir grubu atlamaz", async () => {
+    const llm = new LmStudioProvider(llmConfigFromEnv())
+    const { data } = await llm.extract({
+      prompt: SKILLS_PROMPT,
+      schemaName: "resume_skills",
+      schema: skillLinesJsonSchema,
+      input: IKI_BOLUMLU,
+    })
+    const skills = flattenSkillLines(SkillLinesSchema.parse(data))
+    const kucuk = skills.map((s) => s.toLowerCase()).join(" ")
+
+    console.log(`[ölçüm] iki bölümlü: ${skills.length} beceri — ${JSON.stringify(skills)}`)
+
+    // Her iki gruptan da beceri gelmeli.
+    expect(kucuk).toContain("manual testing")
+    expect(kucuk).toContain("java")
+    expect(kucuk).toContain("jira")
+    // Bölüm başlıkları beceri sayılmamalı.
+    expect(skills.map((s) => s.toLowerCase())).not.toContain("core skills")
+    expect(skills.map((s) => s.toLowerCase())).not.toContain("technical skills")
+  })
+
   it("kategorili beceri bölümünde başlıkları değil becerileri çıkarır", async () => {
     const llm = new LmStudioProvider(llmConfigFromEnv())
     const { data } = await llm.extract({
       prompt: SKILLS_PROMPT,
       schemaName: "resume_skills",
-      schema: skillsJsonSchema,
+      schema: skillLinesJsonSchema,
       input: KATEGORILI_BLOK,
     })
-    const { skills } = SkillsSchema.parse(data)
+    const skills = flattenSkillLines(SkillLinesSchema.parse(data))
     const kucuk = skills.map((s) => s.toLowerCase())
 
     console.log(`[ölçüm] ${skills.length} beceri çıkarıldı`)

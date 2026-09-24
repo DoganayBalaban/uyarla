@@ -43,10 +43,34 @@ const RESPONSES: Record<string, unknown> = {
       { school: "İTÜ", degree: null, field: "Bilgisayar Mühendisliği", endDate: "2021" },
     ],
   },
-  resume_skills: { skills: ["React", "TypeScript"], languages: [], certifications: [] },
+  resume_skills: {
+    lines: [{ label: "Beceriler", items: ["React", "TypeScript"] }],
+    languages: [],
+    certifications: [],
+  },
 }
 
 describe("extractResumeProfile", () => {
+  it("beceri satırlarını düzleştirip profile koyar", async () => {
+    // Model satırları kopyalıyor, "hangisi beceri" kararı kodda veriliyor (K-19).
+    const llm = fakeLlm({
+      ...RESPONSES,
+      resume_skills: {
+        lines: [
+          { label: "Technical Skills", items: [] },
+          { label: "Diller", items: ["Java", "SQL"] },
+          { label: "Manual Testing", items: ["Performing regression testing."] },
+        ],
+        languages: ["İngilizce"],
+        certifications: [],
+      },
+    })
+    const { data } = await extractResumeProfile(llm, "ham cv metni")
+
+    expect(data.skills).toEqual(["Java", "SQL", "Manual Testing"])
+    expect(data.languages).toEqual(["İngilizce"])
+  })
+
   it("bölümleme ve blok çıkarımlarını tek profilde birleştirir", async () => {
     const llm = fakeLlm(RESPONSES)
     const { data } = await extractResumeProfile(llm, "ham cv metni")

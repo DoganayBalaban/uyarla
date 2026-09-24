@@ -22,4 +22,5 @@ storage/
 # Ham CV'ler ve ilan metinleri — kişisel veri, depoya girmez.
 # Değerlendirme setine yalnızca anonimleştirilmiş hâlleri girer (spec §10, KVKK).
 docs/cvler/
+docs/ilan/
 veri/

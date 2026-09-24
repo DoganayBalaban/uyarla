@@ -725,3 +725,68 @@ maliyeti, ürünün ana çıktısının sessizce anlamsızlaşması.
 Bu hatayı **değerlendirme seti yakaladı** — tam da kurulma amacı buydu.
 Sentetik iki çiftlik sette görünmüyordu ve üretimde ancak kullanıcı
 şikâyetiyle öğrenilirdi.
+
+---
+
+## K-19 · Beceri çıkarımı: model transkribe eder, yorumu kod yapar
+
+**Tarih:** 24 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1, Görev 6
+
+Beceri çıkarımı artık modelden "beceri listesi" istemiyor; **satır satır
+transkripsiyon** istiyor. Hangi parçanın beceri olduğu kararı kodda,
+`flattenSkillLines` içinde veriliyor.
+
+```
+model döndürür:  { label: "Programming Languages", items: ["Java", "SQL"] }
+                 { label: "Manual Testing", items: ["Performing regression testing."] }
+
+kod karar verir: items kısa ve noktasız terimlerse → onlar beceridir
+                 değilse → label beceridir
+                 label bir bölüm başlığıysa → hiçbiri
+```
+
+**Bulgu:** K-17'deki düzeltmeden sonra bile beceri çıkarımı kırılmaya devam
+etti. Değerlendirme setindeki bir test mühendisi CV'si üç ilanda da **0**
+aldı; CV'de `Java`, `SQL`, `Selenium`, `JIRA`, `Postman` yazılı olmasına
+rağmen hiçbiri çıkarılmamıştı.
+
+Sebep, o CV'nin **iki ayrı beceri bölümü** olmasıydı:
+
+```
+Core Skills          → Test Case Design, Manual Testing…   (isim: açıklama)
+Technical Skills     → Programming Languages: Java, SQL     (kategori: a, b, c)
+```
+
+Bölümleme doğru çalışıyordu — iki bölüm de `skillsBlock` içindeydi. Model,
+bloğu tek bir liste sanıp **gruplardan yalnızca birini** döndürüyordu.
+
+**Prompt ile çözülemedi.** İki farklı prompt denendi ve ikisi de yalnızca bir
+grubu aldı — üstelik farklı grupları: mevcut prompt teknik becerileri alıp
+anlatı becerilerini attı, yeni prompt tam tersini yaptı. Sorun ifade değil,
+modelden **tek çağrıda hem yapıyı çözmesinin hem yorumlamasının** istenmesiydi.
+
+Gruplu şema (`groups: [{ heading, skills }]`) denendi: iki grup da geldi ama
+bu sefer iç kategorilerin adları beceri yerine geçti — yapı aslında üç
+katmanlıydı (bölüm → kategori → beceri), şema iki katmanlıydı.
+
+**Çözüm satır transkripsiyonu oldu.** Model satırları kusursuz kopyalıyor:
+etiketler doğru, terimler doğru, hiçbir satır düşmüyor. Yorum kodda yapılınca
+deterministik ve test edilebilir hâle geliyor — sekiz birim testi kuralı
+kilitliyor.
+
+**Ölçüm:**
+
+| CV biçimi | Önce | Sonra |
+|---|---|---|
+| İki bölümlü (Core + Technical) | bir grup, 6 beceri | **8 beceri, iki grup da** |
+| Kategorili (AI/LLM, Backend, …) | 4–21 arası oynak | **23 beceri, kategori sızmıyor** |
+
+Prompt'a üç satır biçimi de öğretildi: `"Kategori: a, b, c"`,
+`"Beceri: açıklama"` ve kategorinin kendi satırında olup terimlerin alt
+satırda geldiği biçim. Sonuncusu eklenmeden kategori adları beceri olarak
+sızıyordu — K-13'te uğraştığımız yanlış pozitif kaynağının aynısı.
+
+**Genel ders — K-18'in devamı:** Modelden yorum istenirse hata sessiz olur;
+transkripsiyon istenip yorum kodda yapılırsa hata testle yakalanır. Bu
+projede aynı desen üç kez çıktı: gereksinim listesinin erken kapanması
+(K-11), anahtar kelime hizalaması (K-18), beceri çıkarımı (K-19).

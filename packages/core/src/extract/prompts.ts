@@ -33,20 +33,32 @@ Her eğitim kaydı için okul, derece, bölüm ve bitiş yılını çıkar.
 Bilgi yoksa null yaz. CV'de olmayan hiçbir bilgi ekleme.`
 
 export const SKILLS_PROMPT = `Sana bir CV'nin beceriler bölümü verilecek.
-Becerileri, bilinen dilleri ve sertifikaları ayrı dizilere ayır.
 
-Beceri bölümü kategorilere ayrılmış olabilir ("AI / LLM", "Backend",
-"Frontend", "DevOps / Tools" gibi). Kategori BAŞLIKLARINI yazma — onların
-ALTINDAKİ tek tek becerileri yaz. Her beceri ayrı bir dizi elemanı olmalı,
-virgülle ayrılmış tek bir metin değil.
+Bölümdeki HER satır için bir kayıt döndür. Hiçbir satırı atlama, sırayı koru.
+Bölüm birden çok alt başlık içerebilir ("Core Skills", "Technical Skills",
+"Araçlar" gibi); hepsinin altındaki satırları da kaydet.
 
-Örnek girdi:
+Her satır "Etiket: içerik" biçimindedir:
+- "label" alanına iki nokta üst üsteden ÖNCEKİ kısmı yaz.
+- İçerik kısa terimlerin virgüllü listesiyse, terimleri "items" dizisine
+  ayrı ayrı yaz.
+- İçerik bir cümle veya açıklamaysa "items" dizisini BOŞ bırak.
+
+Örnek: "Programming Languages: Java, SQL"
+   ->  { "label": "Programming Languages", "items": ["Java", "SQL"] }
+Örnek: "Manual Testing: Performing functional and regression testing"
+   ->  { "label": "Manual Testing", "items": [] }
+
+Kategori adı kendi satırında, terimler de bir ALT satırda olabilir:
   Backend
   Python, FastAPI, PostgreSQL
-Örnek çıktı:
-  ["Python", "FastAPI", "PostgreSQL"]     ("Backend" yazılmaz)
+Bu durumda ikisini TEK kayıtta birleştir:
+  { "label": "Backend", "items": ["Python", "FastAPI", "PostgreSQL"] }
+Kategori adını ayrı bir terim olarak yazma.
 
-Her beceriyi metinde yazıldığı gibi yaz. CV'de olmayan hiçbir beceri ekleme.`
+Yalnız başına duran bölüm başlıkları için kayıt aç, "items" boş kalsın.
+Bilinen dilleri ve sertifikaları ayrı dizilere koy.
+CV'de olmayan hiçbir şey ekleme.`
 
 export const JOB_PROMPT = `Sana bir iş ilanının metni verilecek.
 Pozisyon adını, şirketi, kıdem seviyesini ve ilanın dilini belirle.
