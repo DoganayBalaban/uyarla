@@ -24,6 +24,41 @@ export const TITLE_SYNONYMS: Record<string, string> = {
   mühendis: "muhendis",
   engineer: "muhendis",
 
+  // --- Bölüm ve alan adları (çapraz dilli köprü) ---
+  // Değerlendirme setindeki dört kaçırmanın üçü buradan geliyordu: ilan
+  // "Yazılım Mühendisliği" derken CV "B.Sc. Software Engineering" yazıyor ve
+  // iki taraf buluşamıyordu. Ek soyma bu köprüyü kuramaz; sözlük gerekiyor.
+  yazılım: "yazilim",
+  yazılımı: "yazilim",
+  software: "yazilim",
+  bilgisayar: "bilgisayar",
+  computer: "bilgisayar",
+  mühendislik: "muhendis",
+  mühendisliği: "muhendis",
+  mühendisi: "muhendis",
+  engineering: "muhendis",
+  bilim: "bilim",
+  bilimleri: "bilim",
+  bilimi: "bilim",
+  science: "bilim",
+  sciences: "bilim",
+  veri: "veri",
+  data: "veri",
+  makine: "makine",
+  machine: "makine",
+  öğrenmesi: "ogrenme",
+  öğrenme: "ogrenme",
+  learning: "ogrenme",
+  ajan: "agent",
+  ajanı: "agent",
+  agent: "agent",
+  agents: "agent",
+  agentic: "agent",
+  mimarisi: "mimari",
+  mimarileri: "mimari",
+  architecture: "mimari",
+  architectures: "mimari",
+
   // --- Teknoloji yazım varyantları ---
   // "next.js" gibi noktalı yazımlar normalizeText'te "next js" olur;
   // burada yalnızca bitişik tek kelime varyantları eşlenir.

@@ -136,3 +136,27 @@ describe("aşırı soyma yanlış pozitif üretmiyor mu", () => {
     expect(containsKeyword(cv, "yazılım geliştirme")).toBe(false)
   })
 })
+
+describe("çapraz dilli bölüm ve alan adları", () => {
+  // Değerlendirme setindeki dört kaçırmanın üçü buradan geliyordu (K-25).
+  const ciftler: Array<[string, string]> = [
+    ["Yazılım Mühendisliği", "Software Engineering"],
+    ["Bilgisayar Mühendisliği", "Computer Engineering"],
+    ["Bilgisayar Bilimleri", "Computer Science"],
+    ["makine öğrenmesi", "machine learning"],
+    ["veri bilimi", "data science"],
+    ["agent mimarileri", "agent architectures"],
+  ]
+
+  for (const [tr, en] of ciftler) {
+    it(`"${tr}" ile "${en}" eşleşir`, () => {
+      expect(containsKeyword(`Mezuniyet: ${en}`, tr)).toBe(true)
+      expect(containsKeyword(`Bölüm: ${tr}`, en)).toBe(true)
+    })
+  }
+
+  it("alakasız bölümü eşleştirmez", () => {
+    expect(containsKeyword("Endüstri Mühendisliği mezunu", "Bilgisayar Mühendisliği")).toBe(false)
+    expect(containsKeyword("Graphic Design", "Software Engineering")).toBe(false)
+  })
+})

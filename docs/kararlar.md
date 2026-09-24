@@ -1094,3 +1094,46 @@ Eşleşme kaynağı: kelime 11 · anlamsal 9
 Kalan 3 uydurmanın üçü de yeni mezun CV'sinde ve anlamsal eşleşmeden geliyor:
 yapay zekâ eğitmenliği deneyimi, üretken yapay zekâ yetkinliği gereksinimine
 yakın düşüyor. Sonraki iyileştirme turunun ilk adayı bu.
+
+---
+
+## K-25 · Çapraz dilli bölüm ve alan adları sözlüğe eklendi
+
+**Tarih:** 25 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1+
+
+`TITLE_SYNONYMS` sözlüğüne bölüm ve alan adlarının çapraz dilli karşılıkları
+eklendi: `software ↔ yazılım`, `engineering ↔ mühendislik`,
+`computer ↔ bilgisayar`, `machine learning ↔ makine öğrenmesi`,
+`data science ↔ veri bilimi`, `agent ↔ ajan`, `architecture ↔ mimari`.
+
+**Gerekçe:** Değerlendirme setindeki **dört kaçırmanın üçü** aynı sebepten
+geliyordu — ilan Türkçe "Yazılım Mühendisliği" derken CV İngilizce "B.Sc.
+Software Engineering" yazıyor ve iki taraf buluşamıyordu. Ek soyma bu köprüyü
+kuramaz; iki dilin kelimeleri arasında morfolojik ilişki yok.
+
+K-08'de sözlük için şu kuralı koymuştuk:
+
+> *"Başlangıç hâlidir ve tahminle şişirilmez: her ekleme, değerlendirme
+> setinde görülmüş gerçek bir kaçırmayı kapatmalı."*
+
+Bu ekleme o kuralın ilk uygulaması: eklenen her terim, ölçülmüş bir kaçırmayı
+kapatıyor.
+
+**Ölçüm:**
+
+| | Önce | Sonra |
+|---|---|---|
+| İsabet oranı | 87.5% | **91.1%** |
+| Kaçırma | 4 | **2** |
+| Uydurma | 3 | 3 |
+| Kelime eşleşmesi | 11 | 13 |
+
+Uydurma sayısı değişmedi — yani sözlük yanlış pozitif üretmedi. Testler ayrıca
+alakasız bölümlerin eşleşmediğini doğruluyor (`Endüstri Mühendisliği` ≠
+`Bilgisayar Mühendisliği`, `Graphic Design` ≠ `Software Engineering`).
+
+**Kalan 2 kaçırma ve 3 uydurma:** Üçü de yeni mezun CV'sinde ve anlamsal
+eşleşmeden geliyor — yapay zekâ eğitmenliği deneyimi, üretken yapay zekâ
+yetkinliği gereksinimine yakın düşüyor. Bu, eşik ayarıyla çözülecek bir şey
+değil; gereksinimin "profesyonel deneyim" boyutunu değerlendirmek gerekiyor ve
+sistem şu an bunu yapmıyor. Sonraki iyileştirme turunun konusu.
