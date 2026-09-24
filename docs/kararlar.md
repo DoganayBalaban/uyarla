@@ -667,3 +667,61 @@ Sentetik test verisi biçim çeşitliliğini göstermiyor. Dört hatanın üçü
 (K-13 yanlış kanıt, K-17 beceri çıkarımı, K-11 eksik gereksinimler) ancak
 gerçek veriyle ortaya çıktı. Değerlendirme setinin gerçek veriden kurulması
 bir tercih değil, ön koşul.
+
+---
+
+## K-18 · Anahtar kelime hizalaması sıraya değil metne dayanıyor
+
+**Tarih:** 24 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1, Görev 7
+
+İlan çıkarımının ikinci çağrısı artık her anahtar kelime listesiyle birlikte
+ait olduğu gereksinimin metnini de döndürüyor; hizalama bu metinle
+doğrulanıyor. Eşleşme bulunamayan gereksinim anahtar kelimesiz bırakılıyor.
+
+**Bulgu:** Değerlendirme seti genişletilirken saçma skorlar çıktı — bir AI
+mühendisi CV'si bir AI mühendisi ilanına **5** puan aldı, aynı ilana bir
+yazılım test mühendisi CV'si **20** aldı.
+
+Sebep, anahtar kelimelerin bir gereksinim kaymış olmasıydı:
+
+```
+Gereksinim: "2+ years building LLM or agent systems"
+   kw:      ["API", "arayüz programlama"]      ← 1. gereksinime ait
+
+Gereksinim: "At least 5 hours overlap with PST timezone"
+   kw:      ["LangGraph", "langgraph"]         ← 3. gereksinime ait
+```
+
+Model, ilk gereksinimin içindeki iki nokta üst üsteden sonraki listeyi
+("APIs, services, data infrastructure, testing, CI/CD, on-call") ayrı
+gereksinimler sayıp her birine anahtar kelime üretmişti. **Sayı tesadüfen
+tuttuğu için** K-11'deki uzunluk kontrolü devreye girmedi.
+
+Hata koşulluydu: beş ilandan yalnızca birinde, bileşik ve düzyazı üsluplu
+gereksinimler olan İngilizce ilanda görüldü. Diğer dördünde hizalama
+doğruydu.
+
+**Düzeltme:** Şema `keywords: string[][]` yerine
+`items: [{ text, keywords }]`. Eşleştirme önce tam metin, bulunamazsa
+kapsama yoluyla (asgari 15 karakter sınırıyla, kısa metinlerin yanlış
+eşleşmesini önlemek için) yapılıyor. Prompt'a ayrıca "iki nokta üst üsteden
+sonraki listeyi parçalama, tek gereksinimdir" kuralı eklendi.
+
+Ölçüldü: kırılan ilanda **12/12 gereksinim doğru hizalandı**, anahtar
+kelimesiz kalan yok. Bileşik gereksinim artık tek parça kalıyor ve alt
+maddeleri kendi anahtar kelimeleri oluyor.
+
+**K-11'deki karar hatalıydı ve gerekçesi de kayıtlıydı.** O zaman iki biçim
+ölçülmüş, `items[{text, keywords}]` 200 token harcadığı ve daha gürültülü
+kelimeler ürettiği için reddedilmiş, düz dizi seçilmişti. Yanlış olan,
+**token maliyeti için doğrulanabilirliği feda etmekti**: düz biçimde
+hizalamanın doğru olduğunu kontrol etmenin hiçbir yolu yoktu, sessizce
+kırıldığında da kimse fark etmedi.
+
+**Ders:** Bir sıra varsayımına dayanan her yerde, o sıranın doğruluğunu
+kontrol edecek bir alan taşımak gerekir. Maliyeti birkaç yüz token; yokluğun
+maliyeti, ürünün ana çıktısının sessizce anlamsızlaşması.
+
+Bu hatayı **değerlendirme seti yakaladı** — tam da kurulma amacı buydu.
+Sentetik iki çiftlik sette görünmüyordu ve üretimde ancak kullanıcı
+şikâyetiyle öğrenilirdi.

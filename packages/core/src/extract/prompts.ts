@@ -68,7 +68,12 @@ export const KEYWORDS_PROMPT = `Sana bir iş ilanındaki gereksinimlerin
 numaralı listesi verilecek. Her gereksinim için, o gereksinimi bir CV'de
 ararken kullanılacak anahtar kelimeleri üret.
 
-Sırayı ve sayıyı koru: kaç gereksinim verildiyse o kadar liste döndür.
+Her sonuç iki alan taşır: "text" (gereksinimin metni, sana verildiği gibi
+birebir kopyala) ve "keywords".
+
+Sırayı ve sayıyı koru: kaç gereksinim verildiyse o kadar sonuç döndür. Bir
+gereksinimin içinde iki nokta üst üsteden sonra liste varsa ("APIs, services,
+testing" gibi) onu PARÇALAMA — tek bir gereksinimdir, tek bir sonuç yaz.
 
 Anahtar kelimeler AYNI ŞEYİN BAŞKA ADLARI olmalı. Yazım varyantları,
 kısaltmalar ve çeviriler yaz. Daha geniş kategorileri, ilgili kavramları veya

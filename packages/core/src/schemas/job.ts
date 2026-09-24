@@ -33,12 +33,29 @@ export const JobPostingDraftSchema = JobPostingSchema.omit({ requirements: true 
 })
 
 /**
- * İkinci çağrının şeması: gereksinim sırasıyla hizalı anahtar kelime listeleri.
- * Düz dizi-içinde-dizi biçimi, nesne sarmalayan biçime göre hem daha az token
- * harcıyor hem Türkçe terimleri daha iyi koruyor (ölçüldü).
+ * İkinci çağrının şeması: her anahtar kelime listesi, ait olduğu gereksinimin
+ * metnini de taşır.
+ *
+ * Önceki biçim yalnızca `keywords: string[][]` idi ve hizalamayı **sıraya
+ * güvenerek** yapıyordu. Değerlendirme setinde sessizce kırıldı: bileşik bir
+ * gereksinimde ("4+ years of production software engineering: APIs, services,
+ * data infrastructure, testing, CI/CD, on-call") model iki nokta üst üsteden
+ * sonraki listeyi ayrı gereksinimler sayıp her birine anahtar kelime üretti.
+ * Sayı tesadüfen tuttuğu için uzunluk kontrolü devreye girmedi ve anahtar
+ * kelimeler bir gereksinim kaymış hâlde yapıştı — bir AI mühendisi CV'si AI
+ * mühendisi ilanına 5 puan aldı (K-18).
+ *
+ * Metin taşınması token maliyetini artırıyor ama hizalamayı **doğrulanabilir**
+ * kılıyor: eşleşmeyen satırın anahtar kelimeleri boş bırakılır.
  */
 export const RequirementKeywordsSchema = z.object({
-  keywords: z.array(z.array(z.string())),
+  items: z.array(
+    z.object({
+      /** Gereksinimin metni; hizalama bununla doğrulanır. */
+      text: z.string(),
+      keywords: z.array(z.string()),
+    }),
+  ),
 })
 
 export type Requirement = z.infer<typeof RequirementSchema>

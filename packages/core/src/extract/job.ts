@@ -1,4 +1,5 @@
 import type { ExtractResult, LlmProvider } from "../llm/types.js"
+import { normalizeText } from "../normalize/turkish.js"
 import {
   JobPostingDraftSchema,
   JobPostingSchema,
@@ -44,17 +45,52 @@ export async function extractJobPosting(
     schema: requirementKeywordsJsonSchema,
     input: posting.requirements.map((r, i) => `${i + 1}. ${r.text}`).join("\n"),
   })
-  const { keywords: listeler } = RequirementKeywordsSchema.parse(keywords.data)
+  const { items } = RequirementKeywordsSchema.parse(keywords.data)
 
-  // Hizalama garanti değil. Eksik kalan gereksinim anahtar kelimesiz kalır;
-  // skorlamada anlamsal eşleşmeye düşer, sessizce yanlış eşleşmez.
   const data = JobPostingSchema.parse({
     ...posting,
-    requirements: posting.requirements.map((req, i) => ({
+    requirements: posting.requirements.map((req) => ({
       ...req,
-      keywords: listeler[i] ?? [],
+      keywords: keywordsForRequirement(req.text, items),
     })),
   })
 
   return { data, tokens: draft.tokens + keywords.tokens }
+}
+
+/** Metin eşleşmesinin kapsama yoluyla kabul edilebilmesi için asgari uzunluk. */
+const MIN_KAPSAMA_UZUNLUGU = 15
+
+/**
+ * Bir gereksinimin anahtar kelimelerini, modelin döndürdüğü metinle
+ * doğrulayarak bulur.
+ *
+ * Sıraya güvenmek yetmiyor: model bileşik bir gereksinimi alt maddelerine
+ * bölüp her birine anahtar kelime üretebiliyor. Sayı tesadüfen tuttuğunda
+ * uzunluk kontrolü bunu yakalamıyor ve anahtar kelimeler bir gereksinim
+ * kaymış hâlde yapışıyor (K-18).
+ *
+ * Eşleşme bulunamazsa boş dizi döner: yanlış gereksinime anahtar kelime
+ * yapıştırmaktansa o gereksinimi anlamsal eşleşmeye bırakmak yeğdir.
+ */
+function keywordsForRequirement(
+  requirementText: string,
+  items: Array<{ text: string; keywords: string[] }>,
+): string[] {
+  const aranan = normalizeText(requirementText)
+
+  for (const item of items) {
+    if (normalizeText(item.text) === aranan) return item.keywords
+  }
+
+  // Model metni kısaltmış veya uzatmış olabilir; kapsama yoluyla eşleştir.
+  // Kısa metinlerde kapsama yanlış eşleşme üretir, bu yüzden alt sınır var.
+  for (const item of items) {
+    const echo = normalizeText(item.text)
+    const kisa = Math.min(echo.length, aranan.length)
+    if (kisa < MIN_KAPSAMA_UZUNLUGU) continue
+    if (echo.includes(aranan) || aranan.includes(echo)) return item.keywords
+  }
+
+  return []
 }

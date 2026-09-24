@@ -44,7 +44,9 @@ function fakeLlm(overrides: Record<string, unknown> = {}) {
     resume_experience: { experience: PROFILE.experience },
     resume_skills: { skills: ["React"], languages: [], certifications: [] },
     job_posting_draft: POSTING_DRAFT,
-    requirement_keywords: { keywords: [["react"]] },
+    requirement_keywords: {
+      items: [{ text: "React deneyimi", keywords: ["react"] }],
+    },
     ...overrides,
   }
   return {
