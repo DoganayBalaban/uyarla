@@ -1,0 +1,89 @@
+K. I.
+Kahire, Mısır
++90 5XX XXX XX XX | aday@ornek.com | LinkedIn : K. I.
+Professional Summary
+Software Testing Engineer with hands-on experience in manual, automation, integration, and API testing
+within Agile environments. Skilled in test case design, defect tracking, test documentation, and validating
+web applications using Selenium WebDriver, Postman, JIRA, Java, and TestNG. Strong understanding of
+software quality assurance processes, ISTQB principles, and software testing best practices.
+Professional Experience
+Bir Veri Şirketi
+Software Testing Engineer
+Sep 2025 - Present
+Manual & Integration Testing: Execute manual and integration testing activities for web
+applications and internal systems to validate functionality, system behavior, and release quality.
+Defect Tracking & Issue Resolution: Identify, document, and follow up on defects using
+structured bug reporting while collaborating with development teams to ensure timely resolution.
+Test Scenario Execution: Perform end-to-end test scenarios across multiple platforms to verify
+business requirements and application workflows.
+Cross-Functional Collaboration: Coordinate with product owners, developers, and QA teams
+during testing cycles to improve product stability and testing coverage.
+Release Validation: Support pre-release validation and regression testing activities to maintain
+application performance and deployment readiness.
+Bir Yazılım Şirketi
+Software Testing Engineer Intern
+Apr 2025 - Aug 2025
+Test Documentation: Prepared test plans, test cases, defect reports, and testing
+documentation for web application testing activities.
+Manual & API Testing: Conducted manual testing and API validation using Postman while
+reporting and tracking defects through JIRA.
+Automation Testing: Developed automation test scripts using Selenium WebDriver, Java, TestNG,
+and Page Object Model (POM) principles to improve testing efficiency.
+Education
+Bir Devlet Üniversitesi
+Bachelor of Computer and Information Science
+Grade: Very Good
+2023
+
+-- 1 of 3 --
+
+Projects
+Automation Testing Project – Automation Exercise
+Developed automated test cases using Selenium WebDriver with Java.
+Applied Page Object Model (POM) and TestNG.
+Automated key e-commerce scenarios including registration, login, search, filtering, and cart
+functionalities.
+Used Maven for project management and Git for version control.
+Automation Testing Project – ElMatar Website
+Designed and implemented automated test cases for the ElMatar website.
+Used Selenium WebDriver with Java and TestNG.
+Applied Page Object Model (POM) to improve test maintainability and reusability.
+Performed functional and regression automation testing.
+API Testing Project – Eleagi Website
+Designed and executed API test cases using Postman.
+Validated API responses, status codes, request/response data, and authentication.
+Used Postman Collections, Environment Variables, and Dynamic Variables.
+Performed positive and negative API testing.
+Manual Testing Project – Umberalla Website
+Designed and executed manual test cases for the Umberalla website.
+Performed Functional, Integration, Smoke, Sanity, and Regression Testing.
+Reported and documented defects with clear steps to reproduce and expected/actual results.
+Verified application functionality across different scenarios and user flows.
+Core Skills
+Test Case Design & Execution: Creating and executing structured test scenarios to validate software
+functionality and business requirements.
+Defect Tracking & Bug Reporting: Identifying, documenting, prioritizing, and following up on
+defects to support issue resolution processes.
+Manual Testing: Performing functional, regression, and integration testing for web-based
+applications and systems.
+API Validation: Testing APIs and validating request/response behavior to ensure service
+reliability and accuracy.
+Agile Collaboration: Working within Agile/Scrum teams while coordinating with developers and
+stakeholders during testing cycles.
+Test Documentation: Preparing clear testing documentation including test plans, reports, and execution
+summaries.
+
+-- 2 of 3 --
+
+Technical Skills
+Programming & Query Languages: Java, SQL Queries
+Automation Testing Tools: Selenium WebDriver, TestNG, Page Object Model (POM)
+QA & Collaboration Tools: JIRA, Postman
+Testing Methodologies: Agile Methodologies (Scrum), ISTQB Testing Concepts, Integration Testing
+Honors
+Top QC Student – Bir Yazılım Şirketi Software Testing Program
+Languages
+Arabic: Native
+English: Upper Intermediate (B2)
+
+-- 3 of 3 --

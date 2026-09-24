@@ -24,3 +24,7 @@ storage/
 docs/cvler/
 docs/ilan/
 veri/
+
+# Değerlendirme çıkarım önbelleği — türetilebilir, depoda durmasına gerek yok
+packages/core/eval/cache/
+packages/core/eval/inceleme.md

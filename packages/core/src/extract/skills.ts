@@ -35,10 +35,7 @@ export function flattenSkillLines(data: SkillLines): string[] {
 
   for (const line of data.lines) {
     const terimler = line.items.filter(
-      (item) =>
-        item.length <= MAX_BECERI_UZUNLUGU &&
-        !item.includes(".") &&
-        !bolumBasligiMi(item),
+      (item) => terimGibiMi(item) && !bolumBasligiMi(item),
     )
 
     if (terimler.length > 0) {
@@ -46,8 +43,12 @@ export function flattenSkillLines(data: SkillLines): string[] {
       continue
     }
 
+    // Etikete de aynı ölçüt uygulanıyor: bölümlemenin karıştığı CV'lerde
+    // deneyim cümleleri beceri bloğuna sızabiliyor ve etiket olarak geliyor.
     const etiket = line.label.trim()
-    if (etiket && !bolumBasligiMi(etiket)) beceriler.push(etiket)
+    if (etiket && terimGibiMi(etiket) && !bolumBasligiMi(etiket)) {
+      beceriler.push(etiket)
+    }
   }
 
   // Dil ve sertifikalar kendi alanlarında zaten var; beceri sayılmamalılar.
@@ -67,6 +68,11 @@ export function flattenSkillLines(data: SkillLines): string[] {
       }),
     ),
   ]
+}
+
+/** Kısa ve nokta içermeyen metin terimdir; değilse cümledir. */
+function terimGibiMi(metin: string): boolean {
+  return metin.length <= MAX_BECERI_UZUNLUGU && !metin.includes(".")
 }
 
 function bolumBasligiMi(metin: string): boolean {

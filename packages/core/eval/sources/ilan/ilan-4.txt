@@ -1,0 +1,30 @@
+İş ilanı hakkında
+Yarına ilham veren 37 yıl
+Hikayemiz, konuk ağırlama ve yeme-içme sektöründeki işletmelere dijital yönetim sistemleri sağladığımız 1989 yılında, daha fazla hayal kurarak başladı. Bugün bulunduğumuz noktaya, insana, çalışmaya, dürüstlüğe, sürdürülebilirliğe ve teknolojiye olan tutkumuzla ürettiğimiz, otel ve restoran operasyonlarını başarıya taşıyan çözümlerle ulaştık.Bulut tabanlı otel yönetim sistemlerinden restoran yönetim sistemlerine kadar geniş ürün yelpazemiz, her ölçekteki işletmenin ihtiyaçlarını karşılar. Dünyanın alanında öncü konuk ağırlama teknolojileri üreticisi Oracle ile güçlü bir iş ortağıyız. Oracle Hospitality ürünleri OPERA PMS (Otel Yönetim Yazılımı) ve Simphony POS (Restoran Otomasyon Yazılımı) çözümlerinin Türkiye’deki tek distribütörü olma ayrıcalığına da sahibiz.
+Bugün büyük bir mutlulukla bahsettiğimiz bu konuma, güçlü iş birliklerimiz, tutkuyla çalışan ve üreten ekibimiz, en önemlisi de müşterilerimize 7/24 teknik destek sunarak kazandığımız güven ile geldik.
+GENEL NİTELİKLER
+Bilgisayar Mühendisliği, Yazılım Mühendisliği, Bilgisayar Bilimleri veya ilgili bölümlerden mezun,
+Generative AI ve LLM tabanlı uygulamalar konusunda profesyonel proje geliştirme deneyimine sahip,
+AI Agent ve agentic workflow teknolojileri konusunda deneyimli,
+LangGraph, n8n veya benzeri agent orchestration ve workflow automation araçlarından en az biriyle uygulama geliştirmiş,
+LLM API’lerini kullanarak AI Agent, RAG veya benzeri LLM tabanlı uygulamalar geliştirmiş,
+AI çözümlerini PoC aşamasından production ortamına taşıma konusunda deneyimli,
+AI teknolojilerinin iş süreçlerine ve ürünlere uygulanması konusunda güçlü analitik düşünme ve problem çözme yeteneğine sahip,
+AI teknolojilerini ve yeni gelişmeleri yakından takip eden, farklı teknolojileri hızlı şekilde değerlendirebilen,
+İyi seviyede İngilizce bilen.
+
+İŞ TANIMI
+Şirketin AI-native organizasyona dönüşüm yol haritasının oluşturulmasına ve uygulanmasına katkı sağlamak,
+Farklı departman ve iş süreçlerini analiz ederek AI ile iyileştirilebilecek fırsatları belirlemek,
+AI use-case’lerini belirlemek, önceliklendirmek ve iş değerini ölçmek,
+AI Agent, RAG ve agentic workflow tabanlı çözümler geliştirmek ve hızlı PoC’ler oluşturmak,
+LangGraph, n8n ve benzeri teknolojilerle AI destekli otomasyon ve agentic workflow’lar tasarlamak,
+AI çözümlerinin şirket ürünleri, uygulamaları, API’leri, veritabanları ve iş süreçleriyle entegrasyonunu tasarlamak,
+Geliştirilen PoC’lerin production ortamına taşınması için Software Engineering ve ML Engineering ekipleriyle birlikte çalışmak,
+AI teknolojilerinin çalışanlar ve ekipler tarafından etkin şekilde kullanılmasını sağlayacak yöntem ve araçları geliştirmek,
+Yeni AI teknolojilerini, modelleri ve araçları değerlendirerek şirket için uygulanabilir olanları belirlemek,
+AI kullanımının kalite, verimlilik, maliyet ve iş sonuçlarına etkisini takip etmek,
+
+İşine odaklan, gerisini biz hallederiz!
+Özel sağlık sigortası: Sağlığını önemsiyoruz. Türkiye’de çoğu hastanede geçerli olan, genel sağlık sigortası.Öğle yemeği desteği: Öğle yemekleri için yemek ödemesi yapıyoruz! Ayrıca tüm süpermarketlerde geçerli!Teknoloji desteği: Bilgisayar, monitör ve diğer teknolojik araçlarSigara içmeme izni: Sağlıklı yaşamı desteklediğimizi söylemiştik! Sigara içmeyen çalışanlar için her sene +5 gün izin!Doğum günü izni: Doğum gününde kullanabilmen için 1 gün izinEğitim desteği: Eğitim, aklın gücünü geliştirir! Pozisyonunda gelişmene ve yeni şeyler öğrenmene yardımcı olacak eğitim bütçesi!Eğitim koçu: Protel ruhunu hissedebilmen için başladığınız gün itibariyle tüm işe alışma süreciniz boyunca seninle ilgilenecek olan bir eğitim koçunuz var!İngilizce kursu desteği: Daha küresel olma zamanı! İngilizceni geliştirmek için destek oluyoruz.
+Kişisel Verilerin Korunması Kanunu kapsamında kişisel verilerinizin işlenmesi ve işlenen kişisel verilerinize dair haklarınızla ilgili detaylı bilgiye https://www.protel.com.tr/calisan-adayi-aydinlatma-metni/ adresindeki Çalışan Adayı Aydınlatma Metni’nden ulaşabilirsiniz.

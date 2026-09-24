@@ -147,3 +147,32 @@ describe("flattenSkillLines · gerçek CV'lerden çıkan kirlilikler", () => {
     ).toEqual(["Python"])
   })
 })
+
+describe("flattenSkillLines · cümle sızıntısı", () => {
+  it("etiket bir cümleyse beceri saymaz", () => {
+    // Bölümlemenin karıştığı CV'lerde deneyim maddeleri beceri bloğuna
+    // sızıyor ve etiket olarak geliyor.
+    expect(
+      flattenSkillLines({
+        lines: [
+          { label: "Robotik kodlama, tasarım ve üretim eğitimleri verdim.", items: [] },
+          { label: "Öğrencilere proje geliştirme süreçlerinde mentorluk yaptım.", items: [] },
+          { label: "Python", items: [] },
+        ],
+        languages: [], certifications: [],
+      }),
+    ).toEqual(["Python"])
+  })
+
+  it("noktasız ama uzun bir etiketi de cümle sayar", () => {
+    expect(
+      flattenSkillLines({
+        lines: [
+          { label: "Eğitim içerikleri ve uygulamalı atölyeler hazırladım", items: [] },
+          { label: "Git & GitHub", items: [] },
+        ],
+        languages: [], certifications: [],
+      }),
+    ).toEqual(["Git & GitHub"])
+  })
+})

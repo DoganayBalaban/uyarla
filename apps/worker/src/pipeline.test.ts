@@ -42,6 +42,9 @@ function fakeLlm(overrides: Record<string, unknown> = {}) {
       summaryBlock: "", experienceBlock: "Acme...", educationBlock: "", skillsBlock: "React",
     },
     resume_experience: { experience: PROFILE.experience },
+    // Kod bölümlemesi başlıksız metinde ham metni her bloğa verdiği için
+    // eğitim çağrısı da yapılıyor.
+    resume_education: { education: [] },
     resume_skills: {
       lines: [{ label: "Beceriler", items: ["React"] }],
       languages: [],
@@ -99,7 +102,8 @@ describe("runAnalysis · mutlu yol", () => {
   it("token sayılarını toplayıp kaydeder", async () => {
     const completeAnalysis = vi.fn()
     await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), GIRDI)
-    // 3 CV çağrısı + 2 ilan çağrısı × 10 token
+    // 3 CV çağrısı (deneyim, eğitim, beceri) + 2 ilan çağrısı × 10 token.
+    // Bölümleme artık kodda yapılıyor, LLM çağrısı yok.
     expect(completeAnalysis.mock.calls[0]![0].tokenUsage).toBe(50)
   })
 
