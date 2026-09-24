@@ -1,0 +1,73 @@
+A. B.
+
+AI ENGINEER  |  FULL-STACK AI ENGINEER
+
+Istanbul, Türkiye  •  GitHub: github.com/aday  •  Portfolio: aday.example.app  •  Medium: @aday
+
+PROFILE
+
+AI Engineer and Software Engineering graduate focused on production-grade LLM applications, RAG systems, AI agents, and full-stack AI products. Experienced in building enterprise assistants with retrieval, reranking, citations, tool calling, MCP integrations, evaluation, and privacy-aware AI workflows. Strong full-stack background with Python/FastAPI and React, with a focus on turning AI capabilities into reliable, usable products.
+
+EXPERIENCE
+
+Bir Telekom Şirketi — AI Engineer  |  Istanbul / Remote  |  May 2026 – Present
+
+• Developing enterprise AI assistants and LLM-powered workflows for internal use cases.
+
+• Building RAG pipelines with embeddings, reranking, source grounding, citations, document ingestion, and retrieval evaluation.
+
+• Developing agentic workflows with tool calling and MCP integrations, including Jira/Atlassian and Outlook-based capabilities.
+
+• Implementing privacy and security controls including PII/KVKK masking, prompt-injection protection, and document-level access considerations.
+
+• Working with Python, FastAPI, LLM gateways, vector search, SSE, background tasks, Docker, and React-based interfaces.
+
+Bir Yazılım Şirketi — Full-Stack Developer Intern  |  Istanbul / Hybrid  |  Jun 2025 – Sep 2025
+
+• Built a drag-and-drop workflow interface using React, ReactFlow, and Zustand.
+
+• Developed REST APIs and backend services with FastAPI, SSE, Supabase/PostgreSQL, and Docker.
+
+• Worked on AI workflow components including OpenAI, HTTP client, webhook, and Kafka producer nodes.
+
+• Contributed to authentication and application infrastructure using JWT/AuthGuard and production-oriented development practices.
+
+SELECTED PROJECTS
+
+Yeni Nesil Asistan — Enterprise AI Assistant — Enterprise document assistant supporting PDF, Word, Excel, PowerPoint and TXT files with RAG, citations, source grounding, document health, feedback/evaluation workflows, BM25 search, source-change alerts, and agent/deep-research modes. Integrated Confluence synchronization, Outlook, Jira/Atlassian MCP, PII/KVKK masking, and prompt-injection protection.
+
+AI Workflow Platform — Full-stack workflow automation experience using React, ReactFlow, Zustand and FastAPI, with configurable AI/API/integration nodes and real-time SSE communication.
+
+EDUCATION
+
+Bir Devlet Üniversitesi — B.Sc. Software Engineering  |  Expected Jun 2026  |  GPA: 3.25/4.00
+
+TECHNICAL SKILLS
+
+AI / LLM
+
+LLMs, Generative AI, RAG, AI Agents, MCP, prompt engineering, embeddings, reranking, evaluation, tool calling
+
+Backend
+
+Python, FastAPI, REST APIs, SSE, PostgreSQL, Supabase
+
+Frontend
+
+React, ReactFlow, Zustand, JavaScript/TypeScript
+
+AI / Data
+
+Vector search, BM25, LangChain, LangGraph, OpenAI-compatible APIs
+
+DevOps / Tools
+
+Docker, Git, n8n, Linux, API integrations
+
+Security
+
+PII/KVKK masking, prompt-injection protection, access-aware document workflows
+
+ADDITIONAL
+
+English: B2 (IELTS preparation ongoing)   •   Focus: AI Engineering, LLM applications, RAG, agentic systems, full-stack AI

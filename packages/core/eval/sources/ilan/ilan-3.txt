@@ -1,0 +1,78 @@
+İş ilanı hakkında
+Hilbert is building a reasoning engine that must navigate non-deterministic user behavior across data silos — turning months-long decision cycles into minutes. Fully agentic by design, our demand intelligence platform doesn't just call APIs; it solves the hard problem of orchestrating multi-step inference over messy, high-stakes enterprise data where deterministic answers don't exist.
+
+From Fortune 500 enterprises to beloved brands like FreshDirect, Blank Street, and Levain Bakery, operators run their growth on Hilbert. We're also co-building alongside leading AI companies.
+
+We're looking for an AI Engineer who can build production-grade AI systems end-to-end — from prototype to pipeline to product — with the ownership and urgency of a startup culture.
+
+This is not a "wire up a prompt chain and move on" role. You'll own core pieces of the AI stack that power Hilbert's demand intelligence platform — designing agent architectures, building evaluation systems, and making hard tradeoffs between accuracy, latency, and cost in production. You'll ship fast in conditions where the spec is evolving, and communicate what you're building (and why) with clarity to the rest of the team. If you think in systems, have opinions about how agentic workflows should actually work, and want to build AI products that drive real enterprise outcomes, we want to meet you.
+
+What You’ll Own First
+
+Evaluation and testing for our agents. Hilbert's agents are in production with enterprise customers today. Before we expand what they do, we need to know, reproducibly, when a change makes them better or worse. You'll own designing the eval harness, defining what "correct" means for a multi-step agent trajectory, building the regression gates that run before anything ships, and turning production failures into test cases. From there, the scope widens into retrieval, orchestration, and execution across the AI stack.
+
+What You'll Do
+
+Own the evaluation layer for our agents — harnesses, metrics, golden datasets, regression gates, and human-in-the-loop review.
+Architect and implement agent workflows using LangChain, LangGraph, or equivalent; state memory, routing, tools registries and recovery paths.
+Own systems from experimentation through production and operate in production: tracing, monitoring, latency, cost-per-task budgeting, on-call for what you build.
+Diagnose real production failures: hallucination, tool misuse, retrieval misses, silent degradation and turn each into a durable fix and a test.
+Set the technical standard for agent work at Hilbert: review designs, define patterns others build on, and raise the bar across the team.
+Collaborate closely with the founding team and cross-functional partners — communicating tradeoffs, progress, and technical decisions with clarity.
+Make pragmatic engineering decisions under ambiguity—ship, learn, iterate.
+
+Our Current Hurdles
+
+These are the kinds of problems you'll walk into on day one:
+
+Intelligent retrieval across heterogeneous approaches — our agents need the right information at exactly the right moment. The challenge isn't picking one retrieval method; it's combining RAG, graph-based retrieval, and other approaches into a unified strategy that fetches the most relevant content precisely when the agent needs it — no more, no less.
+Agentic workflows that solve real-world problems — it's building workflows robust enough to handle the unexpected. When an agent hits an edge case, missing data, or a situation it wasn't explicitly designed for, it needs to reason through it — leveraging available context, escalating to a human when it can't, and never silently failing.
+Evaluation beyond vibes — we need systematic, reproducible evals that actually predict real-world performance. If you've built custom evaluators for RAG or agent workflows, we want to talk.
+Execution and real-world integration — an agent that only surfaces insights isn't enough. We're building systems where agents take action — integrating with external platforms, executing workflows, and doing real work with the information they have, combined with human-in-the-loop checkpoints that keep enterprise trust intact.
+
+Who Thrives In This Role
+
+We care about what you've shipped and how you think, but as an AI Engineer, we expect you to demonstrate 4+ years of building production software, with at least 2 of those on LLM or agentic systems that real users depend on.
+
+Must-haves
+
+4+ years of production software engineering: APIs, services, data infrastructure. You've owned code that other people depended on, with tests, CI/CD, and on-call attached.
+2+ years building LLM or agent systems that shipped to productions watching real users adopt. Not internal demos, not prototypes. Be ready to talk about what broke in production and what you did about it.
+Hands on with LangChain, LangGraph, or equivalent agent/orchestration frameworks. You've built with them, hit their limits, and worked around them. You operate beyond just following tutorials.
+You communicate with clarity and conviction. You can explain a technical decision to a non-technical founder and debate architecture tradeoffs with a senior engineer. Communication is not a nice-to-have here — it's core to the role.
+You take ownership. You don't wait for tickets. You see what needs to be built, raise your hand, and ship it.
+You thrive in ambiguity. AI products evolve fast. Requirements change. You're energized by figuring it out.
+You move at startup speed. Without waiting for permission, and you know which decisions deserve a day of thought and which deserve an hour.
+
+Strong Pluses
+
+Retrieval-augmented generation (RAG) at depth: Hybrid and graph retrieval, chunking and embedding strategy, ranking, grounding
+Observability for LLM systems (Langfuse, OpenTelemetry, or equivalent) and cost/latency optimization
+MCP, tool-calling frameworks, structured output and constrained decoding
+Experience at early-stage startups or high-growth environments where you wore multiple hats
+
+You Might Be
+
+A backend engineer who went deep on LLMs and never looked back. An ML engineer who realized they love building products, not just models. A startup CTO who wants to go deep on AI at a company where the stack is the product. Someone who's been hacking on agents and pipelines nights and weekends and wants to do it full-time with real enterprise stakes. What matters: you ship, you own it, and you communicate like a teammate — not a silo.
+
+Location
+
+Turkiye
+
+At least 5 hours overlap with PST timezone (7am-5pm)
+
+Compensation
+
+Competitive salary + equity package, commensurate with experience.
+
+Performance-based bonuses tied to project milestones and customer impact.
+
+The Hiring Journey
+
+Short form → Intro call → Technical working session → Team conversations → Offer
+
+Why join us
+
+At Hilbert, we move fast, work collaboratively, and give people real ownership over their impact. As a fast-growing company, there's no shortage of room to grow — you'll take on new challenges quickly and shape the path as you go.
+
+Hilbert is an Equal Opportunity Employer. We are committed to building a diverse team and an inclusive culture, and we welcome applicants of all backgrounds. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, gender identity or expression, sexual orientation, national origin, age, disability, veteran status, or any other status protected by applicable law.

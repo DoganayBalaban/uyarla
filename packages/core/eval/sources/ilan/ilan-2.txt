@@ -1,0 +1,39 @@
+İş ilanı hakkında
+Şirket Profili
+Kuveyt Türk Katılım Bankası’nın %100 iştiraki olarak 2015yılından beri dijital ürün ve hizmetler geliştiren Architecht, bilişim sektöründe faaliyet gösteriyor. Açık bankacılık, ana bankacılık, tedarikçifinansmanı, güvenlik teknolojileri, alternatif kanal çözümleri, yazılımgeliştirme, destek ve danışmanlık hizmetleri sunan şirket, bankalar,telekomünikasyon şirketleri, teknoloji şirketleri ve bireysel emeklilikşirketleri gibi geniş bir yelpazede finansal çözümler sağlıyor.Kuruluşunun ilk yılında Türkiye’nin ilk 500 büyük şirketiarasına giren, 2019 yılında Türkiye’nin en hızlı büyüyen teknoloji şirketi olanve bugün 800’ü aşkın çalışanı ile finansal teknolojiler geliştiren Architecht,Great Place to Work® Sertifikasyon programına göre son 6 yıldırTürkiye’nin En İyi İşverenleri arasında yer alıyor.
+Pozisyona Dair Genel Beklentiler:
+Üretken yapay zekâ alanında yürüttüğümüz stratejik projelerde görev alacak; LLM tabanlı çözümlerin geliştirilmesi, kurumsal yapay zekâ kullanım senaryolarının hayata geçirilmesi, çoklu ajan mimarilerinin tasarlanması, veri güvenliği ve yapay zekâ yönetişim süreçlerinde aktif rol üstlenecek deneyimli bir Generative AI Engineer arıyoruz.Bu rol; yalnızca teknik geliştirme değil, aynı zamanda üretken yapay zekâ projelerinin mimari tasarımı, güvenlik, etik kullanım, risk yönetimi, performans optimizasyonu ve kurumsal yönetişim boyutlarında sorumluluk almayı gerektirmektedir.
+
+
+Aranan Nitelikler
+Bilgisayar Mühendisliği, Yazılım Mühendisliği, Matematik Mühendisliği veya ilgili bölümlerden mezun,
+Yapay zekâ, makine öğrenmesi, doğal dil işleme veya veri bilimi alanlarında en az 5 yıl deneyim,
+Üretken yapay zekâ ve LLM tabanlı projelerde en az 2 yıl uygulamalı deneyim
+Python ile ileri seviye yazılım geliştirme tecrübesi,
+Docker, Kubernetes ve CI/CD süreçlerinde deneyim,
+LLM, Transformer mimarileri, embedding, semantic search, vector search ve RAG konularında bilgi sahibi,
+LangChain, LlamaIndex, Semantic Kernel, AutoGen, CrewAI veya benzeri framework'lerden en az biriyle deneyim,
+REST API, mikroservis mimarileri ve sistem entegrasyonları konusunda tecrübeli,
+FAISS, Pinecone, Weaviate, Milvus, Chroma veya Azure AI Search gibi vektör veritabanlarıyla çalışma deneyimi,
+Model değerlendirme, prompt değerlendirme, test otomasyonu ve kalite ölçümleme alanlarında deneyim,
+Kurumsal veri güvenliği, kimlik ve erişim yönetimi, kişisel veri koruma konularında bilgi sahibi
+Teknik gereksinimleri iş hedefleriyle ilişkilendirebilen ve paydaş yönetimi güçlü,
+Analitik düşünme, problem çözme ve teknik liderlik yetkinliklerine sahip,
+Agile/Scrum metodolojileriyle çalışma deneyimi,
+Responsible AI, AI Governance, AI Risk Management veya Model Risk Management süreçlerinde deneyim sahibi,
+Takım odaklı bir çalışma ortamında etkili şekilde çalışabilme yetkinliği olan takım arkadaşları arıyoruz.
+
+Görev Tanımı
+Kurum içi ve müşteri odaklı üretken yapay zekâ kullanım senaryolarının analiz edilmesi ve tasarlanması,
+LLM tabanlı uygulamaların geliştirilmesi, test edilmesi ve canlı ortamlara alınması,
+RAG mimarileri, vektör veritabanları, embedding modelleri ve bilgi erişim katmanlarının tasarlanması,
+Prompt engineering, prompt optimization ve model davranışı iyileştirme çalışmalarının yürütülmesi,
+Çoklu ajan mimarilerinin (Multi-Agent Systems) tasarlanması, geliştirilmesi ve operasyonel kullanıma alınması,
+Ajanlar arası iletişim, shared memory, tool-calling ve agentic workflow mekanizmalarının geliştirilmesi,
+Otonom ve yarı otonom ajan sistemlerinin doğruluk, performans ve tutarlılık kriterleri açısından optimize edilmesi,
+Model performansı, yanıt kalitesi, güvenilirlik ve halüsinasyon risklerinin ölçümlenmesi ve iyileştirilmesi,
+Veri güvenliği, KVKK/GDPR uyumu, erişim kontrolü, loglama ve denetlenebilirlik süreçlerinin tasarlanması,
+Responsible AI, AI Governance ve AI Risk Management prensiplerinin projelere uygulanması,
+Mimari karar dokümanları, teknik dokümantasyon ve ürün dokümanlarının hazırlanması,
+Ürün, veri bilimi ve altyapı ekipleriyle yakın iş birliği içerisinde çalışılması,
+Yeni nesil GenAI, Agentic AI ve LLM teknolojilerinin takip edilerek kurum içinde uygulanabilir kullanım alanlarının değerlendirilmesi.

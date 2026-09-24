@@ -11,6 +11,7 @@ import {
   skillLinesJsonSchema,
 } from "../schemas/resume.js"
 import type { ResumeProfile, SkillLines } from "../schemas/resume.js"
+import { segmentResume } from "./segment.js"
 import { flattenSkillLines } from "./skills.js"
 import {
   EDUCATION_PROMPT,
@@ -41,20 +42,37 @@ function duzlestir(lines: SkillLines) {
  * Çağrılar sıralı (K-09). Paralelleştirme Görev 13'te değerlendirme
  * setinin süre verisiyle yeniden ele alınacak.
  */
+export interface ExtractResumeOptions {
+  /**
+   * Bölümlemenin nasıl yapılacağı.
+   *
+   * "code" varsayılan: başlıkları düzenli ifadeyle tanır, deterministiktir,
+   * bir LLM çağrısı tasarruf ettirir. "llm" karşılaştırma için duruyor —
+   * ikisi aynı değerlendirme setinde ölçülebilsin diye.
+   */
+  segmenter?: "code" | "llm"
+}
+
 export async function extractResumeProfile(
   llm: LlmProvider,
   rawText: string,
+  options: ExtractResumeOptions = {},
 ): Promise<ExtractResult<ResumeProfile>> {
   let tokens = 0
 
-  const segments = await llm.extract({
-    prompt: SEGMENT_PROMPT,
-    schemaName: "resume_segments",
-    schema: resumeSegmentsJsonSchema,
-    input: rawText,
-  })
-  tokens += segments.tokens
-  const blocks = ResumeSegmentsSchema.parse(segments.data)
+  let blocks
+  if (options.segmenter === "llm") {
+    const segments = await llm.extract({
+      prompt: SEGMENT_PROMPT,
+      schemaName: "resume_segments",
+      schema: resumeSegmentsJsonSchema,
+      input: rawText,
+    })
+    tokens += segments.tokens
+    blocks = ResumeSegmentsSchema.parse(segments.data)
+  } else {
+    blocks = segmentResume(rawText)
+  }
 
   // Boş bloklar için çağrı yapılmaz: hem süre hem gereksiz uydurma riski.
   const experience = blocks.experienceBlock.trim()

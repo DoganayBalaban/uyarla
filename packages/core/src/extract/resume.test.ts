@@ -50,7 +50,7 @@ const RESPONSES: Record<string, unknown> = {
   },
 }
 
-describe("extractResumeProfile", () => {
+describe("extractResumeProfile · LLM bölümlemesiyle", () => {
   it("beceri satırlarını düzleştirip profile koyar", async () => {
     // Model satırları kopyalıyor, "hangisi beceri" kararı kodda veriliyor (K-19).
     const llm = fakeLlm({
@@ -65,7 +65,7 @@ describe("extractResumeProfile", () => {
         certifications: [],
       },
     })
-    const { data } = await extractResumeProfile(llm, "ham cv metni")
+    const { data } = await extractResumeProfile(llm, "ham cv metni", { segmenter: "llm" })
 
     expect(data.skills).toEqual(["Java", "SQL", "Manual Testing"])
     expect(data.languages).toEqual(["İngilizce"])
@@ -73,7 +73,7 @@ describe("extractResumeProfile", () => {
 
   it("bölümleme ve blok çıkarımlarını tek profilde birleştirir", async () => {
     const llm = fakeLlm(RESPONSES)
-    const { data } = await extractResumeProfile(llm, "ham cv metni")
+    const { data } = await extractResumeProfile(llm, "ham cv metni", { segmenter: "llm" })
 
     expect(data.experience).toHaveLength(1)
     expect(data.experience[0]!.company).toBe("Acme")
@@ -84,7 +84,7 @@ describe("extractResumeProfile", () => {
 
   it("dört ayrı çağrı yapar: bölümleme + üç blok", async () => {
     const llm = fakeLlm(RESPONSES)
-    await extractResumeProfile(llm, "ham cv metni")
+    await extractResumeProfile(llm, "ham cv metni", { segmenter: "llm" })
 
     expect(llm.calls.map((c) => c.schemaName)).toEqual([
       "resume_segments",
@@ -96,7 +96,7 @@ describe("extractResumeProfile", () => {
 
   it("blok çağrılarına ham CV'yi değil, yalnızca ilgili bloğu gönderir", async () => {
     const llm = fakeLlm(RESPONSES)
-    await extractResumeProfile(llm, "ham cv metni")
+    await extractResumeProfile(llm, "ham cv metni", { segmenter: "llm" })
 
     const deneyim = llm.calls.find((c) => c.schemaName === "resume_experience")!
     expect(deneyim.input).toBe((RESPONSES.resume_segments as { experienceBlock: string }).experienceBlock)
@@ -105,7 +105,7 @@ describe("extractResumeProfile", () => {
 
   it("token sayılarını toplar", async () => {
     const llm = fakeLlm(RESPONSES)
-    const { tokens } = await extractResumeProfile(llm, "ham cv metni")
+    const { tokens } = await extractResumeProfile(llm, "ham cv metni", { segmenter: "llm" })
     expect(tokens).toBe(40)
   })
 
@@ -117,7 +117,7 @@ describe("extractResumeProfile", () => {
         educationBlock: "   ",
       },
     })
-    const { data } = await extractResumeProfile(llm, "ham cv metni")
+    const { data } = await extractResumeProfile(llm, "ham cv metni", { segmenter: "llm" })
 
     expect(llm.calls.map((c) => c.schemaName)).not.toContain("resume_education")
     expect(data.education).toEqual([])
@@ -129,7 +129,7 @@ describe("extractResumeProfile", () => {
         summaryBlock: "", experienceBlock: "", educationBlock: "", skillsBlock: "",
       },
     })
-    const { data, tokens } = await extractResumeProfile(llm, "bos cv")
+    const { data, tokens } = await extractResumeProfile(llm, "bos cv", { segmenter: "llm" })
 
     expect(llm.calls).toHaveLength(1)
     expect(data.experience).toEqual([])
@@ -142,6 +142,51 @@ describe("extractResumeProfile", () => {
       ...RESPONSES,
       resume_experience: { experience: [{ company: "Acme" }] },
     })
-    await expect(extractResumeProfile(llm, "ham cv metni")).rejects.toThrow()
+    await expect(extractResumeProfile(llm, "ham cv metni", { segmenter: "llm" })).rejects.toThrow()
+  })
+})
+
+describe("extractResumeProfile · kod bölümlemesiyle (varsayılan)", () => {
+  const CV = `PROFILE
+3 yıldır React ile arayüz geliştiriyorum.
+
+EXPERIENCE
+Acme · Frontend Geliştirici · 2022 – halen
+- React ile panel geliştirdim
+
+EDUCATION
+Bir Üniversite, Bilgisayar Mühendisliği, 2021
+
+TECHNICAL SKILLS
+Frontend: React, TypeScript
+
+ADDITIONAL
+References available on request`
+
+  it("bölümleme için LLM çağrısı yapmaz", async () => {
+    const llm = fakeLlm(RESPONSES)
+    await extractResumeProfile(llm, CV)
+
+    expect(llm.calls.map((c) => c.schemaName)).not.toContain("resume_segments")
+    expect(llm.calls).toHaveLength(3)
+  })
+
+  it("her blok çağrısına yalnızca kendi bölümünü gönderir", async () => {
+    const llm = fakeLlm(RESPONSES)
+    await extractResumeProfile(llm, CV)
+
+    const beceri = llm.calls.find((c) => c.schemaName === "resume_skills")!
+    expect(beceri.input).toContain("TECHNICAL SKILLS")
+    expect(beceri.input).toContain("React, TypeScript")
+    // ADDITIONAL yoksayılan bir bölüm; beceri bloğuna girmemeli.
+    expect(beceri.input).not.toContain("References available")
+    // Deneyim bloğu da beceri bloğuna sızmamalı.
+    expect(beceri.input).not.toContain("Acme")
+  })
+
+  it("özeti kod bölümlemesinden alır", async () => {
+    const llm = fakeLlm(RESPONSES)
+    const { data } = await extractResumeProfile(llm, CV)
+    expect(data.summary).toContain("React ile arayüz geliştiriyorum")
   })
 })

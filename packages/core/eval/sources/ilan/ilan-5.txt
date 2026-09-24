@@ -1,0 +1,36 @@
+İş ilanı hakkında
+Inspire progress with us, today and tomorrow!
+Discover Şişecam
+We were founded under the visionary leadership of Mustafa Kemal Atatürk, embracing modernity, growth, and prosperity. With 90 years of expertise, a team of nearly 23,000 dedicated employees, production facilities spanning 13 countries across four continents, and a sales network in more than 150 countries, Şişecam is steadfast in its 'Global Excellence' strategy.
+Every achievement we make is a testament to the power of unity and shared dreams. We are committed to sustainable growth, ensuring that our endeavors enrich both our present and future generations.
+Now, imagine being part of this dynamic community. Imagine your ideas shaping the future of a global leader. At Şişecam, your creativity and passion are not just welcomed—they are the driving force behind our progress. Here, you will find a place where your innovation is celebrated, and your efforts make a tangible impact on the world.
+Join us, and let’s create a brighter future together. Being part of a team that is not just a workplace, but a community where every voice matters. Be part of a story where your contributions drive us forward. Be a part of Şişecam and let’s build a world of progress and prosperity together.
+More about the Role
+Design and develop AI agents for key business functions using scalable multi-agent architectures.
+Develop and maintain MCP servers and secure integrations with enterprise systems, including SAP, BigQuery, and document repositories.
+Build and optimize end-to-end RAG solutions, continuously improving retrieval quality and overall system performance.
+Develop NLP and LLM-powered solutions for information extraction, classification, summarization, and semantic search across enterprise content.
+Create evaluation frameworks, datasets, testing strategies, and quality metrics to ensure reliable AI agent performance.
+Establish engineering best practices covering prompts, context management, security guardrails, model governance, monitoring, and cost optimization.
+Collaborate on production deployments, release management, and operational monitoring of AI solutions.
+Stay current with advancements in AI and contribute to technology evaluation, knowledge sharing, and architectural decisions.
+
+All About You
+Bachelor’s degree in Computer Engineering, Software Engineering, or a related field; Master’s or Ph.D. is a plus.
+5+ years of software and/or data engineering experience, including hands-on work with LLM and NLP-based systems.
+Proven experience delivering at least one production-grade LLM solution, such as a RAG system, AI agent, or intelligent assistant.
+Strong Python development skills, including clean code, testing, asynchronous programming, type safety, and version control.
+Solid expertise in RAG architectures, retrieval techniques, tool/function calling, context management, and document processing.
+Strong understanding of NLP concepts and their application to tasks such as classification, information extraction, NER, summarization, and semantic search.
+Experience with LLM evaluation, error analysis, and hallucination mitigation.
+Experience developing AI applications on cloud platforms; GCP and Vertex AI experience is a strong advantage.
+Familiarity with agent frameworks, MCP, vector databases, and model fine-tuning techniques is preferred.
+Excellent command of English
+
+What Awaits You Here?
+At Şişecam, our global transformation and expansion create a vibrant business environment. With a strong focus on digitalization, you'll engage in dynamic digital and analytical projects, developing valuable technology skills and gaining insights into innovative business models and processes.
+We understand that a fulfilling career is more than just exciting work opportunities. That’s why we offer a competitive salary and inclusive benefits that promote work-life balance, wellbeing initiatives, and social activities. Our mentoring, leadership development, and training programs provide robust support for your personal and professional growth. In our diverse working environment, individuals from various nationalities, backgrounds, and functions come together. We offer local and international career development opportunities, allowing you to enrich your professional experience, stretch your abilities, and maximize your potential throughout your career journey.
+Equal Opportunities Today, Better Tomorrows
+We are committed to providing a fair and safe work environment where human rights are respected, and every employee feels valued and empowered to contribute. We ensure equal opportunities at all levels, regardless of race, nationality, gender, sexual orientation, social or personal status, health, marital status, religion, personal belief, disability, age, or other characteristics, in line with international and local legislation.
+Meet us on Social MediaŞişecam Kariyerim: https://www.sisecamkariyerim.com/enInstagram: https://www.instagram.com/sisecamcareer/LinkedIn: https://www.linkedin.com/company/sisecam/life/70f9b130-35cd-485a-b1f6-94f804be39cc/
+Join us and let's create a brighter future together!

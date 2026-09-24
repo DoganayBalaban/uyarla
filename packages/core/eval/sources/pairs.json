@@ -1,0 +1,15 @@
+{
+  "note": "Değerlendirme çiftleri. cv ve ilan kimlikleri sources/ altındaki dosya adlarıdır. Karışım bilinçli: iyi eşleşmesi beklenen çiftler kaçırmayı, kötü eşleşmesi beklenenler uydurmayı yakalar.",
+  "pairs": [
+    { "cv": "cv-a-ai-engineer", "ilan": "ilan-1", "beklenti": "yüksek" },
+    { "cv": "cv-a-ai-engineer", "ilan": "ilan-2", "beklenti": "yüksek" },
+    { "cv": "cv-a-ai-engineer", "ilan": "ilan-3", "beklenti": "orta" },
+    { "cv": "cv-a-ai-engineer", "ilan": "ilan-5", "beklenti": "orta" },
+    { "cv": "cv-b-test-engineer", "ilan": "ilan-1", "beklenti": "düşük" },
+    { "cv": "cv-b-test-engineer", "ilan": "ilan-3", "beklenti": "düşük" },
+    { "cv": "cv-b-test-engineer", "ilan": "ilan-4", "beklenti": "düşük" },
+    { "cv": "cv-c-yeni-mezun", "ilan": "ilan-1", "beklenti": "düşük" },
+    { "cv": "cv-c-yeni-mezun", "ilan": "ilan-2", "beklenti": "düşük" },
+    { "cv": "cv-c-yeni-mezun", "ilan": "ilan-4", "beklenti": "orta" }
+  ]
+}

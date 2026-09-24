@@ -1,0 +1,28 @@
+İş ilanı hakkında
+MONSTER SİZİ EKİBİNE DAVET EDİYOR…GÜCÜNÜ ORTAYA KOY, CANAVAR EKİBİN BİR PARÇASI OL!
+Monster Bilgisayar olarak yüksek performansı yalnızca ürünlerimizde değil, çalışma kültürümüzde de önceliklendiriyoruz.
+Yüksek performanslı oyun bilgisayarları ve oyun aksesuarları alanında 26 yıldır faaliyet gösteren, donanım, deneyim ve topluluk odağında bütünsel bir oyun ekosistemi sunan ve uluslararası teknoloji dünyasında konumlanan Monster, organizasyonunu güçlendirecek yeteneklerle tanışmayı amaçlamaktadır.
+Şirketimizin Genel Merkezinde görevlendirmek üzere Bilgi Teknolojileri Departmanına bağlı olarak; şirketimizin yapay zekâ dönüşüm yolculuğunda görev alacak, üretken yapay zekâ (Generative AI), makine öğrenmesi (Machine Learning) ve Agentic AI teknolojileri üzerinde çalışacak ''Yapay Zeka Mühendisi / Yapay Zeka Geliştiricisi' arayışımız bulunmaktadır.
+GENEL NİTELİKLER
+Bilgisayar Mühendisliği, Yazılım Mühendisliği veya ilgili bölümlerden mezun olmak
+Benzer bir işte en az 5 yıl deneyim sahibi olmak
+Python, REST API, SQL ve NoSQL veri tabanları konusunda deneyim sahibi olmak
+Makine öğrenmesi ve veri bilimi süreçlerine hakim olmak
+Git ve CI/C, Microservices, Docker ve Container teknolojileri konusunda bilgi sahibi olmak
+Generative AI Yetkinlikleri, OpenAI, Azure OpenAI, Anthropic Claude veya Gemini API deneyimine sahip olmak
+Otonom karar mekanizmaları ve agent mimarileri konusunda bilgi sahibi olmak
+
+GÖREV TANIMI
+LLM (Large Language Model) tabanlı uygulamalar geliştirmek
+Agentic AI mimarileri tasarlamak ve geliştirmek
+AI Agent, Multi-Agent ve Workflow Orchestration çözümleri oluşturmak
+RAG (Retrieval Augmented Generation) mimarileri geliştirmek
+Kurumsal bilgi kaynakları ile AI sistemlerini entegre etmek
+Chatbot, VoiceAgent ve Copilot uygulamalarının geliştirilmesinde görev almak
+Makine öğrenmesi modelleri geliştirmek, eğitmek ve iyileştirmek
+Prompt Engineering ve Context Engineering çalışmaları yürütmek
+API entegrasyonları ve mikroservis geliştirmeleri gerçekleştirmek
+AI çözümlerinin performansını, doğruluğunu ve güvenilirliğini ölçmek
+Yeni AI teknolojilerini araştırmak ve PoC (Proof of Concept) çalışmaları hazırlamak
+Azure AI, OpenAI ve benzeri platformlar üzerinde çözümler geliştirmek
+AI çözümlerini üretim ortamında devreye almak ve operasyonel takibini yapmak

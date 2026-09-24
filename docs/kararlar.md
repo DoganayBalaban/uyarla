@@ -866,3 +866,81 @@ duruyor, karşılaştırma biçimine modül yüklenirken çevriliyor.
 **Ders:** Yerel duyarlı küçültme, tek dilli bir varsayımdır. İki dilli veri
 işleyen her yerde — ki bu ürünün tamamı öyle — her iki dilin kurallarının
 birbirini nasıl bozduğu ayrıca düşünülmeli.
+
+---
+
+## K-22 · Bölümleme kodda yapılıyor; LLM bölümlemesi bırakıldı
+
+**Tarih:** 24 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1+
+**K-10'un yerine geçer.**
+
+CV'yi bölümlerine ayırma işi `segmentResume` ile kodda yapılıyor: başlıklar
+düzenli ifadeyle tanınıyor, bölümler dört bloğa dağıtılıyor. LLM bölümlemesi
+`{ segmenter: "llm" }` seçeneğiyle duruyor ama varsayılan değil.
+
+**K-10'daki risk gerçekleşti.** Orada şöyle yazmıştık:
+
+> *"Kabul edilen risk: Çözüm modelin talimatı izlemesine bağlı kalıyor. Başka
+> bir CV'de başka bir bilginin düşmesi mümkün ve bunu ancak Görev 13'teki
+> değerlendirme setinde fark ederiz."*
+
+Fark edildi. Gerçek bir CV'de bölümleme şunu yaptı:
+
+```
+CV'deki bölüm          LLM'in koyduğu yer
+─────────────────────  ────────────────────────
+PROFILE            →   summaryBlock      ✓
+EXPERIENCE         →   experienceBlock   ✓
+EDUCATION          →   educationBlock    ✓
+TECHNICAL SKILLS   →   experienceBlock   ✗
+ADDITIONAL         →   skillsBlock       ✗
+```
+
+Son bölümü beceri sandı, asıl beceri bölümünü deneyimin içine gömdü. Sonuç:
+CV'de açıkça yazan `MCP`, `tool calling`, `Python`, `Docker` hiç beceri
+olarak çıkmadı ve "agent mimarileri" gereksinimi kaçırıldı.
+
+### Ölçüm
+
+Üç gerçek CV, iki yöntem, aynı çıkarıcılar:
+
+| CV | Yöntem | Beceri | Süre | Token |
+|---|---|---|---|---|
+| cv-a | **kod** | **33** | **39s** | **1973** |
+| cv-a | llm | 6 | 60s | 3233 |
+| cv-b | kod | 18 | **41s** | **2260** |
+| cv-b | llm | 19 | 74s | 3890 |
+| cv-c | kod | 14 | **66s** | **2788** |
+| cv-c | llm | 15 | 101s | 4499 |
+
+Kod yolu her CV'de **%35–40 daha hızlı** ve **%40 daha az token** harcıyor —
+bir LLM çağrısı eksildiği için. Beceri kalitesinde cv-a'da fark uçurum
+(33'e 6: tüm TECHNICAL SKILLS bölümü geri geldi), diğer ikisinde başa baş.
+
+### Deterministiklik
+
+Sayılardan daha önemli olan bu: LLM bölümlemesi aynı CV'de her çalıştırmada
+farklı sonuç veriyordu. Bugün aynı çıkarım üç kez yapıldı, üçünde de farklı
+çıktı. Bu tek başına değerlendirme setini güvenilmez kılıyor — bir
+değişikliğin etkisini mi yoksa modelin o seferki hâlini mi ölçtüğün ayırt
+edilemiyor.
+
+### Yan bulgu: cümle sızıntısı
+
+Kod bölümlemesi, okuma sırası bozuk CV'lerde (iki sütunlu tasarımlar) deneyim
+maddelerini beceri bloğuna taşıyabiliyor. Bu maddeler `flattenSkillLines`
+içinde etiket olarak geliyordu ve terim ölçütü yalnızca öğelere
+uygulanıyordu. Ölçüt artık etikete de uygulanıyor: kırk karakterden uzun ya
+da nokta içeren metin terim değil cümledir.
+
+### Sınır
+
+Kod bölümlemesi de yanılabilir — tanınmayan başlıklı ya da hiç başlıksız
+CV'lerde. Geri çekilme yolu var: başlık bulunamazsa ham metnin tamamı her
+çıkarıcıya veriliyor, yani bugünkü davranıştan kötü değil. Ama fark şu:
+**kod yanıldığında test kırmızı yanıyor, model yanıldığında sessizce yanlış
+veri üretiyor.** Bugün beş kez ikincisini yaşadık.
+
+**Genel ders — üçüncü kez doğrulandı:** deterministik bir işi dil modeline
+vermek, ücretsiz olmayan bir kolaylık. Bölümleme metni başlığına göre kesmek
+demek; yorum gerektirmiyor, o yüzden modele ait değil.
