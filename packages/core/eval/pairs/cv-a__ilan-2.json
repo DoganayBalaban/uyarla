@@ -1,0 +1,40 @@
+{
+  "id": "cv-a__ilan-2",
+  "cv": "cv-a-ai-engineer",
+  "ilan": "ilan-2",
+  "note": "AI mühendisi CV'si, kıdemli GenAI ilanı. Vektör veritabanı ürünleri ve Agile CV'de yok.",
+  "expectations": [
+    {
+      "match": "Bilgisayar Mühendisliği",
+      "shouldMatch": true
+    },
+    {
+      "match": "Yapay zekâ, makine öğrenmesi",
+      "shouldMatch": true
+    },
+    {
+      "match": "en az 2 yıl",
+      "shouldMatch": false
+    },
+    {
+      "match": "Python ile ileri seviye",
+      "shouldMatch": true
+    },
+    {
+      "match": "Docker, Kubernetes",
+      "shouldMatch": true
+    },
+    {
+      "match": "LangChain, LlamaIndex",
+      "shouldMatch": true
+    },
+    {
+      "match": "FAISS, Pinecone",
+      "shouldMatch": false
+    },
+    {
+      "match": "Agile/Scrum",
+      "shouldMatch": false
+    }
+  ]
+}

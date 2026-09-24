@@ -1,0 +1,28 @@
+{
+  "id": "cv-c__ilan-4",
+  "cv": "cv-c-yeni-mezun",
+  "ilan": "ilan-4",
+  "note": "Yeni mezun CV'si, AI ajan ilanı. Eğitmenlik deneyimi profesyonel AI geliştirme sayılmaz.",
+  "expectations": [
+    {
+      "match": "Bilgisayar Mühendisliği",
+      "shouldMatch": true
+    },
+    {
+      "match": "Generative AI ve LLM tabanlı",
+      "shouldMatch": false
+    },
+    {
+      "match": "AI Agent ve agentic workflow",
+      "shouldMatch": false
+    },
+    {
+      "match": "LangGraph, n8n",
+      "shouldMatch": false
+    },
+    {
+      "match": "PoC aşamasından production",
+      "shouldMatch": false
+    }
+  ]
+}

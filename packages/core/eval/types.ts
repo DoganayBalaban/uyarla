@@ -9,10 +9,12 @@ export interface ExpectedRequirement {
 
 export interface EvalPair {
   id: string
+  /** sources/cv altındaki dosya adı. */
+  cv: string
+  /** sources/ilan altındaki dosya adı. */
+  ilan: string
   /** Bu çiftin neyi sınadığı ve verinin nereden geldiği. */
   note: string
-  resumeText: string
-  jobText: string
   expectations: ExpectedRequirement[]
 }
 

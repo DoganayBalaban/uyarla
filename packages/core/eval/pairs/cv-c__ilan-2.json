@@ -1,0 +1,28 @@
+{
+  "id": "cv-c__ilan-2",
+  "cv": "cv-c-yeni-mezun",
+  "ilan": "ilan-2",
+  "note": "Yeni mezun CV'si, kıdemli GenAI ilanı. Python dışında teknik gereksinim karşılanmamalı.",
+  "expectations": [
+    {
+      "match": "Python ile ileri seviye",
+      "shouldMatch": true
+    },
+    {
+      "match": "Docker, Kubernetes",
+      "shouldMatch": false
+    },
+    {
+      "match": "LangChain, LlamaIndex",
+      "shouldMatch": false
+    },
+    {
+      "match": "FAISS, Pinecone",
+      "shouldMatch": false
+    },
+    {
+      "match": "Kurumsal veri güvenliği",
+      "shouldMatch": false
+    }
+  ]
+}

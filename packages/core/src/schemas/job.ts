@@ -1,13 +1,29 @@
 import { z } from "zod"
 import { toJsonSchema } from "./toJsonSchema.js"
 
+/**
+ * Bir gereksinimin içindeki tek bir kavram ve onun eş anlamlıları.
+ *
+ * Kavram ayrımı olmadan "eş anlamlı" ile "ayrı bileşen" ayırt edilemiyordu:
+ * ["react","react.js","reactjs"] üçü de aynı şey (biri eşleşirse tam puan),
+ * ["git","ci/cd","microservices","docker"] ise dört ayrı şey (biri eşleşirse
+ * çeyrek puan). İkisi de düz dizi olduğu için dört şey isteyen bir gereksinim,
+ * bir tanesini bilen adaya tam puan veriyordu (K-23).
+ */
+export const ConceptSchema = z.object({
+  /** Kavramın kanonik adı; kullanıcıya eksik listesinde bu gösterilir. */
+  term: z.string(),
+  /** Yazım varyantları ve çeviriler; herhangi biri eşleşirse kavram karşılanır. */
+  synonyms: z.array(z.string()),
+})
+
 export const RequirementSchema = z.object({
   /** Gereksinimin ilandaki hâli — kullanıcıya bu gösterilir. */
   text: z.string(),
   type: z.enum(["skill", "experience", "education", "soft"]),
   importance: z.enum(["must", "nice"]),
-  /** Eşleştirme için aranacak biçimler; normalleştirme Görev 8'de. */
-  keywords: z.array(z.string()),
+  /** Gereksinimin içerdiği kavramlar; güven bunların kaçının karşılandığıyla ölçülür. */
+  concepts: z.array(ConceptSchema),
 })
 
 export const JobPostingSchema = z.object({
@@ -26,38 +42,13 @@ export const JobPostingSchema = z.object({
  * dönüyordu ve düşenler her seferinde "tercihen" bölümündekilerdi. Ölçümle
  * doğrulandı: keywords çıkarıldığında aynı prompt 6/6 üretiyor (K-11).
  */
-export const RequirementDraftSchema = RequirementSchema.omit({ keywords: true })
+export const RequirementDraftSchema = RequirementSchema.omit({ concepts: true })
 
 export const JobPostingDraftSchema = JobPostingSchema.omit({ requirements: true }).extend({
   requirements: z.array(RequirementDraftSchema),
 })
 
-/**
- * İkinci çağrının şeması: her anahtar kelime listesi, ait olduğu gereksinimin
- * metnini de taşır.
- *
- * Önceki biçim yalnızca `keywords: string[][]` idi ve hizalamayı **sıraya
- * güvenerek** yapıyordu. Değerlendirme setinde sessizce kırıldı: bileşik bir
- * gereksinimde ("4+ years of production software engineering: APIs, services,
- * data infrastructure, testing, CI/CD, on-call") model iki nokta üst üsteden
- * sonraki listeyi ayrı gereksinimler sayıp her birine anahtar kelime üretti.
- * Sayı tesadüfen tuttuğu için uzunluk kontrolü devreye girmedi ve anahtar
- * kelimeler bir gereksinim kaymış hâlde yapıştı — bir AI mühendisi CV'si AI
- * mühendisi ilanına 5 puan aldı (K-18).
- *
- * Metin taşınması token maliyetini artırıyor ama hizalamayı **doğrulanabilir**
- * kılıyor: eşleşmeyen satırın anahtar kelimeleri boş bırakılır.
- */
-export const RequirementKeywordsSchema = z.object({
-  items: z.array(
-    z.object({
-      /** Gereksinimin metni; hizalama bununla doğrulanır. */
-      text: z.string(),
-      keywords: z.array(z.string()),
-    }),
-  ),
-})
-
+export type Concept = z.infer<typeof ConceptSchema>
 export type Requirement = z.infer<typeof RequirementSchema>
 export type RequirementDraft = z.infer<typeof RequirementDraftSchema>
 export type JobPostingData = z.infer<typeof JobPostingSchema>
@@ -65,4 +56,3 @@ export type JobPostingDraft = z.infer<typeof JobPostingDraftSchema>
 
 export const jobPostingJsonSchema = toJsonSchema(JobPostingSchema)
 export const jobPostingDraftJsonSchema = toJsonSchema(JobPostingDraftSchema)
-export const requirementKeywordsJsonSchema = toJsonSchema(RequirementKeywordsSchema)

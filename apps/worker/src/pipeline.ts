@@ -2,6 +2,7 @@ import {
   PermanentError,
   TransientError,
   collectEvidence,
+  conceptTexts,
   extractJobPosting,
   extractResumeProfile,
   score,
@@ -45,18 +46,18 @@ export async function runAnalysis(
     deps.onProgress?.("karsilastiriliyor")
     const evidence = collectEvidence(profile.data)
     const evidenceTexts = evidence.map((e) => e.text)
-    const requirementTexts = posting.data.requirements.map((r) => r.text)
+    const conceptTerms = conceptTexts(posting.data)
 
-    // Tek toplu çağrı: kanıtlar önce, gereksinimler sonra. Sıralama
-    // aşağıdaki dilimlemeyle eşleşmek zorunda.
-    const vectors = await deps.embedding.embed([...evidenceTexts, ...requirementTexts])
+    // Tek toplu çağrı: kanıtlar önce, kavramlar sonra. Sıralama aşağıdaki
+    // dilimlemeyle eşleşmek zorunda.
+    const vectors = await deps.embedding.embed([...evidenceTexts, ...conceptTerms])
 
     const result = score({
       profile: profile.data,
       posting: posting.data,
       evidence,
       evidenceVectors: vectors.slice(0, evidenceTexts.length),
-      requirementVectors: vectors.slice(evidenceTexts.length),
+      conceptVectors: vectors.slice(evidenceTexts.length),
     })
 
     await deps.store.completeAnalysis({

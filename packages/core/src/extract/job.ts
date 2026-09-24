@@ -1,96 +1,42 @@
 import type { ExtractResult, LlmProvider } from "../llm/types.js"
-import { normalizeText } from "../normalize/turkish.js"
-import {
-  JobPostingDraftSchema,
-  JobPostingSchema,
-  RequirementKeywordsSchema,
-  jobPostingDraftJsonSchema,
-  requirementKeywordsJsonSchema,
-} from "../schemas/job.js"
+import { JobPostingDraftSchema, JobPostingSchema, jobPostingDraftJsonSchema } from "../schemas/job.js"
 import type { JobPostingData } from "../schemas/job.js"
-import { JOB_PROMPT, KEYWORDS_PROMPT } from "./prompts.js"
+import { splitIntoConcepts } from "./concepts.js"
+import { JOB_PROMPT } from "./prompts.js"
 
 /**
- * İlan çıkarımı iki çağrı (K-11).
+ * İlan çıkarımı TEK çağrı.
  *
- * Birincisi gereksinim listesini çıkarır, ikincisi o listeye anahtar kelime
- * üretir. Tek çağrıda birleştirmek — yani gereksinim nesnesinin içine bir
- * dizi daha koymak — küçük modelde dış listeyi erken kapattırıyordu: altı
- * gereksinimin dördü dönüyor, düşenler her seferinde "tercihen"
- * bölümündekiler oluyordu.
+ * Model yalnızca gerçekten yorum gerektiren işi yapıyor: ilan metninden
+ * gereksinimleri ayırmak, türünü ve önemini belirlemek. Gereksinimin
+ * kavramlarına bölünmesi kodda yapılıyor (K-23).
  *
- * Çıkan listenin kalitesi tüm skorun kalitesini belirliyor: "3 yıl React
- * deneyimi" için ["react", "react.js", "reactjs"] üretilirse eşleşme tutar,
- * yalnızca gereksinim cümlesinin kopyası üretilirse hiçbir CV'de bulunmaz.
+ * Önceki tasarım bu işi ikinci bir LLM çağrısına veriyordu ve üç ayrı biçimde
+ * kırıldı: kavramları eksik çıkarma, eş anlamlıları boş bırakma, listeyi
+ * erken kapatma. Ayrıca iki çağrı arasında hizalama sorunu vardı ve
+ * doğrulanması gerekiyordu (K-18) — o sorun da tümüyle ortadan kalktı.
+ *
+ * Yan kazanç: ilan çıkarımı 21 saniyeden tek çağrıya indi.
  */
 export async function extractJobPosting(
   llm: LlmProvider,
   rawText: string,
 ): Promise<ExtractResult<JobPostingData>> {
-  const draft = await llm.extract({
+  const { data, tokens } = await llm.extract({
     prompt: JOB_PROMPT,
     schemaName: "job_posting_draft",
     schema: jobPostingDraftJsonSchema,
     input: rawText,
   })
-  const posting = JobPostingDraftSchema.parse(draft.data)
+  const draft = JobPostingDraftSchema.parse(data)
 
-  if (posting.requirements.length === 0) {
-    return { data: JobPostingSchema.parse({ ...posting, requirements: [] }), tokens: draft.tokens }
-  }
-
-  const keywords = await llm.extract({
-    prompt: KEYWORDS_PROMPT,
-    schemaName: "requirement_keywords",
-    schema: requirementKeywordsJsonSchema,
-    input: posting.requirements.map((r, i) => `${i + 1}. ${r.text}`).join("\n"),
-  })
-  const { items } = RequirementKeywordsSchema.parse(keywords.data)
-
-  const data = JobPostingSchema.parse({
-    ...posting,
-    requirements: posting.requirements.map((req) => ({
+  const posting = JobPostingSchema.parse({
+    ...draft,
+    requirements: draft.requirements.map((req) => ({
       ...req,
-      keywords: keywordsForRequirement(req.text, items),
+      concepts: splitIntoConcepts(req.text),
     })),
   })
 
-  return { data, tokens: draft.tokens + keywords.tokens }
-}
-
-/** Metin eşleşmesinin kapsama yoluyla kabul edilebilmesi için asgari uzunluk. */
-const MIN_KAPSAMA_UZUNLUGU = 15
-
-/**
- * Bir gereksinimin anahtar kelimelerini, modelin döndürdüğü metinle
- * doğrulayarak bulur.
- *
- * Sıraya güvenmek yetmiyor: model bileşik bir gereksinimi alt maddelerine
- * bölüp her birine anahtar kelime üretebiliyor. Sayı tesadüfen tuttuğunda
- * uzunluk kontrolü bunu yakalamıyor ve anahtar kelimeler bir gereksinim
- * kaymış hâlde yapışıyor (K-18).
- *
- * Eşleşme bulunamazsa boş dizi döner: yanlış gereksinime anahtar kelime
- * yapıştırmaktansa o gereksinimi anlamsal eşleşmeye bırakmak yeğdir.
- */
-function keywordsForRequirement(
-  requirementText: string,
-  items: Array<{ text: string; keywords: string[] }>,
-): string[] {
-  const aranan = normalizeText(requirementText)
-
-  for (const item of items) {
-    if (normalizeText(item.text) === aranan) return item.keywords
-  }
-
-  // Model metni kısaltmış veya uzatmış olabilir; kapsama yoluyla eşleştir.
-  // Kısa metinlerde kapsama yanlış eşleşme üretir, bu yüzden alt sınır var.
-  for (const item of items) {
-    const echo = normalizeText(item.text)
-    const kisa = Math.min(echo.length, aranan.length)
-    if (kisa < MIN_KAPSAMA_UZUNLUGU) continue
-    if (echo.includes(aranan) || aranan.includes(echo)) return item.keywords
-  }
-
-  return []
+  return { data: posting, tokens }
 }

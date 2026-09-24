@@ -13,13 +13,15 @@ const sonuc = (
   score: 50,
   missingKeywords: [],
   requirements: satirlar.map((s) => ({
-    requirement: { text: s.text, type: "skill", importance: "must", keywords: [] },
+    requirement: { text: s.text, type: "skill", importance: "must", concepts: [] },
     status: s.status,
     confidence: s.status === "matched" ? 1 : 0,
     method: s.status === "matched" ? (s.method ?? "keyword") : null,
     evidence: s.evidence
-      ? { text: s.evidence, matchText: s.evidence, kind: "bullet", sourceRef: null }
+      ? { text: s.evidence, matchText: s.evidence, kind: "bullet" as const, sourceRef: null }
       : null,
+    matchedConcepts: [],
+    missingConcepts: [],
   })),
 })
 

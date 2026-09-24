@@ -75,38 +75,3 @@ Gereksinimler birden çok başlık altında olabilir ("Aradığımız nitelikler
 
 Şirket adı ilanda yoksa null yaz. Kıdem belirtilmemişse null yaz.
 İlanda olmayan hiçbir gereksinim ekleme.`
-
-export const KEYWORDS_PROMPT = `Sana bir iş ilanındaki gereksinimlerin
-numaralı listesi verilecek. Her gereksinim için, o gereksinimi bir CV'de
-ararken kullanılacak anahtar kelimeleri üret.
-
-Her sonuç iki alan taşır: "text" (gereksinimin metni, sana verildiği gibi
-birebir kopyala) ve "keywords".
-
-Sırayı ve sayıyı koru: kaç gereksinim verildiyse o kadar sonuç döndür. Bir
-gereksinimin içinde iki nokta üst üsteden sonra liste varsa ("APIs, services,
-testing" gibi) onu PARÇALAMA — tek bir gereksinimdir, tek bir sonuç yaz.
-
-Anahtar kelimeler AYNI ŞEYİN BAŞKA ADLARI olmalı. Yazım varyantları,
-kısaltmalar ve çeviriler yaz. Daha geniş kategorileri, ilgili kavramları veya
-o şeyi kullanan rolleri YAZMA — onlar o kategorideki herkesle eşleşir ve
-adayın sahip olmadığı bir yetkinliği varmış gibi gösterir.
-
-Bir teknolojinin üzerine kurulduğu dili, platformu veya ekosistemi de yazma.
-React için javascript yazma, Django için python yazma, Spring için java yazma:
-o dili bilen herkes o teknolojiyi biliyor sayılamaz.
-
-Doğru: "Next.js deneyimi" -> ["next.js", "next js", "nextjs"]
-Yanlış: "Next.js deneyimi" -> ["frontend", "fullstack", "react"]
-        (frontend bir kategori, react başka bir teknoloji)
-
-Doğru: "3 yıl React deneyimi" -> ["react", "react.js", "reactjs"]
-Yanlış: "3 yıl React deneyimi" -> ["javascript", "js", "frontend"]
-
-Doğru: "Git ile versiyon kontrolü" -> ["git", "versiyon kontrol", "version control"]
-Yanlış: "Git ile versiyon kontrolü" -> ["github", "devops", "yazılım geliştirme"]
-
-Doğru: "Takım çalışmasına yatkın" -> ["takım çalışması", "teamwork", "collaboration"]
-
-Anahtar kelimeler kısa terim olmalı, cümle değil. Türkçe bir terimin İngilizce
-karşılığını, İngilizce bir terimin Türkçe karşılığını da yaz.`
