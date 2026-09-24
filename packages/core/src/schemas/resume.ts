@@ -48,6 +48,30 @@ export const ResumeSegmentsSchema = z.object({
 /** Aşama 2 şemaları: her blok için ayrı ve kısa çağrı. */
 export const ExperienceListSchema = z.object({ experience: z.array(ExperienceSchema) })
 export const EducationListSchema = z.object({ education: z.array(EducationSchema) })
+/**
+ * Beceri bölümünün SATIR SATIR transkripsiyonu.
+ *
+ * Model "hangisi beceri" kararını vermiyor, yalnızca satırları kopyalıyor;
+ * yorum kodda yapılıyor (flattenSkillLines). Sebebi ölçümle bulundu: beceri
+ * bölümü birden çok alt başlık içerdiğinde ("Core Skills" + "Technical
+ * Skills") model bunlardan yalnızca birini döndürüyor ve diğerini tümüyle
+ * atıyordu — hangi prompt yazılırsa yazılsın. Satır transkripsiyonu istendiğinde
+ * ise hiçbir satırı kaçırmıyor (K-19).
+ */
+export const SkillLinesSchema = z.object({
+  lines: z.array(
+    z.object({
+      /** İki nokta üst üsteden önceki kısım; ya kategori ya beceri adı. */
+      label: z.string(),
+      /** Kısa terimlerin virgüllü listesiyse öğeler; cümleyse boş. */
+      items: z.array(z.string()),
+    }),
+  ),
+  languages: z.array(z.string()),
+  certifications: z.array(z.string()),
+})
+
+/** Düzleştirilmiş hâl; hattın geri kalanı bunu görür. */
 export const SkillsSchema = z.object({
   skills: z.array(z.string()),
   languages: z.array(z.string()),
@@ -59,9 +83,11 @@ export type Experience = z.infer<typeof ExperienceSchema>
 export type Education = z.infer<typeof EducationSchema>
 export type ResumeProfile = z.infer<typeof ResumeProfileSchema>
 export type ResumeSegments = z.infer<typeof ResumeSegmentsSchema>
+export type SkillLines = z.infer<typeof SkillLinesSchema>
 
 export const resumeProfileJsonSchema = toJsonSchema(ResumeProfileSchema)
 export const resumeSegmentsJsonSchema = toJsonSchema(ResumeSegmentsSchema)
 export const experienceListJsonSchema = toJsonSchema(ExperienceListSchema)
 export const educationListJsonSchema = toJsonSchema(EducationListSchema)
+export const skillLinesJsonSchema = toJsonSchema(SkillLinesSchema)
 export const skillsJsonSchema = toJsonSchema(SkillsSchema)

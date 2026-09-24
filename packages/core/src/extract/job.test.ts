@@ -13,7 +13,12 @@ const DRAFT = {
   ],
 }
 
-const KEYWORDS = { keywords: [["react", "react.js"], ["next.js", "nextjs"]] }
+const KEYWORDS = {
+  items: [
+    { text: "3 yıl React deneyimi", keywords: ["react", "react.js"] },
+    { text: "Tercihen Next.js", keywords: ["next.js", "nextjs"] },
+  ],
+}
 
 function fakeLlm(
   responses: Record<string, unknown>,
@@ -71,15 +76,71 @@ describe("extractJobPosting", () => {
     expect(data.seniority).toBeNull()
   })
 
-  it("hizalama eksikse kalan gereksinimi anahtar kelimesiz bırakır", async () => {
+  it("eksik kalan gereksinimi anahtar kelimesiz bırakır", async () => {
     // Sessizce yanlış eşleştirmektense anahtar kelimesiz bırakmak yeğdir:
     // skorlamada anlamsal eşleşmeye düşer.
     const { data } = await extractJobPosting(
-      fakeLlm({ ...RESPONSES, requirement_keywords: { keywords: [["react"]] } }),
+      fakeLlm({
+        ...RESPONSES,
+        requirement_keywords: {
+          items: [{ text: "3 yıl React deneyimi", keywords: ["react"] }],
+        },
+      }),
       "ilan metni",
     )
     expect(data.requirements[0]!.keywords).toEqual(["react"])
     expect(data.requirements[1]!.keywords).toEqual([])
+  })
+
+  it("sıra değişse bile anahtar kelimeleri metne göre eşler", async () => {
+    const { data } = await extractJobPosting(
+      fakeLlm({
+        ...RESPONSES,
+        requirement_keywords: {
+          items: [
+            { text: "Tercihen Next.js", keywords: ["next.js"] },
+            { text: "3 yıl React deneyimi", keywords: ["react"] },
+          ],
+        },
+      }),
+      "ilan metni",
+    )
+    expect(data.requirements[0]!.keywords).toEqual(["react"])
+    expect(data.requirements[1]!.keywords).toEqual(["next.js"])
+  })
+
+  it("kayan hizalamada yanlış anahtar kelime yapıştırmaz", async () => {
+    // K-18: model bileşik bir gereksinimi alt maddelerine bölüp her birine
+    // anahtar kelime üretebiliyor. Sayı tutsa bile içerik kaymış oluyor.
+    const { data } = await extractJobPosting(
+      fakeLlm({
+        ...RESPONSES,
+        requirement_keywords: {
+          items: [
+            { text: "API tasarımı ve servis geliştirme", keywords: ["api"] },
+            { text: "Sürekli entegrasyon süreçleri", keywords: ["ci/cd"] },
+          ],
+        },
+      }),
+      "ilan metni",
+    )
+    expect(data.requirements[0]!.keywords).toEqual([])
+    expect(data.requirements[1]!.keywords).toEqual([])
+  })
+
+  it("model metni kısaltmışsa kapsama yoluyla eşler", async () => {
+    const { data } = await extractJobPosting(
+      fakeLlm({
+        ...RESPONSES,
+        requirement_keywords: {
+          items: [
+            { text: "3 yıl React deneyimi ve modern arayüz geliştirme", keywords: ["react"] },
+          ],
+        },
+      }),
+      "ilan metni",
+    )
+    expect(data.requirements[0]!.keywords).toEqual(["react"])
   })
 
   it("gereksinim yoksa ikinci çağrıyı hiç yapmaz", async () => {

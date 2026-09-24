@@ -4,13 +4,14 @@ import {
   ExperienceListSchema,
   ResumeProfileSchema,
   ResumeSegmentsSchema,
-  SkillsSchema,
+  SkillLinesSchema,
   educationListJsonSchema,
   experienceListJsonSchema,
   resumeSegmentsJsonSchema,
-  skillsJsonSchema,
+  skillLinesJsonSchema,
 } from "../schemas/resume.js"
-import type { ResumeProfile } from "../schemas/resume.js"
+import type { ResumeProfile, SkillLines } from "../schemas/resume.js"
+import { flattenSkillLines } from "./skills.js"
 import {
   EDUCATION_PROMPT,
   EXPERIENCE_PROMPT,
@@ -19,6 +20,18 @@ import {
 } from "./prompts.js"
 
 const BOS_BECERI = { skills: [], languages: [], certifications: [] }
+
+/**
+ * Satır transkripsiyonunu profilin beklediği düz beceri listesine çevirir.
+ * "Hangisi beceri" kararı kodda veriliyor, modelde değil (K-19).
+ */
+function duzlestir(lines: SkillLines) {
+  return {
+    skills: flattenSkillLines(lines),
+    languages: lines.languages,
+    certifications: lines.certifications,
+  }
+}
 
 /**
  * İki aşamalı çıkarım (spec §6.3): önce kaba bölümleme, sonra blok başına
@@ -68,7 +81,7 @@ export async function extractResumeProfile(
     ? await llm.extract({
         prompt: SKILLS_PROMPT,
         schemaName: "resume_skills",
-        schema: skillsJsonSchema,
+        schema: skillLinesJsonSchema,
         input: blocks.skillsBlock,
       })
     : null
@@ -82,7 +95,7 @@ export async function extractResumeProfile(
     summary: blocks.summaryBlock.trim() || null,
     experience: experience ? ExperienceListSchema.parse(experience.data).experience : [],
     education: education ? EducationListSchema.parse(education.data).education : [],
-    ...(skills ? SkillsSchema.parse(skills.data) : BOS_BECERI),
+    ...(skills ? duzlestir(SkillLinesSchema.parse(skills.data)) : BOS_BECERI),
   })
 
   return { data: profile, tokens }

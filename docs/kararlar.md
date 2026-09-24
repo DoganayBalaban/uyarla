@@ -667,3 +667,126 @@ Sentetik test verisi biçim çeşitliliğini göstermiyor. Dört hatanın üçü
 (K-13 yanlış kanıt, K-17 beceri çıkarımı, K-11 eksik gereksinimler) ancak
 gerçek veriyle ortaya çıktı. Değerlendirme setinin gerçek veriden kurulması
 bir tercih değil, ön koşul.
+
+---
+
+## K-18 · Anahtar kelime hizalaması sıraya değil metne dayanıyor
+
+**Tarih:** 24 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1, Görev 7
+
+İlan çıkarımının ikinci çağrısı artık her anahtar kelime listesiyle birlikte
+ait olduğu gereksinimin metnini de döndürüyor; hizalama bu metinle
+doğrulanıyor. Eşleşme bulunamayan gereksinim anahtar kelimesiz bırakılıyor.
+
+**Bulgu:** Değerlendirme seti genişletilirken saçma skorlar çıktı — bir AI
+mühendisi CV'si bir AI mühendisi ilanına **5** puan aldı, aynı ilana bir
+yazılım test mühendisi CV'si **20** aldı.
+
+Sebep, anahtar kelimelerin bir gereksinim kaymış olmasıydı:
+
+```
+Gereksinim: "2+ years building LLM or agent systems"
+   kw:      ["API", "arayüz programlama"]      ← 1. gereksinime ait
+
+Gereksinim: "At least 5 hours overlap with PST timezone"
+   kw:      ["LangGraph", "langgraph"]         ← 3. gereksinime ait
+```
+
+Model, ilk gereksinimin içindeki iki nokta üst üsteden sonraki listeyi
+("APIs, services, data infrastructure, testing, CI/CD, on-call") ayrı
+gereksinimler sayıp her birine anahtar kelime üretmişti. **Sayı tesadüfen
+tuttuğu için** K-11'deki uzunluk kontrolü devreye girmedi.
+
+Hata koşulluydu: beş ilandan yalnızca birinde, bileşik ve düzyazı üsluplu
+gereksinimler olan İngilizce ilanda görüldü. Diğer dördünde hizalama
+doğruydu.
+
+**Düzeltme:** Şema `keywords: string[][]` yerine
+`items: [{ text, keywords }]`. Eşleştirme önce tam metin, bulunamazsa
+kapsama yoluyla (asgari 15 karakter sınırıyla, kısa metinlerin yanlış
+eşleşmesini önlemek için) yapılıyor. Prompt'a ayrıca "iki nokta üst üsteden
+sonraki listeyi parçalama, tek gereksinimdir" kuralı eklendi.
+
+Ölçüldü: kırılan ilanda **12/12 gereksinim doğru hizalandı**, anahtar
+kelimesiz kalan yok. Bileşik gereksinim artık tek parça kalıyor ve alt
+maddeleri kendi anahtar kelimeleri oluyor.
+
+**K-11'deki karar hatalıydı ve gerekçesi de kayıtlıydı.** O zaman iki biçim
+ölçülmüş, `items[{text, keywords}]` 200 token harcadığı ve daha gürültülü
+kelimeler ürettiği için reddedilmiş, düz dizi seçilmişti. Yanlış olan,
+**token maliyeti için doğrulanabilirliği feda etmekti**: düz biçimde
+hizalamanın doğru olduğunu kontrol etmenin hiçbir yolu yoktu, sessizce
+kırıldığında da kimse fark etmedi.
+
+**Ders:** Bir sıra varsayımına dayanan her yerde, o sıranın doğruluğunu
+kontrol edecek bir alan taşımak gerekir. Maliyeti birkaç yüz token; yokluğun
+maliyeti, ürünün ana çıktısının sessizce anlamsızlaşması.
+
+Bu hatayı **değerlendirme seti yakaladı** — tam da kurulma amacı buydu.
+Sentetik iki çiftlik sette görünmüyordu ve üretimde ancak kullanıcı
+şikâyetiyle öğrenilirdi.
+
+---
+
+## K-19 · Beceri çıkarımı: model transkribe eder, yorumu kod yapar
+
+**Tarih:** 24 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1, Görev 6
+
+Beceri çıkarımı artık modelden "beceri listesi" istemiyor; **satır satır
+transkripsiyon** istiyor. Hangi parçanın beceri olduğu kararı kodda,
+`flattenSkillLines` içinde veriliyor.
+
+```
+model döndürür:  { label: "Programming Languages", items: ["Java", "SQL"] }
+                 { label: "Manual Testing", items: ["Performing regression testing."] }
+
+kod karar verir: items kısa ve noktasız terimlerse → onlar beceridir
+                 değilse → label beceridir
+                 label bir bölüm başlığıysa → hiçbiri
+```
+
+**Bulgu:** K-17'deki düzeltmeden sonra bile beceri çıkarımı kırılmaya devam
+etti. Değerlendirme setindeki bir test mühendisi CV'si üç ilanda da **0**
+aldı; CV'de `Java`, `SQL`, `Selenium`, `JIRA`, `Postman` yazılı olmasına
+rağmen hiçbiri çıkarılmamıştı.
+
+Sebep, o CV'nin **iki ayrı beceri bölümü** olmasıydı:
+
+```
+Core Skills          → Test Case Design, Manual Testing…   (isim: açıklama)
+Technical Skills     → Programming Languages: Java, SQL     (kategori: a, b, c)
+```
+
+Bölümleme doğru çalışıyordu — iki bölüm de `skillsBlock` içindeydi. Model,
+bloğu tek bir liste sanıp **gruplardan yalnızca birini** döndürüyordu.
+
+**Prompt ile çözülemedi.** İki farklı prompt denendi ve ikisi de yalnızca bir
+grubu aldı — üstelik farklı grupları: mevcut prompt teknik becerileri alıp
+anlatı becerilerini attı, yeni prompt tam tersini yaptı. Sorun ifade değil,
+modelden **tek çağrıda hem yapıyı çözmesinin hem yorumlamasının** istenmesiydi.
+
+Gruplu şema (`groups: [{ heading, skills }]`) denendi: iki grup da geldi ama
+bu sefer iç kategorilerin adları beceri yerine geçti — yapı aslında üç
+katmanlıydı (bölüm → kategori → beceri), şema iki katmanlıydı.
+
+**Çözüm satır transkripsiyonu oldu.** Model satırları kusursuz kopyalıyor:
+etiketler doğru, terimler doğru, hiçbir satır düşmüyor. Yorum kodda yapılınca
+deterministik ve test edilebilir hâle geliyor — sekiz birim testi kuralı
+kilitliyor.
+
+**Ölçüm:**
+
+| CV biçimi | Önce | Sonra |
+|---|---|---|
+| İki bölümlü (Core + Technical) | bir grup, 6 beceri | **8 beceri, iki grup da** |
+| Kategorili (AI/LLM, Backend, …) | 4–21 arası oynak | **23 beceri, kategori sızmıyor** |
+
+Prompt'a üç satır biçimi de öğretildi: `"Kategori: a, b, c"`,
+`"Beceri: açıklama"` ve kategorinin kendi satırında olup terimlerin alt
+satırda geldiği biçim. Sonuncusu eklenmeden kategori adları beceri olarak
+sızıyordu — K-13'te uğraştığımız yanlış pozitif kaynağının aynısı.
+
+**Genel ders — K-18'in devamı:** Modelden yorum istenirse hata sessiz olur;
+transkripsiyon istenip yorum kodda yapılırsa hata testle yakalanır. Bu
+projede aynı desen üç kez çıktı: gereksinim listesinin erken kapanması
+(K-11), anahtar kelime hizalaması (K-18), beceri çıkarımı (K-19).
