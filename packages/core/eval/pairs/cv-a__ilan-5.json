@@ -1,0 +1,24 @@
+{
+  "id": "cv-a__ilan-5",
+  "cv": "cv-a-ai-engineer",
+  "ilan": "ilan-5",
+  "note": "AI mühendisi CV'si, İngilizce kıdemli ilan. 5+ yıl ve yüksek lisans CV'de yok.",
+  "expectations": [
+    {
+      "match": "Bachelor",
+      "shouldMatch": true
+    },
+    {
+      "match": "Master",
+      "shouldMatch": false
+    },
+    {
+      "match": "RAG architectures",
+      "shouldMatch": true
+    },
+    {
+      "match": "agent frameworks",
+      "shouldMatch": true
+    }
+  ]
+}

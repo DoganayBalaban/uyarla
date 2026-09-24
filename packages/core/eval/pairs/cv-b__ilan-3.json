@@ -1,0 +1,28 @@
+{
+  "id": "cv-b__ilan-3",
+  "cv": "cv-b-test-engineer",
+  "ilan": "ilan-3",
+  "note": "Test mühendisi CV'si, AI mühendisi ilanı (İngilizce). Test ve API bileşenleri dışında eşleşme olmamalı.",
+  "expectations": [
+    {
+      "match": "2+ years building LLM",
+      "shouldMatch": false
+    },
+    {
+      "match": "LangChain, LangGraph",
+      "shouldMatch": false
+    },
+    {
+      "match": "Retrieval-augmented generation",
+      "shouldMatch": false
+    },
+    {
+      "match": "MCP, tool-calling",
+      "shouldMatch": false
+    },
+    {
+      "match": "Observability for LLM",
+      "shouldMatch": false
+    }
+  ]
+}

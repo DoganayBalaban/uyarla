@@ -1,0 +1,37 @@
+{
+  "id": "cv-a__ilan-1",
+  "cv": "cv-a-ai-engineer",
+  "ilan": "ilan-1",
+  "note": "AI mühendisi CV'si, Türkçe AI mühendisi ilanı. Deneyim ~1 yıl, ilan 5 yıl istiyor.",
+  "expectations": [
+    {
+      "match": "Bilgisayar Mühendisliği",
+      "shouldMatch": true,
+      "evidenceContains": "Software Engineering"
+    },
+    {
+      "match": "en az 5 yıl deneyim",
+      "shouldMatch": false
+    },
+    {
+      "match": "Python, REST API, SQL",
+      "shouldMatch": true
+    },
+    {
+      "match": "Makine öğrenmesi ve veri bilimi",
+      "shouldMatch": false
+    },
+    {
+      "match": "Git ve CI/CD",
+      "shouldMatch": true
+    },
+    {
+      "match": "Generative AI Yetkinlikleri",
+      "shouldMatch": true
+    },
+    {
+      "match": "Otonom karar mekanizmaları",
+      "shouldMatch": true
+    }
+  ]
+}

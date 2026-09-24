@@ -1,0 +1,32 @@
+{
+  "id": "cv-b__ilan-1",
+  "cv": "cv-b-test-engineer",
+  "ilan": "ilan-1",
+  "note": "Test mühendisi CV'si, AI mühendisi ilanı. Uyumsuz çift: uydurma eşleşmeyi yakalar.",
+  "expectations": [
+    {
+      "match": "Bilgisayar Mühendisliği",
+      "shouldMatch": true
+    },
+    {
+      "match": "en az 5 yıl deneyim",
+      "shouldMatch": false
+    },
+    {
+      "match": "Makine öğrenmesi ve veri bilimi",
+      "shouldMatch": false
+    },
+    {
+      "match": "Git ve CI/CD",
+      "shouldMatch": false
+    },
+    {
+      "match": "Generative AI Yetkinlikleri",
+      "shouldMatch": false
+    },
+    {
+      "match": "Otonom karar mekanizmaları",
+      "shouldMatch": false
+    }
+  ]
+}

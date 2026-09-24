@@ -1,66 +1,80 @@
-import { readFileSync, readdirSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
-import { extractJobPosting } from "../src/extract/job.js"
-import { extractResumeProfile } from "../src/extract/resume.js"
 import {
   OpenAiCompatibleEmbeddingProvider,
   embeddingConfigFromEnv,
 } from "../src/llm/embedding.js"
-import { LmStudioProvider } from "../src/llm/lmstudio.js"
-import { llmConfigFromEnv } from "../src/llm/types.js"
+import type { JobPostingData } from "../src/schemas/job.js"
+import type { ResumeProfile } from "../src/schemas/resume.js"
 import { DEFAULT_SCORING_CONFIG } from "../src/score/config.js"
 import { collectEvidence } from "../src/score/evidence.js"
-import { score, type ScoreInput } from "../src/score/score.js"
+import { conceptTexts, score, type ScoreInput } from "../src/score/score.js"
 import { compareToExpectations } from "./compare.js"
 import type { EvalPair } from "./types.js"
 
 /**
  * Eşik taraması.
  *
- * Çıkarım ve gömme her çift için BİR KEZ yapılıp bellekte tutuluyor; sonra
- * skor fonksiyonu farklı eşiklerle tekrar tekrar çalıştırılıyor. Skor saf bir
- * fonksiyon olduğu için bu mümkün — her eşik için baştan çıkarım yapmak
- * dakikalarca sürerdi.
+ * Çıkarım `eval:prepare` önbelleğinden okunuyor, gömme bir kez yapılıyor;
+ * sonra skor fonksiyonu farklı eşiklerle tekrar tekrar çalıştırılıyor. Skor
+ * saf bir fonksiyon olduğu için bu mümkün — her eşik için baştan çıkarım
+ * yapmak dakikalarca sürerdi.
  */
-const PAIRS_DIR = join(import.meta.dirname, "pairs")
-const ESIKLER = [0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
+const KOK = import.meta.dirname
+const CACHE = join(KOK, "cache")
+const SOURCES = join(KOK, "sources")
+const PAIRS = join(KOK, "pairs")
+const ESIKLER = [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
 
 async function main() {
-  const llm = new LmStudioProvider(llmConfigFromEnv())
-  const embedding = new OpenAiCompatibleEmbeddingProvider(embeddingConfigFromEnv())
-
-  const dosyalar = readdirSync(PAIRS_DIR).filter((f) => f.endsWith(".json")).sort()
-  const hazirlanan: Array<{ pair: EvalPair; input: ScoreInput }> = []
-
-  console.log(`[sweep] ${dosyalar.length} çift için çıkarım yapılıyor (bir kez)…\n`)
-  for (const dosya of dosyalar) {
-    const pair = JSON.parse(readFileSync(join(PAIRS_DIR, dosya), "utf8")) as EvalPair
-    process.stdout.write(`  ${pair.id} … `)
-
-    const profil = await extractResumeProfile(llm, pair.resumeText)
-    const ilan = await extractJobPosting(llm, pair.jobText)
-    const kanitlar = collectEvidence(profil.data)
-    const kanitMetinleri = kanitlar.map((k) => k.text)
-    const gereksinimMetinleri = ilan.data.requirements.map((r) => r.text)
-    const vektorler = await embedding.embed([...kanitMetinleri, ...gereksinimMetinleri])
-
-    hazirlanan.push({
-      pair,
-      input: {
-        profile: profil.data,
-        posting: ilan.data,
-        evidence: kanitlar,
-        evidenceVectors: vektorler.slice(0, kanitMetinleri.length),
-        requirementVectors: vektorler.slice(kanitMetinleri.length),
-      },
-    })
-    console.log(`${kanitlar.length} kanıt · ${ilan.data.requirements.length} gereksinim`)
+  const beklentiDosyalari = existsSync(PAIRS)
+    ? readdirSync(PAIRS).filter((f) => f.endsWith(".json"))
+    : []
+  if (beklentiDosyalari.length === 0) {
+    console.error(
+      `[sweep] ${PAIRS} altında beklenti dosyası yok.\n` +
+        "Tarama isabet ölçebilmek için beklentilere ihtiyaç duyuyor.",
+    )
+    process.exit(1)
   }
 
-  console.log("\n[sweep] eşik taraması:\n")
+  const embedding = new OpenAiCompatibleEmbeddingProvider(embeddingConfigFromEnv())
+  const hazir: Array<{ pair: EvalPair; input: ScoreInput }> = []
+
+  for (const dosya of beklentiDosyalari.sort()) {
+    const pair = JSON.parse(readFileSync(join(PAIRS, dosya), "utf8")) as EvalPair & {
+      cv: string
+      ilan: string
+    }
+    const profil = JSON.parse(
+      readFileSync(join(CACHE, `cv-${pair.cv}.json`), "utf8"),
+    ) as ResumeProfile
+    const ilan = JSON.parse(
+      readFileSync(join(CACHE, `ilan-${pair.ilan}.json`), "utf8"),
+    ) as JobPostingData
+
+    const kanitlar = collectEvidence(profil)
+    const kanitMetinleri = kanitlar.map((k) => k.text)
+    const kavramMetinleri = conceptTexts(ilan)
+    const vektorler = await embedding.embed([...kanitMetinleri, ...kavramMetinleri])
+
+    hazir.push({
+      pair,
+      input: {
+        profile: profil,
+        posting: ilan,
+        evidence: kanitlar,
+        evidenceVectors: vektorler.slice(0, kanitMetinleri.length),
+        conceptVectors: vektorler.slice(kanitMetinleri.length),
+      },
+    })
+  }
+
+  console.log(`[sweep] ${hazir.length} çift · ${ESIKLER.length} eşik\n`)
+
   const satirlar = ESIKLER.map((esik) => {
     let hits = 0, misses = 0, fabrications = 0, byKeyword = 0, bySemantic = 0
-    for (const { pair, input } of hazirlanan) {
+    for (const { pair, input } of hazir) {
       const sonuc = score(input, { ...DEFAULT_SCORING_CONFIG, semanticThreshold: esik })
       const m = compareToExpectations(pair.id, sonuc, pair.expectations, 0)
       hits += m.hits; misses += m.misses; fabrications += m.fabrications
@@ -81,9 +95,9 @@ async function main() {
 
   console.log("\nSkorlar eşiğe göre:")
   for (const esik of ESIKLER) {
-    const skorlar = hazirlanan.map(({ pair, input }) => {
+    const skorlar = hazir.map(({ pair, input }) => {
       const s = score(input, { ...DEFAULT_SCORING_CONFIG, semanticThreshold: esik })
-      return `${pair.id}=${s.score}`
+      return `${pair.id.slice(0, 18)}=${String(s.score).padStart(2)}`
     })
     console.log(`  ${esik.toFixed(2)} → ${skorlar.join("  ")}`)
   }

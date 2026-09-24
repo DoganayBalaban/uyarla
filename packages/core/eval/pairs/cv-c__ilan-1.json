@@ -1,0 +1,32 @@
+{
+  "id": "cv-c__ilan-1",
+  "cv": "cv-c-yeni-mezun",
+  "ilan": "ilan-1",
+  "note": "Yeni mezun CV'si (Yönetim Bilişim Sistemleri), kıdemli AI ilanı. Yapay zekâ eğitmenliği profesyonel GenAI deneyimi değil.",
+  "expectations": [
+    {
+      "match": "Bilgisayar Mühendisliği",
+      "shouldMatch": true
+    },
+    {
+      "match": "en az 5 yıl deneyim",
+      "shouldMatch": false
+    },
+    {
+      "match": "Python, REST API, SQL",
+      "shouldMatch": true
+    },
+    {
+      "match": "Makine öğrenmesi ve veri bilimi",
+      "shouldMatch": false
+    },
+    {
+      "match": "Generative AI Yetkinlikleri",
+      "shouldMatch": false
+    },
+    {
+      "match": "Otonom karar mekanizmaları",
+      "shouldMatch": false
+    }
+  ]
+}

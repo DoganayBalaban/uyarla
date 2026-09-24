@@ -944,3 +944,153 @@ veri üretiyor.** Bugün beş kez ikincisini yaşadık.
 **Genel ders — üçüncü kez doğrulandı:** deterministik bir işi dil modeline
 vermek, ücretsiz olmayan bir kolaylık. Bölümleme metni başlığına göre kesmek
 demek; yorum gerektirmiyor, o yüzden modele ait değil.
+
+---
+
+## K-23 · Kavram tabanlı skorlama; ikinci LLM çağrısı kaldırıldı
+
+**Tarih:** 24 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1+
+**K-11 ve K-18'in yerine geçer.**
+
+Gereksinimler artık **kavramlara** bölünüyor ve güven, karşılanan kavram
+oranından hesaplanıyor. Bölme işi kodda (`splitIntoConcepts`), eşleştirme
+kavram düzeyinde. İlan çıkarımının ikinci LLM çağrısı tümüyle kaldırıldı.
+
+### Sorun: bileşik gereksinimler tam puan alıyordu
+
+Değerlendirme setinde iki CV'yi yan yana koyunca görüldü:
+
+```
+Gereksinim: "Git ve CI/CD, Microservices, Docker ve Container teknolojileri"
+
+AI mühendisi → Docker ✓ Git ✓            güven 1.00
+yeni mezun   → yalnızca "Git & GitHub"    güven 1.00   ← aynı puan
+```
+
+Dört şey isteyen bir gereksinim, bir tanesini bilen adaya tam puan veriyordu.
+İlanlar sık sık böyle yazılıyor; yeni mezunun 43 alması büyük ölçüde bundan.
+
+### Neden düz anahtar kelime listesi yetmiyordu
+
+Listeden "eş anlamlı" ile "ayrı bileşen" ayırt edilemiyor:
+
+```
+["react", "react.js", "reactjs"]              → aynı şey, biri yeter
+["git", "ci/cd", "microservices", "docker"]   → dört ayrı şey
+```
+
+### Kavramlara bölme neden kodda
+
+Model bu işte üç farklı biçimde üç farklı şekilde başarısız oldu:
+
+| Şema biçimi | Sonuç |
+|---|---|
+| İç içe (`items → concepts → synonyms`) | Tüm gereksinimler var, **kavramlar eksik** (5 yerine 2) |
+| Düz satır, sade prompt | **Tüm kavramlar var**, eş anlamlılar boş, terimler cümle gibi |
+| Düz satır, sıkı prompt | **2 kavram**, liste ikinci gereksinimde kapandı |
+
+Aynı ilanda kod bölmesi 5 kavram bulurken model 1 buluyordu:
+
+```
+"Generative AI Yetkinlikleri, OpenAI, Azure OpenAI, Anthropic Claude ve Gemini API"
+  model → ["generative ai"]
+  kod   → ["Generative AI","OpenAI","Azure OpenAI","Anthropic Claude","Gemini API"]
+```
+
+Bileşik bir gereksinimi parçalamak metin işlemedir: virgül, "ve", "and", iki
+nokta üst üste. Yorum gerektirmiyor.
+
+### Anlamsal eşleştirme kavram düzeyine indi
+
+Eskiden koca bir gereksinim cümlesi bir CV maddesiyle karşılaştırılıyordu; bu
+fazla kabaydı ve anlamsal katman hiçbir katkı yapmıyordu (K-15). Artık her
+kavram ayrı gömülüyor ve ayrı aranıyor. Beklenen iki kazanç:
+
+1. Karşılaştırma keskinleşiyor — `"version control"` ile `"Git ile versiyon
+   kontrolü kullandım"` buluşabiliyor.
+2. Çapraz dilli eşleşme sözlüğe elle yazmak yerine BGE-M3'e kalıyor; K-05'te
+   modeli seçme gerekçemiz buydu ve ilk kez gerçekten kullanılıyor.
+
+### Ağırlıklı katkı
+
+Tam kelime eşleşmesi kesindir ve 1.0 katkı verir; anlamsal eşleşme bir
+tahmindir ve benzerlik değeri kadar katkı verir. İkisine aynı ağırlığı vermek,
+tahmini kesinlik gibi göstermek olurdu.
+
+### Yan kazanç: bir LLM çağrısı daha eksildi
+
+İlan çıkarımı iki çağrıdan tek çağrıya indi. Ayrıca K-18'deki hizalama
+doğrulaması tümüyle gereksizleşti — iki çağrı olmayınca hizalanacak bir şey
+de yok. O hata sınıfı tasarımdan kalktı.
+
+Bugün toplam iki LLM çağrısı eksildi: bölümleme (K-22) ve anahtar kelime
+üretimi (K-23).
+
+**Genel ders — dördüncü kez:** Deterministik bir işi dil modeline vermek,
+ücretsiz olmayan bir kolaylık. Bugün dört yerde aynı sonuca varıldı: hizalama
+(K-18), beceri yorumu (K-19), bölümleme (K-22), kavramlara ayırma (K-23).
+
+---
+
+## K-24 · Eşik 0.65'te kalıyor — 10 çiftle doğrulandı
+
+**Tarih:** 25 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1+
+**K-15'i doğrular ve genişletir.**
+
+`semanticThreshold` 0.65. K-15'te 2 çift ve 14 iddiayla alınan geçici karar,
+10 çift ve 56 iddiayla tekrarlandı ve aynı sonuç çıktı.
+
+### Tarama
+
+| Eşik | İsabet % | Kaçırma | Uydurma | Anlamsal eşleşme |
+|---|---|---|---|---|
+| 0.30 | 37.5 | 0 | **35** | 45 |
+| 0.45 | 42.9 | 0 | 32 | 42 |
+| 0.50 | 48.2 | 0 | 29 | 39 |
+| 0.55 | 64.3 | 0 | 20 | 30 |
+| 0.60 | 75.0 | 3 | 11 | 18 |
+| **0.65** | **87.5** | 4 | **3** | 9 |
+| 0.70 | 87.5 | 5 | 2 | 7 |
+
+Eşiği düşürmek kaçırmayı sıfıra indiriyor ama uydurmayı 35'e çıkarıyor — yani
+her şeyi eşleştirip hiçbir şey söylememiş oluyor.
+
+**0.70 da düşünüldü:** aynı isabet, bir eksik uydurma, bir fazla kaçırma.
+"Uydurma kaçırmadan zararlıdır" ilkesine göre marjinal olarak daha iyi, ama 56
+iddiada bir birimlik fark gürültü sayılır. 0.65 tercih edildi çünkü skor
+ayrışması daha geniş ve ürün açısından skorun ayırt edici olması önemli:
+
+```
+0.65 →  AI mühendisi CV'si: 32 · 25 · 15 · 32
+        test mühendisi CV'si: 5 · 1 · 0
+        yeni mezun CV'si: 20 · 6 · 18
+
+0.30 →  hepsi 50–66 arası, ayrışma yok
+```
+
+### Anlamsal katman artık hak ettiği yeri kazanıyor
+
+K-15'te şöyle yazmıştık:
+
+> *"Rahatsız edici sonuç: Anlamsal katman bu veriyle hiçbir katkı yapmıyor —
+> 0.65'te sıfır eşleşme üretiyor."*
+
+Kavram düzeyine inince (K-23) aynı eşikte **9 eşleşme** üretiyor. Sorun
+katmanda değil, karşılaştırmanın kabalığındaymış: koca bir gereksinim
+cümlesini bir CV maddesiyle karşılaştırmak yerine kavramı karşılaştırınca
+sinyal ortaya çıkıyor.
+
+### Taban çizgisi
+
+```
+10 çift · 56 iddia
+İsabet oranı   : 87.5%
+Kaçırma        : 4
+Uydurma        : 3
+Çıkarılmayan   : 0
+Eşleşme kaynağı: kelime 11 · anlamsal 9
+```
+
+Kalan 3 uydurmanın üçü de yeni mezun CV'sinde ve anlamsal eşleşmeden geliyor:
+yapay zekâ eğitmenliği deneyimi, üretken yapay zekâ yetkinliği gereksinimine
+yakın düşüyor. Sonraki iyileştirme turunun ilk adayı bu.

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { score } from "./score.js"
+import { conceptTexts, score } from "./score.js"
 import { DEFAULT_SCORING_CONFIG } from "./config.js"
 import type { Evidence } from "./evidence.js"
 import type { ResumeProfile } from "../schemas/resume.js"
@@ -13,11 +13,25 @@ const PROFILE: ResumeProfile = {
 const kanit = (text: string): Evidence =>
   ({ text, matchText: text, kind: "bullet", sourceRef: text })
 
+/** Her anahtar kelime ayrı bir kavram sayılır (tek eş anlamlıyla). */
 const gereksinim = (
   text: string,
   importance: "must" | "nice",
-  keywords: string[],
-): Requirement => ({ text, type: "skill", importance, keywords })
+  kavramlar: string[],
+): Requirement => ({
+  text,
+  type: "skill",
+  importance,
+  concepts: kavramlar.map((k) => ({ term: k, synonyms: [k] })),
+})
+
+/** Tek kavram, birden çok eş anlamlı. */
+const esAnlamliGereksinim = (
+  text: string,
+  importance: "must" | "nice",
+  term: string,
+  synonyms: string[],
+): Requirement => ({ text, type: "skill", importance, concepts: [{ term, synonyms }] })
 
 const ilan = (requirements: Requirement[]): JobPostingData => ({
   position: "Geliştirici", company: null, seniority: null, language: "tr", requirements,
@@ -33,7 +47,7 @@ describe("score · kanıt arama", () => {
       posting: ilan([gereksinim("React deneyimi", "must", ["react"])]),
       evidence: [kanit("React ile panel geliştirdim")],
       evidenceVectors: [V.uzak],
-      requirementVectors: [V.yakin],
+      conceptVectors: [V.yakin],
     })
 
     expect(sonuc.requirements[0]!.status).toBe("matched")
@@ -50,7 +64,7 @@ describe("score · kanıt arama", () => {
       posting: ilan([gereksinim("React", "must", ["react"])]),
       evidence: [kanit("React biliyorum")],
       evidenceVectors: [V.orta],
-      requirementVectors: [V.yakin],
+      conceptVectors: [V.yakin],
     })
     expect(sonuc.requirements[0]!.method).toBe("keyword")
     expect(sonuc.requirements[0]!.confidence).toBe(1)
@@ -62,7 +76,7 @@ describe("score · kanıt arama", () => {
       posting: ilan([gereksinim("Arayüz geliştirme", "must", ["kubernetes"])]),
       evidence: [kanit("React ile panel geliştirdim")],
       evidenceVectors: [V.yakin],
-      requirementVectors: [V.yakin],
+      conceptVectors: [V.yakin],
     })
 
     expect(sonuc.requirements[0]!.status).toBe("matched")
@@ -76,7 +90,7 @@ describe("score · kanıt arama", () => {
       posting: ilan([gereksinim("Arayüz", "must", ["yok"])]),
       evidence: [kanit("orta yakınlıkta madde"), kanit("en yakın madde")],
       evidenceVectors: [V.orta, V.yakin],
-      requirementVectors: [V.yakin],
+      conceptVectors: [V.yakin],
     })
     expect(sonuc.requirements[0]!.evidence!.text).toBe("en yakın madde")
   })
@@ -87,7 +101,7 @@ describe("score · kanıt arama", () => {
       posting: ilan([gereksinim("Kubernetes", "must", ["kubernetes"])]),
       evidence: [kanit("React ile panel geliştirdim")],
       evidenceVectors: [V.uzak],
-      requirementVectors: [V.yakin],
+      conceptVectors: [V.yakin],
     })
 
     expect(sonuc.requirements[0]!.status).toBe("missing")
@@ -103,7 +117,7 @@ describe("score · kanıt arama", () => {
       posting: ilan([gereksinim("Kubernetes", "must", [])]),
       evidence: [kanit("React")],
       evidenceVectors: [],
-      requirementVectors: [],
+      conceptVectors: [],
     })
     expect(sonuc.requirements[0]!.status).toBe("missing")
   })
@@ -132,7 +146,7 @@ describe("score · yanlış kanıt koruması", () => {
       posting: ilan([gereksinim("Next.js deneyimi", "nice", ["frontend"])]),
       evidence: [bagliKanit, rolKaniti],
       evidenceVectors: [V.uzak, V.uzak],
-      requirementVectors: [V.yakin],
+      conceptVectors: [V.yakin],
     })
 
     // Eşleşme rol kanıtıyla olmalı, alakasız maddeyle değil.
@@ -150,7 +164,7 @@ describe("score · ağırlıklandırma", () => {
       ]),
       evidence: [kanit("React biliyorum")],
       evidenceVectors: [V.uzak],
-      requirementVectors: [V.yakin, V.yakin],
+      conceptVectors: [V.yakin, V.yakin],
     })
 
     // (2.0 × 1.0 + 1.0 × 0) / 3.0 = 0.667 → 67
@@ -166,20 +180,20 @@ describe("score · ağırlıklandırma", () => {
       ]),
       evidence: [kanit("React biliyorum")],
       evidenceVectors: [V.uzak],
-      requirementVectors: [V.yakin, V.yakin],
+      conceptVectors: [V.yakin, V.yakin],
     })
     // (2.0 × 0 + 1.0 × 1.0) / 3.0 = 0.333 → 33
     expect(sonuc.score).toBe(33)
   })
 
-  it("anlamsal eşleşmede güven benzerlik değeridir, 1.0 değil", () => {
+  it("anlamsal eşleşme benzerlik değeri kadar katkı verir, tam değil", () => {
     const sonuc = score(
       {
         profile: PROFILE,
         posting: ilan([gereksinim("Arayüz", "must", ["yok"])]),
         evidence: [kanit("madde")],
         evidenceVectors: [V.orta],
-        requirementVectors: [V.yakin],
+        conceptVectors: [V.yakin],
       },
       { ...DEFAULT_SCORING_CONFIG, semanticThreshold: 0.5 },
     )
@@ -191,7 +205,7 @@ describe("score · ağırlıklandırma", () => {
   it("gereksinim yoksa skor 0 döner, NaN değil", () => {
     const sonuc = score({
       profile: PROFILE, posting: ilan([]),
-      evidence: [], evidenceVectors: [], requirementVectors: [],
+      evidence: [], evidenceVectors: [], conceptVectors: [],
     })
     expect(sonuc.score).toBe(0)
     expect(sonuc.requirements).toEqual([])
@@ -201,7 +215,7 @@ describe("score · ağırlıklandırma", () => {
     const sonuc = score({
       profile: PROFILE,
       posting: ilan([gereksinim("React", "must", ["react"])]),
-      evidence: [], evidenceVectors: [], requirementVectors: [V.yakin],
+      evidence: [], evidenceVectors: [], conceptVectors: [V.yakin],
     })
     expect(sonuc.requirements[0]!.status).toBe("missing")
     expect(sonuc.score).toBe(0)
@@ -218,7 +232,7 @@ describe("score · eksik kelime listesi", () => {
       ]),
       evidence: [kanit("React biliyorum")],
       evidenceVectors: [V.uzak],
-      requirementVectors: [V.yakin, V.yakin],
+      conceptVectors: [V.yakin, V.yakin],
     })
 
     expect(sonuc.missingKeywords).toEqual(["kubernetes", "k8s"])
@@ -233,7 +247,7 @@ describe("score · eksik kelime listesi", () => {
       ]),
       evidence: [kanit("React")],
       evidenceVectors: [V.uzak],
-      requirementVectors: [V.yakin, V.yakin],
+      conceptVectors: [V.yakin, V.yakin],
     })
     expect(sonuc.missingKeywords).toEqual(["kubernetes", "k8s"])
   })
@@ -246,7 +260,7 @@ describe("score · yapılandırma", () => {
       posting: ilan([gereksinim("Arayüz", "must", ["yok"])]),
       evidence: [kanit("React ile panel geliştirdim")],
       evidenceVectors: [V.orta],
-      requirementVectors: [V.yakin],
+      conceptVectors: [V.yakin],
     }
 
     const kati = score(girdi, { ...DEFAULT_SCORING_CONFIG, semanticThreshold: 0.95 })
@@ -265,10 +279,111 @@ describe("score · yapılandırma", () => {
       ]),
       evidence: [kanit("React")],
       evidenceVectors: [V.uzak],
-      requirementVectors: [V.yakin, V.yakin],
+      conceptVectors: [V.yakin, V.yakin],
     }
 
     // must ve nice eşit ağırlıkta olsaydı: (1 + 0) / 2 = %50
     expect(score(girdi, { ...DEFAULT_SCORING_CONFIG, mustWeight: 1 }).score).toBe(50)
+  })
+})
+
+
+describe("score · oransal güven (K-23)", () => {
+  it("dört kavramdan biri karşılanırsa güven çeyrek olur", () => {
+    // "Git ve CI/CD, Microservices, Docker" gereksiniminde yalnızca Git bilen
+    // aday tam puan alıyordu; ilanlar sık sık böyle bileşik yazılıyor.
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([gereksinim("Git, CI/CD, Microservices, Docker", "must", [
+        "git", "ci/cd", "microservices", "docker",
+      ])]),
+      evidence: [kanit("Git ile versiyon kontrolü yaptım")],
+      evidenceVectors: [V.uzak],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.confidence).toBeCloseTo(0.25)
+    expect(sonuc.requirements[0]!.matchedConcepts).toEqual(["git"])
+    expect(sonuc.requirements[0]!.missingConcepts).toEqual([
+      "ci/cd", "microservices", "docker",
+    ])
+    expect(sonuc.score).toBe(25)
+  })
+
+  it("bütün kavramlar karşılanırsa güven tam olur", () => {
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([gereksinim("Git ve Docker", "must", ["git", "docker"])]),
+      evidence: [kanit("Git ve Docker kullandım")],
+      evidenceVectors: [V.uzak],
+      conceptVectors: [V.yakin],
+    })
+    expect(sonuc.requirements[0]!.confidence).toBe(1)
+    expect(sonuc.requirements[0]!.missingConcepts).toEqual([])
+  })
+
+  it("eş anlamlılardan biri yeterlidir, oranı düşürmez", () => {
+    // ["react","react.js","reactjs"] aynı şeyin adları; biri eşleşirse tam.
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([
+        esAnlamliGereksinim("React deneyimi", "must", "react", [
+          "react", "react.js", "reactjs",
+        ]),
+      ]),
+      evidence: [kanit("React ile panel geliştirdim")],
+      evidenceVectors: [V.uzak],
+      conceptVectors: [V.yakin],
+    })
+    expect(sonuc.requirements[0]!.confidence).toBe(1)
+  })
+
+  it("kısmen karşılanan gereksinimin eksik kavramları listeye girer", () => {
+    // Kullanıcı "React'in var ama Docker'ın yok" bilgisini görmeli.
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([gereksinim("React ve Docker", "must", ["react", "docker"])]),
+      evidence: [kanit("React ile panel geliştirdim")],
+      evidenceVectors: [V.uzak],
+      conceptVectors: [V.yakin],
+    })
+    expect(sonuc.missingKeywords).toEqual(["docker"])
+  })
+
+  it("kavramsız gereksinim eksik sayılır", () => {
+    // splitIntoConcepts her gereksinim için en az bir kavram üretiyor;
+    // boş liste geçersiz bir durum ve savunma amaçlı eksik sayılıyor.
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([gereksinim("Arayüz geliştirme", "must", [])]),
+      evidence: [kanit("React ile panel geliştirdim")],
+      evidenceVectors: [V.yakin],
+      conceptVectors: [],
+    })
+    expect(sonuc.requirements[0]!.status).toBe("missing")
+  })
+
+  it("tam kelime eşleşmesi anlamsal eşleşmeden daha çok katkı verir", () => {
+    const kelime = score({
+      profile: PROFILE,
+      posting: ilan([gereksinim("React", "must", ["react"])]),
+      evidence: [kanit("React ile panel geliştirdim")],
+      evidenceVectors: [V.uzak],
+      conceptVectors: [V.yakin],
+    })
+    const anlamsal = score(
+      {
+        profile: PROFILE,
+        posting: ilan([gereksinim("Arayüz", "must", ["arayüz"])]),
+        evidence: [kanit("React ile panel geliştirdim")],
+        evidenceVectors: [V.orta],
+        conceptVectors: [V.yakin],
+      },
+      { ...DEFAULT_SCORING_CONFIG, semanticThreshold: 0.5 },
+    )
+
+    expect(kelime.requirements[0]!.confidence).toBe(1)
+    expect(anlamsal.requirements[0]!.confidence).toBeLessThan(1)
+    expect(anlamsal.requirements[0]!.method).toBe("semantic")
   })
 })

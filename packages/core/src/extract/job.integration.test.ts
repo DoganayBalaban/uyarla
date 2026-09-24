@@ -35,12 +35,12 @@ describe("extractJobPosting · gerçek model", () => {
     const { data } = await extractJobPosting(llm, ILAN)
 
     for (const req of data.requirements) {
-      console.log(`  [${req.importance}/${req.type}] ${req.text} -> ${JSON.stringify(req.keywords)}`)
+      console.log(`  [${req.importance}/${req.type}] ${req.text} -> ${JSON.stringify(req.concepts.flatMap((c) => c.synonyms))}`)
     }
 
     // Skorun tamamı buna bağlı: keywords, CV metninde geçebilecek kısa
     // terimler olmalı; gereksinim cümlesinin kopyası değil.
-    const tumu = data.requirements.flatMap((r) => r.keywords.map((k) => k.toLowerCase()))
+    const tumu = data.requirements.flatMap((r) => r.concepts.flatMap((c) => c.synonyms).map((k) => k.toLowerCase()))
     expect(tumu).toContain("react")
     expect(tumu.some((k) => k.includes("typescript"))).toBe(true)
 

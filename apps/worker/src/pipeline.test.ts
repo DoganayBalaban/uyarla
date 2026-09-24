@@ -52,7 +52,9 @@ function fakeLlm(overrides: Record<string, unknown> = {}) {
     },
     job_posting_draft: POSTING_DRAFT,
     requirement_keywords: {
-      items: [{ text: "React deneyimi", keywords: ["react"] }],
+      items: [
+        { text: "React deneyimi", concepts: [{ term: "react", synonyms: ["react"] }] },
+      ],
     },
     ...overrides,
   }
@@ -102,9 +104,9 @@ describe("runAnalysis · mutlu yol", () => {
   it("token sayılarını toplayıp kaydeder", async () => {
     const completeAnalysis = vi.fn()
     await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), GIRDI)
-    // 3 CV çağrısı (deneyim, eğitim, beceri) + 2 ilan çağrısı × 10 token.
-    // Bölümleme artık kodda yapılıyor, LLM çağrısı yok.
-    expect(completeAnalysis.mock.calls[0]![0].tokenUsage).toBe(50)
+    // 3 CV çağrısı (deneyim, eğitim, beceri) + 1 ilan çağrısı × 10 token.
+    // Bölümleme ve kavramlara ayırma artık kodda; ikisi de LLM çağrısı değil.
+    expect(completeAnalysis.mock.calls[0]![0].tokenUsage).toBe(40)
   })
 
   it("aşamaları sırayla bildirir", async () => {

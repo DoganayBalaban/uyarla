@@ -1,0 +1,32 @@
+{
+  "id": "cv-a__ilan-3",
+  "cv": "cv-a-ai-engineer",
+  "ilan": "ilan-3",
+  "note": "AI mühendisi CV'si, İngilizce düzyazı üsluplu ilan. Kişisel özellik gereksinimleri CV'den doğrulanamaz.",
+  "expectations": [
+    {
+      "match": "LangChain, LangGraph",
+      "shouldMatch": true
+    },
+    {
+      "match": "Retrieval-augmented generation",
+      "shouldMatch": true
+    },
+    {
+      "match": "MCP, tool-calling",
+      "shouldMatch": true
+    },
+    {
+      "match": "Observability for LLM",
+      "shouldMatch": false
+    },
+    {
+      "match": "early-stage startups",
+      "shouldMatch": false
+    },
+    {
+      "match": "overlap with PST",
+      "shouldMatch": false
+    }
+  ]
+}

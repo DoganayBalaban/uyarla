@@ -11,7 +11,7 @@ import { llmConfigFromEnv } from "../src/llm/types.js"
 import type { JobPostingData } from "../src/schemas/job.js"
 import type { ResumeProfile } from "../src/schemas/resume.js"
 import { collectEvidence } from "../src/score/evidence.js"
-import { score } from "../src/score/score.js"
+import { conceptTexts, score } from "../src/score/score.js"
 
 /**
  * Değerlendirme çiftlerini hazırlar ve incelenebilir bir rapor üretir.
@@ -85,15 +85,15 @@ async function main() {
 
     const kanitlar = collectEvidence(profil)
     const kanitMetinleri = kanitlar.map((k) => k.text)
-    const gereksinimMetinleri = ilan.requirements.map((r) => r.text)
-    const vektorler = await embedding.embed([...kanitMetinleri, ...gereksinimMetinleri])
+    const kavramMetinleri = conceptTexts(ilan)
+    const vektorler = await embedding.embed([...kanitMetinleri, ...kavramMetinleri])
 
     const sonuc = score({
       profile: profil,
       posting: ilan,
       evidence: kanitlar,
       evidenceVectors: vektorler.slice(0, kanitMetinleri.length),
-      requirementVectors: vektorler.slice(kanitMetinleri.length),
+      conceptVectors: vektorler.slice(kanitMetinleri.length),
     })
 
     satirlar.push(

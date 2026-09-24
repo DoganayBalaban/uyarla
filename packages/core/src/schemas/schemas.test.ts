@@ -76,8 +76,8 @@ describe("İlan şeması", () => {
     seniority: "mid" as const,
     language: "tr" as const,
     requirements: [
-      { text: "3 yıl React deneyimi", type: "experience" as const, importance: "must" as const, keywords: ["react"] },
-      { text: "Takım çalışmasına yatkın", type: "soft" as const, importance: "nice" as const, keywords: ["takım çalışması"] },
+      { text: "3 yıl React deneyimi", type: "experience" as const, importance: "must" as const, concepts: [{ term: "react", synonyms: ["react"] }] },
+      { text: "Takım çalışmasına yatkın", type: "soft" as const, importance: "nice" as const, concepts: [{ term: "takım çalışması", synonyms: ["takım çalışması"] }] },
     ],
   }
 
@@ -93,7 +93,7 @@ describe("İlan şeması", () => {
     expect(() =>
       JobPostingSchema.parse({
         ...gecerli,
-        requirements: [{ text: "a", type: "skill", importance: "belki", keywords: [] }],
+        requirements: [{ text: "a", type: "skill", importance: "belki", concepts: [] }],
       }),
     ).toThrow()
   })

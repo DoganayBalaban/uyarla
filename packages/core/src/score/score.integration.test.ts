@@ -5,7 +5,7 @@ import { llmConfigFromEnv } from "../llm/types.js"
 import { extractResumeProfile } from "../extract/resume.js"
 import { extractJobPosting } from "../extract/job.js"
 import { collectEvidence } from "./evidence.js"
-import { score } from "./score.js"
+import { conceptTexts, score } from "./score.js"
 
 const CV = `Elif Yılmaz
 Frontend Geliştirici · İstanbul
@@ -50,15 +50,15 @@ describe("uçtan uca skor · gerçek modeller", () => {
 
     const kanitlar = collectEvidence(profil.data)
     const kanitMetinleri = kanitlar.map((k) => k.text)
-    const gereksinimMetinleri = ilan.data.requirements.map((r) => r.text)
-    const vektorler = await embedding.embed([...kanitMetinleri, ...gereksinimMetinleri])
+    const kavramMetinleri = conceptTexts(ilan.data)
+    const vektorler = await embedding.embed([...kanitMetinleri, ...kavramMetinleri])
 
     const sonuc = score({
       profile: profil.data,
       posting: ilan.data,
       evidence: kanitlar,
       evidenceVectors: vektorler.slice(0, kanitMetinleri.length),
-      requirementVectors: vektorler.slice(kanitMetinleri.length),
+      conceptVectors: vektorler.slice(kanitMetinleri.length),
     })
 
     const sure = Date.now() - basladi

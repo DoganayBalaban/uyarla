@@ -1,0 +1,24 @@
+{
+  "id": "cv-b__ilan-4",
+  "cv": "cv-b-test-engineer",
+  "ilan": "ilan-4",
+  "note": "Test mühendisi CV'si, AI ajan ilanı. Tümüyle uyumsuz; hiçbir teknik gereksinim eşleşmemeli.",
+  "expectations": [
+    {
+      "match": "Generative AI ve LLM tabanlı",
+      "shouldMatch": false
+    },
+    {
+      "match": "AI Agent ve agentic workflow",
+      "shouldMatch": false
+    },
+    {
+      "match": "LangGraph, n8n",
+      "shouldMatch": false
+    },
+    {
+      "match": "PoC aşamasından production",
+      "shouldMatch": false
+    }
+  ]
+}
