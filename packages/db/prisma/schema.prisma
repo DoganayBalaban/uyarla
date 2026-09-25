@@ -41,6 +41,10 @@ model ResumeVersion {
   createdAt DateTime            @default(now())
   analyses  Analysis[]
 
+  // Bu sürümü üreten uyarlama(lar). Adlandırılmış ilişki: Adaptation hem
+  // Analysis'e hem buraya bağlanıyor ve Prisma ikisini ayırt edebilmeli.
+  adaptations Adaptation[] @relation("AdaptedFrom")
+
   @@unique([resumeId, versionNo])
 }
 
@@ -83,11 +87,49 @@ model Analysis {
   errorClass String?
   createdAt  DateTime       @default(now())
 
+  adaptation Adaptation?
+
   @@index([resumeVersionId, jobPostingId])
 }
 
 enum AnalysisStatus {
   running
   done
+  failed
+}
+
+model Adaptation {
+  id String @id @default(cuid())
+
+  // Nullable değil ve benzersiz: bir analizin tek uyarlaması olur. Kullanıcı
+  // farklı sonuç istiyorsa analizi yeniden çalıştırır; birden çok uyarlama
+  // tutmak hangisinin indirildiğini izlemeyi gerektirir ve Sprint 2'de
+  // bunun bir karşılığı yok (spec §5).
+  analysisId String   @unique
+  analysis   Analysis @relation(fields: [analysisId], references: [id])
+
+  /// Çalışma hâli: madde bazında özgün, yeniden yazım, doğrulama, karar.
+  /// Tek Json çünkü madde kararları sık güncelleniyor ve hepsi birlikte
+  /// okunuyor; ayrı tabloya bölmenin kazandıracağı sorgulanabilirlik
+  /// Sprint 2'de kullanılmıyor.
+  draft Json
+
+  /// Kabul edilenlerden üretilen nihai sürüm; indirme anında doluyor.
+  resumeVersionId String?
+  resumeVersion   ResumeVersion? @relation("AdaptedFrom", fields: [resumeVersionId], references: [id])
+
+  status     AdaptationStatus @default(running)
+  modelId    String
+  durationMs Int?
+  tokenUsage Int?
+  errorClass String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+}
+
+enum AdaptationStatus {
+  running
+  draft // yeniden yazım bitti, kullanıcı kararları bekleniyor
+  ready // uyarı taşıyan maddelerin hepsi karara bağlandı
   failed
 }
