@@ -1,28 +1,194 @@
-/* Sprint 1: markasız test arayüzü (K-01). Marka giydirmesi Sprint 2'de. */
+/* Marka rehberi §9.2 ve §9.5.
+   Renkler yalnızca burada tanımlı; bileşenler değişkenden okuyor ki tema
+   değişimi tek yerden yapılabilsin. */
+:root {
+  --mavi: #2b4eff;
+  --gece: #0f172a;
+  --buz: #f5f7ff;
+  --mercan: #ff6b4a;
+  --yesil: #16a34a;
+  --kehribar: #f59e0b;
+  --kirmizi: #dc2626;
+  --gri: #64748b;
+
+  --zemin: var(--buz);
+  --metin: var(--gece);
+  --kart: #ffffff;
+  --cizgi: #e2e8f0;
+
+  --yaricap-buton: 10px;
+  --yaricap-kart: 16px;
+}
+
+/* Koyu temada zemin Gece rengidir (rehber §9.5). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --zemin: var(--gece);
+    --metin: #f1f5f9;
+    --kart: #1e293b;
+    --cizgi: #334155;
+    --gri: #94a3b8;
+  }
+}
+
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  background: var(--zemin);
+  color: var(--metin);
   margin: 2rem auto;
   max-width: 56rem;
-  padding: 0 1rem;
-  line-height: 1.5;
-  color: #111;
+  padding: 0 1rem 4rem;
+  line-height: 1.55;
 }
-textarea { width: 100%; font-family: inherit; font-size: 0.9rem; padding: 0.5rem; }
-label { display: block; margin-bottom: 0.25rem; font-weight: 600; }
-button { padding: 0.6rem 1.2rem; font-size: 1rem; cursor: pointer; }
-button:disabled { cursor: wait; opacity: 0.6; }
 
-.score { font-size: 3.5rem; font-weight: 700; line-height: 1; }
-.matched { color: #16a34a; }
-.missing { color: #dc2626; }
-.meta { color: #64748b; font-size: 0.85rem; }
+h1,
+h2,
+h3 {
+  font-family: Manrope, Inter, system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+h1 {
+  font-size: 1.9rem;
+}
+h2 {
+  font-size: 1.15rem;
+  margin-top: 2.25rem;
+}
+h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
+}
 
-ul.requirements { list-style: none; padding: 0; }
-ul.requirements li { border-bottom: 1px solid #eee; padding: 0.6rem 0; }
+textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.6rem;
+  border: 1px solid var(--cizgi);
+  border-radius: var(--yaricap-buton);
+  background: var(--kart);
+  color: var(--metin);
+}
+label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
 
-details { margin-top: 2rem; }
+/* Birincil eylem her ekranda TEK ve Uyarla Mavisi (rehber §9.5). */
+button,
+.btn-birincil,
+.btn-ikincil {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.65rem 1.3rem;
+  border-radius: var(--yaricap-buton);
+  cursor: pointer;
+}
+button,
+.btn-birincil {
+  background: var(--mavi);
+  color: #fff;
+  border: none;
+}
+.btn-ikincil {
+  background: transparent;
+  color: var(--metin);
+  border: 1px solid var(--cizgi);
+}
+button:disabled,
+.btn-birincil:disabled,
+.btn-ikincil:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.kart {
+  background: var(--kart);
+  border: 1px solid var(--cizgi);
+  border-radius: var(--yaricap-kart);
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Skor ekranın en büyük öğesi (rehber §9.5). */
+.skor-blok {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin: 1.25rem 0;
+}
+.skor-rakam {
+  font-family: Manrope, sans-serif;
+  font-size: 3.75rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.skor-etiket {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.skor-ok {
+  color: var(--gri);
+  font-size: 1.75rem;
+}
+
+/* Önce/sonra (rehber §9.5). */
+.eklenen {
+  background: color-mix(in srgb, var(--yesil) 20%, transparent);
+  border-radius: 3px;
+  padding: 0 2px;
+}
+.cikarilan {
+  text-decoration: line-through;
+  color: var(--gri);
+}
+
+.rozet {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--kehribar) 20%, transparent);
+  color: var(--kehribar);
+  margin-bottom: 0.4rem;
+}
+.gerekce {
+  color: var(--kehribar);
+  font-size: 0.85rem;
+  margin: 0.3rem 0 0;
+}
+.meta {
+  color: var(--gri);
+  font-size: 0.85rem;
+}
+
+.matched {
+  color: var(--yesil);
+}
+.missing {
+  color: var(--kirmizi);
+}
+
+ul.requirements {
+  list-style: none;
+  padding: 0;
+}
+ul.requirements li {
+  border-bottom: 1px solid var(--cizgi);
+  padding: 0.6rem 0;
+}
+
+details {
+  margin-top: 2rem;
+}
 pre {
-  background: #f5f5f5;
+  background: var(--kart);
+  border: 1px solid var(--cizgi);
+  border-radius: var(--yaricap-buton);
   padding: 1rem;
   overflow-x: auto;
   font-size: 0.75rem;
