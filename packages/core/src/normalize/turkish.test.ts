@@ -160,3 +160,41 @@ describe("çapraz dilli bölüm ve alan adları", () => {
     expect(containsKeyword("Graphic Design", "Software Engineering")).toBe(false)
   })
 })
+
+describe("İngilizce çoğul eki", () => {
+  it("çoğul ve tekil aynı köke iner", () => {
+    // Ölçümle bulundu: CV'de "Developed REST APIs" yazarken ilan "REST API"
+    // istiyordu ve iki taraf buluşamıyordu.
+    for (const [cogul, tekil] of [
+      ["APIs", "API"],
+      ["services", "service"],
+      ["workflows", "workflow"],
+      ["pipelines", "pipeline"],
+      ["integrations", "integration"],
+    ]) {
+      expect(normalizeToken(cogul!)).toBe(normalizeToken(tekil!))
+    }
+  })
+
+  it("kaynakta çoğul geçen terimi anahtar kelimeyle bulur", () => {
+    expect(
+      containsKeyword("Developed REST APIs and backend services with FastAPI.", "REST API"),
+    ).toBe(true)
+  })
+
+  it("sonu s ile biten kısa terimleri bozmaz", () => {
+    // Bunlar çoğul değil, teknoloji adı. Soyulurlarsa kendi adlarıyla
+    // eşleşemezler.
+    for (const terim of ["css", "aws", "ios"]) {
+      expect(normalizeToken(terim)).toBe(terim)
+    }
+  })
+
+  it("sonu s ile biten Türkçe kelimelerde simetriyi korur", () => {
+    // Kural iki tarafa da uygulandığı için aşırı soyma sorun değil: önemli
+    // olan kökün doğru olması değil, iki tarafın AYNI köke inmesi.
+    expect(normalizeToken("servis")).toBe(normalizeToken("servis"))
+    expect(containsKeyword("Servis katmanını yazdım", "servis")).toBe(true)
+    expect(containsKeyword("Stres testleri yaptım", "stres")).toBe(true)
+  })
+})

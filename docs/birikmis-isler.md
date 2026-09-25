@@ -150,3 +150,26 @@ için orada sorun yok.
 dağıtıma dahil etmek, (b) fontu alt kümeye indirip base64 olarak bir .ts
 dosyasına gömmek (~40 KB), (c) belge üretimini tümüyle worker'a taşımak.
 Dağıtım kararı verildiğinde seçilecek.
+
+## 10 · Yeniden yazım eşleşen terimi düşürebiliyor
+
+**Ne:** Dürüst bir yeniden ifade, kaynakta geçen ve ilanla eşleşen bir terimi
+düşürebiliyor. Ölçülen örnek:
+
+```
+kaynak: … Python, FastAPI, LLM gateways, vector search, SSE, background tasks, Docker …
+yazım : Python ve FastAPI kullanarak, LLM ağ geçitleri, vektör araması, SSE ve arka plan …
+        ("Docker" düştü — ilan onu istiyor)
+```
+
+**Oran:** 3/93 (%3,2). Üçünden biri çapraz dilli yanlış alarm
+("backend services" → "arka uç servisleri"), yani gerçek oran ~%2.
+
+**Neden şimdi düzeltilmedi:** Enjeksiyon kontrolünün aynası olarak bir
+`matched_term_dropped` kontrolü yazılabilir. Ama %2'lik bir olaya, üçte biri
+yanlış olan bir uyarı eklemek, K-32 sonrası artık hassas olan işaretleri
+(93 maddede 4) güvenilmez kılardı.
+
+**Ne zaman ele alınmalı:** Çapraz dilli sözlük güçlendiğinde yanlış alarm
+oranı düşer; o zaman kontrol eklenebilir. Ya da prompt'a "kaynakta geçen
+teknoloji adlarının hepsini koru" kuralı eklenip ölçülebilir.

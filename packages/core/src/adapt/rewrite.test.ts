@@ -59,16 +59,19 @@ describe("rewriteBullet", () => {
     expect(sonuc.tokens).toBe(12)
   })
 
-  it("modele yalnızca o maddeyi ve must kavramlarını verir", async () => {
-    // Madde başına çağrının bütün anlamı bu: girdi daraldıkça uydurma
-    // kaynağı daralıyor (spec §6.2).
+  it("modele yalnızca o maddeyi verir, ilan kavramlarını vermez", async () => {
+    // Ölçümle karar verildi: kavramlar verildiğinde model onları CV'de
+    // geçmedikleri hâlde maddelere sokuyordu (93 maddenin %63'ü işaretlendi,
+    // 165 uyarının hepsi enjeksiyon) ve dürüst skor kazancı sıfırdı.
     const llm = sahteLlm("x")
-    await rewriteBullet(llm, { bullet: "React ile panel yaptım", posting: ilan })
+    await rewriteBullet(llm, { bullet: "Panel geliştirdim", posting: ilan })
 
     const cagri = vi.mocked(llm.extract).mock.calls[0]![0]
-    expect(cagri.input).toContain("React ile panel yaptım")
-    expect(cagri.input).toContain("React")
-    expect(cagri.input).not.toContain("Kubernetes")
+    expect(cagri.input).toContain("Panel geliştirdim")
+    // İlanda geçen ama maddede geçmeyen hiçbir terim girdiye sızmamalı.
+    for (const terim of ["React", "Kubernetes", "Frontend Geliştirici", "Acme"]) {
+      expect(cagri.input).not.toContain(terim)
+    }
   })
 
   it("boş dönerse orijinali korur", async () => {

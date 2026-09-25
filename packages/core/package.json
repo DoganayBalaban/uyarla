@@ -17,7 +17,8 @@
     "eval": "dotenv -e ../../.env -- tsx eval/run.ts",
     "eval:sweep": "dotenv -e ../../.env -- tsx eval/sweep.ts",
     "eval:prepare": "dotenv -e ../../.env -- tsx eval/prepare.ts",
-    "eval:segment": "dotenv -e ../../.env -- tsx eval/karsilastir.ts"
+    "eval:segment": "dotenv -e ../../.env -- tsx eval/karsilastir.ts",
+    "eval:adapt": "dotenv -e ../../.env -- tsx eval/uyarla.ts"
   },
   "devDependencies": {
     "@types/pdfkit": "^0.17.6",

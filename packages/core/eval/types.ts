@@ -43,3 +43,29 @@ export interface EvalTotals {
   byKeyword: number
   bySemantic: number
 }
+
+/** Bir çiftin uyarlama ölçümü (spec §12). */
+export interface AdaptMetrics {
+  id: string
+  bulletCount: number
+  /** Doğrulamadan uyarıyla dönen madde sayısı. */
+  flaggedCount: number
+  /** Hangi kontrolün kaç kez devreye girdiği. */
+  byKind: Record<string, number>
+  scoreBefore: number
+  /** Tüm yeniden yazımlar kabul edilmiş varsayımıyla: uyarlamanın üst sınırı. */
+  scoreAfter: number
+  /**
+   * Yalnızca doğrulamayı geçen maddeler kabul edilmiş varsayımıyla.
+   *
+   * Ürünün gerçek vaadi bu. Üst sınır, kullanıcının reddedeceği uydurma
+   * içerikten gelen kazancı da sayıyor — ilk koşuda bir çift 0'dan 33'e
+   * çıkmıştı ama 8 maddenin 6'sı işaretliydi.
+   */
+  scoreAfterCleanOnly: number
+  durationMs: number
+  /** Yeniden yazımı patlayan madde sayısı (spec §13). */
+  failedCount: number
+  /** Modelin maddeyi hiç değiştirmediği durumlar; prompt zayıflığının işareti. */
+  unchangedCount: number
+}
