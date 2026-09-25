@@ -15,8 +15,11 @@ next-env.d.ts
 # Prisma üretilen dosyalar
 packages/db/generated/
 
-# Yerel dosya depolama ve test kalıntıları
-storage/
+# Yerel dosya depolama ve test kalıntıları.
+# Yalnızca uygulamaların çalışma dizinindeki storage/ — düz `storage/` kuralı
+# packages/core/src/storage/ kaynak dizinini de yutuyordu.
+/storage/
+apps/*/storage/
 .tmp-test-storage/
 
 # Ham CV'ler ve ilan metinleri — kişisel veri, depoya girmez.
