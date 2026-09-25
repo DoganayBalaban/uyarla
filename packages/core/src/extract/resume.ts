@@ -11,7 +11,8 @@ import {
   skillLinesJsonSchema,
 } from "../schemas/resume.js"
 import type { ResumeProfile, SkillLines } from "../schemas/resume.js"
-import { segmentResume } from "./segment.js"
+import { parseHeader } from "./header.js"
+import { segmentResume, stripLeadingHeading } from "./segment.js"
 import { flattenSkillLines } from "./skills.js"
 import {
   EDUCATION_PROMPT,
@@ -105,12 +106,14 @@ export async function extractResumeProfile(
     : null
   if (skills) tokens += skills.tokens
 
+  // Ad ve başlık kodda çıkarılıyor, LLM'e sorulmuyor: deterministik bir iş
+  // ve kırıldığında testler kırmızıya dönüyor (bkz. parseHeader).
+  const header = parseHeader(blocks.headerBlock)
+
   const profile = ResumeProfileSchema.parse({
-    // Bölümleme aşaması ad ve başlık çıkarmıyor; Sprint 2'de gerekirse
-    // özet bloğundan ayrıca çıkarılır. Skor bu alanları kullanmıyor.
-    fullName: null,
-    headline: null,
-    summary: blocks.summaryBlock.trim() || null,
+    fullName: header.fullName,
+    headline: header.headline,
+    summary: stripLeadingHeading(blocks.summaryBlock) || null,
     experience: experience ? ExperienceListSchema.parse(experience.data).experience : [],
     education: education ? EducationListSchema.parse(education.data).education : [],
     ...(skills ? duzlestir(SkillLinesSchema.parse(skills.data)) : BOS_BECERI),

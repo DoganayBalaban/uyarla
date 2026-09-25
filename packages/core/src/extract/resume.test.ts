@@ -20,6 +20,7 @@ function fakeLlm(
 
 const RESPONSES: Record<string, unknown> = {
   resume_segments: {
+    headerBlock: "Elif Yılmaz\nFrontend Geliştirici",
     summaryBlock: "3 yıl React deneyimi",
     experienceBlock: "Acme · Frontend Geliştirici · 2022-01 – halen\n- React ile arayüz geliştirdi",
     educationBlock: "İTÜ, Bilgisayar Mühendisliği, 2021",
@@ -126,7 +127,7 @@ describe("extractResumeProfile · LLM bölümlemesiyle", () => {
   it("hiç blok yoksa tek çağrıyla boş profil döner", async () => {
     const llm = fakeLlm({
       resume_segments: {
-        summaryBlock: "", experienceBlock: "", educationBlock: "", skillsBlock: "",
+        headerBlock: "", summaryBlock: "", experienceBlock: "", educationBlock: "", skillsBlock: "",
       },
     })
     const { data, tokens } = await extractResumeProfile(llm, "bos cv", { segmenter: "llm" })

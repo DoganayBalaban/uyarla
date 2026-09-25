@@ -39,6 +39,14 @@ export const ResumeProfileSchema = z.object({
 
 /** Aşama 1: ham metni kaba bloklara böler (spec §6.3). */
 export const ResumeSegmentsSchema = z.object({
+  /**
+   * İlk bölüm başlığından önceki satırlar: ad, unvan, iletişim.
+   *
+   * Sprint 1'de bu satırlar summaryBlock'a karışıyordu ve özet metni
+   * iletişim bilgisiyle başlıyordu. Skor bunu kullanmadığı için fark
+   * edilmemişti; indirilen belgede görünür oldu.
+   */
+  headerBlock: z.string(),
   summaryBlock: z.string(),
   experienceBlock: z.string(),
   educationBlock: z.string(),
