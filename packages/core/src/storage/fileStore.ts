@@ -1,9 +1,9 @@
 import { mkdir, writeFile, readFile } from "node:fs/promises"
-import { join, dirname, extname, resolve } from "node:path"
+import { resolve, dirname, extname, basename } from "node:path"
 import { randomUUID } from "node:crypto"
 
 /**
- * Dosya depolama sözleşmesi. Sprint 3'te S3 uygulaması yazılır,
+ * Dosya depolama sözleşmesi. Sprint 3'te S3 uyumlu bir uygulama yazılır,
  * çağıran kod değişmez (spec §5).
  */
 export interface FileStore {
@@ -14,12 +14,16 @@ export interface FileStore {
 export class LocalFileStore implements FileStore {
   constructor(private readonly baseDir: string) {}
 
-  /**
-   * Mutlak yol döndürür. Web ve worker farklı çalışma dizinlerinden
-   * çalışıyor; göreli yol birinin yazdığını ötekinin bulamamasına yol açar.
-   */
   async save(buffer: Buffer, filename: string): Promise<string> {
-    const path = resolve(join(this.baseDir, `${randomUUID()}${extname(filename)}`))
+    // Ad rastgele üretilir, kullanıcının verdiği ad yola girmez: hem yol
+    // geçişini engeller hem de diskte kişi adı tutmaktan kaçınır
+    // ("elif-yilmaz-cv.pdf" tek başına kişisel veridir).
+    const ext = extname(basename(filename))
+
+    // Mutlak yol döndürülüyor: dosyayı yazan süreç (web) ile okuyan süreç
+    // (worker) farklı çalışma dizinlerinde. Göreli yol kaydedilirse worker
+    // dosyayı bulamaz.
+    const path = resolve(this.baseDir, `${randomUUID()}${ext}`)
     await mkdir(dirname(path), { recursive: true })
     await writeFile(path, buffer)
     return path

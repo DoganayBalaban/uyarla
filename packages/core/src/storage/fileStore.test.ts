@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest"
 import { rmSync, existsSync } from "node:fs"
-import { isAbsolute } from "node:path"
 import { LocalFileStore } from "./fileStore.js"
 
 const BASE = "./.tmp-test-storage"
@@ -26,10 +25,24 @@ describe("LocalFileStore", () => {
     expect((await store.read(b)).toString()).toBe("iki")
   })
 
-  it("göreli taban dizinde bile mutlak yol döndürür", async () => {
+  it("mutlak yol döndürür", async () => {
+    // Dosyayı yazan süreç (web) ile okuyan süreç (worker) farklı çalışma
+    // dizinlerinde; göreli yol kaydedilirse worker dosyayı bulamaz.
     const store = new LocalFileStore(BASE)
-    const path = await store.save(Buffer.from("x"), "cv.docx")
-    expect(isAbsolute(path)).toBe(true)
-    expect(path.endsWith(".docx")).toBe(true)
+    expect(await store.save(Buffer.from("x"), "cv.pdf")).toMatch(/^\//)
+  })
+
+  it("dosya uzantısını korur", async () => {
+    const store = new LocalFileStore(BASE)
+    expect(await store.save(Buffer.from("x"), "cv.docx")).toMatch(/\.docx$/)
+  })
+
+  it("kullanıcının verdiği adı yola koymaz", async () => {
+    // Yol geçişi ve kişisel veri sızıntısı riski: dosya adı "elif-yilmaz-cv.pdf"
+    // olabilir ve diskte kişi adı tutmak istemeyiz.
+    const store = new LocalFileStore(BASE)
+    const path = await store.save(Buffer.from("x"), "../../elif-yilmaz-cv.pdf")
+    expect(path).not.toContain("elif")
+    expect(path).not.toContain("..")
   })
 })
