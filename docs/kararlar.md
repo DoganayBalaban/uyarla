@@ -1137,3 +1137,117 @@ eşleşmeden geliyor — yapay zekâ eğitmenliği deneyimi, üretken yapay zek�
 yetkinliği gereksinimine yakın düşüyor. Bu, eşik ayarıyla çözülecek bir şey
 değil; gereksinimin "profesyonel deneyim" boyutunu değerlendirmek gerekiyor ve
 sistem şu an bunu yapmıyor. Sonraki iyileştirme turunun konusu.
+
+---
+
+## K-26 · Onay zorunluluğu riske göre: uyarı varsa zorunlu, yoksa değil
+
+**Tarih:** 25 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 2
+
+Uyarlamada doğrulamayı geçen maddeler **kabul edilmiş** gelir; uyarı taşıyan
+maddeler **karar bekler** ve karara bağlanmadan indirme açılmaz.
+
+**Gerilim:** Marka rehberi §11 şunu diyor:
+
+> *"Yapay zekâ şeffaflığı: Metinlerin yapay zekâ ile yeniden yazıldığı açıkça
+> belirtilir ve kullanıcı her değişikliği onaylar."*
+
+Harfi harfine uygulanırsa her madde için tek tek onay gerekir. Tipik bir CV'de
+8–10 madde var; bu, marka rehberi §4'teki **Hız** değeriyle ve ürünün "başvuru
+başına saniyeler" vaadiyle çelişiyor.
+
+**Gerekçe:** Rehberin asıl derdi, kullanıcının bilmediği bir şeyin CV'sine
+girmemesi. Doğrulamayı geçen bir madde, kullanıcının kendi cümlesinin yeniden
+ifade edilmiş hâlidir ve farkı ekranda görünür; orada zorunlu onay gerçek bir
+koruma sağlamaz, yalnızca sürtünme ekler. Uyarı taşıyan maddede ise onay
+zorunludur ve **atlanamaz** — yani koruma rehberin öngördüğünden güçlüdür.
+
+**Sonuç:** Marka rehberi §11 bu karara göre güncellenecek. Lafzından sapıyoruz
+ama amacını daha iyi koruyoruz; sapma gerekçesiyle birlikte kayıtlı.
+
+---
+
+## K-27 · Beceriler yeniden yazılmaz, kodda sıralanır
+
+**Tarih:** 25 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 2
+
+Yol haritası §6.2 "özet, deneyim maddeleri ve **yetenekleri** yeniden yazma"
+diyor. Beceriler yeniden yazılmayacak; ilana göre sıralanacak ve bu sıralama
+kodda yapılacak.
+
+**Gerekçe:** Bir beceri adını yeniden yazmanın kazancı yok — `React` →
+`React.js` kimseye bir şey kazandırmıyor. Beceri **eklemek** ise doğrudan
+uydurma, yani ürünün ana vaadinin ihlali. Buna karşılık sıralamanın kazancı
+gerçek: ATS tarayıcıları listenin başındaki terimleri daha çok tartıyor.
+
+Sıralama LLM gerektirmiyor: skor servisi hangi becerinin hangi gereksinimi
+karşıladığını zaten biliyor (`RequirementResult.evidence`). Kural — önce
+`must` karşılayanlar, sonra `nice` karşılayanlar, sonra kalanlar özgün
+sırasıyla. Küme değişmediği için uydurma riski sıfır.
+
+Sprint 1'in dersinin doğrudan uygulaması: deterministik bir işi modele vermek,
+ücretsiz olmayan bir kolaylık (K-18, K-19, K-22, K-23).
+
+---
+
+## K-28 · Uydurma kontrolü üç deterministik kontrolle yapılıyor
+
+**Tarih:** 25 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 2
+
+Yeniden yazılmış her madde üç kontrolden geçer:
+
+1. **Sayı kontrolü** — yazımdaki her sayı kaynakta da bulunmalı
+   (`%40` → `%60` yakalanır)
+2. **İlan terimi enjeksiyonu** — yazımda geçip kaynakta geçmeyen bir ilan
+   kavramı varsa işaretlenir (`Kubernetes` eklenmesi yakalanır)
+3. **Anlamsal sapma** (ikincil) — `cosine(yazım, kaynak)` eşiğin altındaysa
+   işaretlenir (`katkı sağladım` → `liderlik ettim` yakalanır)
+
+**Değerlendirilen ve reddedilen alternatifler:**
+
+*Yalnızca anlamsal benzerlik:* Kör. "React ile panel geliştirdim" →
+"Kubernetes ile panel geliştirdim" benzerlik olarak çok yakın ama teknoloji
+değişmiş — tam da yakalanması gereken şeyi kaçırıyor.
+
+*LLM hakem:* Modele "bu yazım kaynakta olmayan bilgi ekliyor mu" diye sormak.
+Esnek, ama Sprint 1'de beş kez görülen sessiz hata riskini taşıyor: hakem
+yanıldığında kimse fark etmez. Ürünün ana güvencesini doğrulanamayan bir
+mekanizmaya bağlamak kabul edilemez.
+
+**Neden ilk ikisi yeterli:** Uydurmanın zararlı biçimi somut. Kimse
+"geliştirdim" yerine "hayata geçirdim" yazıldığı için işe alım sürecinde
+yanmaz; olmayan bir teknoloji, şişirilmiş bir sayı ya da uydurulmuş bir unvan
+yüzünden yanar. İlk iki kontrol tam olarak bunları yakalıyor ve **kullanıcıya
+gösterilebilir gerekçe** üretiyor: *"Bu maddede Kubernetes geçiyor ama CV'nde
+yok."*
+
+İki kontrol de Sprint 1'in makinesini yeniden kullanıyor: `sourceRef` (ham
+metindeki birebir karşılık), `containsKeyword` (Türkçe normalleştirme ve
+çapraz dilli sözlükle birlikte) ve ilanın kavram listesi.
+
+---
+
+## K-29 · Tek şablon, PDF ve DOCX
+
+**Tarih:** 25 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 2
+
+Yol haritası "2 ATS dostu şablon, PDF ve DOCX" diyor; kapsam kesme sırası
+(§12.2) ise gecikme hâlinde önce DOCX'in kesilmesini öngörüyor. **Sıra
+tersine çevrildi:** tek şablon yapılacak, DOCX korunacak.
+
+**Neden ikinci şablon değil:** Henüz hiç çıktı üretmiş değiliz ve birinci
+şablonun gerçek ATS'lerden geçtiğini bilmiyoruz. İkinci şablon, doğrulanmamış
+bir tasarımın kopyası olur. Sprint 1'in dersi: ölçülmeyen kalite, olmayan
+kalitedir. Önce bir şablonu doğru yapıp gerçek bir tarayıcıya sokmak gerekir.
+
+**Neden DOCX kesilmemeli:** Türkiye'de kurumsal İK süreçlerinin ve bazı ilan
+sitelerinin hâlâ DOCX istediği biliniyor. "PDF indirdim ama sistem kabul
+etmedi" yaşayan kullanıcı ürünü bırakır. Maliyeti de düşük: aynı ara yapıdan
+(`DocumentModel`) ikinci bir üreteç yazmak, ikinci bir şablon tasarlamaktan
+çok daha ucuz.
+
+**Tarayıcı kullanılmıyor.** Puppeteer worker'a yüzlerce megabaytlık bağımlılık
+ekler. ATS dostu çıktı zaten tek sütunlu ve sade bir yerleşim istiyor;
+`pdfkit` ile doğrudan yazmak hem hafif hem metnin seçilebilir olmasını
+garantiliyor. Marka rehberi §9.3 CV çıktılarında sistem fontu şart koştuğu
+için tipografi özgürlüğüne de ihtiyaç yok.
