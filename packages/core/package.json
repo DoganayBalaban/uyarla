@@ -5,7 +5,9 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./document/pdf": "./src/document/pdf.ts",
+    "./document/docx": "./src/document/docx.ts"
   },
   "scripts": {
     "test": "vitest run",
@@ -25,7 +27,7 @@
     "vitest": "^2.1.0"
   },
   "dependencies": {
-    "dejavu-fonts-ttf": "^2.37.3",
+    "@uyarla/fonts": "workspace:*",
     "docx": "^9.7.2",
     "mammoth": "^1.12.3",
     "openai": "^7.20.0",

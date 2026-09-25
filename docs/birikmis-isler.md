@@ -128,3 +128,25 @@ bakmayı gerektiriyor — kendi başına bir görev.
 **Etkisi:** Bu CV'de özet boş kalıyor (belgede özet bölümü hiç çıkmıyor) ve
 hakkımda metni deneyim maddesi gibi işleniyor. Skor bundan zarar görmüyor;
 kanıt olarak hâlâ sayılıyor.
+
+## 9 · Font yolu depo köküne bağlı
+
+**Ne:** `@uyarla/fonts` font dosyalarını, `process.cwd()`'den yukarı yürüyüp
+`pnpm-workspace.yaml` arayarak buluyor. Yani depo ağacının çalışma anında
+diskte durmasını varsayıyor.
+
+**Neden böyle:** Modül çözümlemesinin üç varyantı da Next'in bundler'ında
+kırıldı — düz specifier derlemeyi düşürdü, hesaplanmış specifier
+`webpackEmptyContext` ile susturuldu, ayrı pakete taşımak
+`serverExternalPackages` monorepo paketinde uygulanmadığı için göreli modül
+kimliği döndürdü. Dosya sisteminden okumak bundler'ın tümüyle dışında kalan
+tek yol.
+
+**Ne zaman sorun olur:** Vercel'e standalone çıktı olarak dağıtımda
+`packages/fonts/ttf` pakete girmeyebilir. Worker kendi sunucusunda çalıştığı
+için orada sorun yok.
+
+**Seçenekler:** (a) Next `outputFileTracingIncludes` ile font dizinini
+dağıtıma dahil etmek, (b) fontu alt kümeye indirip base64 olarak bir .ts
+dosyasına gömmek (~40 KB), (c) belge üretimini tümüyle worker'a taşımak.
+Dağıtım kararı verildiğinde seçilecek.

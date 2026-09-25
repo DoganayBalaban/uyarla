@@ -26,6 +26,9 @@ export async function GET(
 
     return NextResponse.json({
       status: "completed",
+      // Uyarlama bu kimlikle başlatılıyor (spec §4); iş kimliği kuyruk
+      // temizlendiğinde kayboluyor, analiz kimliği kalıcı.
+      analysisId: analysisId ?? null,
       score: analysis?.score ?? null,
       result: analysis?.result ?? null,
       durationMs: analysis?.durationMs ?? null,
