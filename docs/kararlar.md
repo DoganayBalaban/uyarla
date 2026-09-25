@@ -1251,3 +1251,68 @@ ekler. ATS dostu çıktı zaten tek sütunlu ve sade bir yerleşim istiyor;
 `pdfkit` ile doğrudan yazmak hem hafif hem metnin seçilebilir olmasını
 garantiliyor. Marka rehberi §9.3 CV çıktılarında sistem fontu şart koştuğu
 için tipografi özgürlüğüne de ihtiyaç yok.
+
+## K-30 · CV çıktısında gömülü font
+
+**Tarih:** 25 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 2
+
+**Karar:** PDF çıktısında DejaVu Sans gömülüyor ve font dosyaları depoda
+duruyor (`packages/fonts/ttf/`), modül çözümlemesiyle değil dosya sisteminden
+bulunuyor.
+
+**Ölçüm — neden gömülü font:** `pdfkit`'in gömülü Helvetica'sı WinAnsi
+kodlaması kullanıyor ve `ş ğ ı İ` bu kodlamada yok.
+
+```
+Helvetica   → "æPyma Ça öÆ  1 ÿÏa_ 5@ANBUL Geli ÷F— ici"
+DejaVu Sans → "Şeyma Çağlar ığüöş İSTANBUL Geliştirici"
+```
+
+Türkçe bir CV Helvetica ile okunaksız çıkıyor. Marka rehberi §9.3'e aykırı
+değil: kural **marka fontunu** yasaklıyor, DejaVu sıradan bir sans-serif ve
+serbest lisanslı.
+
+**Neden dosya sisteminden:** Modül çözümlemesinin üç varyantı da Next'in
+bundler'ında kırıldı.
+
+| Yaklaşım | Sonuç |
+|---|---|
+| `require.resolve("…/X.ttf")` | webpack .ttf'i paketlemeye çalıştı, derleme düştü |
+| Hesaplanmış specifier | çağrı `webpackEmptyContext` ile susturuldu, çalışma anında MODULE_NOT_FOUND |
+| Ayrı paket + `serverExternalPackages` | monorepo paketinde uygulanmadı, göreli modül kimliği döndü |
+
+İkincisi en tehlikelisiydi: **derleme geçiyor, indirme çalışma anında 500
+veriyordu.** Derlemeyi susturan bir "düzeltme" hatayı gizlemişti; uçtan uca
+deneme olmasa fark edilmezdi. Ders, Sprint 1'inkinin aynısı: derlemenin
+geçmesi çalıştığı anlamına gelmiyor.
+
+**Bilinen sınır:** Yol, `process.cwd()`'den yukarı yürünüp
+`pnpm-workspace.yaml` aranarak bulunuyor; depo ağacının diskte durmasını
+varsayıyor. Vercel'e standalone dağıtımda font dizini pakete girmeyebilir.
+Seçenekler `docs/birikmis-isler.md` #9'da.
+
+## K-31 · Ad ve başlık çıkarımı kodda
+
+**Tarih:** 25 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 2
+
+**Karar:** CV'nin ad, unvan ve iletişim satırı kodda çıkarılıyor; LLM çağrısı
+eklenmedi.
+
+**Sorun:** Sprint 1 bu alanları bilerek boş bırakmıştı — skor onları
+kullanmıyordu ve kod bunu söyleyen bir yorum bile taşıyordu. Sprint 2'de
+indirilen belgenin başlığı oldular ve **üretilen her CV'nin tepesinde
+"İsimsiz" yazıyordu.** Hiçbir test kırmızıya dönmedi çünkü hiçbir test
+belgenin başlığına bakmıyordu.
+
+**Neden kodda:** "Hangi satır ad" sorusu deterministik kurallarla
+cevaplanabiliyor. Modele sormak Sprint 1'in dört kez öğrenilen dersine
+(K-11, K-18, K-19, K-22) aykırı olurdu: modelden yorum istendiğinde hatalar
+sessiz oluyor ve şema doğrulamasından geçiyor.
+
+**Kural dışlayıcı:** e-posta, bağlantı, rakam içeren veya 50 karakterden uzun
+satır ad sayılmıyor. Yanlış ad, CV'nin en görünür yerinde yanlış bilgi demek;
+şüphedeyken `null` daha dürüst ve satır atılmıyor, başlık satırına giriyor.
+
+**Ölçüm iki düzeltme daha çıkardı:** "Professional Summary" başlık olarak
+tanınmıyordu, ve özet metni `"PROFILE"` satırıyla başlıyordu (başlıklar
+bloklara bilerek dahil — K-10 — ama özet belgeye olduğu gibi yazılıyor).
