@@ -1,0 +1,129 @@
+{
+  "model": "google/gemma-4-e4b",
+  "config": {
+    "mustWeight": 2,
+    "niceWeight": 1,
+    "semanticThreshold": 0.65
+  },
+  "totals": {
+    "hits": 51,
+    "misses": 2,
+    "fabrications": 3,
+    "notExtracted": 0,
+    "byKeyword": 13,
+    "bySemantic": 9
+  },
+  "accuracy": 0.9107142857142857,
+  "metrics": [
+    {
+      "id": "cv-a__ilan-1",
+      "hits": 7,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 39,
+      "durationMs": 2718,
+      "byKeyword": 4,
+      "bySemantic": 1
+    },
+    {
+      "id": "cv-a__ilan-2",
+      "hits": 7,
+      "misses": 1,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 27,
+      "durationMs": 5545,
+      "byKeyword": 3,
+      "bySemantic": 1
+    },
+    {
+      "id": "cv-a__ilan-3",
+      "hits": 6,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 15,
+      "durationMs": 4167,
+      "byKeyword": 3,
+      "bySemantic": 0
+    },
+    {
+      "id": "cv-a__ilan-5",
+      "hits": 4,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 32,
+      "durationMs": 2797,
+      "byKeyword": 2,
+      "bySemantic": 1
+    },
+    {
+      "id": "cv-b__ilan-1",
+      "hits": 5,
+      "misses": 1,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 5,
+      "durationMs": 1362,
+      "byKeyword": 0,
+      "bySemantic": 0
+    },
+    {
+      "id": "cv-b__ilan-3",
+      "hits": 5,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 1,
+      "durationMs": 1980,
+      "byKeyword": 0,
+      "bySemantic": 0
+    },
+    {
+      "id": "cv-b__ilan-4",
+      "hits": 4,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 0,
+      "durationMs": 3868,
+      "byKeyword": 0,
+      "bySemantic": 0
+    },
+    {
+      "id": "cv-c__ilan-1",
+      "hits": 4,
+      "misses": 0,
+      "fabrications": 2,
+      "notExtracted": 0,
+      "score": 20,
+      "durationMs": 3132,
+      "byKeyword": 1,
+      "bySemantic": 3
+    },
+    {
+      "id": "cv-c__ilan-2",
+      "hits": 5,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 6,
+      "durationMs": 5000,
+      "byKeyword": 0,
+      "bySemantic": 1
+    },
+    {
+      "id": "cv-c__ilan-4",
+      "hits": 4,
+      "misses": 0,
+      "fabrications": 1,
+      "notExtracted": 0,
+      "score": 18,
+      "durationMs": 2634,
+      "byKeyword": 0,
+      "bySemantic": 2
+    }
+  ]
+}

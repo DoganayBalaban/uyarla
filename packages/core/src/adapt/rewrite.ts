@@ -41,17 +41,24 @@ async function callRewrite(
   return { data: rewritten.trim() || fallback, tokens }
 }
 
+/**
+ * Tek bir maddeyi yeniden ifade eder.
+ *
+ * `posting` imzada duruyor ama modele VERİLMİYOR — bkz. BULLET_PROMPT'un
+ * üstündeki gerekçe. Parametre, çağıranların hattı değiştirmeden ölçüm
+ * yapabilmesi için korunuyor.
+ */
 export async function rewriteBullet(
   llm: LlmProvider,
   input: { bullet: string; posting: JobPostingData },
 ): Promise<ExtractResult<string>> {
-  const kavramlar = mustConceptTerms(input.posting)
-  const metin = [
+  return callRewrite(
+    llm,
+    BULLET_PROMPT,
+    "rewritten_bullet",
     `Madde: ${input.bullet}`,
-    `İlanın aradığı kavramlar: ${kavramlar.join(", ") || "—"}`,
-  ].join("\n")
-
-  return callRewrite(llm, BULLET_PROMPT, "rewritten_bullet", metin, input.bullet)
+    input.bullet,
+  )
 }
 
 export async function rewriteSummary(

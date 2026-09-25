@@ -1,0 +1,147 @@
+{
+  "model": "google/gemma-4-e4b",
+  "esik": 0.85,
+  "metrics": [
+    {
+      "id": "cv-a__ilan-1",
+      "bulletCount": 9,
+      "flaggedCount": 5,
+      "byKind": {
+        "semantic_drift": 5
+      },
+      "scoreBefore": 40,
+      "scoreAfter": 40,
+      "scoreAfterCleanOnly": 40,
+      "durationMs": 3332,
+      "failedCount": 0,
+      "unchangedCount": 0
+    },
+    {
+      "id": "cv-a__ilan-2",
+      "bulletCount": 9,
+      "flaggedCount": 5,
+      "byKind": {
+        "semantic_drift": 5,
+        "posting_term_injected": 1
+      },
+      "scoreBefore": 28,
+      "scoreAfter": 30,
+      "scoreAfterCleanOnly": 28,
+      "durationMs": 4455,
+      "failedCount": 0,
+      "unchangedCount": 0
+    },
+    {
+      "id": "cv-a__ilan-3",
+      "bulletCount": 9,
+      "flaggedCount": 5,
+      "byKind": {
+        "semantic_drift": 5
+      },
+      "scoreBefore": 15,
+      "scoreAfter": 14,
+      "scoreAfterCleanOnly": 14,
+      "durationMs": 4024,
+      "failedCount": 0,
+      "unchangedCount": 0
+    },
+    {
+      "id": "cv-a__ilan-5",
+      "bulletCount": 9,
+      "flaggedCount": 5,
+      "byKind": {
+        "semantic_drift": 5
+      },
+      "scoreBefore": 32,
+      "scoreAfter": 32,
+      "scoreAfterCleanOnly": 32,
+      "durationMs": 4076,
+      "failedCount": 0,
+      "unchangedCount": 0
+    },
+    {
+      "id": "cv-b__ilan-1",
+      "bulletCount": 8,
+      "flaggedCount": 5,
+      "byKind": {
+        "semantic_drift": 5
+      },
+      "scoreBefore": 5,
+      "scoreAfter": 5,
+      "scoreAfterCleanOnly": 5,
+      "durationMs": 2739,
+      "failedCount": 0,
+      "unchangedCount": 0
+    },
+    {
+      "id": "cv-b__ilan-3",
+      "bulletCount": 8,
+      "flaggedCount": 5,
+      "byKind": {
+        "semantic_drift": 5
+      },
+      "scoreBefore": 1,
+      "scoreAfter": 1,
+      "scoreAfterCleanOnly": 1,
+      "durationMs": 3482,
+      "failedCount": 0,
+      "unchangedCount": 0
+    },
+    {
+      "id": "cv-b__ilan-4",
+      "bulletCount": 8,
+      "flaggedCount": 5,
+      "byKind": {
+        "semantic_drift": 5
+      },
+      "scoreBefore": 0,
+      "scoreAfter": 0,
+      "scoreAfterCleanOnly": 0,
+      "durationMs": 2647,
+      "failedCount": 0,
+      "unchangedCount": 0
+    },
+    {
+      "id": "cv-c__ilan-1",
+      "bulletCount": 11,
+      "flaggedCount": 0,
+      "byKind": {},
+      "scoreBefore": 20,
+      "scoreAfter": 20,
+      "scoreAfterCleanOnly": 20,
+      "durationMs": 2872,
+      "failedCount": 0,
+      "unchangedCount": 1
+    },
+    {
+      "id": "cv-c__ilan-2",
+      "bulletCount": 11,
+      "flaggedCount": 0,
+      "byKind": {},
+      "scoreBefore": 6,
+      "scoreAfter": 6,
+      "scoreAfterCleanOnly": 6,
+      "durationMs": 4018,
+      "failedCount": 0,
+      "unchangedCount": 1
+    },
+    {
+      "id": "cv-c__ilan-4",
+      "bulletCount": 11,
+      "flaggedCount": 0,
+      "byKind": {},
+      "scoreBefore": 18,
+      "scoreAfter": 18,
+      "scoreAfterCleanOnly": 18,
+      "durationMs": 2780,
+      "failedCount": 0,
+      "unchangedCount": 1
+    }
+  ],
+  "turler": {
+    "semantic_drift": 35,
+    "posting_term_injected": 1
+  },
+  "durustDegisim": -0.1,
+  "ustDegisim": 0.1
+}

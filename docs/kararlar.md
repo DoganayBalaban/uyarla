@@ -1316,3 +1316,71 @@ satır ad sayılmıyor. Yanlış ad, CV'nin en görünür yerinde yanlış bilgi
 **Ölçüm iki düzeltme daha çıkardı:** "Professional Summary" başlık olarak
 tanınmıyordu, ve özet metni `"PROFILE"` satırıyla başlıyordu (başlıklar
 bloklara bilerek dahil — K-10 — ama özet belgeye olduğu gibi yazılıyor).
+
+## K-32 · Madde yeniden yazımına ilan kavramları verilmiyor
+
+**Tarih:** 26 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 2
+
+**Karar:** `BULLET_PROMPT` modele yalnızca maddenin kendisini veriyor. İlanın
+aradığı kavramlar prompt'a girmiyor.
+
+**Ölçüm:** 10 çift, 93 madde.
+
+| | Kavram verilerek | Kavram verilmeden |
+|---|---|---|
+| İşaretlenen madde | %63,4 (59/93) | **%4,3 (4/93)** |
+| `posting_term_injected` | 165 | **1** |
+| `semantic_drift` | 32 | 3 |
+| `number_mismatch` | 7 | **0** |
+| Skor değişimi (dürüst) | +0,0 | −0,1 |
+| Skor değişimi (üst sınır) | +18,8 | +0,1 |
+
+Kavramları vermek uydurmayı besliyordu ve karşılığında hiçbir dürüst kazanç
+üretmiyordu.
+
+**Daha büyük bulgu — dürüst skor kazancı sıfır.** Kavramlar verilirken bile,
+doğrulamayı geçen maddelerin skora katkısı 10 çiftin 10'unda +0,0. Görünen
++18,8'in tamamı işaretli maddelerden, yani kullanıcının reddedeceği
+içerikten geliyordu.
+
+Bunun yapısal bir sebebi var: skorlama zaten Türkçe normalleştirme, çapraz
+dilli sözlük ve anlamsal eşleşme kullanıyor. Adayda o yetkinlik varsa
+**zaten eşleşiyor**; yoksa dürüst bir yeniden ifade onu ekleyemez. Skoru
+artıran tek mekanizma uydurma.
+
+**Sonucu:** Marka rehberi §6.2'deki "%41'den %83'e" örneği ve spec §10'un
+"skor yükselir" beklentisi bu veriyle desteklenmiyor. Uyarlamanın sattığı
+şey skor artışı değil: ilanın diliyle hizalanmış anlatım, ATS dostu belge ve
+eksik kavram listesi. Arayüz skoru dürüstçe gösteriyor ve değişmediğinde
+bunu söylüyor. Vaadin kendisi ürün kararı olarak K2'de ele alınmalı.
+
+## K-33 · Anlamsal sapma eşiği 0.70
+
+**Tarih:** 26 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 2
+
+**Karar:** `driftThreshold = 0.70`.
+
+**Tarama** (93 madde, K-32 sonrası prompt):
+
+| Eşik | İşaretlenen | Sapma | Enjeksiyon |
+|---|---|---|---|
+| 0.65 | %1,1 | 0 | 1 |
+| 0.70 | %1,1 | 0 | 1 |
+| 0.75 | %4,3 | 3 | 1 |
+| 0.80 | %15,1 | 13 | 1 |
+| 0.85 | %37,6 | 35 | 1 |
+
+**Gerekçe:** 0.75'te tetiklenen üç maddenin **üçü de yanlış alarmdı** —
+sadık İngilizce→Türkçe çeviri. En düşük benzerlikler 0,749 / 0,779 / 0,787
+ve hepsi kaynakla aynı işi anlatıyor. BGE-M3 çapraz dilli, ama çevrilmiş bir
+cümle yine 0,75–0,79 bandında kalıyor.
+
+0.70 bu veride hiç tetiklenmiyor ve gerçekten savrulmuş bir yeniden yazım
+için emniyet supabı olarak duruyor.
+
+**Uyarı:** Kontrol bu sette hiç gerçek pozitif üretmedi. Değeri
+kanıtlanmadı; spec §16'daki kesme sırasında hâlâ ikinci sırada.
+
+**Reddedilen:** 0.85 — işaretlenen oranı %37,6'ya çıkıyor ve hepsi çeviri
+kaynaklı yanlış alarm. Her işaretli madde kullanıcıyı durdurduğu için bu
+akışı kullanılamaz kılardı.

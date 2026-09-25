@@ -7,6 +7,16 @@ import { TITLE_SYNONYMS } from "./titles.js"
 const MIN_STEM_LENGTH = 4
 
 /**
+ * İngilizce çoğul eki soyulduktan sonra kökün inebileceği en kısa uzunluk.
+ *
+ * Türkçe eklerden ayrı bir sınır gerekiyor: "APIs" dört harf ve genel sınır
+ * onu koruyup soymayı engelliyordu, oysa istediğimiz tam olarak "api". Üç
+ * harfte durmak "css", "aws", "ios" gibi sonu s ile biten kısa terimleri
+ * koruyor.
+ */
+const MIN_STEM_LENGTH_PLURAL = 3
+
+/**
  * Soyulacak ekler. Uzunluğa göre azalan sırada denenirler (dizi kodda
  * sıralanıyor, elle sıraya güvenilmiyor).
  *
@@ -106,6 +116,21 @@ export function normalizeToken(word: string): string {
         break
       }
     }
+    // İngilizce çoğul, Türkçe ekler tükendikten sonra deneniyor.
+    //
+    // Ölçümle bulundu: CV'de "Developed REST APIs" yazarken ilan "REST API"
+    // istiyordu ve iki taraf buluşamıyordu — uydurma kontrolü de bunu
+    // "kaynakta REST API yok" diye işaretliyordu. Aynı kusur skorlamada
+    // sessizce eşleşme kaybettiriyordu.
+    //
+    // Türkçe kelimelerde de çalışıyor ("servis" → "servi") ve bu sorun
+    // değil: kural iki tarafa da uygulandığı için ikisi aynı köke iniyor.
+    // Önemli olan kökün doğru olması değil, iki tarafın AYNI köke inmesi.
+    if (!degisti && stem.endsWith("s") && stem.length - 1 >= MIN_STEM_LENGTH_PLURAL) {
+      stem = stem.slice(0, -1)
+      degisti = true
+    }
+
     const eslesme = SYNONYMS.get(stem)
     if (eslesme) return eslesme
   }

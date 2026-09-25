@@ -94,7 +94,8 @@ describe("verifyRewrite", () => {
     expect(v.issues.map((i) => i.kind)).toEqual(["semantic_drift"])
   })
 
-  it("varsayılan eşik 0.75", () => {
-    expect(DEFAULT_VERIFICATION_CONFIG.driftThreshold).toBe(0.75)
+  it("varsayılan eşik ölçümle belirlenmiş 0.70", () => {
+    // K-33: 0.75'te tetiklenen üç maddenin üçü de sadık çeviriydi.
+    expect(DEFAULT_VERIFICATION_CONFIG.driftThreshold).toBe(0.7)
   })
 })

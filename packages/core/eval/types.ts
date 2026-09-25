@@ -55,6 +55,14 @@ export interface AdaptMetrics {
   scoreBefore: number
   /** Tüm yeniden yazımlar kabul edilmiş varsayımıyla: uyarlamanın üst sınırı. */
   scoreAfter: number
+  /**
+   * Yalnızca doğrulamayı geçen maddeler kabul edilmiş varsayımıyla.
+   *
+   * Ürünün gerçek vaadi bu. Üst sınır, kullanıcının reddedeceği uydurma
+   * içerikten gelen kazancı da sayıyor — ilk koşuda bir çift 0'dan 33'e
+   * çıkmıştı ama 8 maddenin 6'sı işaretliydi.
+   */
+  scoreAfterCleanOnly: number
   durationMs: number
   /** Yeniden yazımı patlayan madde sayısı (spec §13). */
   failedCount: number
