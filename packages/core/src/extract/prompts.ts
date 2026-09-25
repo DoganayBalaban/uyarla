@@ -1,5 +1,6 @@
 export const SEGMENT_PROMPT = `Sana bir özgeçmişin (CV) ham metni verilecek.
-Metni dört bölüme ayır:
+Metni beş bölüme ayır:
+- headerBlock: ilk bölüm başlığından ÖNCEKİ satırlar — ad, unvan, iletişim
 - summaryBlock: kişisel özet, hakkında, profil bölümü
 - experienceBlock: iş deneyimi bölümü
 - educationBlock: eğitim bölümü

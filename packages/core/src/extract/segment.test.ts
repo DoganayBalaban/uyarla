@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { segmentResume } from "./segment.js"
+import { segmentResume, stripLeadingHeading } from "./segment.js"
 
 const cv = (ad: string) =>
   readFileSync(join(import.meta.dirname, "../../eval/sources/cv", `${ad}.txt`), "utf8")
@@ -90,5 +90,38 @@ describe("segmentResume · kenar durumlar", () => {
     expect(b.skillsBlock).toContain("Python")
     expect(b.skillsBlock).not.toContain("Ahmet")
     expect(b.experienceBlock).not.toContain("Ahmet")
+  })
+})
+
+describe("stripLeadingHeading", () => {
+  it("baştaki bölüm başlığını atar", () => {
+    expect(stripLeadingHeading("PROFILE\n\nAI Engineer ve geliştirici")).toBe(
+      "AI Engineer ve geliştirici",
+    )
+  })
+
+  it("başlık yoksa metne dokunmaz", () => {
+    expect(stripLeadingHeading("AI Engineer ve geliştirici")).toBe("AI Engineer ve geliştirici")
+  })
+
+  it("yalnızca ilk başlığı atar", () => {
+    // İçerikte geçen bir kelime başlığa benziyorsa metin ortasından
+    // satır silmiyoruz.
+    expect(stripLeadingHeading("ÖZET\nDeneyim sahibiyim\nEĞİTİM")).toBe(
+      "Deneyim sahibiyim\nEĞİTİM",
+    )
+  })
+
+  it("boş blokta boş döner", () => {
+    expect(stripLeadingHeading("")).toBe("")
+    expect(stripLeadingHeading("  \n\n ")).toBe("")
+  })
+
+  it("Professional Summary başlığını tanır", () => {
+    // Ölçümle bulundu: değerlendirme CV'lerinden birinde bu başlık
+    // tanınmıyordu ve özet bölümü tümüyle başlık bloğunda kalıyordu.
+    expect(stripLeadingHeading("Professional Summary\nTest mühendisiyim")).toBe(
+      "Test mühendisiyim",
+    )
   })
 })

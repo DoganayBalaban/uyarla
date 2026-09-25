@@ -15,7 +15,7 @@ import type { ResumeSegments } from "../schemas/resume.js"
  * ~10 saniye kazandırıyor ve üretimde bir çağrılık token maliyeti düşüyor.
  */
 
-type Bolum = "summary" | "experience" | "education" | "skills" | "yoksay"
+type Bolum = "header" | "summary" | "experience" | "education" | "skills" | "yoksay"
 
 /** Başlık satırı bu uzunluğu aşmaz; aşıyorsa içerik satırıdır. */
 const MAX_BASLIK_UZUNLUGU = 60
@@ -24,6 +24,12 @@ const KALIPLAR: Array<[Bolum, RegExp]> = [
   [
     "summary",
     /^(profile|profil|hakkimda|özet|ozet|summary|about( me)?|profesyonel özet|kariyer özeti)$/,
+  ],
+  // Ölçümle eklendi: değerlendirme CV'lerinden birinde "Professional Summary"
+  // tanınmıyordu ve özet bölümü tümüyle başlık bloğunda kalıyordu.
+  [
+    "summary",
+    /^(professional|career|personal)\s+(summary|profile|statement)$/,
   ],
   ["experience", /^((work|professional|relevant)\s+)?(experience|employment|history)$/],
   ["experience", /^(iş\s+)?(deneyim|deneyimler|deneyimi|tecrübe|tecrübeler)$/],
@@ -54,6 +60,7 @@ const YOKSAYILAN =
 export function segmentResume(rawText: string): ResumeSegments {
   const satirlar = rawText.split("\n")
   const bloklar: Record<Bolum, string[]> = {
+    header: [],
     summary: [],
     experience: [],
     education: [],
@@ -61,9 +68,10 @@ export function segmentResume(rawText: string): ResumeSegments {
     yoksay: [],
   }
 
-  // İlk başlıktan önceki satırlar ad, unvan ve iletişim bilgisidir; özete
-  // yazılıyor. Eşleştirmede kullanılmıyor, ama atmanın da gereği yok.
-  let aktif: Bolum = "summary"
+  // İlk başlıktan önceki satırlar ad, unvan ve iletişim bilgisidir ve kendi
+  // bloğuna gidiyor. Sprint 1'de özete karışıyorlardı; skor özeti
+  // kullanmadığı için sorun görünmüyordu, indirilen belgede görünür oldu.
+  let aktif: Bolum = "header"
   let baslikBulundu = false
 
   for (const satir of satirlar) {
@@ -82,6 +90,9 @@ export function segmentResume(rawText: string): ResumeSegments {
   if (!baslikBulundu) {
     const tam = rawText.trim()
     return {
+      // Başlık bloğu yine de ilk satırlardan okunuyor: ad çoğu CV'de en
+      // üstte ve bölümleme başarısız diye belgeyi adsız bırakmanın anlamı yok.
+      headerBlock: tam.split("\n").slice(0, 4).join("\n"),
       summaryBlock: tam,
       experienceBlock: tam,
       educationBlock: tam,
@@ -90,11 +101,27 @@ export function segmentResume(rawText: string): ResumeSegments {
   }
 
   return {
+    headerBlock: bloklar.header.join("\n").trim(),
     summaryBlock: bloklar.summary.join("\n").trim(),
     experienceBlock: bloklar.experience.join("\n").trim(),
     educationBlock: bloklar.education.join("\n").trim(),
     skillsBlock: bloklar.skills.join("\n").trim(),
   }
+}
+
+/**
+ * Bloğun başındaki bölüm başlığını atar.
+ *
+ * Başlıklar bloklara bilerek dahil ediliyor (K-10): çıkarıcılar bağlamdan
+ * yararlanıyor. Ama özet metni belgeye olduğu gibi yazılıyor ve orada
+ * "PROFILE" satırı bir başlık değil, özetin ilk kelimesi gibi görünüyor.
+ */
+export function stripLeadingHeading(block: string): string {
+  const satirlar = block.split("\n")
+  const ilkDolu = satirlar.findIndex((s) => s.trim())
+  if (ilkDolu === -1) return ""
+  if (!baslikTuru(satirlar[ilkDolu]!)) return block.trim()
+  return satirlar.slice(ilkDolu + 1).join("\n").trim()
 }
 
 function baslikTuru(satir: string): Bolum | null {

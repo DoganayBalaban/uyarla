@@ -111,3 +111,20 @@ Denenmemiş bir daraltma: anlamsal eşleşmeyi yalnızca `soft` türü
 gereksinimlerde kullanmak. Teknik terimleri zaten kelime eşleşmesi yakalıyor;
 anlamsal katmanın asıl katkısı "takım çalışmasına yatkın" gibi ifadelerde.
 Değerlendirme setinde ölçülebilir.
+
+## 8 · İki sütunlu CV'lerde metin sırası bozuluyor
+
+**Ne:** `cv-c-yeni-mezun` iki sütunlu bir PDF ve metin çıkarımı sütunları iç
+içe geçiriyor. `HAKKIMDA` başlığının hemen ardından `PROFESYONEL DENEYİM`
+geliyor; başlığa ait metin ise deneyim bloğuna düşüyor.
+
+**Nasıl bulundu:** Sprint 2'de CV başlık bilgisi çıkarımı eklenirken, üç
+değerlendirme CV'sinden birinin özeti boş çıktı.
+
+**Neden şimdi değil:** Sorun bölümlemede değil, `pdf-parse`'ın sütunları
+okuma sırasında. Düzeltmek metin bloklarının sayfa üzerindeki konumuna
+bakmayı gerektiriyor — kendi başına bir görev.
+
+**Etkisi:** Bu CV'de özet boş kalıyor (belgede özet bölümü hiç çıkmıyor) ve
+hakkımda metni deneyim maddesi gibi işleniyor. Skor bundan zarar görmüyor;
+kanıt olarak hâlâ sayılıyor.
