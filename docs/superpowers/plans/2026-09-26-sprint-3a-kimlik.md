@@ -677,6 +677,7 @@ export class AuthError extends Error {
 
 /** Oturum şart; anonim yeterli. */
 export function ensureSession(session: Oturum | null): Oturum {
+  // Mesajlar spec §10'daki tablodan; marka rehberi §6 tonunda.
   if (!session) {
     throw new AuthError("Devam etmek için giriş yapman gerekiyor.", 401, "oturum_yok")
   }
@@ -967,6 +968,9 @@ başkasının hesabına bağlanır.
 - Değiştir: `apps/web/lib/auth.ts` (`onLinkAccount` bağlanır)
 - Değiştir: `apps/web/app/api/analyze/route.ts` (anonim oturum + sahiplik)
 - Değiştir: `apps/web/package.json` (`test:integration` betiği)
+
+Spec §11 bu görevin iki tümleşik testini şart koşuyor (spec §11): devralma
+ve yetki sızıntısı. İkisi de gerçek veritabanına karşı koşuyor.
 
 **Arayüzler:**
 - Tüketir: Görev 3'ten `getSession`, `ensureSession`.
@@ -1925,7 +1929,47 @@ durumunda kodu kontrol et:
     }
 ```
 
-- [ ] **Adım 5: Elle doğrula**
+- [ ] **Adım 5: Süresi geçmiş bağlantıyı karşıla**
+
+Spec §10'un hata tablosu bu mesajı şart koşuyor: *"Bu bağlantının süresi dolmuş. Yenisini
+gönderelim mi?"* Better Auth doğrulama başarısız olunca giriş adresine
+`?error=<kod>` ekleyerek dönüyor.
+
+`apps/web/app/giris/page.tsx` içinde, bileşenin başına ekle:
+
+```tsx
+/**
+ * Better Auth'un hata kodlarını Türkçe mesaja çeviriyor.
+ *
+ * Bilinmeyen kod için genel mesaj: kullanıcıya İngilizce bir kod
+ * göstermenin hiçbir faydası yok.
+ */
+function hataMesaji(kod: string | null): string | null {
+  if (!kod) return null
+  if (/EXPIRED|INVALID/i.test(kod)) {
+    return "Bu bağlantının süresi dolmuş. Yenisini gönderelim mi?"
+  }
+  return "Giriş yapılamadı. E-postanı tekrar girer misin?"
+}
+```
+
+ve `GirisPage` gövdesinin başına:
+
+```tsx
+  const [urlHatasi] = useState(() =>
+    typeof window === "undefined"
+      ? null
+      : hataMesaji(new URLSearchParams(window.location.search).get("error")),
+  )
+```
+
+Formdaki hata satırını ikisini de gösterecek hâle getir:
+
+```tsx
+        {(hata ?? urlHatasi) && <p className="gerekce">{hata ?? urlHatasi}</p>}
+```
+
+- [ ] **Adım 6: Elle doğrula**
 
 Tarayıcıda:
 
@@ -1938,7 +1982,10 @@ Tarayıcıda:
 
 6. adım devralmanın uçtan uca kanıtı: skor kaybolduysa iş taşınmamış demektir.
 
-- [ ] **Adım 6: Commit**
+Ayrıca süresi geçmiş bağlantıyı dene: `/giris?error=EXPIRED_TOKEN` adresini
+aç, Türkçe mesaj görünmeli.
+
+- [ ] **Adım 7: Commit**
 
 ```bash
 pnpm --filter @uyarla/web test
