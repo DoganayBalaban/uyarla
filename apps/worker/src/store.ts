@@ -52,6 +52,7 @@ export const prismaStore: AnalysisStore = {
     await prisma.jobPosting.update({
       where: { id: jobPostingId },
       data: {
+        position: data.position,
         requirements: data.requirements as unknown as object,
         language: data.language,
         seniority: data.seniority,
