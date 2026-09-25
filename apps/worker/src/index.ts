@@ -7,6 +7,9 @@ import {
 } from "@uyarla/core"
 import { Worker, UnrecoverableError } from "bullmq"
 import IORedis from "ioredis"
+import { runAdaptation } from "./adapt-pipeline.js"
+import { ADAPT_QUEUE, type AdaptJobData } from "./adapt-queue.js"
+import { prismaAdaptationStore } from "./adapt-store.js"
 import { runAnalysis } from "./pipeline.js"
 import { ANALYZE_QUEUE, type AnalyzeJobData } from "./queue.js"
 import { prismaStore } from "./store.js"
@@ -53,6 +56,37 @@ worker.on("completed", (job, analysisId) => {
   console.log(`[analyze] tamamlandı: iş ${job.id} → analiz ${analysisId}`)
 })
 
+const adaptWorker = new Worker<AdaptJobData, void>(
+  ADAPT_QUEUE,
+  async (job) => {
+    try {
+      await runAdaptation(
+        {
+          llm,
+          embedding,
+          store: prismaAdaptationStore,
+          onProgress: (stage) => void job.updateProgress({ stage }),
+        },
+        { adaptationId: job.data.adaptationId },
+      )
+    } catch (error) {
+      if (error instanceof PermanentError) throw new UnrecoverableError(error.message)
+      throw error
+    }
+  },
+  // Eşzamanlılık 1: bir uyarlama zaten madde başına paralel çağrı yapıyor,
+  // ikinci bir katman yerel modeli sıraya sokmaktan başka işe yaramaz (K-16).
+  { connection, concurrency: 1 },
+)
+
+adaptWorker.on("failed", (job, error) => {
+  console.error(`[adapt] iş başarısız: ${job?.id ?? "?"} — ${error.message}`)
+})
+
+adaptWorker.on("completed", (job) => {
+  console.log(`[adapt] tamamlandı: uyarlama ${job.data.adaptationId}`)
+})
+
 console.log(
-  `[worker] ${ANALYZE_QUEUE} kuyruğu dinleniyor · model: ${llmConfig.model}`,
+  `[worker] ${ANALYZE_QUEUE} ve ${ADAPT_QUEUE} kuyrukları dinleniyor · model: ${llmConfig.model}`,
 )

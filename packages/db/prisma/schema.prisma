@@ -54,7 +54,12 @@ enum ResumeVersionSource {
 }
 
 model JobPosting {
-  id           String     @id @default(cuid())
+  id String @id @default(cuid())
+
+  // Sprint 1'de ihtiyaç yoktu; Sprint 2'de özet yeniden yazımı pozisyon
+  // adını istiyor (spec §6.1). Mevcut kayıtlar boş kalıyor.
+  position String @default("")
+
   rawText      String     @db.Text
   requirements Json
   language     String

@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./queue": "./src/queue.ts"
+    "./queue": "./src/queue.ts",
+    "./adapt-queue": "./src/adapt-queue.ts"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
