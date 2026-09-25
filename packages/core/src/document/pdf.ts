@@ -1,23 +1,6 @@
-import { createRequire } from "node:module"
+import { fontYollari } from "@uyarla/fonts"
 import PDFDocument from "pdfkit"
 import type { DocumentModel } from "./model.js"
-
-const require = createRequire(import.meta.url)
-
-/**
- * Türkçe kapsayan gömülü font.
- *
- * pdfkit'in gömülü Helvetica'sı WinAnsi kodlaması kullanıyor ve `ş ğ ı İ`
- * bu kodlamada yok. Ölçüldü:
- *
- *   Helvetica  → "æPyma Ça öÆ  1 ÿÏa_ 5@ANBUL Geli ÷F— ici"
- *   DejaVu Sans→ "Şeyma Çağlar ığüöş İSTANBUL Geliştirici"
- *
- * DejaVu Sans sıradan bir sans-serif ve serbest lisanslı; marka rehberi
- * §9.3'ün "CV çıktısında marka fontu kullanılmaz" kuralına aykırı değil.
- */
-const FONT = require.resolve("dejavu-fonts-ttf/ttf/DejaVuSans.ttf")
-const FONT_BOLD = require.resolve("dejavu-fonts-ttf/ttf/DejaVuSans-Bold.ttf")
 
 /** ~2 cm kenar boşluğu. */
 const KENAR = 56
@@ -32,8 +15,9 @@ const KENAR = 56
  */
 export async function renderPdf(model: DocumentModel): Promise<Buffer> {
   const doc = new PDFDocument({ size: "A4", margin: KENAR })
-  doc.registerFont("govde", FONT)
-  doc.registerFont("kalin", FONT_BOLD)
+  const fontlar = fontYollari()
+  doc.registerFont("govde", fontlar.regular)
+  doc.registerFont("kalin", fontlar.bold)
 
   const parcalar: Buffer[] = []
   doc.on("data", (parca: Buffer) => parcalar.push(parca))

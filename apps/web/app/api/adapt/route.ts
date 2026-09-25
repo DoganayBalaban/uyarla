@@ -1,0 +1,47 @@
+import { PermanentError } from "@uyarla/core"
+import { prisma } from "@uyarla/db"
+import { ADAPT_JOB_OPTIONS } from "@uyarla/worker/adapt-queue"
+import { NextResponse } from "next/server"
+import { adaptQueue } from "@/lib/adaptQueue"
+
+export const runtime = "nodejs"
+
+/**
+ * Uyarlama başlatır. Kayıt burada açılıyor, worker'da değil: kararlar ve
+ * indirme de aynı kaydı adresliyor ve arayüzün beklemeden bir kimliğe
+ * ihtiyacı var.
+ */
+export async function POST(request: Request) {
+  try {
+    const { analysisId } = (await request.json()) as { analysisId?: string }
+    if (!analysisId) throw new PermanentError("Analiz kimliği gerekli.", "missing_analysis")
+
+    const analysis = await prisma.analysis.findUnique({ where: { id: analysisId } })
+    if (!analysis) throw new PermanentError("Analiz bulunamadı.", "analysis_not_found")
+    if (analysis.status !== "done") {
+      throw new PermanentError("Bu analiz henüz tamamlanmadı.", "analysis_incomplete")
+    }
+
+    // analysisId benzersiz: bir analizin tek uyarlaması olur (spec §5).
+    // Varsa yeniden çalıştırmak yerine mevcut kaydı döndürüyoruz.
+    const mevcut = await prisma.adaptation.findUnique({ where: { analysisId } })
+    if (mevcut) return NextResponse.json({ adaptationId: mevcut.id })
+
+    const adaptation = await prisma.adaptation.create({
+      data: { analysisId, draft: {}, modelId: analysis.modelId, status: "running" },
+    })
+
+    await adaptQueue.add("adapt", { adaptationId: adaptation.id }, ADAPT_JOB_OPTIONS)
+
+    return NextResponse.json({ adaptationId: adaptation.id })
+  } catch (error) {
+    if (error instanceof PermanentError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 400 })
+    }
+    console.error("[api/adapt]", error)
+    return NextResponse.json(
+      { error: "Bir şeyler ters gitti. Birazdan tekrar dener misin?", code: "unknown" },
+      { status: 500 },
+    )
+  }
+}

@@ -12,7 +12,7 @@ export default {
   // Yalnızca yerel eklenti ya da dinamik require kullananlar. mammoth ve
   // pdf-parse saf JavaScript; dışarıda bırakılınca CJS/ESM ara katmanı
   // "Object.defineProperty called on non-object" ile düşüyor.
-  serverExternalPackages: ["@prisma/client", "bullmq", "ioredis"],
+  serverExternalPackages: ["@prisma/client", "bullmq", "ioredis", "pdfkit", "docx", "@uyarla/fonts"],
 
   webpack(config) {
     // TypeScript ESM'de kaynak dosyalar birbirine ".js" uzantısıyla import
