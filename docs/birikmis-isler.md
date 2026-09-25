@@ -173,3 +173,27 @@ yanlış olan bir uyarı eklemek, K-32 sonrası artık hassas olan işaretleri
 **Ne zaman ele alınmalı:** Çapraz dilli sözlük güçlendiğinde yanlış alarm
 oranı düşer; o zaman kontrol eklenebilir. Ya da prompt'a "kaynakta geçen
 teknoloji adlarının hepsini koru" kuralı eklenip ölçülebilir.
+
+## 11 · Çeviri, meşru kazanç yolu ama uydurma sanılıyor
+
+**Ne:** İngilizce bir CV Türkçe bir ilana uyarlandığında, sadık çeviri
+ilanın Türkçe terimini maddeye getiriyor ve skor **meşru olarak** artıyor.
+Ama `checkPostingTermInjection` bunu uydurma sanıyor: karşılaştırma
+`sourceRef` ile yapılıyor ve İngilizce kaynak Türkçe terimi lafzen taşımıyor.
+
+**Ölçülen örnek** (uçtan uca, 26 Eylül):
+
+```
+kaynak: … authentication and app infrastructure with JWT/AuthGuard …
+yazım : JWT/AuthGuard kullanarak kimlik doğrulama ve uygulama altyapısına …
+uyarı : "kimlik" geçiyor ama senin yazdığın hâlinde yok        ← YANLIŞ
+karar : kabul → skor 28 → 30                                   ← meşru kazanç
+```
+
+**Neden önemli:** K-32'nin "dürüst kazanç sıfır" bulgusu bu yüzden bir miktar
+olduğundan düşük ölçülmüş olabilir. Çapraz dilli sözlük güçlendirilirse hem
+yanlış alarm düşer hem çeviri kazancı sayılabilir hâle gelir.
+
+**Ne yapılabilir:** `TITLE_SYNONYMS`'e ilan/CV sözlüğünden çapraz dilli
+çiftler eklemek (K-25'in yöntemi: ölçülen kaçırmalardan türetmek).
+Örneğin `authentication ↔ kimlik doğrulama`, `AI ↔ yapay zeka`.
