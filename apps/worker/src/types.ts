@@ -17,7 +17,12 @@ export interface AnalysisStore {
   getJobPostingText(jobPostingId: string): Promise<string>
   saveResumeVersion(resumeId: string, profile: ResumeProfile): Promise<string>
   saveJobPostingData(jobPostingId: string, data: JobPostingData): Promise<void>
-  createAnalysis(input: { jobPostingId: string; modelId: string }): Promise<string>
+  createAnalysis(input: {
+    jobPostingId: string
+    modelId: string
+    /** Sahiplik; yetki kontrolü buna bakıyor (spec §5). */
+    userId: string
+  }): Promise<string>
   attachResumeVersion(analysisId: string, resumeVersionId: string): Promise<void>
   completeAnalysis(input: {
     analysisId: string
@@ -50,4 +55,6 @@ export interface PipelineDeps {
 export interface PipelineInput {
   resumeId: string
   jobPostingId: string
+  /** Analiz kaydına yazılacak sahip. */
+  userId: string
 }

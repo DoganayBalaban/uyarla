@@ -71,6 +71,8 @@ export async function loadAdaptation(id: string) {
     posting,
     draft,
     scoreBefore: analysis.score,
+    /** Yetki kontrolü için; Adaptation'ın kendi userId'si yok (spec §5). */
+    ownerId: analysis.userId,
     /** Nihai ResumeVersion'ın bağlanacağı CV; indirme route'u kullanıyor. */
     resumeId: analysis.resumeVersion?.resumeId ?? null,
   }

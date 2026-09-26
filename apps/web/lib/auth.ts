@@ -1,7 +1,9 @@
 import { betterAuth } from "better-auth"
 import { prismaAdapter } from "better-auth/adapters/prisma"
+import { nextCookies } from "better-auth/next-js"
 import { anonymous, magicLink } from "better-auth/plugins"
 import { prisma } from "@uyarla/db"
+import { devralmaIslemleri } from "./devral"
 import { sendMagicLinkEmail } from "./mail"
 
 /**
@@ -32,7 +34,18 @@ export const auth = betterAuth({
         await sendMagicLinkEmail({ email, url })
       },
     }),
-    // Devralma mantığı Görev 4'te bu eklentiye takılacak.
-    anonymous(),
+    anonymous({
+      onLinkAccount: async ({ anonymousUser, newUser }) => {
+        // Tek işlemde: yarısı taşınmış bir kullanıcı, hiç taşınmamıştan daha
+        // kötü — skorunu görüyor ama CV'si yok (spec §7).
+        await prisma.$transaction(
+          devralmaIslemleri(prisma, anonymousUser.user.id, newUser.user.id),
+        )
+      },
+    }),
+    // EN SONDA olmak zorunda: sunucu tarafında auth.api.* çağrıldığında
+    // Set-Cookie'yi Next'in çerez deposuna yazıyor. Olmadan anonim oturum
+    // kuruluyor ama isteği yapan tarafa ulaşmıyor.
+    nextCookies(),
   ],
 })

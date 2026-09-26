@@ -34,7 +34,11 @@ const worker = new Worker<AnalyzeJobData, string>(
           modelId: llmConfig.model,
           onProgress: (stage) => void job.updateProgress({ stage }),
         },
-        { resumeId: job.data.resumeId, jobPostingId: job.data.jobPostingId },
+        {
+          resumeId: job.data.resumeId,
+          jobPostingId: job.data.jobPostingId,
+          userId: job.data.userId,
+        },
       )
     } catch (error) {
       // Kalıcı hatada tekrar denemek anlamsız: girdi hatalı, ikinci deneme de
