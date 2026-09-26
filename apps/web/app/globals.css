@@ -35,10 +35,15 @@ body {
   font-family: Inter, system-ui, -apple-system, sans-serif;
   background: var(--zemin);
   color: var(--metin);
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* Uygulama ekranlarının dar sütunu; tanıtım sayfası tam genişlikte. */
+.uygulama-kap {
   margin: 2rem auto;
   max-width: 56rem;
   padding: 0 1rem 4rem;
-  line-height: 1.55;
 }
 
 h1,
