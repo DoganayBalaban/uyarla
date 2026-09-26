@@ -1,9 +1,9 @@
 import "./globals.css"
-import { OturumCubugu } from "./components/OturumCubugu"
 
 export const metadata = {
-  title: "uyarla",
-  description: "Her ilana, doğru CV.",
+  title: "uyarla · Her ilana, doğru CV.",
+  description:
+    "İlanı yapıştır, CV'nin ne kadar uyduğunu gör ve tek tıkla ilana özel hâle getir. Deneyimini uydurmadan.",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -14,14 +14,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Inter:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body>
-        <OturumCubugu />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   )
 }

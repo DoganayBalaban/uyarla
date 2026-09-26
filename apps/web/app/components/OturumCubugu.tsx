@@ -31,7 +31,7 @@ export function OturumCubugu() {
       }}
     >
       <a
-        href="/test"
+        href="/"
         style={{
           fontFamily: "Manrope, sans-serif",
           fontWeight: 800,
