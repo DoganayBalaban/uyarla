@@ -1,10 +1,8 @@
 /**
  * Giriş ekranının sağındaki görsel panel.
  *
- * Arkada ipeksi kurdeleler, önde CV'deki kavramların döndüğü bir yörünge ve
- * ortada skor halkası: ürünün ne yaptığını tek karede anlatıyor. Rakip
- * örneklerdeki kullanıcı yorumu kartı yerine slogan var — rehber §11 uydurma
- * yorumu yasaklıyor, gerçek yorum geldiğinde buraya konabilir.
+ * Arkada ipeksi kurdeleler, önde CV'deki kavramların döndüğü bir yörünge,
+ * ortada skor halkası ve altta bir kullanıcı yorumu kartı.
  *
  * Tamamen dekoratif; ekran okuyucudan gizli.
  */
@@ -22,6 +20,21 @@ const KAVRAMLAR: { metin: string; r: number; aci: number; eksik?: boolean }[] = 
 ]
 
 const HALKALAR = [26, 50, 74, 96]
+
+/**
+ * YER TUTUCU YORUM — gerçek değil, yayından önce değiştirilmeli.
+ *
+ * Marka rehberi §11: yalnızca gerçek kullanıcıların açık izniyle, gerçek
+ * isim veya onaylı takma adla yorum yayımlanır. Ad ve unvan bilerek
+ * "yer tutucu" görünüyor ki gerçek sanılıp canlıya çıkmasın.
+ */
+const YORUM = {
+  metin:
+    "Aynı CV ile aylarca başvurdum, dönüş yoktu. Uyarla eksik anahtar kelimeleri gösterdi, deneyimimi ilanın diliyle yeniden yazdı; hiçbir şey uydurmadı.",
+  ad: "Ad Soyad",
+  unvan: "Yeni mezun · Frontend Geliştirici",
+  basHarfler: "AS",
+}
 
 export function GirisGorseli() {
   return (
@@ -106,18 +119,28 @@ export function GirisGorseli() {
         </div>
       </div>
 
-      {/* Alt kart: slogan. */}
-      <div className="absolute inset-x-6 bottom-6 sm:inset-x-10 sm:bottom-10 motion-safe:animate-yuzme">
+      {/* Üst: slogan. */}
+      <p className="absolute left-8 top-8 font-baslik text-sm font-extrabold tracking-tight text-white/80">
+        Aynı deneyim, doğru anlatım.
+      </p>
+
+      {/* Alt kart: kullanıcı yorumu. */}
+      <figure className="absolute inset-x-6 bottom-6 sm:inset-x-10 sm:bottom-10 motion-safe:animate-yuzme">
         <div className="max-w-sm rounded-kart border border-white/20 bg-white/10 p-5 text-white shadow-2xl backdrop-blur-xl">
-          <p className="font-baslik text-xl font-extrabold tracking-tight">
-            Aynı deneyim, doğru anlatım.
-          </p>
-          <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-            CV&apos;ni her ilana göre uyarla. Olmayan hiçbir şey eklenmez, her değişikliği sen
-            onaylarsın.
-          </p>
+          <div className="flex items-center gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#8ea2ff] to-mavi font-baslik text-sm font-extrabold">
+              {YORUM.basHarfler}
+            </span>
+            <figcaption>
+              <p className="text-sm font-semibold">{YORUM.ad}</p>
+              <p className="text-xs text-white/60">{YORUM.unvan}</p>
+            </figcaption>
+          </div>
+          <blockquote className="mt-3 text-sm leading-relaxed text-white/85">
+            “{YORUM.metin}”
+          </blockquote>
         </div>
-      </div>
+      </figure>
     </div>
   )
 }

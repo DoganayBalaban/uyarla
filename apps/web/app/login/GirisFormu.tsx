@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { signIn } from "@/lib/authClient"
+import { epostaOnerisi, postaUygulamasi } from "@/lib/eposta"
 import type { Saglayici } from "@/lib/saglayicilar"
 import { GirisGorseli } from "./GirisGorseli"
 import { SosyalGiris } from "./SosyalGiris"
@@ -45,6 +46,8 @@ export function GirisFormu({ acikSaglayicilar }: { acikSaglayicilar: Saglayici[]
   const [email, setEmail] = useState("")
   const [durum, setDurum] = useState<"bos" | "gonderiliyor" | "gonderildi">("bos")
   const [hata, setHata] = useState<string | null>(null)
+  const [kalan, setKalan] = useState(0)
+  const [yenidenGonderildi, setYenidenGonderildi] = useState(false)
 
   // URL'deki hata yalnızca istemcide okunuyor; ilk çizimde okumak sunucu ile
   // istemci çıktısını ayrıştırıp hydration uyarısı veriyordu.
@@ -52,24 +55,50 @@ export function GirisFormu({ acikSaglayicilar }: { acikSaglayicilar: Saglayici[]
     setHata(hataMesaji(new URLSearchParams(window.location.search).get("error")))
   }, [])
 
-  async function gonder(event: React.FormEvent) {
-    event.preventDefault()
-    setHata(null)
-    setDurum("gonderiliyor")
+  // Tekrar gönderme sayacı. 60 saniye, sunucudaki "dakikada 3 bağlantı"
+  // sınırının (lib/auth.ts) içinde kalıyor: ilk gönderim + dakikada bir tekrar.
+  useEffect(() => {
+    if (kalan <= 0) return
+    const id = setTimeout(() => setKalan((k) => k - 1), 1000)
+    return () => clearTimeout(id)
+  }, [kalan])
 
+  const oneri = durum === "bos" ? epostaOnerisi(email) : null
+  const uygulama = postaUygulamasi(email)
+
+  /** Bağlantıyı gönderir; başarılıysa true. */
+  async function baglantiGonder(): Promise<boolean> {
     const { error } = await signIn.magicLink({
       email,
       // Giriş sonrası kullanıcıyı ana akışa alıyoruz; dönüş adresi takibi
       // Sprint 3B'nin işi.
       callbackURL: "/analyze",
     })
-
     if (error) {
-      setHata("Bağlantıyı gönderemedik. Birazdan tekrar dener misin?")
-      setDurum("bos")
-      return
+      setHata(
+        error.status === 429
+          ? "Çok sık denedin. Bir dakika sonra tekrar gönderebilirsin."
+          : "Bağlantıyı gönderemedik. Birazdan tekrar dener misin?",
+      )
+      return false
     }
-    setDurum("gonderildi")
+    setKalan(60)
+    return true
+  }
+
+  async function gonder(event: React.FormEvent) {
+    event.preventDefault()
+    setHata(null)
+    setDurum("gonderiliyor")
+    const tamam = await baglantiGonder()
+    setYenidenGonderildi(false)
+    setDurum(tamam ? "gonderildi" : "bos")
+  }
+
+  async function tekrarGonder() {
+    setHata(null)
+    setYenidenGonderildi(false)
+    if (await baglantiGonder()) setYenidenGonderildi(true)
   }
 
   return (
@@ -109,10 +138,53 @@ export function GirisFormu({ acikSaglayicilar }: { acikSaglayicilar: Saglayici[]
               </p>
               <p className="mt-2 text-sm text-gri">Gelmediyse spam klasörüne bak.</p>
 
+              <div className="mt-8 space-y-3">
+                {uygulama && (
+                  <a
+                    href={uygulama.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-mavi px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(43_78_255/0.8)] transition hover:-translate-y-px hover:bg-[#2442e0]"
+                  >
+                    {uygulama.eylem}
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => void tekrarGonder()}
+                  disabled={kalan > 0}
+                  className="w-full rounded-2xl border border-cizgi px-5 py-3.5 font-semibold text-metin transition-colors hover:bg-zemin disabled:cursor-not-allowed disabled:text-gri disabled:hover:bg-transparent dark:hover:bg-white/5"
+                >
+                  {kalan > 0 ? (
+                    <>
+                      Tekrar gönder{" "}
+                      <span className="tabular-nums">
+                        ({Math.floor(kalan / 60)}:{String(kalan % 60).padStart(2, "0")})
+                      </span>
+                    </>
+                  ) : (
+                    "Bağlantıyı tekrar gönder"
+                  )}
+                </button>
+
+                <p role="status" className="min-h-5 text-center text-sm">
+                  {hata ? (
+                    <span className="text-kehribar">{hata}</span>
+                  ) : yenidenGonderildi ? (
+                    <span className="text-yesil">Yeni bağlantı gönderildi. En son geleni kullan.</span>
+                  ) : null}
+                </p>
+              </div>
+
               <button
                 type="button"
-                onClick={() => setDurum("bos")}
-                className="mt-8 w-full rounded-buton border border-cizgi px-5 py-3.5 font-semibold text-metin transition-colors hover:bg-zemin dark:hover:bg-white/5"
+                onClick={() => {
+                  setHata(null)
+                  setDurum("bos")
+                }}
+                className="mt-2 w-full text-center text-sm font-medium text-gri underline-offset-4 hover:text-metin hover:underline"
               >
                 Başka bir e-posta kullan
               </button>
@@ -144,6 +216,19 @@ export function GirisFormu({ acikSaglayicilar }: { acikSaglayicilar: Saglayici[]
                   aria-describedby={hata ? "giris-hata" : undefined}
                   className="w-full rounded-2xl border border-transparent bg-zemin px-5 py-4 dark:bg-white/5 text-base text-metin outline-none ring-mavi/25 transition placeholder:text-gri/80 focus:border-mavi focus:bg-white focus:ring-4 dark:focus:bg-white/10"
                 />
+
+                {oneri && (
+                  <p className="mt-3 text-sm text-gri">
+                    <button
+                      type="button"
+                      onClick={() => setEmail(oneri)}
+                      className="font-semibold text-mavi underline-offset-4 hover:underline dark:text-[#8ea2ff]"
+                    >
+                      {oneri}
+                    </button>{" "}
+                    mı demek istedin?
+                  </p>
+                )}
 
                 {hata && (
                   <p id="giris-hata" role="alert" className="mt-3 text-sm text-kehribar">
@@ -208,7 +293,15 @@ export function GirisFormu({ acikSaglayicilar }: { acikSaglayicilar: Saglayici[]
         </main>
 
         <footer className="text-xs text-gri">
-          © 2026 uyarla · Her ilana, doğru CV.
+          Devam ederek{" "}
+          <a href="/terms" className="underline underline-offset-2 hover:text-metin">
+            kullanım koşullarını
+          </a>{" "}
+          kabul etmiş olursun. Verilerinin nasıl işlendiği{" "}
+          <a href="/privacy" className="underline underline-offset-2 hover:text-metin">
+            KVKK aydınlatma metninde
+          </a>
+          .
         </footer>
       </div>
 
