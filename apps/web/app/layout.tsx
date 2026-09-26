@@ -1,5 +1,5 @@
 import "./globals.css"
-import { OturumCubugu } from "./components/OturumCubugu"
+import { UstCubuk } from "./components/UstCubuk"
 
 export const metadata = {
   title: "uyarla",
@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <OturumCubugu />
+        <UstCubuk />
         {children}
       </body>
     </html>
