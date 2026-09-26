@@ -36,7 +36,7 @@ export default function GirisPage() {
       email,
       // Giriş sonrası kullanıcıyı ana akışa alıyoruz; dönüş adresi takibi
       // Sprint 3B'nin işi.
-      callbackURL: "/test",
+      callbackURL: "/analyze",
     })
 
     if (error) {
@@ -49,15 +49,18 @@ export default function GirisPage() {
 
   if (durum === "gonderildi") {
     return (
-      <main>
-        <h1>Posta kutunu kontrol et</h1>
-        <p>
+      <main className="max-w-md">
+        <h1 className="text-3xl">Posta kutunu kontrol et</h1>
+        <p className="mt-3">
           <strong>{email}</strong> adresine bir giriş bağlantısı gönderdik.
           Bağlantı 15 dakika geçerli.
         </p>
-        <p className="meta">
+        <p className="mt-4 text-sm text-gri">
           Gelmediyse spam klasörüne bak, ya da{" "}
-          <button className="btn-ikincil" onClick={() => setDurum("bos")}>
+          <button
+            className="rounded-buton border border-cizgi px-3 py-1.5 font-semibold"
+            onClick={() => setDurum("bos")}
+          >
             tekrar dene
           </button>
         </p>
@@ -66,40 +69,40 @@ export default function GirisPage() {
   }
 
   return (
-    <main>
-      <h1>Giriş yap</h1>
-      <p className="meta">
+    <main className="max-w-md">
+      <h1 className="text-3xl">Giriş yap</h1>
+      <p className="mt-2 text-sm text-gri">
         Parola yok. E-postanı bırak, sana bir giriş bağlantısı gönderelim.
       </p>
 
-      <form onSubmit={gonder} style={{ marginTop: "1.5rem", maxWidth: "24rem" }}>
-        <label htmlFor="email">E-posta</label>
-        <input
-          id="email"
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="aday@ornek.com"
-          style={{
-            width: "100%",
-            padding: "0.6rem",
-            border: "1px solid var(--cizgi)",
-            borderRadius: "var(--yaricap-buton)",
-            background: "var(--kart)",
-            color: "var(--metin)",
-            font: "inherit",
-          }}
-        />
-        {(hata ?? urlHatasi) && <p className="gerekce">{hata ?? urlHatasi}</p>}
-        <p>
-          <button className="btn-birincil" type="submit" disabled={durum === "gonderiliyor"}>
-            {durum === "gonderiliyor" ? "Gönderiliyor…" : "Bağlantıyı gönder"}
-          </button>
-        </p>
+      <form onSubmit={gonder} className="mt-6 space-y-3">
+        <div>
+          <label htmlFor="email" className="mb-1 block font-semibold">
+            E-posta
+          </label>
+          <input
+            id="email"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="aday@ornek.com"
+            className="w-full rounded-buton border border-cizgi bg-white p-2.5 font-govde"
+          />
+        </div>
+        {(hata ?? urlHatasi) && <p className="text-sm text-kehribar">{hata ?? urlHatasi}</p>}
+        <button
+          type="submit"
+          disabled={durum === "gonderiliyor"}
+          className="rounded-buton bg-mavi px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          {durum === "gonderiliyor" ? "Gönderiliyor…" : "Bağlantıyı gönder"}
+        </button>
       </form>
 
-      <p className="meta">Kayıt gerekmez · CV&apos;n izinsiz paylaşılmaz</p>
+      <p className="mt-6 text-sm text-gri">
+        Kayıt gerekmez · CV&apos;n izinsiz paylaşılmaz
+      </p>
     </main>
   )
 }

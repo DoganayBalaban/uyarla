@@ -3,7 +3,7 @@
 import { signOut, useSession } from "@/lib/authClient"
 
 /**
- * Kim giriş yapmış ve çıkış bağlantısı.
+ * Uygulama ekranlarının üst çubuğu: logo, gezinme ve oturum durumu.
  *
  * Anonim oturum "giriş yapılmış" sayılmıyor: kullanıcı açısından o bir oturum
  * değil, sadece işinin kaybolmamasını sağlayan bir iz. Üstelik anonim
@@ -12,45 +12,40 @@ import { signOut, useSession } from "@/lib/authClient"
  */
 export function OturumCubugu() {
   const { data, isPending } = useSession()
-  if (isPending) return null
 
   const kullanici = data?.user
-  const kayitli = kullanici && !(kullanici as { isAnonymous?: boolean | null }).isAnonymous
+  const kayitli =
+    !isPending && kullanici && !(kullanici as { isAnonymous?: boolean | null }).isAnonymous
 
   return (
-    <div
-      className="meta"
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: "1rem",
-        borderBottom: "1px solid var(--cizgi)",
-        paddingBottom: "0.6rem",
-        marginBottom: "1.5rem",
-      }}
-    >
-      <a
-        href="/"
-        style={{
-          fontFamily: "Manrope, sans-serif",
-          fontWeight: 800,
-          color: "var(--metin)",
-          textDecoration: "none",
-        }}
-      >
+    <header className="mb-6 flex items-center justify-between gap-4 border-b border-cizgi pb-2.5">
+      <a href="/" className="font-baslik text-lg font-extrabold text-metin no-underline">
         uyarla
       </a>
-      {kayitli ? (
-        <span style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          {kullanici.email}
-          <button className="btn-ikincil" onClick={() => void signOut()}>
-            Çıkış
-          </button>
-        </span>
-      ) : (
-        <a href="/giris">Giriş yap</a>
-      )}
-    </div>
+
+      <nav className="flex items-center gap-4 text-sm text-gri">
+        <a href="/analyze" className="hover:text-mavi">
+          Yeni analiz
+        </a>
+        {/* Yalnızca oturum kısmı bekletiliyor, çubuğun tamamı değil: tümünü
+            gizlemek yerleşimi zıplatıyor. "Giriş yap" gösterip sonra
+            e-postaya dönmek de göz kırpması yaratıyor. */}
+        {isPending ? null : kayitli ? (
+          <>
+            <span>{kullanici.email}</span>
+            <button
+              className="rounded-buton border border-cizgi px-3 py-1.5 font-semibold"
+              onClick={() => void signOut()}
+            >
+              Çıkış
+            </button>
+          </>
+        ) : (
+          <a href="/login" className="hover:text-mavi">
+            Giriş yap
+          </a>
+        )}
+      </nav>
+    </header>
   )
 }

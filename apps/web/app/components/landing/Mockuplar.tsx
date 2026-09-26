@@ -141,9 +141,9 @@ export function OnceSonra() {
         <div className={`${s.onceSonraBlok} ${s.onceSonraYeni}`}>
           <span className={`${s.onceSonraRozet} ${s.onceSonraRozetYeni}`}>Sonra</span>
           <p>
-            <span className="eklenen">React ve TypeScript ile</span> müşteri{" "}
-            <span className="cikarilan">paneli projesinde görev aldım, React kullandım.</span>{" "}
-            <span className="eklenen">panelini geliştirdim.</span>
+            <span className="rounded bg-yesil/20 px-0.5">React ve TypeScript ile</span> müşteri{" "}
+            <span className="text-gri line-through">paneli projesinde görev aldım, React kullandım.</span>{" "}
+            <span className="rounded bg-yesil/20 px-0.5">panelini geliştirdim.</span>
           </p>
         </div>
       </div>
@@ -159,12 +159,12 @@ export function OnceSonra() {
 export function UyariKarti() {
   return (
     <div className={`${s.mock} ${s.mockGenis}`}>
-      <span className="rozet">Kontrol et</span>
+      <span className="mb-1.5 inline-block rounded-full bg-kehribar/20 px-2 py-0.5 text-xs font-bold text-kehribar">Kontrol et</span>
       <p className={s.uyariMetin}>
-        <span className="cikarilan">Stajyerlerin uyumuna destek oldum.</span>{" "}
-        <span className="eklenen">4 kişilik ekibe liderlik ettim.</span>
+        <span className="text-gri line-through">Stajyerlerin uyumuna destek oldum.</span>{" "}
+        <span className="rounded bg-yesil/20 px-0.5">4 kişilik ekibe liderlik ettim.</span>
       </p>
-      <p className="gerekce">
+      <p className="mt-1.5 text-sm text-kehribar">
         Orijinal maddede “liderlik” ve “4 kişi” geçmiyor. Bu ifade deneyimini abartıyor olabilir.
       </p>
       <div className={s.uyariButonlar}>
