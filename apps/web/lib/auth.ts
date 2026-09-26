@@ -5,14 +5,16 @@ import { anonymous, magicLink } from "better-auth/plugins"
 import { prisma } from "@uyarla/db"
 import { devralmaIslemleri } from "./devral"
 import { sendMagicLinkEmail } from "./mail"
+import { saglayiciAyarlari } from "./saglayicilar"
 
 /**
  * Kimlik katmanı. `packages/core` bunu bilmiyor ve bilmemeli: kimlik HTTP
  * katmanının işi, alan mantığı oturumdan bağımsız kalıyor.
  *
- * Tek giriş yöntemi magic link (spec §6). Parola yok: unutulacak bir şey
+ * Ana giriş yöntemi magic link (spec §6). Parola yok: unutulacak bir şey
  * yok, sızacak bir şey yok, ve tek seferlik CV uyarlaması için parola
- * kurmak gereksiz sürtünme.
+ * kurmak gereksiz sürtünme. Google, LinkedIn ve GitHub isteğe bağlı:
+ * kimlik bilgileri .env'de varsa açılıyorlar.
  */
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
@@ -41,9 +43,10 @@ export const auth = betterAuth({
     },
   },
 
-  // Google buraya gelecek. Kimlik bilgileri .env'ye eklendiğinde açılıyor;
-  // şimdilik boş (spec §6).
-  socialProviders: {},
+  // Kimlik bilgisi .env'de olan sağlayıcılar açılıyor; hiçbiri yoksa boş.
+  // Anonim kullanıcı sosyal girişle kaydolursa işi yine devralınıyor:
+  // anonymous eklentisinin onLinkAccount'u giriş yönteminden bağımsız.
+  socialProviders: saglayiciAyarlari(),
 
   plugins: [
     magicLink({
