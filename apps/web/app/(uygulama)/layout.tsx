@@ -5,7 +5,7 @@ import { OturumCubugu } from "../components/OturumCubugu"
  *
  * Tanıtım sayfası tam genişlikte kendi gezinme çubuğuyla çiziliyor; dar
  * sütun ve oturum çubuğu yalnızca bu grubun sayfalarına uygulanıyor.
- * Route group olduğu için adresler değişmedi: /test, /adapt/[id], /giris.
+ * Route group adrese girmiyor: /analyze, /adapt/[id], /login.
  */
 export default function UygulamaLayout({ children }: { children: React.ReactNode }) {
   return (
