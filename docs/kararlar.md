@@ -1384,3 +1384,55 @@ kanıtlanmadı; spec §16'daki kesme sırasında hâlâ ikinci sırada.
 **Reddedilen:** 0.85 — işaretlenen oranı %37,6'ya çıkıyor ve hepsi çeviri
 kaynaklı yanlış alarm. Her işaretli madde kullanıcıyı durdurduğu için bu
 akışı kullanılamaz kılardı.
+
+## K-34 · Kimlik katmanı Better Auth ile, magic link tek yöntem
+
+**Tarih:** 26 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 3A
+
+**Karar:** Better Auth 1.7.x, `magic-link` + `anonymous` + `prisma-adapter`
+eklentileriyle. Tek giriş yöntemi magic link.
+
+**Neden Auth.js değil:** `next-auth` v5 iki yıldır beta (`5.0.0-beta.32`) ve
+beta'lar arası kırıcı değişiklik yapıyor; stabil v4 ise App Router öncesi.
+Ödeme alacak bir ürünün kimlik katmanını beta'ya bağlamak istemedik.
+
+**Neden Better Auth:** `anonymous` eklentisi huninin en riskli parçasını hazır
+veriyor — `onLinkAccount` kayıt anında tetikleniyor ve anonim kullanıcının
+işini devralmayı sağlıyor. Paket içeriği açılıp doğrulandı, tahmine
+dayanmadı.
+
+**Neden parola yok:** Unutulacak bir şey yok, sızacak bir şey yok, ve tek
+seferlik CV uyarlaması için parola kurmak gereksiz sürtünme.
+
+**Reddedilen:** Kendi yazmak — oturum güvenliği, CSRF, token hash'leme,
+zamanlama saldırıları sessizce yanlış yapılabilir; üstelik Google'ı sonra
+eklemek OAuth'u da kendimiz yazmak demekti.
+
+**Şema elle yazılmadı**, `@better-auth/cli generate` ile üretildi. CLI iki
+yerde plandaki tahminden ayrıldı (`isAnonymous` nullable çıktı, `@@map`
+direktifleri eklendi) — bu yüzden plan baştan "CLI doğrudur" kuralını
+taşıyordu.
+
+## K-35 · Yetkisiz erişimde 404, 403 değil
+
+**Tarih:** 26 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 3A
+
+**Karar:** Başkasının kaynağına erişim denemesi 404 döner. Sahipsiz kaynak da
+404.
+
+**Gerekçe:** 403 "bu kaynak var ama senin değil" demek, yani varlık bilgisi
+sızdırır. Uyarlama kimlikleri cuid ve tahmin edilmesi zor, ama bilgiyi
+vermenin hiçbir faydası yok.
+
+**Aynı ilkenin ikinci uygulaması:** Uyarlama başlatma ucunda kayıt kontrolü
+kaynağı **aramadan önce** yapılıyor. İlk yazılan sırada varlık kontrolü
+öndeydi ve anonim kullanıcı geçersiz kimlikte 400, geçerlide 401 alıyordu —
+yanıt kodundan "bu analiz var" okunabiliyordu. Canlı deneme gösterdi.
+
+**Sahiplik `Analysis` ve `JobPosting`'e ayrı alan olarak eklendi.** Zincirden
+türetmek çalışmıyor: `Analysis.resumeVersionId` nullable ve çıkarım patlayan
+analizler sahipsiz kalırdı. `Adaptation`'a eklenmedi — `analysisId` benzersiz
+ve `loadAdaptation` analizi zaten `include` ediyor.
+
+**Analiz durumu ucundaki kontrol özellikle kritik:** BullMQ iş kimliği artan
+tam sayı, yani `/api/analyze/7` tahmin edilebilir.
