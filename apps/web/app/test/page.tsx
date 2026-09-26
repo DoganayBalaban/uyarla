@@ -47,9 +47,19 @@ export default function TestPage() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ analysisId }),
     })
-    const govde = (await cevap.json()) as { adaptationId?: string; error?: string }
+    const govde = (await cevap.json()) as {
+      adaptationId?: string
+      error?: string
+      code?: string
+    }
     if (cevap.ok && govde.adaptationId) {
       window.location.href = `/adapt/${govde.adaptationId}`
+      return
+    }
+    // Anonim kullanıcı uyarlama isteyince kayıt gerekiyor (spec §7). Hata
+    // göstermek yerine doğrudan giriş ekranına alıyoruz: huninin tasarımı bu.
+    if (govde.code === "kayit_gerekli") {
+      window.location.href = "/giris"
       return
     }
     setError(govde.error ?? "Uyarlama başlatılamadı.")
