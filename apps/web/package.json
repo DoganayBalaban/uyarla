@@ -13,6 +13,7 @@
     "@uyarla/core": "workspace:*",
     "@uyarla/db": "workspace:*",
     "@uyarla/worker": "workspace:*",
+    "better-auth": "^1.7.6",
     "bullmq": "^5.20.0",
     "ioredis": "^5.4.0",
     "next": "^15.0.0",
