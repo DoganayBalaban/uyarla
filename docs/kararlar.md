@@ -1436,3 +1436,49 @@ ve `loadAdaptation` analizi zaten `include` ediyor.
 
 **Analiz durumu ucundaki kontrol özellikle kritik:** BullMQ iş kimliği artan
 tam sayı, yani `/api/analyze/7` tahmin edilebilir.
+
+## K-36 · Silme tek işlemde, dosyalar işlemden sonra
+
+**Tarih:** 27 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 3B / KVKK
+
+**Karar:** Kullanıcı verisi silinirken sıra şu: (1) `Resume.filePath` yolları
+okunur, (2) sekiz tablo tek `$transaction` içinde silinir, (3) dosyalar
+diskten işlemin DIŞINDA ve sonrasında silinir.
+
+**Neden tek işlem:** Yarısı silinmiş bir hesap hiç silinmemişten kötü — CV'si
+gitmiş ama analizleri duran bir kullanıcı ne silinmiş ne duruyor sayılır ve
+hangi durumda olduğu kullanıcıya anlatılamaz. Silme sırası koda gömülü bir
+diziden (`SILME_SIRASI`) üretiliyor, yorumdan değil; sıra yorum olarak
+yazılırsa kodla ayrışır.
+
+**Neden dosyalar işlemin dışında:** İki yanlıştan hangisini seçtiğimizin
+kaydı. Dosya silinip işlem geri alınırsa kayıt dosyasız kalır — kullanıcı
+CV'sini göremez, ürün kırılır. Tersi durumda diskte sahipsiz bir dosya kalır —
+temizlik işiyle toplanabilir, kullanıcıya hiçbir şey kırılmaz. İkincisi
+zararsız olduğu için o seçildi.
+
+**Silinecek kimlik yalnızca oturumdan okunuyor,** istek gövdesinden değil.
+Böylece "başkasının hesabını sil" diye bir istek biçimi hiç var olmuyor:
+sızıntı bir kontrolle değil, yüzey hiç açılmayarak kapatılıyor. Gövde yine de
+kimlik taşıyorsa `ensureOwner` ile oturumla karşılaştırılıyor ve uymazsa 404
+dönüyor (K-35).
+
+**Diskte yol kontrolü:** `Resume.filePath` veritabanından geliyor ve doğrudan
+`unlink`'e gidiyor. `depoIcindeMi` yolu `STORAGE_DIR` altında olmaya zorluyor.
+Düz `startsWith` yetmedi: `/veri/storage-yedek` dizesi `/veri/storage` ile
+başlıyor ama onun altında değil; `path.relative` bu tuzağı ve `..` geçişlerini
+birlikte kapatıyor.
+
+**Ölçülen şema davranışı:** `Analysis.resumeVersionId` ve
+`Adaptation.resumeVersionId` yabancı anahtarları `ON DELETE SET NULL` taşıyor
+(nullable oldukları için Prisma'nın öntanımlısı). Yani bir CV sürümü
+silindiğinde ona bağlı başka bir satır silinmez, alanı NULL olur. Uygulama
+akışında çapraz kullanıcı bağı kurulamıyor, ama sıraya tablo eklenirken bu
+varsayım yeniden sınanmalı. Atomiklik testi bu yüzden `jobPostingId`
+üzerinden kuruldu: o yabancı anahtar `RESTRICT` taşıyor ve işlemi gerçekten
+düşürüyor.
+
+**Değerlendirilen alternatifler:** Şemaya `onDelete: Cascade` yaymak (silme
+sırası kaybolur, ama kapsam da görünmez olur — geri alınamaz bir işlemin
+kapsamı okunabilir kalmalı) · dosyaları işlem içinde silmek (geri alma diski
+geri getirmiyor, yani işlem yalancı olurdu).

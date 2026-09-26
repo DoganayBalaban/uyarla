@@ -32,7 +32,12 @@ export function OturumCubugu() {
             e-postaya dönmek de göz kırpması yaratıyor. */}
         {isPending ? null : kayitli ? (
           <>
-            <span>{kullanici.email}</span>
+            {/* E-posta artık hesap ekranına açılıyor: silme akışına girişin
+                başka bir kapısı yok ve "istediğin an silebilirsin" sözünün
+                ulaşılamaz olması sözü tutmamakla aynı şey. */}
+            <a href="/account" className="text-gri no-underline hover:text-mavi">
+              {kullanici.email}
+            </a>
             <button
               className="rounded-buton border border-cizgi px-3 py-1.5 font-semibold"
               onClick={() => void signOut()}

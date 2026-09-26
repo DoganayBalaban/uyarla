@@ -224,12 +224,24 @@ işi bir zamanlanmış görev gerektiriyor (henüz altyapı yok).
 kullanılmayan CV'lerin süresiz saklanması savunulabilir değil. 30 gün
 sonra silen bir iş yeterli.
 
-## 14 · Hesap silme akışı yok
+## 14 · Hesap silme akışı yok · KAPANDI (27 Eylül 2026)
 
 **Ne:** Marka rehberi "istediğin an silebilirsin" diyor. Sahiplik alanları
 (`Analysis.userId`, `JobPosting.userId`) bunu artık mümkün kılıyor — bir
 kullanıcının tüm verisi tek sorguyla bulunabiliyor — ama akış yazılmadı.
 
-**Neden şimdi değil:** Sprint 3A'nın kapsamı dışı (spec §2).
+**Nasıl kapandı:** `apps/web/lib/silme.ts` sekiz tabloyu tek `$transaction`
+içinde siliyor, diskteki CV dosyaları işlemden sonra kaldırılıyor (K-36).
+`DELETE /api/account` yalnızca oturum sahibinin kimliğini kullanıyor;
+`/account` ekranı marka rehberi §10.2'deki onay metnini soruyor. Tümleşik
+test (`lib/silme.integration.test.ts`) başka kullanıcıların verisine
+dokunulmadığını ve işlem düşerse hiçbir şeyin gitmediğini gerçek
+veritabanında doğruluyor.
 
-**Ne zaman gerekli:** Lansmandan önce. KVKK aydınlatma metniyle birlikte.
+**Kalan açık — `Verification` satırları:** Magic link doğrulama satırı
+kullanıcının e-postasını JSON `value` alanında taşıyor ve `userId` ile
+bağlanmıyor; silme kapsamına alınamadı. Satır 15 dakikada geçersiz oluyor ve
+bağlantı kullanıldığında siliniyor, yani pencere küçük. Kapatmak için
+`value` üzerinde metin eşleşmesi gerekir — geri alınamaz bir silme işleminde
+bulanık eşleşme istemedik. Bekleyen bağlantıları süresi geçince toplayan ayrı
+bir temizlik adımı doğru yol.
