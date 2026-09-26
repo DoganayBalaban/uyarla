@@ -80,13 +80,23 @@ Bu bölüm her görevin gereksinimlerine örtük olarak dahildir.
 
 Doğrusal: her görev bir öncekinin kurduğu yüzeye dayanıyor.
 
+**Görev 4 ve 5 uygulama sırasında yer değiştirdi.** Plan ilk hâlinde sahiplik
+alanlarını (`Analysis.userId`, `JobPosting.userId`) Görev 1'e koyuyordu. Ama
+bu alanlar `NOT NULL` ve birinin değer üretmesi gerekiyor — üretecek oturum
+ise Görev 2'den önce yok. Görev 1'e koymak ağacı kırmızı bırakıyordu:
+`Analysis.create` çağrıları derlenmiyordu.
+
+Sahiplik alanları artık anonim oturumla aynı görevde: sütun ve onu
+doldurabilecek kaynak birlikte geliyor. Yetki kontrolü doğal olarak arkasına
+düşüyor — korunacak alan var olduktan sonra.
+
 | # | Görev | Spec | Süre |
 |---|---|---|---|
 | 1 | Şema, sahiplik alanları ve göç | §5 | 3 sa |
 | 2 | Kimlik katmanı, magic link, e-posta | §6 | 4 sa |
 | 3 | Yetkilendirme yardımcısı | §8 | 3 sa |
-| 4 | Route'lara yetki kontrolü | §8 | 2 sa |
-| 5 | Anonim oturum ve devralma | §7 | 3 sa |
+| 4 | Anonim oturum, sahiplik alanları ve devralma | §5, §7 | 4 sa |
+| 5 | Route'lara yetki kontrolü | §8 | 2 sa |
 | 6 | Hız limiti | §9 | 2 sa |
 | 7 | Giriş ekranı ve oturum çubuğu | §2 | 3 sa |
 | | | **Toplam** | **20 sa** |
@@ -95,8 +105,10 @@ Doğrusal: her görev bir öncekinin kurduğu yüzeye dayanıyor.
 
 ### Görev 1: Şema, sahiplik alanları ve göç
 
-Spec §5. Better Auth'un dört modeli + iki sahiplik alanı. Geliştirme verisi
-siliniyor.
+Spec §5. Better Auth'un dört modeli. Geliştirme verisi siliniyor.
+
+Sahiplik alanları burada DEĞİL: `NOT NULL` oldukları için değer üretebilecek
+bir oturum gerekiyor ve o Görev 2'de geliyor. Görev 4'te eklenirler.
 
 **Dosyalar:**
 - Değiştir: `packages/db/prisma/schema.prisma`
@@ -106,8 +118,9 @@ siliniyor.
 
 **Arayüzler:**
 - Üretir: Prisma modelleri `User` (genişletilmiş), `Session`, `Account`,
-  `Verification`; `Analysis.userId`, `JobPosting.userId`
-- Görev 2–7 bu şemaya dayanır.
+  `Verification`
+- Görev 2–7 bu şemaya dayanır. Sahiplik alanları Görev 4'te eklenir —
+  `NOT NULL` oldukları için değer üretebilecek bir oturum gerekiyor.
 
 - [ ] **Adım 1: Bağımlılıkları kur**
 
@@ -167,48 +180,7 @@ Beklenen: `Session`, `Account`, `Verification` modelleri eklendi; `User`'a
 **CLI çıktısı bu belgedeki tahminle çelişirse CLI doğrudur.** Farkı not et,
 Görev 1 sonunda spec'i güncelle.
 
-- [ ] **Adım 4: Sahiplik alanlarını elle ekle**
-
-CLI bunları üretmez; bizim alan modelimiz.
-
-`packages/db/prisma/schema.prisma` içinde `Analysis` modeline:
-
-```prisma
-  // Sahiplik zincirden türetilemiyor: resumeVersionId nullable ve çıkarım
-  // patlayan analizler ResumeVersion üretmiyor, sahipsiz kalırlardı.
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-```
-
-ve aynı modelin sonuna:
-
-```prisma
-  @@index([userId])
-```
-
-`JobPosting` modeline:
-
-```prisma
-  // Kullanıcının yapıştırdığı metni tutuyor ve marka rehberi "istediğin an
-  // silebilirsin" diyor; sahipsiz satır o sözü tutulamaz kılar.
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-```
-
-ve sonuna:
-
-```prisma
-  @@index([userId])
-```
-
-`User` modeline ters ilişkiler:
-
-```prisma
-  analyses    Analysis[]
-  jobPostings JobPosting[]
-```
-
-- [ ] **Adım 5: Geliştirme verisini sil ve göçü çalıştır**
+- [ ] **Adım 4: Geliştirme verisini sil ve göçü çalıştır**
 
 `User.name` zorunlu ve mevcut tek kullanıcı adsız; ona bağlı tüm veri Sprint
 1–2 test artığı (spec §5).
@@ -221,7 +193,7 @@ pnpm --filter @uyarla/db migrate --name sprint3a_kimlik
 
 Beklenen: "Your database is now in sync with your schema."
 
-- [ ] **Adım 6: Ortam değişkenlerini belgele**
+- [ ] **Adım 5: Ortam değişkenlerini belgele**
 
 `.env.example` sonuna ekle (değer YAZMA — GitGuardian tarar):
 
@@ -241,7 +213,7 @@ echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" >> .env
 echo "BETTER_AUTH_URL=http://localhost:3000" >> .env
 ```
 
-- [ ] **Adım 7: Doğrula ve commit**
+- [ ] **Adım 6: Doğrula ve commit**
 
 ```bash
 pnpm --filter @uyarla/db migrate:status
@@ -979,7 +951,58 @@ ve yetki sızıntısı. İkisi de gerçek veritabanına karşı koşuyor.
   - `auth` yapılandırmasında etkin `onLinkAccount`
 - Görev 6, 7 bu akışın üstüne kuruluyor.
 
-- [ ] **Adım 1: Devralma testini yaz**
+- [ ] **Adım 1: Sahiplik alanlarını ekle ve göçü çalıştır**
+
+CLI bunları üretmez; bizim alan modelimiz.
+
+`packages/db/prisma/schema.prisma` içinde `Analysis` modeline:
+
+```prisma
+  // Sahiplik zincirden türetilemiyor: resumeVersionId nullable ve çıkarım
+  // patlayan analizler ResumeVersion üretmiyor, sahipsiz kalırlardı.
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+```
+
+ve aynı modelin sonuna:
+
+```prisma
+  @@index([userId])
+```
+
+`JobPosting` modeline:
+
+```prisma
+  // Kullanıcının yapıştırdığı metni tutuyor ve marka rehberi "istediğin an
+  // silebilirsin" diyor; sahipsiz satır o sözü tutulamaz kılar.
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+```
+
+ve sonuna:
+
+```prisma
+  @@index([userId])
+```
+
+`User` modeline ters ilişkiler:
+
+```prisma
+  analyses    Analysis[]
+  jobPostings JobPosting[]
+```
+
+Göçü çalıştır:
+
+```bash
+pnpm --filter @uyarla/db migrate --name sprint3a_sahiplik
+```
+
+Bu noktada `Analysis.create` çağrıları derlenmiyor — sonraki adımlar onları
+düzeltiyor. Görev bitene kadar ağaç kırmızı kalıyor ve bu bilinçli: sütun ile
+onu dolduran kaynak aynı görevde geliyor.
+
+- [ ] **Adım 2: Devralma testini yaz**
 
 Saf kısım: hangi tabloların hangi koşulla güncelleneceği. Prisma çağrılarını
 üretip döndürmek, bunu veritabanı olmadan test edilebilir kılıyor.

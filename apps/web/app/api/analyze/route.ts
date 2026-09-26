@@ -34,10 +34,12 @@ export async function POST(request: Request) {
     // pdf-parse'ın kullandığı pdfjs Next'in sunucu katmanında yüklenemiyor.
     // Okunamayan dosya kullanıcıya iş başarısız olduğunda bildiriliyor.
 
+    // Geçici: bu blok Görev 4'te anonim oturumla değiştirilecek. `name`
+    // alanı Better Auth şemasında zorunlu olduğu için eklendi.
     const user = await prisma.user.upsert({
       where: { email: TEST_USER_EMAIL },
       update: {},
-      create: { email: TEST_USER_EMAIL },
+      create: { email: TEST_USER_EMAIL, name: "Test" },
     })
 
     const resume = await prisma.resume.create({
