@@ -1,6 +1,6 @@
 import { ADAPT_QUEUE, type AdaptJobData } from "@uyarla/worker/adapt-queue"
 import { Queue } from "bullmq"
-import IORedis from "ioredis"
+import { redis } from "./redis"
 
 const globalForQueue = globalThis as unknown as { adaptQueue?: Queue<AdaptJobData, void> }
 
@@ -10,10 +10,6 @@ const globalForQueue = globalThis as unknown as { adaptQueue?: Queue<AdaptJobDat
  */
 export const adaptQueue =
   globalForQueue.adaptQueue ??
-  new Queue<AdaptJobData, void>(ADAPT_QUEUE, {
-    connection: new IORedis(process.env.REDIS_URL ?? "redis://localhost:6379", {
-      maxRetriesPerRequest: null,
-    }),
-  })
+  new Queue<AdaptJobData, void>(ADAPT_QUEUE, { connection: redis })
 
 if (process.env.NODE_ENV !== "production") globalForQueue.adaptQueue = adaptQueue

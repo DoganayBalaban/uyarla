@@ -1,6 +1,6 @@
 import { ANALYZE_QUEUE, type AnalyzeJobData } from "@uyarla/worker/queue"
 import { Queue } from "bullmq"
-import IORedis from "ioredis"
+import { redis } from "./redis"
 
 const globalForQueue = globalThis as unknown as {
   analyzeQueue?: Queue<AnalyzeJobData, string>
@@ -13,10 +13,6 @@ const globalForQueue = globalThis as unknown as {
  */
 export const analyzeQueue =
   globalForQueue.analyzeQueue ??
-  new Queue<AnalyzeJobData, string>(ANALYZE_QUEUE, {
-    connection: new IORedis(process.env.REDIS_URL ?? "redis://localhost:6379", {
-      maxRetriesPerRequest: null,
-    }),
-  })
+  new Queue<AnalyzeJobData, string>(ANALYZE_QUEUE, { connection: redis })
 
 if (process.env.NODE_ENV !== "production") globalForQueue.analyzeQueue = analyzeQueue

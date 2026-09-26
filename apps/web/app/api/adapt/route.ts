@@ -3,6 +3,7 @@ import { prisma } from "@uyarla/db"
 import { ADAPT_JOB_OPTIONS } from "@uyarla/worker/adapt-queue"
 import { NextResponse } from "next/server"
 import { adaptQueue } from "@/lib/adaptQueue"
+import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/lib/rateLimit"
 import {
   authErrorResponse,
   ensureOwner,
@@ -26,6 +27,9 @@ export async function POST(request: Request) {
     // "bu analiz var" ile "yok" arasındaki farkı yanıt kodundan okuyabiliyor.
     // Oturum değişkende tutuluyor; Görev 6 hız limiti anahtarı için kullanacak.
     const oturum = ensureRegistered(await getSession())
+
+    // Pahalı uç: madde başına LLM çağrısı (spec §9).
+    await enforceRateLimit(redisStore, `uyarla:${oturum.user.id}`, RATE_LIMITS.kayitli)
 
     const analysis = await prisma.analysis.findUnique({ where: { id: analysisId } })
     if (!analysis) throw new PermanentError("Analiz bulunamadı.", "analysis_not_found")
