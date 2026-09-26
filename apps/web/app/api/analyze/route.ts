@@ -6,6 +6,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { authErrorResponse, ensureSession, getSession } from "@/lib/authz"
 import { analyzeQueue } from "@/lib/queue"
+import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/lib/rateLimit"
 import { validateUpload } from "@/lib/upload"
 
 export const runtime = "nodejs"
@@ -47,6 +48,13 @@ export async function POST(request: Request) {
       oturum = yeni?.user ? { user: { id: yeni.user.id, isAnonymous: true } } : null
     }
     const { user } = ensureSession(oturum)
+
+    // Pahalı uç: her çağrı ~60 saniyelik LLM işi başlatıyor (spec §9).
+    await enforceRateLimit(
+      redisStore,
+      `analiz:${user.id}`,
+      user.isAnonymous ? RATE_LIMITS.anonim : RATE_LIMITS.kayitli,
+    )
 
     const resume = await prisma.resume.create({
       data: { userId: user.id, filePath, rawText: "" },
