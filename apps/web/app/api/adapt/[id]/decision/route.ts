@@ -2,6 +2,7 @@ import { AdaptationDraftSchema } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { applyDecision, computeScoreAfter, loadAdaptation, nextStatus } from "@/lib/adaptation"
+import { authErrorResponse, ensureOwner, getSession } from "@/lib/authz"
 
 export const runtime = "nodejs"
 
@@ -22,6 +23,14 @@ export async function PATCH(
   const yuk = await loadAdaptation(id)
   if (!yuk?.draft) {
     return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
+  }
+
+  try {
+    ensureOwner(yuk.ownerId, await getSession())
+  } catch (error) {
+    const yanit = authErrorResponse(error)
+    if (yanit) return yanit
+    throw error
   }
 
   let yeni

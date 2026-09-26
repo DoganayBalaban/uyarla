@@ -2,6 +2,7 @@ import { applyAdaptation, hasPendingDecisions, toDocumentModel } from "@uyarla/c
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { loadAdaptation } from "@/lib/adaptation"
+import { authErrorResponse, ensureOwner, getSession } from "@/lib/authz"
 
 export const runtime = "nodejs"
 
@@ -15,6 +16,14 @@ export async function GET(
   const yuk = await loadAdaptation(id)
   if (!yuk?.draft || !yuk.profile || !yuk.resumeId) {
     return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
+  }
+
+  try {
+    ensureOwner(yuk.ownerId, await getSession())
+  } catch (error) {
+    const yanit = authErrorResponse(error)
+    if (yanit) return yanit
+    throw error
   }
 
   // İndirme kapısı (spec §8; §16'da "asla kesilmeyecek" listesinde): uyarı
