@@ -14,11 +14,14 @@ export interface ScoreResultView {
   missingKeywords: string[]
 }
 
-/** Skor yalnızca renkle değil etiketle de anlatılıyor (marka rehberi §9.2). */
-function skorEtiketi(skor: number): { metin: string; renk: string } {
-  if (skor >= 70) return { metin: "Yüksek uyum", renk: "var(--yesil)" }
-  if (skor >= 40) return { metin: "Orta uyum", renk: "var(--kehribar)" }
-  return { metin: "Düşük uyum", renk: "var(--kirmizi)" }
+/**
+ * Skor yalnızca renkle değil etiketle de anlatılıyor — renk körlüğü gereği
+ * (marka rehberi §9.2).
+ */
+function skorEtiketi(skor: number): { metin: string; sinif: string } {
+  if (skor >= 70) return { metin: "Yüksek uyum", sinif: "text-yesil" }
+  if (skor >= 40) return { metin: "Orta uyum", sinif: "text-kehribar" }
+  return { metin: "Düşük uyum", sinif: "text-kirmizi" }
 }
 
 /**
@@ -47,37 +50,42 @@ export function SkorSonucu({
 
   return (
     <section>
-      <div className="skor-blok">
-        <span className="skor-rakam" style={{ color: etiket.renk }}>
+      {/* Skor ekranın en büyük öğesi (rehber §9.5). */}
+      <div className="my-5 flex flex-wrap items-baseline gap-3">
+        <span className={`font-baslik text-6xl font-extrabold leading-none ${etiket.sinif}`}>
           {sonuc.score}
         </span>
-        <span className="skor-etiket" style={{ color: etiket.renk }}>
-          {etiket.metin}
-        </span>
+        <span className={`text-sm font-bold ${etiket.sinif}`}>{etiket.metin}</span>
       </div>
 
-      <p className="meta">
+      <p className="text-sm text-gri dark:text-gri-koyu">
         {sonuc.requirements.length} gereksinimin {karsilanan} tanesi karşılanıyor
       </p>
 
       {onUyarla && (
-        <p style={{ marginTop: "1.25rem" }}>
-          <button className="btn-birincil" disabled={uyarlaniyor} onClick={onUyarla}>
+        <p className="mt-5">
+          <button
+            className="rounded-buton bg-mavi px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
+            disabled={uyarlaniyor}
+            onClick={onUyarla}
+          >
             {uyarlaniyor ? "Hazırlanıyor…" : "CV'mi bu ilana uyarla"}
           </button>
         </p>
       )}
 
-      <h2>Gereksinimler</h2>
-      <ul className="requirements">
+      <h2 className="mt-9 mb-2 text-lg">Gereksinimler</h2>
+      <ul className="list-none p-0">
         {sonuc.requirements.map((item, i) => (
-          <li key={i}>
-            <span className={item.status}>
+          <li key={i} className="border-b border-cizgi py-2.5 dark:border-cizgi-koyu">
+            <span className={item.status === "matched" ? "text-yesil" : "text-kirmizi"}>
               {item.status === "matched" ? "✓" : "✗"} {item.requirement.text}
             </span>{" "}
-            <span className="meta">({item.requirement.importance})</span>
+            <span className="text-sm text-gri dark:text-gri-koyu">
+              ({item.requirement.importance})
+            </span>
             {item.evidence && (
-              <div className="meta">
+              <div className="text-sm text-gri dark:text-gri-koyu">
                 CV&apos;nde bunu karşılayan: {item.evidence.text}
               </div>
             )}
@@ -85,15 +93,19 @@ export function SkorSonucu({
         ))}
       </ul>
 
-      <h2>Eksik kavramlar</h2>
+      <h2 className="mt-9 mb-2 text-lg">Eksik kavramlar</h2>
       <p>{sonuc.missingKeywords.join(" · ") || "Yok"}</p>
 
-      <details>
-        <summary className="meta">Teknik ayrıntı</summary>
-        <p className="meta">
+      <details className="mt-8">
+        <summary className="cursor-pointer text-sm text-gri dark:text-gri-koyu">
+          Teknik ayrıntı
+        </summary>
+        <p className="mt-2 text-sm text-gri dark:text-gri-koyu">
           {durationMs} ms · {tokenUsage} token · {modelId}
         </p>
-        <pre>{JSON.stringify(sonuc, null, 2)}</pre>
+        <pre className="mt-2 max-h-[32rem] overflow-x-auto rounded-buton border border-cizgi bg-white p-4 text-xs dark:border-cizgi-koyu dark:bg-kart-koyu">
+          {JSON.stringify(sonuc, null, 2)}
+        </pre>
       </details>
     </section>
   )

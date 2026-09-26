@@ -1,196 +1,69 @@
-/* Marka rehberi §9.2 ve §9.5.
-   Renkler yalnızca burada tanımlı; bileşenler değişkenden okuyor ki tema
-   değişimi tek yerden yapılabilsin. */
-:root {
-  --mavi: #2b4eff;
-  --gece: #0f172a;
-  --buz: #f5f7ff;
-  --mercan: #ff6b4a;
-  --yesil: #16a34a;
-  --kehribar: #f59e0b;
-  --kirmizi: #dc2626;
-  --gri: #64748b;
+@import "tailwindcss";
 
-  --zemin: var(--buz);
-  --metin: var(--gece);
-  --kart: #ffffff;
-  --cizgi: #e2e8f0;
+/**
+ * Marka rehberi §9.2 ve §9.5'teki token'lar.
+ *
+ * Tailwind'in yardımcı sınıfları bunlardan üretiliyor: `--color-mavi` →
+ * `bg-mavi`, `text-mavi`. Böylece marka rehberi tek kaynak kalıyor ve kodda
+ * `bg-[#2b4eff]` gibi elle renk yazmak gerekmiyor.
+ */
+@theme {
+  --color-mavi: #2b4eff;
+  --color-gece: #0f172a;
+  --color-buz: #f5f7ff;
+  --color-mercan: #ff6b4a;
+  --color-yesil: #16a34a;
+  --color-kehribar: #f59e0b;
+  --color-kirmizi: #dc2626;
+  --color-gri: #64748b;
 
-  --yaricap-buton: 10px;
-  --yaricap-kart: 16px;
+  /* Koyu temada kart ve çizgi renkleri. */
+  --color-kart-koyu: #1e293b;
+  --color-cizgi: #e2e8f0;
+  --color-cizgi-koyu: #334155;
+  --color-metin-koyu: #f1f5f9;
+  --color-gri-koyu: #94a3b8;
+
+  /* Marka rehberi §9.5: buton 10px, kart 16px. */
+  --radius-buton: 10px;
+  --radius-kart: 16px;
+
+  --font-baslik: Manrope, Inter, system-ui, sans-serif;
+  --font-govde: Inter, system-ui, -apple-system, sans-serif;
 }
 
-/* Koyu temada zemin Gece rengidir (rehber §9.5). */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --zemin: var(--gece);
-    --metin: #f1f5f9;
-    --kart: #1e293b;
-    --cizgi: #334155;
-    --gri: #94a3b8;
-  }
-}
-
+/**
+ * Koyu tema `dark:` varyantıyla, her bileşende açıkça yazılıyor
+ * (`bg-buz dark:bg-gece`). Tailwind'in varsayılanı zaten
+ * `prefers-color-scheme`; ara bir semantik değişken katmanı tutmak yerine
+ * kodda görünür olması tercih edildi.
+ *
+ * Burada `@apply` kullanılmıyor: `@apply` içinde `dark:` varyantı, body
+ * kuralının içine iç içe medya sorgusu gömüyor ve çıktı gereksiz kırılgan
+ * oluyor. Düz CSS daha okunur.
+ */
 body {
-  font-family: Inter, system-ui, -apple-system, sans-serif;
-  background: var(--zemin);
-  color: var(--metin);
-  margin: 2rem auto;
-  max-width: 56rem;
-  padding: 0 1rem 4rem;
+  font-family: var(--font-govde);
   line-height: 1.55;
+  background-color: var(--color-buz);
+  color: var(--color-gece);
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--color-gece);
+    color: var(--color-metin-koyu);
+  }
 }
 
 h1,
 h2,
 h3 {
-  font-family: Manrope, Inter, system-ui, sans-serif;
+  font-family: var(--font-baslik);
   font-weight: 800;
   letter-spacing: -0.01em;
 }
-h1 {
-  font-size: 1.9rem;
-}
-h2 {
-  font-size: 1.15rem;
-  margin-top: 2.25rem;
-}
-h3 {
-  font-size: 0.95rem;
-  margin: 0 0 0.5rem;
-}
 
-textarea {
-  width: 100%;
-  font-family: inherit;
-  font-size: 0.9rem;
-  padding: 0.6rem;
-  border: 1px solid var(--cizgi);
-  border-radius: var(--yaricap-buton);
-  background: var(--kart);
-  color: var(--metin);
-}
-label {
-  display: block;
-  margin-bottom: 0.25rem;
-  font-weight: 600;
-}
-
-/* Birincil eylem her ekranda TEK ve Uyarla Mavisi (rehber §9.5). */
-button,
-.btn-birincil,
-.btn-ikincil {
-  font: inherit;
-  font-weight: 600;
-  padding: 0.65rem 1.3rem;
-  border-radius: var(--yaricap-buton);
-  cursor: pointer;
-}
-button,
-.btn-birincil {
-  background: var(--mavi);
-  color: #fff;
-  border: none;
-}
-.btn-ikincil {
-  background: transparent;
-  color: var(--metin);
-  border: 1px solid var(--cizgi);
-}
-button:disabled,
-.btn-birincil:disabled,
-.btn-ikincil:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.kart {
-  background: var(--kart);
-  border: 1px solid var(--cizgi);
-  border-radius: var(--yaricap-kart);
-  padding: 1rem 1.25rem;
-  margin-bottom: 0.75rem;
-}
-
-/* Skor ekranın en büyük öğesi (rehber §9.5). */
-.skor-blok {
-  display: flex;
-  align-items: baseline;
-  gap: 0.7rem;
-  flex-wrap: wrap;
-  margin: 1.25rem 0;
-}
-.skor-rakam {
-  font-family: Manrope, sans-serif;
-  font-size: 3.75rem;
-  font-weight: 800;
-  line-height: 1;
-}
-.skor-etiket {
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-.skor-ok {
-  color: var(--gri);
-  font-size: 1.75rem;
-}
-
-/* Önce/sonra (rehber §9.5). */
-.eklenen {
-  background: color-mix(in srgb, var(--yesil) 20%, transparent);
-  border-radius: 3px;
-  padding: 0 2px;
-}
-.cikarilan {
-  text-decoration: line-through;
-  color: var(--gri);
-}
-
-.rozet {
-  display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--kehribar) 20%, transparent);
-  color: var(--kehribar);
-  margin-bottom: 0.4rem;
-}
-.gerekce {
-  color: var(--kehribar);
-  font-size: 0.85rem;
-  margin: 0.3rem 0 0;
-}
-.meta {
-  color: var(--gri);
-  font-size: 0.85rem;
-}
-
-.matched {
-  color: var(--yesil);
-}
-.missing {
-  color: var(--kirmizi);
-}
-
-ul.requirements {
-  list-style: none;
-  padding: 0;
-}
-ul.requirements li {
-  border-bottom: 1px solid var(--cizgi);
-  padding: 0.6rem 0;
-}
-
-details {
-  margin-top: 2rem;
-}
-pre {
-  background: var(--kart);
-  border: 1px solid var(--cizgi);
-  border-radius: var(--yaricap-buton);
-  padding: 1rem;
-  overflow-x: auto;
-  font-size: 0.75rem;
-  max-height: 32rem;
-}
+/* CV çıktısının fontları (PDF'te DejaVu, DOCX'te Calibri) buradan gelmiyor:
+   belge üretimi tarayıcı kullanmıyor ve marka rehberi §9.3 orada sistem
+   fontu şart koşuyor. */

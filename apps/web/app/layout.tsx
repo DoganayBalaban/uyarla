@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>
+      <body className="mx-auto max-w-4xl px-4 pt-8 pb-16">
         <UstCubuk />
         {children}
       </body>

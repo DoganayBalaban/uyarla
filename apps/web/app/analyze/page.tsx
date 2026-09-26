@@ -106,44 +106,53 @@ export default function AnalyzePage() {
     <main>
       {!sonucVar && (
         <>
-          <h1>CV&apos;ni ilanla karşılaştır</h1>
-          <p className="meta">
+          <h1 className="text-3xl">CV&apos;ni ilanla karşılaştır</h1>
+          <p className="mt-2 text-sm text-gri dark:text-gri-koyu">
             CV&apos;ni yükle → ilanı yapıştır → skorunu gör. Kayıt gerekmez.
           </p>
 
-          <form onSubmit={onSubmit} style={{ marginTop: "1.5rem" }}>
-            <p>
-              <label htmlFor="cv">CV&apos;n (PDF veya Word)</label>
+          <form onSubmit={onSubmit} className="mt-6 space-y-4">
+            <div>
+              <label htmlFor="cv" className="mb-1 block font-semibold">
+                CV&apos;n (PDF veya Word)
+              </label>
               <input id="cv" type="file" name="cv" accept=".pdf,.docx" required />
-            </p>
-            <p>
-              <label htmlFor="jobText">İlan metni</label>
+            </div>
+            <div>
+              <label htmlFor="jobText" className="mb-1 block font-semibold">
+                İlan metni
+              </label>
               <textarea
                 id="jobText"
                 name="jobText"
                 rows={12}
                 required
                 placeholder="İlanın tamamını yapıştır — gereksinimler bölümü dahil."
+                className="w-full rounded-buton border border-cizgi bg-white p-2.5 font-govde text-sm dark:border-cizgi-koyu dark:bg-kart-koyu"
               />
-            </p>
-            <button className="btn-birincil" type="submit" disabled={busy}>
+            </div>
+            <button
+              type="submit"
+              disabled={busy}
+              className="rounded-buton bg-mavi px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
+            >
               {busy ? "Çalışıyor…" : "Skorumu gör"}
             </button>
           </form>
         </>
       )}
 
-      {error && <p className="missing">{error}</p>}
+      {error && <p className="mt-4 text-kirmizi">{error}</p>}
 
       {state?.status === "running" && (
-        <p style={{ marginTop: "1rem" }}>{STAGE_TEXT[state.stage ?? ""] ?? "Çalışıyor…"}</p>
+        <p className="mt-4">{STAGE_TEXT[state.stage ?? ""] ?? "Çalışıyor…"}</p>
       )}
 
-      {state?.status === "failed" && <p className="missing">{state.error}</p>}
+      {state?.status === "failed" && <p className="mt-4 text-kirmizi">{state.error}</p>}
 
       {sonucVar && state.result && (
         <>
-          <h1>Skorun</h1>
+          <h1 className="text-3xl">Skorun</h1>
           <SkorSonucu
             sonuc={state.result}
             durationMs={state.durationMs}

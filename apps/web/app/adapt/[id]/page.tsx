@@ -44,20 +44,27 @@ interface Durum {
  * Skor yalnızca renkle değil etiketle de anlatılıyor — renk körlüğü gereği
  * (rehber §9.2).
  */
-function skorEtiketi(skor: number): { metin: string; renk: string } {
-  if (skor >= 70) return { metin: "Yüksek uyum", renk: "var(--yesil)" }
-  if (skor >= 40) return { metin: "Orta uyum", renk: "var(--kehribar)" }
-  return { metin: "Düşük uyum", renk: "var(--kirmizi)" }
+function skorEtiketi(skor: number): { metin: string; sinif: string } {
+  if (skor >= 70) return { metin: "Yüksek uyum", sinif: "text-yesil" }
+  if (skor >= 40) return { metin: "Orta uyum", sinif: "text-kehribar" }
+  return { metin: "Düşük uyum", sinif: "text-kirmizi" }
 }
 
 function Fark({ original, rewritten }: { original: string; rewritten: string }) {
   return (
-    <p style={{ margin: "0.4rem 0" }}>
+    <p className="my-1.5">
       {diffWords(original, rewritten).map((parca, i) =>
         parca.kind === "same" ? (
           <span key={i}>{parca.text} </span>
         ) : (
-          <span key={i} className={parca.kind === "added" ? "eklenen" : "cikarilan"}>
+          <span
+            key={i}
+            className={
+              parca.kind === "added"
+                ? "rounded bg-yesil/20 px-0.5"
+                : "text-gri line-through dark:text-gri-koyu"
+            }
+          >
             {parca.text}{" "}
           </span>
         ),
@@ -131,7 +138,7 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
     }
   }
 
-  if (!durum) return <p className="meta">Yükleniyor…</p>
+  if (!durum) return <p className="text-sm text-gri dark:text-gri-koyu">Yükleniyor…</p>
   if (durum.status === "running") return <p>{STAGE_TEXT.yeniden_yaziliyor}</p>
   if (durum.status === "failed" || !durum.draft) {
     return <p>Uyarlama tamamlanamadı. Birazdan tekrar dener misin?</p>
@@ -147,20 +154,21 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
     <main>
       <h1>CV&apos;n hazır</h1>
 
-      <div className="skor-blok">
-        <span className="skor-rakam" style={{ color: "var(--gri)" }}>
+      {/* Skor ekranın en büyük öğesi (rehber §9.5). */}
+      <div className="my-5 flex flex-wrap items-baseline gap-3">
+        <span className="font-baslik text-6xl font-extrabold leading-none text-gri dark:text-gri-koyu">
           {once}
         </span>
-        <span className="skor-ok">→</span>
-        <span className="skor-rakam" style={{ color: etiket.renk }}>
+        <span className="text-3xl text-gri dark:text-gri-koyu">→</span>
+        <span
+          className={`font-baslik text-6xl font-extrabold leading-none ${etiket.sinif}`}
+        >
           {sonra}
         </span>
-        <span className="skor-etiket" style={{ color: etiket.renk }}>
-          {etiket.metin}
-        </span>
+        <span className={`text-sm font-bold ${etiket.sinif}`}>{etiket.metin}</span>
       </div>
       {sonra === once && (
-        <p className="meta">
+        <p className="text-sm text-gri dark:text-gri-koyu">
           Skor değişmedi. Yeniden ifade her zaman eşleşme kazandırmaz; eksik
           olan şey ilanda aranıp CV&apos;nde gerçekten bulunmayan deneyim olabilir.
         </p>
@@ -169,10 +177,10 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
       {draft.summary.original && (
         <>
           <h2>Özet</h2>
-          <section className="kart">
+          <section className="mb-3 rounded-kart border border-cizgi bg-white p-4 dark:border-cizgi-koyu dark:bg-kart-koyu">
             <Fark original={draft.summary.original} rewritten={draft.summary.rewritten} />
             <button
-              className="btn-ikincil"
+              className="rounded-buton border border-cizgi px-5 py-2.5 font-semibold disabled:cursor-not-allowed disabled:opacity-45 dark:border-cizgi-koyu"
               disabled={mesgul || draft.summary.decision === "rejected"}
               onClick={() => karar("summary", "rejected")}
             >
@@ -186,12 +194,14 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
 
       <h2>Deneyim maddeleri</h2>
       {draft.bullets.map((madde) => (
-        <section className="kart" key={madde.id}>
+        <section className="mb-3 rounded-kart border border-cizgi bg-white p-4 dark:border-cizgi-koyu dark:bg-kart-koyu" key={madde.id}>
           {madde.verification.status === "flagged" && (
             <>
-              <span className="rozet">Kontrol et</span>
+              <span className="mb-1.5 inline-block rounded-full bg-kehribar/20 px-2 py-0.5 text-xs font-bold text-kehribar">
+                Kontrol et
+              </span>
               {madde.verification.issues.map((sorun, i) => (
-                <p className="gerekce" key={i}>
+                <p className="mt-1.5 text-sm text-kehribar" key={i}>
                   {sorun.detail}
                 </p>
               ))}
@@ -199,14 +209,14 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
           )}
           <Fark original={madde.original} rewritten={madde.rewritten} />
           <button
-            className="btn-ikincil"
+            className="rounded-buton border border-cizgi px-5 py-2.5 font-semibold disabled:cursor-not-allowed disabled:opacity-45 dark:border-cizgi-koyu"
             disabled={mesgul || madde.decision === "accepted"}
             onClick={() => karar(madde.id, "accepted")}
           >
             {madde.decision === "accepted" ? "Yeni hâli kullanılıyor" : "Yeni hâlini kullan"}
           </button>{" "}
           <button
-            className="btn-ikincil"
+            className="rounded-buton border border-cizgi px-5 py-2.5 font-semibold disabled:cursor-not-allowed disabled:opacity-45 dark:border-cizgi-koyu"
             disabled={mesgul || madde.decision === "rejected"}
             onClick={() => karar(madde.id, "rejected")}
           >
@@ -216,29 +226,29 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
       ))}
 
       <h2>Beceriler</h2>
-      <p className="kart meta">
+      <p className="mb-3 rounded-kart border border-cizgi bg-white p-4 dark:border-cizgi-koyu dark:bg-kart-koyu text-sm text-gri dark:text-gri-koyu">
         İlana en çok uyanlar başa alındı. Hiçbir beceri eklenmedi veya silinmedi.
         <br />
-        <span style={{ color: "var(--metin)" }}>{draft.skillOrder.join(" · ")}</span>
+        <span className="text-gece dark:text-metin-koyu">{draft.skillOrder.join(" · ")}</span>
       </p>
 
       {bekleyen > 0 && (
-        <p className="gerekce">
+        <p className="mt-1.5 text-sm text-kehribar">
           {bekleyen} madde için karar bekliyoruz. Karar verince indirme açılır.
         </p>
       )}
-      {hata && <p className="gerekce">{hata}</p>}
+      {hata && <p className="mt-1.5 text-sm text-kehribar">{hata}</p>}
 
-      <p style={{ marginTop: "1.25rem" }}>
+      <p className="mt-5">
         <button
-          className="btn-birincil"
+          className="rounded-buton bg-mavi px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
           disabled={mesgul || bekleyen > 0}
           onClick={() => indir("pdf")}
         >
           PDF indir
         </button>{" "}
         <button
-          className="btn-ikincil"
+          className="rounded-buton border border-cizgi px-5 py-2.5 font-semibold disabled:cursor-not-allowed disabled:opacity-45 dark:border-cizgi-koyu"
           disabled={mesgul || bekleyen > 0}
           onClick={() => indir("docx")}
         >
@@ -247,7 +257,7 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
       </p>
 
       {/* Marka rehberi §11: yapay zekâ şeffaflığı ve uydurmama ilkesi. */}
-      <p className="meta" style={{ marginTop: "2rem" }}>
+      <p className="mt-8 text-sm text-gri dark:text-gri-koyu">
         Metinler yapay zekâ ile yeniden yazıldı. Hiçbir deneyim, beceri veya
         sertifika eklenmedi; eğitim ve sertifikalarına hiç dokunulmadı.
       </p>

@@ -18,43 +18,31 @@ export function UstCubuk() {
     !isPending && kullanici && !(kullanici as { isAnonymous?: boolean | null }).isAnonymous
 
   return (
-    <header
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: "1rem",
-        borderBottom: "1px solid var(--cizgi)",
-        paddingBottom: "0.7rem",
-        marginBottom: "1.75rem",
-      }}
-    >
-      <a
-        href="/"
-        style={{
-          fontFamily: "Manrope, sans-serif",
-          fontWeight: 800,
-          fontSize: "1.1rem",
-          color: "var(--metin)",
-          textDecoration: "none",
-        }}
-      >
+    <header className="mb-7 flex items-center justify-between gap-4 border-b border-cizgi pb-3 dark:border-cizgi-koyu">
+      <a href="/" className="font-baslik text-lg font-extrabold no-underline">
         uyarla
       </a>
 
-      <nav className="meta" style={{ display: "flex", alignItems: "center", gap: "0.9rem" }}>
-        <a href="/analyze">Yeni analiz</a>
+      <nav className="flex items-center gap-4 text-sm text-gri dark:text-gri-koyu">
+        <a href="/analyze" className="hover:text-mavi">
+          Yeni analiz
+        </a>
         {/* isPending sırasında hiçbir şey gösterilmiyor: "Giriş yap" gösterip
             sonra e-postaya dönmek göz kırpması yaratıyor. */}
         {isPending ? null : kayitli ? (
           <>
             <span>{kullanici.email}</span>
-            <button className="btn-ikincil" onClick={() => void signOut()}>
+            <button
+              className="rounded-buton border border-cizgi px-3 py-1.5 font-semibold dark:border-cizgi-koyu"
+              onClick={() => void signOut()}
+            >
               Çıkış
             </button>
           </>
         ) : (
-          <a href="/login">Giriş yap</a>
+          <a href="/login" className="hover:text-mavi">
+            Giriş yap
+          </a>
         )}
       </nav>
     </header>
