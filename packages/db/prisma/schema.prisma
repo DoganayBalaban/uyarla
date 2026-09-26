@@ -8,17 +8,19 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  createdAt     DateTime  @default(now())
+  id            String       @id @default(cuid())
+  email         String       @unique
+  createdAt     DateTime     @default(now())
   resumes       Resume[]
   name          String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean      @default(false)
   image         String?
-  updatedAt     DateTime  @updatedAt
-  isAnonymous   Boolean?  @default(false)
+  updatedAt     DateTime     @updatedAt
+  isAnonymous   Boolean?     @default(false)
   sessions      Session[]
   accounts      Account[]
+  analyses      Analysis[]
+  jobPostings   JobPosting[]
 }
 
 model Resume {
@@ -63,6 +65,11 @@ enum ResumeVersionSource {
 model JobPosting {
   id String @id @default(cuid())
 
+  // Kullanıcının yapıştırdığı metni tutuyor ve marka rehberi "istediğin an
+  // silebilirsin" diyor; sahipsiz satır o sözü tutulamaz kılar (spec §5).
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
   // Sprint 1'de ihtiyaç yoktu; Sprint 2'de özet yeniden yazımı pozisyon
   // adını istiyor (spec §6.1). Mevcut kayıtlar boş kalıyor.
   position String @default("")
@@ -77,6 +84,11 @@ model JobPosting {
 
 model Analysis {
   id String @id @default(cuid())
+
+  // Sahiplik zincirden türetilemiyor: resumeVersionId nullable ve çıkarım
+  // patlayan analizler ResumeVersion üretmiyor, sahipsiz kalırlardı (spec §5).
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   // Nullable: CV çıkarımı başarısız olursa ResumeVersion hiç oluşmaz, ama
   // spec §11 başarısız işlerin de Analysis kaydı yazmasını istiyor.
@@ -102,6 +114,7 @@ model Analysis {
   adaptation Adaptation?
 
   @@index([resumeVersionId, jobPostingId])
+  @@index([userId])
 }
 
 enum AnalysisStatus {

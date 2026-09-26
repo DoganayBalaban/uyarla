@@ -81,7 +81,7 @@ function fakeDeps(overrides: Partial<PipelineDeps> = {}): PipelineDeps {
   }
 }
 
-const GIRDI = { resumeId: "r-1", jobPostingId: "j-1" }
+const GIRDI = { resumeId: "r-1", jobPostingId: "j-1", userId: "u-1" }
 
 describe("runAnalysis · mutlu yol", () => {
   it("analysisId döner ve analizi tamamlar", async () => {

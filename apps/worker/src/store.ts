@@ -60,9 +60,9 @@ export const prismaStore: AnalysisStore = {
     })
   },
 
-  async createAnalysis({ jobPostingId, modelId }) {
+  async createAnalysis({ jobPostingId, modelId, userId }) {
     const analysis = await prisma.analysis.create({
-      data: { jobPostingId, modelId, status: "running" },
+      data: { jobPostingId, modelId, userId, status: "running" },
     })
     return analysis.id
   },

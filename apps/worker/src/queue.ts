@@ -3,6 +3,8 @@ export const ANALYZE_QUEUE = "analyze"
 export interface AnalyzeJobData {
   resumeId: string
   jobPostingId: string
+  /** Analiz kaydının sahibi; web katmanında oturumdan geliyor. */
+  userId: string
 }
 
 /**

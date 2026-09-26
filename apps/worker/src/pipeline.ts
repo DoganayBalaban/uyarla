@@ -29,6 +29,7 @@ export async function runAnalysis(
   const analysisId = await deps.store.createAnalysis({
     jobPostingId: input.jobPostingId,
     modelId: deps.modelId,
+    userId: input.userId,
   })
 
   try {

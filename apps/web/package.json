@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:integration": "dotenv -e ../../.env -- vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@uyarla/core": "workspace:*",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
+    "dotenv-cli": "^11.0.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
   }
