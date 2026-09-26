@@ -197,3 +197,39 @@ yanlış alarm düşer hem çeviri kazancı sayılabilir hâle gelir.
 **Ne yapılabilir:** `TITLE_SYNONYMS`'e ilan/CV sözlüğünden çapraz dilli
 çiftler eklemek (K-25'in yöntemi: ölçülen kaçırmalardan türetmek).
 Örneğin `authentication ↔ kimlik doğrulama`, `AI ↔ yapay zeka`.
+
+## 12 · Gerçek e-posta hiç denenmedi
+
+**Ne:** Magic link akışı yalnızca konsol modunda doğrulandı
+(`RESEND_API_KEY` yok → bağlantı terminale yazılıyor). Resend üzerinden
+gerçek bir e-posta gönderilip gelip gelmediği, spam'e düşüp düşmediği
+bilinmiyor.
+
+**Neden şimdi değil:** Resend hesabı ve alan adı doğrulaması gerekiyor; ikisi
+de kullanıcının işi.
+
+**Ne zaman gerekli:** K3'ten (22 Kasım) önce. Ödeme alan bir ürünün giriş
+e-postası spam klasörüne düşerse kullanıcı hiç giremez.
+
+## 13 · Anonim kullanıcı kayıtları birikiyor
+
+**Ne:** Kayıt olmadan giden ziyaretçilerin `User`, `Resume`, `JobPosting` ve
+`Analysis` kayıtları veritabanında kalıyor. Kayıt olanların anonim kaydı
+`onLinkAccount` sonrası siliniyor, ama olmayanların kalıyor.
+
+**Neden şimdi değil:** Tek kullanıcılı geliştirmede sorun değil ve temizlik
+işi bir zamanlanmış görev gerektiriyor (henüz altyapı yok).
+
+**Ne zaman gerekli:** Trafik başladığında. Ayrıca KVKW açısından:
+kullanılmayan CV'lerin süresiz saklanması savunulabilir değil. 30 gün
+sonra silen bir iş yeterli.
+
+## 14 · Hesap silme akışı yok
+
+**Ne:** Marka rehberi "istediğin an silebilirsin" diyor. Sahiplik alanları
+(`Analysis.userId`, `JobPosting.userId`) bunu artık mümkün kılıyor — bir
+kullanıcının tüm verisi tek sorguyla bulunabiliyor — ama akış yazılmadı.
+
+**Neden şimdi değil:** Sprint 3A'nın kapsamı dışı (spec §2).
+
+**Ne zaman gerekli:** Lansmandan önce. KVKK aydınlatma metniyle birlikte.
