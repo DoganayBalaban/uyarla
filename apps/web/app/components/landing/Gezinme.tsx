@@ -50,8 +50,8 @@ export function Gezinme() {
             </a>
           ))}
           <div className={s.gezinmeMobilEylem}>
-            {!isPending && !kayitli && <a href="/giris">Giriş yap</a>}
-            <a href="/test" className={s.btnBirincil}>
+            {!isPending && !kayitli && <a href="/login">Giriş yap</a>}
+            <a href="/analyze" className={s.btnBirincil}>
               Ücretsiz skorumu gör
             </a>
           </div>
@@ -59,11 +59,11 @@ export function Gezinme() {
 
         <div className={s.gezinmeEylem}>
           {!isPending && !kayitli && (
-            <a href="/giris" className={s.gezinmeGiris}>
+            <a href="/login" className={s.gezinmeGiris}>
               Giriş yap
             </a>
           )}
-          <a href="/test" className={`${s.btnBirincil} ${s.btnKucuk}`}>
+          <a href="/analyze" className={`${s.btnBirincil} ${s.btnKucuk}`}>
             Ücretsiz skorumu gör
           </a>
         </div>

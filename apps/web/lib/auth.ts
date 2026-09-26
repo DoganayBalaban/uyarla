@@ -19,9 +19,27 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
 
-  // Kimlik uçlarının kendi limiti (spec §9). Bir e-posta adresine bağlantı
-  // yağmuru yapılmasını engelliyor. Pahalı uçların limiti ayrı (Görev 6).
-  rateLimit: { enabled: true, window: 60, max: 3 },
+  /**
+   * Kimlik uçlarının limiti (spec §9).
+   *
+   * Genel limit cömert, sıkı kural yalnızca magic link gönderimine
+   * uygulanıyor. İlk hâli global dakikada 3'tü ve arayüzü kırıyordu:
+   * useSession() oturumu yokluyor, /get-session dakikada 3'ü hemen aşıyor ve
+   * oturum çubuğu hiç yüklenemiyordu (canlı denemede 429 görüldü).
+   *
+   * /get-session tümüyle muaf: oturum okumak pahalı değil ve arayüzün her
+   * gezinmede ihtiyacı var.
+   */
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 100,
+    customRules: {
+      // Bir e-posta adresine bağlantı yağmuru yapılmasını engelliyor.
+      "/sign-in/magic-link": { window: 60, max: 3 },
+      "/get-session": false,
+    },
+  },
 
   // Google buraya gelecek. Kimlik bilgileri .env'ye eklendiğinde açılıyor;
   // şimdilik boş (spec §6).

@@ -207,7 +207,7 @@ export default function Home() {
                 Deneyimini uydurmadan.
               </p>
               <div className={s.heroEylem}>
-                <a href="/test" className={`${s.btnBirincil} ${s.btnBuyuk}`}>
+                <a href="/analyze" className={`${s.btnBirincil} ${s.btnBuyuk}`}>
                   Ücretsiz skorumu gör
                   <Ikon ad="ok" boyut={18} />
                 </a>
@@ -458,7 +458,7 @@ export default function Home() {
               <div className={s.sonCagriMetin}>
                 <h2 className={s.sonCagriBaslik}>Tek CV ile yetinme.</h2>
                 <p>İlanı yapıştır, CV'nin ne kadar uyduğunu hemen gör. Kayıt gerekmez.</p>
-                <a href="/test" className={`${s.btnBeyaz} ${s.btnBuyuk}`}>
+                <a href="/analyze" className={`${s.btnBeyaz} ${s.btnBuyuk}`}>
                   Ücretsiz skorumu gör
                   <Ikon ad="ok" boyut={18} />
                 </a>
@@ -491,11 +491,11 @@ export default function Home() {
               <p className={s.altbilgiBaslik}>Ürün</p>
               <a href="#nasil">Nasıl çalışır</a>
               <a href="#ozellikler">Özellikler</a>
-              <a href="/test">Ücretsiz skor</a>
+              <a href="/analyze">Ücretsiz skor</a>
             </div>
             <div>
               <p className={s.altbilgiBaslik}>Hesap</p>
-              <a href="/giris">Giriş yap</a>
+              <a href="/login">Giriş yap</a>
               <a href="#sss">SSS</a>
             </div>
             <div>
