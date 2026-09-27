@@ -1,5 +1,12 @@
 export const ADAPT_QUEUE = "adapt"
 
+/**
+ * Uyarlama kuyruğunda ön yazı işinin adı; aynı veriyi ({ adaptationId })
+ * taşıyor. Burada tanımlı çünkü web katmanı da import ediyor ve bu dosya
+ * bağımlılıksız (cover-pipeline.ts core'u çekiyor).
+ */
+export const COVER_LETTER_JOB = "cover-letter"
+
 export interface AdaptJobData {
   /**
    * Uyarlama kaydı web katmanında oluşturuluyor ve kimliği buraya geliyor.

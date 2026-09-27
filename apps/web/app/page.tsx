@@ -106,8 +106,7 @@ const BENTO: { ikon: IkonAdi; baslik: string; metin: string; yakinda?: boolean; 
   {
     ikon: "mektup",
     baslik: "Ön yazı",
-    metin: "İlana ve senin deneyimine özel ön yazı.",
-    yakinda: true,
+    metin: "İlana ve senin deneyimine özel ön yazı; uydurma kontrolünden geçer.",
   },
   {
     ikon: "kolonlar",
