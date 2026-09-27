@@ -15,7 +15,7 @@ import type { ResumeSegments } from "../schemas/resume.js"
  * ~10 saniye kazandırıyor ve üretimde bir çağrılık token maliyeti düşüyor.
  */
 
-type Bolum = "header" | "summary" | "experience" | "education" | "skills" | "yoksay"
+export type Bolum = "header" | "summary" | "experience" | "education" | "skills" | "yoksay"
 
 /** Başlık satırı bu uzunluğu aşmaz; aşıyorsa içerik satırıdır. */
 const MAX_BASLIK_UZUNLUGU = 60
@@ -122,6 +122,15 @@ export function stripLeadingHeading(block: string): string {
   if (ilkDolu === -1) return ""
   if (!baslikTuru(satirlar[ilkDolu]!)) return block.trim()
   return satirlar.slice(ilkDolu + 1).join("\n").trim()
+}
+
+/**
+ * Satır tanınan bir bölüm başlığıysa türünü döndürür. Biçim kontrolü
+ * (format/check.ts) aynı tanımayı kullanıyor: "ATS başlığını tanır mı"
+ * sorusunun cevabı, bizim bölümlememizin tanıyıp tanımadığıyla aynı.
+ */
+export function bolumBasligi(satir: string): Bolum | null {
+  return baslikTuru(satir)
 }
 
 function baslikTuru(satir: string): Bolum | null {
