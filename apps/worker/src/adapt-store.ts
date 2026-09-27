@@ -46,6 +46,13 @@ export const prismaAdaptationStore: AdaptationStore = {
     })
   },
 
+  async saveCoverLetter(adaptationId, value) {
+    await prisma.adaptation.update({
+      where: { id: adaptationId },
+      data: { coverLetter: value as unknown as object },
+    })
+  },
+
   async failAdaptation(adaptationId, errorClass) {
     await prisma.adaptation.update({
       where: { id: adaptationId },

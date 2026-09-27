@@ -10,6 +10,7 @@ import IORedis from "ioredis"
 import { runAdaptation } from "./adapt-pipeline.js"
 import { ADAPT_QUEUE, type AdaptJobData } from "./adapt-queue.js"
 import { prismaAdaptationStore } from "./adapt-store.js"
+import { COVER_LETTER_JOB, runCoverLetter } from "./cover-pipeline.js"
 import { runAnalysis } from "./pipeline.js"
 import { ANALYZE_QUEUE, type AnalyzeJobData } from "./queue.js"
 import { prismaStore } from "./store.js"
@@ -63,6 +64,25 @@ worker.on("completed", (job, analysisId) => {
 const adaptWorker = new Worker<AdaptJobData, void>(
   ADAPT_QUEUE,
   async (job) => {
+    // Ön yazı aynı kuyrukta ayrı bir iş adıyla: aynı yerel modeli
+    // paylaşıyorlar, ayrı kuyruk ikisini paralel çalıştırıp sıraya sokardı.
+    if (job.name === COVER_LETTER_JOB) {
+      try {
+        await runCoverLetter({ llm, store: prismaAdaptationStore }, job.data)
+      } catch (error) {
+        const sonDeneme = job.attemptsMade + 1 >= (job.opts.attempts ?? 1)
+        if (error instanceof PermanentError || sonDeneme) {
+          // Arayüz "hazırlanıyor"da takılı kalmasın.
+          await prismaAdaptationStore
+            .saveCoverLetter(job.data.adaptationId, { durum: "failed" })
+            .catch(() => {})
+        }
+        if (error instanceof PermanentError) throw new UnrecoverableError(error.message)
+        throw error
+      }
+      return
+    }
+
     try {
       await runAdaptation(
         {

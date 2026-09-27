@@ -26,6 +26,7 @@ export async function GET(
       // gömme çağrısı yapılmaz.
       scoreAfter: await computeScoreAfter(profile, posting, draft),
       errorClass: adaptation.errorClass,
+      coverLetter: adaptation.coverLetter ?? null,
     })
   } catch (error) {
     const yanit = authErrorResponse(error)

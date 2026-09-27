@@ -49,8 +49,8 @@ export default function PrivacyPage() {
             <strong>İlan metni:</strong> karşılaştırma için yapıştırdığın iş ilanı.
           </li>
           <li>
-            <strong>Sonuçlar:</strong> ATS uyum skoru, eksik anahtar kelimeler, uyarlanmış CV ve
-            maddelere verdiğin kararlar.
+            <strong>Sonuçlar:</strong> ATS uyum skoru, eksik anahtar kelimeler, uyarlanmış CV, ön
+            yazı ve maddelere verdiğin kararlar.
           </li>
           <li>
             <strong>Oturum ve güvenlik:</strong> oturum çerezi, IP adresi ve tarayıcı bilgisi
