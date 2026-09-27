@@ -1482,3 +1482,97 @@ düşürüyor.
 sırası kaybolur, ama kapsam da görünmez olur — geri alınamaz bir işlemin
 kapsamı okunabilir kalmalı) · dosyaları işlem içinde silmek (geri alma diski
 geri getirmiyor, yani işlem yalancı olurdu).
+## K-37 · Deneyim gereksinimini beceri listesi karşılamaz
+
+**Tarih:** 27 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 1+
+**Birikmiş işler #1 ve #7'yi kapatır.**
+
+**Karar:** Gereksinimin türü, onu karşılayabilecek kanıtın türünü sınırlıyor.
+`experience` türü gereksinimler yalnızca **anlatı kanıtıyla** (`role`,
+`bullet`) karşılanabiliyor; beceri listesi ve diploma satırı onlar için kanıt
+sayılmıyor. Diğer türlerde kısıt yok.
+
+Kısıt her iki eşleştirme aşamasına da uygulanıyor. Yalnızca anlamsal katmana
+konsaydı aynı uydurma kelime eşleşmesiyle geri gelirdi; ayrım yapan şey
+gereksinimin türü, eşleşmenin hangi aşamada bulunduğu değil.
+
+### Neden eşik ayarı değil
+
+K-24 eşiği taramış ve kalan üç uydurmanın eşikle elenemeyeceğini söylemişti.
+Sebebi bu turda sayıyla görüldü — uydurmaların benzerliği meşru eşleşmelerin
+bandının **tam içinde**:
+
+| | Benzerlik |
+|---|---|
+| Meşru anlamsal eşleşmeler | 0,6694 · 0,6828 · 0,6941 · 0,7235 · 0,7285 · 0,8972 |
+| Uydurmalar | **0,6687 · 0,7056 · 0,7056** |
+
+En düşük uydurma (0,6687) ile en düşük meşru eşleşme (0,6694) arasında 0,0007
+var. Hiçbir eşik bu ikisini ayırmaz. Ayrım sayıda değil, **türde**.
+
+### Kapsam taraması (`pnpm eval:kapsam`, 10 çift · 56 iddia)
+
+| Varyant | İsabet % | Kaçırma | Uydurma | Anlamsal |
+|---|---|---|---|---|
+| taban (kısıt yok) | 91,1 | 2 | 3 | 9 |
+| **#1 · experience → anlatı** | **92,9** | **2** | **2** | **8** |
+| #7 · anlamsal yalnız `soft` | 85,7 | 8 | 0 | 0 |
+| her tür → anlatı | 76,8 | 13 | 0 | 0 |
+| `education` → yalnız diploma | 89,3 | 4 | 2 | 6 |
+
+**#1 kazandı:** bir uydurma eksildi, hiçbir meşru eşleşme düşmedi. Ölçüm
+setinde `experience` türü hiçbir gereksinim beceri kanıtıyla *meşru* olarak
+eşleşmiyordu — yani kısıtın bedeli sıfır.
+
+### #7 reddedildi — ve K-15'in tahminini çürüttü
+
+K-15 "belki yalnızca `soft` türü gereksinimlerde devreye girmesi" diye bir
+kapı açık bırakmıştı. Ölçüm kapattı: isabet %91,1'den %85,7'ye düşüyor.
+Sebebi basit ve verinin kendisinde — **değerlendirme setindeki beş ilanda hiç
+`soft` türü gereksinim yok.** Kapsam `soft`'a daraltılınca anlamsal katman
+tümüyle susuyor ve altı meşru eşleşme kaçırmaya dönüyor.
+
+Bu, K-24'ün "anlamsal katman artık hak ettiği yeri kazanıyor" bulgusunun
+ikinci kanıtı: katmanın asıl işi yumuşak beceriler değil, çapraz dilli ve
+eş anlamlı teknik eşleşmeler (`Yazılım Mühendisliği` ↔ `Yazılım Geliştirme`,
+`Python ile ileri seviye geliştirme` ↔ `Python`).
+
+### Denenen iki fikir daha, ikisi de reddedildi
+
+**Anlamsal katman yalnızca anlatı kanıtına baksın.** Gerekçesi şuydu: beceri
+satırı kanonik bir terimdir, ya lafzen eşleşir ya da benzerliği sözlüksel
+gürültüdür. Ölçüm tersini gösterdi — isabet %76,8'e düşüyor. Sebebi ölçülebilir:
+dokuz anlamsal eşleşmenin dokuzu da beceri kanıtından geliyor ve anlatı
+kanıtındaki en iyi alternatifleri 0,4072–0,5949 bandında, yani eşiğin çok
+altında. Kısa ve kanonik metinler gömme uzayında birbirine yakın duruyor;
+uzun anlatı cümleleri kavramdan uzaklaşıyor. Beceri listesini anlamsal
+katmandan çıkarmak, katmanı kapatmakla aynı şey.
+
+**Eğitim gereksinimini yalnızca diploma kanıtı karşılasın.** Kulağa #1 kadar
+mantıklı geliyor, ama iki meşru eşleşme düşüyor (%89,3): ilan "Yazılım
+Mühendisliği" derken yeni mezunun diploma satırı "Yönetim Bilişim Sistemleri"
+diyor ve köprüyü beceri satırındaki "Yazılım Geliştirme" kuruyor. Simetrik
+görünen bir kısıt simetrik sonuç vermiyor — her tür ayrı ölçülmek zorunda.
+
+### Yeni taban çizgisi
+
+```
+10 çift · 56 iddia
+İsabet oranı   : 92.9%   (önce 91.1%)
+Kaçırma        : 2       (değişmedi)
+Uydurma        : 2       (önce 3)
+Çıkarılmayan   : 0
+Eşleşme kaynağı: kelime 13 · anlamsal 8
+```
+
+**Kalan 2 uydurma** ikisi de `cv-c__ilan-1`'de, ikisi de `skill` türü ve ikisi
+de yeni mezunun beceri listesindeki `Yapay Zeka Araçları` satırına düşüyor.
+Bu satır bir şemsiye terim ve gömme uzayında hem "Generative AI"ye (0,7056) hem
+"Otonom karar mekanizmaları"na (0,6687) yakın. Tür kısıtı bunları eleyemiyor
+çünkü gereksinim gerçekten bir beceri gereksinimi ve kanıt gerçekten bir
+beceri kaydı. Sonraki adayı birikmiş işler #15'te duruyor.
+
+**Yapılandırma ölçüm yüzeyi olarak kaldı:** `semanticTypes` ve
+`evidenceKindsByType` yapılandırmada duruyor ki set büyüdüğünde (birikmiş
+işler #4) tarama tekrarlanabilsin — `semanticThreshold`'un `eval:sweep` için
+durmasıyla aynı gerekçe.

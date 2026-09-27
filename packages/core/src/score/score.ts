@@ -121,6 +121,22 @@ function matchRequirement(
   let kelimeVar = false
   let anlamsalVar = false
 
+  // Gereksinimin türü, onu karşılayabilecek kanıtın türünü sınırlıyor.
+  // Filtreleme burada yapılıyor ki hem kelime hem anlamsal aşama aynı kanıt
+  // kümesine baksın: kısıt yalnızca anlamsal katmana konsaydı aynı uydurma
+  // kelime eşleşmesiyle geri gelirdi (K-36).
+  //
+  // Vektör kanıtla aynı nesnede taşınıyor; ayrı diziyi index'le eşlemek
+  // filtreden sonra kayardı.
+  const izinliTurler = cfg.evidenceKindsByType[requirement.type]
+  const uygunKanitlar: Array<{ evidence: Evidence; vector: number[] | undefined }> = []
+  for (const [j, kanit] of input.evidence.entries()) {
+    if (!izinliTurler.includes(kanit.kind)) continue
+    uygunKanitlar.push({ evidence: kanit, vector: input.evidenceVectors[j] })
+  }
+
+  const anlamsalAcik = cfg.semanticTypes.includes(requirement.type)
+
   // Karşılanan kavramların ağırlıklı toplamı. Tam kelime eşleşmesi kesindir
   // ve 1.0 katkı verir; anlamsal eşleşme bir tahmindir ve benzerlik değeri
   // kadar katkı verir. İkisine aynı ağırlığı vermek, tahmini kesinlik gibi
@@ -135,9 +151,9 @@ function matchRequirement(
     // matchText kullanılıyor, text değil: text deneyim maddelerinde unvan ön
     // eki taşıyor ve unvana denk gelen bir kelime tüm maddelerle eşleşip
     // kanıt olarak rastgele birini seçtiriyordu (K-13).
-    const kelimeKaniti = input.evidence.find((item) =>
-      aranacaklar.some((terim) => containsKeyword(item.matchText, terim)),
-    )
+    const kelimeKaniti = uygunKanitlar.find((item) =>
+      aranacaklar.some((terim) => containsKeyword(item.evidence.matchText, terim)),
+    )?.evidence
     if (kelimeKaniti) {
       karsilanan.push(concept.term)
       agirlik += 1
@@ -148,12 +164,10 @@ function matchRequirement(
 
     // 2. Anlamsal eşleşme — kavram düzeyinde.
     const vektor = conceptVectors[i]
-    if (vektor) {
+    if (vektor && anlamsalAcik) {
       let enIyi: { similarity: number; evidence: Evidence } | null = null
-      for (let j = 0; j < input.evidence.length; j++) {
-        const kanitVektoru = input.evidenceVectors[j]
-        const kanit = input.evidence[j]
-        if (!kanitVektoru || !kanit) continue
+      for (const { evidence: kanit, vector: kanitVektoru } of uygunKanitlar) {
+        if (!kanitVektoru) continue
         const benzerlik = cosineSimilarity(vektor, kanitVektoru)
         if (!enIyi || benzerlik > enIyi.similarity) {
           enIyi = { similarity: benzerlik, evidence: kanit }
