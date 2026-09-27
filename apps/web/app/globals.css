@@ -40,6 +40,36 @@
 
   --font-baslik: Manrope, Inter, system-ui, sans-serif;
   --font-govde: Inter, system-ui, -apple-system, sans-serif;
+
+  /* Giriş ekranının görsel paneli. Kullanan yerde `motion-safe:` ile
+     açılıyor; hareket azaltmayı seçen kullanıcı durağan görüyor. */
+  --animate-yorunge: yorunge 60s linear infinite;
+  --animate-yorunge-ters: yorunge 60s linear infinite reverse;
+  --animate-kurdele: kurdele 14s ease-in-out infinite alternate;
+  --animate-yuzme: yuzme 7s ease-in-out infinite;
+
+  @keyframes yorunge {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes kurdele {
+    from {
+      transform: translate3d(-4%, 3%, 0);
+    }
+    to {
+      transform: translate3d(4%, -3%, 0);
+    }
+  }
+  @keyframes yuzme {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
 }
 
 /**

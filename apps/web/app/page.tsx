@@ -500,9 +500,8 @@ export default function Home() {
             </div>
             <div>
               <p className={s.altbilgiBaslik}>Yasal</p>
-              {/* Sayfalar henüz yok; KVKK metni yayından önce eklenecek (rehber §11). */}
-              <a href="#">KVKK aydınlatma metni</a>
-              <a href="#">Kullanım koşulları</a>
+              <a href="/privacy">KVKK aydınlatma metni</a>
+              <a href="/terms">Kullanım koşulları</a>
             </div>
           </nav>
         </div>
