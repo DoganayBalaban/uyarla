@@ -1,6 +1,17 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import {
+  Check,
+  Copy,
+  Download,
+  LoaderCircle,
+  Mail,
+  RefreshCw,
+  Sparkles,
+  TriangleAlert,
+} from "lucide-react"
+import { cn } from "@/lib/cn"
 
 interface Kontrol {
   status: "ok" | "flagged"
@@ -81,39 +92,66 @@ export function OnYaziBolumu({
   }
 
   return (
-    <section className="mt-10 rounded-kart border border-cizgi bg-white p-5 dark:bg-kart">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="m-0 text-lg">Ön yazı</h2>
-          <p className="m-0 mt-1 text-sm text-gri">
-            Bu ilana ve CV&apos;ndeki gerçek deneyimine özel, üç paragraflık bir ön yazı.
-          </p>
+    <section className="rounded-kart border border-cizgi bg-kart p-5 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <span className="grid size-9 shrink-0 place-items-center rounded-buton bg-mavi/10 text-mavi">
+            <Mail className="size-5" aria-hidden />
+          </span>
+          <div>
+            <h2 className="m-0 text-lg">Ön yazı</h2>
+            <p className="m-0 mt-0.5 text-sm text-gri">
+              Bu ilana ve CV&apos;ndeki gerçek deneyimine özel, üç paragraflık bir ön yazı.
+            </p>
+          </div>
         </div>
         {kayit?.durum !== "running" && (
           <button
+            type="button"
             onClick={() => void olustur()}
-            className={
+            className={cn(
+              "inline-flex items-center gap-2 rounded-buton px-4 py-2.5 text-sm font-semibold transition",
               kayit?.durum === "done"
-                ? "rounded-buton border border-cizgi px-5 py-2.5 font-semibold"
-                : "rounded-buton bg-mavi px-5 py-2.5 font-semibold text-white"
-            }
+                ? "border border-cizgi hover:border-mavi/40 hover:text-mavi"
+                : "bg-mavi text-white shadow-sm shadow-mavi/30 hover:bg-mavi/90",
+            )}
           >
+            {kayit?.durum === "done" ? (
+              <RefreshCw className="size-4" aria-hidden />
+            ) : (
+              <Sparkles className="size-4" aria-hidden />
+            )}
             {kayit?.durum === "done" ? "Yeniden yaz" : "Ön yazı oluştur"}
           </button>
         )}
       </div>
 
-      {hata && <p className="mt-3 text-sm text-kehribar">{hata}</p>}
-
-      {calisiyor && (
-        <p className="mt-4 flex items-center gap-2.5 text-sm text-gri" role="status">
-          <span className="size-4 animate-spin rounded-full border-2 border-cizgi border-t-mavi" />
-          Ön yazını yazıyoruz, sonra hiçbir şeyin uydurulmadığını kontrol ediyoruz…
+      {hata && (
+        <p role="alert" className="mt-3 text-sm text-kirmizi dark:text-[#f87171]">
+          {hata}
         </p>
       )}
 
+      {calisiyor && (
+        <div className="mt-5 space-y-2.5" role="status">
+          <p className="m-0 flex items-center gap-2 text-sm text-gri">
+            <LoaderCircle className="size-4 text-mavi motion-safe:animate-spin" aria-hidden />
+            Ön yazını yazıyoruz, sonra hiçbir şeyin uydurulmadığını kontrol ediyoruz…
+          </p>
+          {/* İskelet: metnin geleceği yerin kabaca şekli. */}
+          {[92, 100, 78].map((w) => (
+            <div
+              key={w}
+              aria-hidden
+              className="h-3 rounded-full bg-zemin motion-safe:animate-pulse"
+              style={{ width: `${w}%` }}
+            />
+          ))}
+        </div>
+      )}
+
       {kayit?.durum === "failed" && (
-        <p className="mt-4 text-sm text-kehribar">
+        <p className="mt-4 text-sm text-kirmizi dark:text-[#f87171]">
           Ön yazıyı yazamadık. “Ön yazı oluştur” ile tekrar dener misin?
         </p>
       )}
@@ -121,20 +159,22 @@ export function OnYaziBolumu({
       {kayit?.durum === "done" && (
         <>
           {isaretli > 0 && (
-            <p className="mt-4 text-sm text-kehribar">
-              {isaretli} paragrafta CV&apos;nde olmayan bir bilgi olabilir. Kullanmadan önce
-              işaretli yerleri düzelt ya da çıkar.
+            <p className="mt-4 flex gap-2 rounded-buton bg-kehribar/10 p-3 text-sm">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-kehribar" aria-hidden />
+              <span>
+                {isaretli} paragrafta CV&apos;nde olmayan bir bilgi olabilir. Kullanmadan önce işaretli
+                yerleri düzelt ya da çıkar.
+              </span>
             </p>
           )}
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 space-y-2 rounded-buton border border-cizgi bg-zemin/60 p-2 sm:p-3">
             {kayit.paragraflar.map((p, i) => (
               <div
                 key={i}
-                className={
-                  p.kontrol.status === "flagged"
-                    ? "rounded-buton border border-kehribar/40 bg-kehribar/5 p-3"
-                    : "p-3"
-                }
+                className={cn(
+                  "rounded-[8px] p-3",
+                  p.kontrol.status === "flagged" && "border border-kehribar/40 bg-kehribar/5",
+                )}
               >
                 {p.kontrol.status === "flagged" && (
                   <>
@@ -154,15 +194,19 @@ export function OnYaziBolumu({
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <button
+              type="button"
               onClick={() => void kopyala()}
-              className="rounded-buton bg-mavi px-5 py-2.5 font-semibold text-white"
+              className="inline-flex items-center gap-2 rounded-buton bg-mavi px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-mavi/30 transition hover:bg-mavi/90"
             >
+              {kopyalandi ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
               {kopyalandi ? "Kopyalandı" : "Metni kopyala"}
             </button>
             <button
+              type="button"
               onClick={indir}
-              className="rounded-buton border border-cizgi px-5 py-2.5 font-semibold"
+              className="inline-flex items-center gap-2 rounded-buton border border-cizgi px-4 py-2.5 text-sm font-semibold transition hover:border-mavi/40 hover:text-mavi"
             >
+              <Download className="size-4" aria-hidden />
               Metin olarak indir
             </button>
           </div>
