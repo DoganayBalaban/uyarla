@@ -112,8 +112,7 @@ const BENTO: { ikon: IkonAdi; baslik: string; metin: string; yakinda?: boolean; 
   {
     ikon: "kolonlar",
     baslik: "Başvuru panosu",
-    metin: "Hangi ilana hangi CV sürümüyle başvurduğunu tek yerde gör.",
-    yakinda: true,
+    metin: "Her analiz bir kart: başvurdun mu, mülakat mı, teklif mi, tek yerde gör.",
     genis: true,
   },
   {

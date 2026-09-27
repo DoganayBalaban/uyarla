@@ -23,8 +23,10 @@ export function OturumCubugu() {
         uyarla
       </a>
 
-      <nav className="flex items-center gap-4 text-sm text-gri">
-        <a href="/analyze" className="hover:text-mavi">
+      <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-sm text-gri">
+        {/* Dar ekranda sığmıyor; mobilde analiz panodaki "Yeni analiz"
+            butonundan ve ana sayfadan başlatılıyor. */}
+        <a href="/analyze" className="hidden hover:text-mavi sm:inline">
           Yeni analiz
         </a>
         {/* Yalnızca oturum kısmı bekletiliyor, çubuğun tamamı değil: tümünü
@@ -32,11 +34,15 @@ export function OturumCubugu() {
             e-postaya dönmek de göz kırpması yaratıyor. */}
         {isPending ? null : kayitli ? (
           <>
+            <a href="/applications" className="hover:text-mavi">
+              Başvuru panosu
+            </a>
             {/* E-posta artık hesap ekranına açılıyor: silme akışına girişin
                 başka bir kapısı yok ve "istediğin an silebilirsin" sözünün
                 ulaşılamaz olması sözü tutmamakla aynı şey. */}
             <a href="/account" className="text-gri no-underline hover:text-mavi">
-              {kullanici.email}
+              <span className="hidden sm:inline">{kullanici.email}</span>
+              <span className="sm:hidden">Hesabım</span>
             </a>
             <button
               className="rounded-buton border border-cizgi px-3 py-1.5 font-semibold"

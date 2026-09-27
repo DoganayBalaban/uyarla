@@ -113,8 +113,25 @@ model Analysis {
 
   adaptation Adaptation?
 
+  // Başvuru panosu. Her tamamlanmış analiz bir başvuru adayı: aynı CV'nin
+  // aynı ilana göre değerlendirilmesi. Ayrı bir Application tablosu yerine
+  // burada, çünkü ikisi bire bir ve pano analiz verisinin (skor, pozisyon,
+  // uyarlama) tamamını zaten buradan okuyor.
+  stage          ApplicationStage @default(saved)
+  stageChangedAt DateTime?
+  note           String?          @db.Text
+
   @@index([resumeVersionId, jobPostingId])
   @@index([userId])
+}
+
+/// Başvuru panosunun sütunları.
+enum ApplicationStage {
+  saved // skor alındı, henüz başvurulmadı
+  applied
+  interview
+  offer
+  rejected
 }
 
 enum AnalysisStatus {
