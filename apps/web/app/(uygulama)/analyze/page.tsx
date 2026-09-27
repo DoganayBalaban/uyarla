@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { SkorSonucu, type ScoreResultView } from "../../components/SkorSonucu"
 
 /** Marka rehberi §10.2'deki yükleme metinleri. */
@@ -26,6 +26,39 @@ export default function AnalyzePage() {
   const [state, setState] = useState<AnalysisResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const ilanKutusu = useRef<HTMLTextAreaElement>(null)
+  const [ilanUrl, setIlanUrl] = useState("")
+  const [ilanDurumu, setIlanDurumu] = useState<
+    { tur: "yukleniyor" } | { tur: "tamam"; metin: string } | { tur: "hata"; metin: string } | null
+  >(null)
+
+  /**
+   * İlan bağlantısından metni alıp kutuya doldurur. Kutu düzenlenebilir
+   * kalıyor: çekilen metinde gereksiz kısım varsa kullanıcı silebilir.
+   */
+  async function ilaniGetir() {
+    if (!ilanUrl.trim()) return
+    setIlanDurumu({ tur: "yukleniyor" })
+    try {
+      const cevap = await fetch("/api/job-url", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: ilanUrl }),
+      })
+      const govde = (await cevap.json()) as { metin?: string; pozisyon?: string | null; error?: string }
+      if (!cevap.ok || !govde.metin) {
+        setIlanDurumu({ tur: "hata", metin: govde.error ?? "İlanı alamadık." })
+        return
+      }
+      if (ilanKutusu.current) ilanKutusu.current.value = govde.metin
+      setIlanDurumu({
+        tur: "tamam",
+        metin: `${govde.pozisyon ? `“${govde.pozisyon}” ilanı` : "İlan metni"} aşağıya eklendi. Göndermeden önce göz atabilirsin.`,
+      })
+    } catch {
+      setIlanDurumu({ tur: "hata", metin: "Sunucuya ulaşamadık. Metni kopyalayıp yapıştırır mısın?" })
+    }
+  }
 
   /** Uyarlamayı başlatır ve uyarlama ekranına geçer. */
   async function uyarla(analysisId: string) {
@@ -119,15 +152,53 @@ export default function AnalyzePage() {
               <input id="cv" type="file" name="cv" accept=".pdf,.docx" required />
             </div>
             <div>
+              <label htmlFor="ilanUrl" className="mb-1 block font-semibold">
+                İlan bağlantısı <span className="font-normal text-gri">(isteğe bağlı)</span>
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="ilanUrl"
+                  type="url"
+                  inputMode="url"
+                  value={ilanUrl}
+                  onChange={(e) => setIlanUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    // Enter formu (analizi) göndermesin; bağlantıyı getirsin.
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      void ilaniGetir()
+                    }
+                  }}
+                  placeholder="https://www.kariyer.net/is-ilani/…"
+                  className="min-w-0 flex-1 rounded-buton border border-cizgi bg-white p-2.5 font-govde text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => void ilaniGetir()}
+                  disabled={!ilanUrl.trim() || ilanDurumu?.tur === "yukleniyor"}
+                  className="shrink-0 rounded-buton border border-cizgi px-4 font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  {ilanDurumu?.tur === "yukleniyor" ? "Getiriliyor…" : "İlanı getir"}
+                </button>
+              </div>
+              {ilanDurumu?.tur === "tamam" && (
+                <p className="mt-1.5 text-sm text-yesil">✓ {ilanDurumu.metin}</p>
+              )}
+              {ilanDurumu?.tur === "hata" && (
+                <p className="mt-1.5 text-sm text-kehribar">{ilanDurumu.metin}</p>
+              )}
+            </div>
+            <div>
               <label htmlFor="jobText" className="mb-1 block font-semibold">
                 İlan metni
               </label>
               <textarea
                 id="jobText"
                 name="jobText"
+                ref={ilanKutusu}
                 rows={12}
                 required
-                placeholder="İlanın tamamını yapıştır — gereksinimler bölümü dahil."
+                placeholder="İlanın tamamını yapıştır — gereksinimler bölümü dahil. Bağlantıyı yukarıya yapıştırırsan buraya kendiliğinden gelir."
                 className="w-full rounded-buton border border-cizgi bg-white p-2.5 font-govde text-sm"
               />
             </div>
