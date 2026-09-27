@@ -1,5 +1,6 @@
 import {
   PermanentError,
+  checkFormat,
   TransientError,
   collectEvidence,
   conceptTexts,
@@ -7,7 +8,8 @@ import {
   extractResumeProfile,
   score,
 } from "@uyarla/core"
-import type { PipelineDeps, PipelineInput } from "./types.js"
+import type { FormatRaporu } from "@uyarla/core"
+import type { AnalysisStore, PipelineDeps, PipelineInput } from "./types.js"
 
 /**
  * analyze işinin aşama sırası (spec §8):
@@ -35,6 +37,7 @@ export async function runAnalysis(
   try {
     deps.onProgress?.("cv_okunuyor")
     const resumeText = await deps.store.getResumeText(input.resumeId)
+    const format = await bicimRaporu(deps.store, input.resumeId, resumeText)
     const profile = await extractResumeProfile(deps.llm, resumeText)
     const resumeVersionId = await deps.store.saveResumeVersion(input.resumeId, profile.data)
     await deps.store.attachResumeVersion(analysisId, resumeVersionId)
@@ -65,6 +68,7 @@ export async function runAnalysis(
       analysisId,
       score: result.score,
       result,
+      format,
       durationMs: now() - basladi,
       tokenUsage: profile.tokens + posting.tokens,
     })
@@ -80,6 +84,24 @@ export async function runAnalysis(
       // Kayıt da düşerse asıl hata gizlenmemeli; teşhisi imkânsız kılar.
     }
     throw error
+  }
+}
+
+/**
+ * CV'nin biçim kontrolü. Yan bilgi: patlarsa analiz durmuyor, skor yine
+ * üretiliyor ve arayüz kontrol bölümünü göstermiyor.
+ */
+async function bicimRaporu(
+  store: AnalysisStore,
+  resumeId: string,
+  text: string,
+): Promise<FormatRaporu | null> {
+  try {
+    const { buffer, filename } = await store.getResumeFile(resumeId)
+    return await checkFormat({ buffer, filename, text })
+  } catch (error) {
+    console.warn("[pipeline] biçim kontrolü atlandı", error)
+    return null
   }
 }
 
