@@ -5,7 +5,7 @@ import { signIn } from "@/lib/authClient"
 import { epostaOnerisi, postaUygulamasi } from "@/lib/eposta"
 import type { Saglayici } from "@/lib/saglayicilar"
 import { GirisGorseli } from "./GirisGorseli"
-import { SosyalGiris } from "./SosyalGiris"
+import { SosyalGiris, girisHataAdresi } from "./SosyalGiris"
 
 /**
  * Better Auth'un hata kodlarını Türkçe mesaja çeviriyor.
@@ -42,7 +42,14 @@ function Logo() {
  * Google/LinkedIn/GitHub. Aynı akış kayıt da yapıyor; ayrı bir "hesap
  * oluştur" ekranına gerek yok.
  */
-export function GirisFormu({ acikSaglayicilar }: { acikSaglayicilar: Saglayici[] }) {
+export function GirisFormu({
+  acikSaglayicilar,
+  donus,
+}: {
+  acikSaglayicilar: Saglayici[]
+  /** Girişten sonra gidilecek, doğrulanmış site içi adres. */
+  donus: string
+}) {
   const [email, setEmail] = useState("")
   const [durum, setDurum] = useState<"bos" | "gonderiliyor" | "gonderildi">("bos")
   const [hata, setHata] = useState<string | null>(null)
@@ -70,9 +77,10 @@ export function GirisFormu({ acikSaglayicilar }: { acikSaglayicilar: Saglayici[]
   async function baglantiGonder(): Promise<boolean> {
     const { error } = await signIn.magicLink({
       email,
-      // Giriş sonrası kullanıcıyı ana akışa alıyoruz; dönüş adresi takibi
-      // Sprint 3B'nin işi.
-      callbackURL: "/analyze",
+      // Kullanıcı girişe bir işin ortasından geldiyse (ör. uyarlama) oraya
+      // dönüyor; değilse ana akışa.
+      callbackURL: donus,
+      errorCallbackURL: girisHataAdresi(donus),
     })
     if (error) {
       setHata(
@@ -263,7 +271,7 @@ export function GirisFormu({ acikSaglayicilar }: { acikSaglayicilar: Saglayici[]
                 <span className="h-px flex-1 bg-cizgi" />
               </div>
 
-              <SosyalGiris acik={acikSaglayicilar} />
+              <SosyalGiris acik={acikSaglayicilar} donus={donus} />
 
               <ul className="mt-9 space-y-2.5 text-sm text-gri">
                 {[
