@@ -1,5 +1,6 @@
 import type {
   EmbeddingProvider,
+  FormatRaporu,
   JobPostingData,
   LlmProvider,
   ResumeProfile,
@@ -14,6 +15,8 @@ import type {
  */
 export interface AnalysisStore {
   getResumeText(resumeId: string): Promise<string>
+  /** Biçim kontrolü dosyanın kendisine bakıyor (DOCX iç yapısı). */
+  getResumeFile(resumeId: string): Promise<{ buffer: Buffer; filename: string }>
   getJobPostingText(jobPostingId: string): Promise<string>
   saveResumeVersion(resumeId: string, profile: ResumeProfile): Promise<string>
   saveJobPostingData(jobPostingId: string, data: JobPostingData): Promise<void>
@@ -28,6 +31,8 @@ export interface AnalysisStore {
     analysisId: string
     score: number
     result: ScoreResult
+    /** CV'nin ATS okunabilirliği; kontrol patlarsa null (analizi durdurmuyor). */
+    format: FormatRaporu | null
     durationMs: number
     tokenUsage: number
   }): Promise<void>

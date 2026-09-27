@@ -31,6 +31,7 @@
   "dependencies": {
     "@uyarla/fonts": "workspace:*",
     "docx": "^9.7.2",
+    "jszip": "^3.10.2",
     "mammoth": "^1.12.3",
     "openai": "^7.20.0",
     "pdf-parse": "^2.4.5",
