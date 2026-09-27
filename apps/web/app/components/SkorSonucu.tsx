@@ -1,5 +1,7 @@
 "use client"
 
+import { BicimRaporu, type FormatRaporuView } from "./BicimRaporu"
+
 export interface RequirementResult {
   requirement: { text: string; importance: string; type: string }
   status: "matched" | "missing"
@@ -12,6 +14,8 @@ export interface ScoreResultView {
   score: number
   requirements: RequirementResult[]
   missingKeywords: string[]
+  /** Biçim kontrolü; eski analizlerde ve kontrol patladığında yok. */
+  format?: FormatRaporuView | null
 }
 
 /**
@@ -73,6 +77,8 @@ export function SkorSonucu({
           </button>
         </p>
       )}
+
+      {sonuc.format && <BicimRaporu rapor={sonuc.format} />}
 
       <h2 className="mt-9 mb-2 text-lg">Gereksinimler</h2>
       <ul className="list-none p-0">

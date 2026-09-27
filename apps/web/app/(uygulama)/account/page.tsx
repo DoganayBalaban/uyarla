@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useSession } from "@/lib/authClient"
+import { girisAdresi } from "@/lib/donus"
 
 /** Marka rehberi §10.2'deki veri silme onay metni, birebir. */
 const ONAY_METNI = "CV'ni ve tüm başvurularını kalıcı olarak silmek istediğine emin misin?"
@@ -50,7 +51,7 @@ export default function HesapPage() {
       <main className="max-w-md">
         <h1 className="text-3xl">Hesabım</h1>
         <p className="mt-3">Devam etmek için giriş yapman gerekiyor.</p>
-        <a href="/login" className="mt-4 inline-block font-semibold text-mavi">
+        <a href={girisAdresi("/account")} className="mt-4 inline-block font-semibold text-mavi">
           Giriş yap
         </a>
       </main>
