@@ -2,6 +2,7 @@
 
 import { use, useCallback, useEffect, useState } from "react"
 import { diffWords } from "@/lib/diff"
+import { OnYaziBolumu, type OnYaziKaydiView } from "../../../components/OnYaziBolumu"
 
 /** Marka rehberi §10.2 tonunda yükleme metinleri. */
 const STAGE_TEXT: Record<string, string> = {
@@ -38,6 +39,7 @@ interface Durum {
   draft: Draft | null
   scoreBefore: number | null
   scoreAfter: number | null
+  coverLetter: OnYaziKaydiView | null
 }
 
 /**
@@ -255,6 +257,8 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
           Word indir
         </button>
       </p>
+
+      <OnYaziBolumu adaptationId={id} baslangic={durum.coverLetter} />
 
       {/* Marka rehberi §11: yapay zekâ şeffaflığı ve uydurmama ilkesi. */}
       <p className="mt-8 text-sm text-gri">

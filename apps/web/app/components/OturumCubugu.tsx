@@ -1,6 +1,8 @@
 "use client"
 
+import { usePathname } from "next/navigation"
 import { signOut, useSession } from "@/lib/authClient"
+import { girisAdresi } from "@/lib/donus"
 
 /**
  * Uygulama ekranlarının üst çubuğu: logo, gezinme ve oturum durumu.
@@ -12,6 +14,8 @@ import { signOut, useSession } from "@/lib/authClient"
  */
 export function OturumCubugu() {
   const { data, isPending } = useSession()
+  // Girişten sonra kullanıcı bulunduğu sayfaya dönüyor.
+  const yol = usePathname()
 
   const kullanici = data?.user
   const kayitli =
@@ -52,7 +56,7 @@ export function OturumCubugu() {
             </button>
           </>
         ) : (
-          <a href="/login" className="hover:text-mavi">
+          <a href={girisAdresi(yol)} className="hover:text-mavi">
             Giriş yap
           </a>
         )}

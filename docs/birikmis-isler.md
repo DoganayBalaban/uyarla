@@ -133,6 +133,12 @@ bakmayı gerektiriyor — kendi başına bir görev.
 hakkımda metni deneyim maddesi gibi işleniyor. Skor bundan zarar görmüyor;
 kanıt olarak hâlâ sayılıyor.
 
+**Kısmi hafifletme (27 Eylül 2026):** Biçim kontrolü (`format/check.ts`)
+arada içerik olmadan art arda gelen başlıkları "metin sırası karışmış
+olabilir" uyarısıyla kullanıcıya gösteriyor; DOCX'te `w:cols` ile tanımlı
+çok sütunlu düzen doğrudan "sorun" olarak işaretleniyor. Çıkarım sırası
+hâlâ düzeltilmiyor.
+
 ## 9 · Font yolu depo köküne bağlı
 
 **Ne:** `@uyarla/fonts` font dosyalarını, `process.cwd()`'den yukarı yürüyüp

@@ -28,6 +28,13 @@ export const prismaStore: AnalysisStore = {
     return rawText
   },
 
+  async getResumeFile(resumeId) {
+    const resume = await prisma.resume.findUnique({ where: { id: resumeId } })
+    if (!resume) throw new PermanentError("CV bulunamadı", "resume_not_found")
+    const store = new LocalFileStore(process.env.STORAGE_DIR ?? "./storage")
+    return { buffer: await store.read(resume.filePath), filename: resume.filePath }
+  },
+
   async getJobPostingText(jobPostingId) {
     const posting = await prisma.jobPosting.findUnique({ where: { id: jobPostingId } })
     if (!posting) throw new PermanentError("İlan bulunamadı", "posting_not_found")
@@ -71,12 +78,14 @@ export const prismaStore: AnalysisStore = {
     await prisma.analysis.update({ where: { id: analysisId }, data: { resumeVersionId } })
   },
 
-  async completeAnalysis({ analysisId, score, result, durationMs, tokenUsage }) {
+  async completeAnalysis({ analysisId, score, result, format, durationMs, tokenUsage }) {
     await prisma.analysis.update({
       where: { id: analysisId },
       data: {
         score,
-        result: result as unknown as object,
+        // Biçim raporu skor sonucunun yanında aynı JSON'da duruyor; ayrı bir
+        // sütun açmak şema değişikliği gerektirirdi, okuyan tek yer arayüz.
+        result: { ...result, format } as unknown as object,
         durationMs,
         tokenUsage,
         status: "done",

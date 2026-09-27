@@ -89,6 +89,7 @@ function sahteStore() {
     failAdaptation: vi.fn(async (_id, errorClass) => {
       kayit.errorClass = errorClass
     }),
+    saveCoverLetter: vi.fn(async () => {}),
   }
   return { store, kayit }
 }

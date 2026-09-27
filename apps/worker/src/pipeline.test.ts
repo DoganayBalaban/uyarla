@@ -23,6 +23,7 @@ const POSTING_DRAFT = {
 function fakeStore(overrides: Partial<AnalysisStore> = {}): AnalysisStore {
   return {
     getResumeText: async () => "ham cv",
+    getResumeFile: async () => ({ buffer: Buffer.from(""), filename: "cv.pdf" }),
     getJobPostingText: async () => "ham ilan",
     saveResumeVersion: async () => "rv-1",
     saveJobPostingData: async () => {},
@@ -93,6 +94,27 @@ describe("runAnalysis · mutlu yol", () => {
     const arg = completeAnalysis.mock.calls[0]![0]
     expect(arg.analysisId).toBe("an-1")
     expect(arg.score).toBe(100)
+  })
+
+  it("biçim raporunu sonuçla birlikte kaydeder", async () => {
+    const completeAnalysis = vi.fn()
+    await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), GIRDI)
+    const format = completeAnalysis.mock.calls[0]![0].format
+    // "ham cv" metninde e-posta yok: kontrol çalışmış ve bunu bulmuş olmalı.
+    expect(format.bulgular.map((b: { kod: string }) => b.kod)).toContain("eposta_yok")
+  })
+
+  it("biçim kontrolü patlarsa analiz yine tamamlanır", async () => {
+    const completeAnalysis = vi.fn()
+    const store = fakeStore({
+      completeAnalysis,
+      getResumeFile: async () => {
+        throw new Error("dosya yok")
+      },
+    })
+    await runAnalysis(fakeDeps({ store }), GIRDI)
+    expect(completeAnalysis).toHaveBeenCalledOnce()
+    expect(completeAnalysis.mock.calls[0]![0].format).toBeNull()
   })
 
   it("süreyi ölçüp kaydeder", async () => {

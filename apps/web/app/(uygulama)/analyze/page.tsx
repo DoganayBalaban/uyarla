@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { girisAdresi } from "@/lib/donus"
 import { SkorSonucu, type ScoreResultView } from "../../components/SkorSonucu"
 
 /** Marka rehberi §10.2'deki yükleme metinleri. */
@@ -26,6 +27,21 @@ export default function AnalyzePage() {
   const [state, setState] = useState<AnalysisResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [devamEdiliyor, setDevamEdiliyor] = useState(false)
+  const devamBasladi = useRef(false)
+
+  // Girişten dönüş: `?uyarla=<analiz>` varsa uyarlamayı başlat. Ref, React'in
+  // geliştirme modunda efekti iki kez çalıştırmasına karşı: iki uyarlama
+  // isteği gitmesin.
+  useEffect(() => {
+    const analysisId = new URLSearchParams(window.location.search).get("uyarla")
+    if (!analysisId || devamBasladi.current) return
+    devamBasladi.current = true
+    setDevamEdiliyor(true)
+    void uyarla(analysisId)
+    // uyarla her çizimde yeniden tanımlanıyor; efekt yalnızca ilk açılışta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   /** Uyarlamayı başlatır ve uyarlama ekranına geçer. */
   async function uyarla(analysisId: string) {
@@ -46,12 +62,17 @@ export default function AnalyzePage() {
     }
     // Anonim kullanıcı uyarlama isteyince kayıt gerekiyor (spec §7). Hata
     // göstermek yerine doğrudan giriş ekranına alıyoruz: huninin tasarımı bu.
+    // Dönüş adresi `?uyarla=` taşıyor: girişten sonra bu sayfa açılınca
+    // uyarlama kendiliğinden başlıyor ve kullanıcı işine kaldığı yerden
+    // devam ediyor. Analiz kimliği kayıtta değişmiyor, yalnızca sahibi
+    // anonim kullanıcıdan yeni hesaba geçiyor (lib/devral.ts).
     if (govde.code === "kayit_gerekli") {
-      window.location.href = "/login"
+      window.location.href = girisAdresi(`/analyze?uyarla=${encodeURIComponent(analysisId)}`)
       return
     }
     setError(govde.error ?? "Uyarlama başlatılamadı.")
     setBusy(false)
+    setDevamEdiliyor(false)
   }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -101,6 +122,18 @@ export default function AnalyzePage() {
 
   // Sonuç geldiğinde form gizleniyor: ekranda tek iş olsun.
   const sonucVar = state?.status === "completed" && state.result
+
+  // Girişten dönüşte form bir an bile görünmesin; başarılıysa sayfa
+  // uyarlama ekranına geçiyor, değilse hata ile birlikte form geri geliyor.
+  if (devamEdiliyor) {
+    return (
+      <main className="py-16 text-center">
+        <span className="mx-auto block size-8 animate-spin rounded-full border-2 border-cizgi border-t-mavi" />
+        <h1 className="mt-6 text-2xl">Uyarlaman hazırlanıyor…</h1>
+        <p className="mt-2 text-sm text-gri">Kaldığın yerden devam ediyoruz.</p>
+      </main>
+    )
+  }
 
   return (
     <main>

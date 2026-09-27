@@ -156,6 +156,12 @@ model Adaptation {
   /// Sprint 2'de kullanılmıyor.
   draft Json
 
+  /// Ön yazı: { durum: "running" | "done" | "failed", paragraflar, … }.
+  /// Taslaktan ayrı sütun: taslak madde kararlarıyla sürekli okunup
+  /// yeniden yazılıyor, ön yazı işi aynı alana yazsaydı eşzamanlı iki yazım
+  /// birbirinin değişikliğini silebilirdi.
+  coverLetter Json?
+
   /// Kabul edilenlerden üretilen nihai sürüm; indirme anında doluyor.
   resumeVersionId String?
   resumeVersion   ResumeVersion? @relation("AdaptedFrom", fields: [resumeVersionId], references: [id])
