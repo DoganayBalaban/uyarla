@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { signIn } from "@/lib/authClient"
+import { girisAdresi } from "@/lib/donus"
 import type { Saglayici } from "@/lib/saglayicilar"
 
 const ETIKET: Record<Saglayici, string> = {
@@ -47,7 +48,15 @@ function SaglayiciIkon({ s }: { s: Saglayici }) {
  * tıklanınca yönlendirmek yerine "yakında" diyor: sunucuya gidip Better
  * Auth'un İngilizce hatasıyla dönmekten iyi.
  */
-export function SosyalGiris({ acik }: { acik: Saglayici[] }) {
+/**
+ * Giriş başarısız olursa dönülecek adres: yine giriş ekranı, ama dönüş
+ * adresini kaybetmeden.
+ */
+export function girisHataAdresi(donus: string): string {
+  return girisAdresi(donus)
+}
+
+export function SosyalGiris({ acik, donus }: { acik: Saglayici[]; donus: string }) {
   const [bekleyen, setBekleyen] = useState<Saglayici | null>(null)
   const [mesaj, setMesaj] = useState<string | null>(null)
 
@@ -60,8 +69,8 @@ export function SosyalGiris({ acik }: { acik: Saglayici[] }) {
     setBekleyen(s)
     const { error } = await signIn.social({
       provider: s,
-      callbackURL: "/analyze",
-      errorCallbackURL: "/login",
+      callbackURL: donus,
+      errorCallbackURL: girisHataAdresi(donus),
     })
     // Başarılıysa tarayıcı sağlayıcıya yönleniyor; buraya yalnızca hata düşer.
     if (error) {
