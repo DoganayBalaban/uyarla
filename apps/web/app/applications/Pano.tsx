@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { girisAdresi } from "@/lib/donus"
 import {
   ASAMALAR,
   ASAMA_ETIKETI,
@@ -83,7 +84,7 @@ export function Pano() {
           analizler hesabına taşınır.
         </p>
         <a
-          href="/login"
+          href={girisAdresi("/applications")}
           className="mt-6 inline-block rounded-buton bg-mavi px-6 py-3 font-semibold text-white no-underline"
         >
           Giriş yap
