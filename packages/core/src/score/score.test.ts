@@ -387,3 +387,156 @@ describe("score · oransal güven (K-23)", () => {
     expect(anlamsal.requirements[0]!.method).toBe("semantic")
   })
 })
+
+describe("score · gereksinim türüne göre kanıt kapsamı (K-36)", () => {
+  const turluGereksinim = (type: Requirement["type"], kavram: string): Requirement => ({
+    text: `${kavram} deneyimi`,
+    type,
+    importance: "must",
+    concepts: [{ term: kavram, synonyms: [kavram] }],
+  })
+
+  const turluKanit = (text: string, kind: Evidence["kind"]): Evidence => ({
+    text,
+    matchText: text,
+    kind,
+    sourceRef: null,
+  })
+
+  it("experience gereksinimi beceri listesi kanıtıyla karşılanmış sayılmaz", () => {
+    // Ölçülen uydurma: "Generative AI ve LLM tabanlı uygulamalar konusunda
+    // PROFESYONEL PROJE GELİŞTİRME deneyimine sahip olmak" gereksinimi, yeni
+    // mezunun beceri listesindeki "Yapay Zeka Araçları" satırıyla 0.7056
+    // benzerlikte eşleşiyordu. Beceri listesi bir iddiadır, deneyim kanıtı
+    // değil.
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([turluGereksinim("experience", "yapay zeka")]),
+      evidence: [turluKanit("Yapay Zeka Araçları", "skill")],
+      evidenceVectors: [V.yakin],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.status).toBe("missing")
+  })
+
+  it("experience gereksinimi madde ve unvan kanıtıyla karşılanır", () => {
+    for (const kind of ["bullet", "role"] as const) {
+      const sonuc = score({
+        profile: PROFILE,
+        posting: ilan([turluGereksinim("experience", "yapay zeka")]),
+        evidence: [turluKanit("Yapay zeka projeleri geliştirdim", kind)],
+        evidenceVectors: [V.yakin],
+        conceptVectors: [V.yakin],
+      })
+      expect(sonuc.requirements[0]!.status).toBe("matched")
+    }
+  })
+
+  it("kısıt yalnızca experience türünde geçerli, skill türünde değil", () => {
+    // Daraltmayı experience dışına taşırmak ölçümde geriye götürüyor: beceri
+    // gereksinimlerinin meşru anlamsal eşleşmelerinin hepsi beceri listesinden
+    // geliyor (K-36).
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([turluGereksinim("skill", "yapay zeka")]),
+      evidence: [turluKanit("Yapay Zeka Araçları", "skill")],
+      evidenceVectors: [V.yakin],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.status).toBe("matched")
+  })
+
+  it("kanıt türü kısıtı kelime eşleşmesinde de geçerli", () => {
+    // Kısıt yalnızca anlamsal katmana konsaydı aynı uydurma kelime
+    // eşleşmesiyle geri gelirdi. Gereksinimin türü kanıtın türünü belirler;
+    // hangi aşamanın bulduğu fark etmez.
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([turluGereksinim("experience", "kubernetes")]),
+      evidence: [turluKanit("Kubernetes", "skill")],
+      evidenceVectors: [V.uzak],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.status).toBe("missing")
+  })
+
+  it("kanıt kapsamı yapılandırmadan okunur", () => {
+    const gevsek = score(
+      {
+        profile: PROFILE,
+        posting: ilan([turluGereksinim("experience", "kubernetes")]),
+        evidence: [turluKanit("Kubernetes", "skill")],
+        evidenceVectors: [V.uzak],
+        conceptVectors: [V.yakin],
+      },
+      {
+        ...DEFAULT_SCORING_CONFIG,
+        evidenceKindsByType: {
+          ...DEFAULT_SCORING_CONFIG.evidenceKindsByType,
+          experience: ["role", "bullet", "skill", "education"],
+        },
+      },
+    )
+
+    expect(gevsek.requirements[0]!.status).toBe("matched")
+  })
+
+  it("kanıt kısıtlanınca vektör hizası kaymaz", () => {
+    // Kanıt listesi filtrelenirken evidenceVectors ile olan index eşlemesi
+    // korunmalı; kayarsa yanlış madde kanıt gösterilir.
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([turluGereksinim("experience", "arayüz")]),
+      evidence: [
+        turluKanit("Yapay Zeka Araçları", "skill"),
+        turluKanit("Panel arayüzü geliştirdim", "bullet"),
+      ],
+      // Beceri kanıtı yakın, madde kanıtı orta: kısıt olmasaydı beceri
+      // seçilirdi.
+      evidenceVectors: [V.yakin, V.orta],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.evidence!.text).toBe("Panel arayüzü geliştirdim")
+  })
+})
+
+describe("score · anlamsal katmanın tür kapsamı (K-36)", () => {
+  it("anlamsal katman yalnızca izinli türlerde devreye girer", () => {
+    // Birikmiş işler #7: anlamsal eşleşmeyi yalnızca soft türünde kullanmak.
+    // Ölçümde reddedildi, ama kapsam yapılandırılabilir kaldı ki değerlendirme
+    // seti büyüdüğünde tarama tekrarlanabilsin.
+    const sadeceSoft = score(
+      {
+        profile: PROFILE,
+        posting: ilan([
+          { ...gereksinim("Takım çalışması", "must", ["uyum"]), type: "soft" },
+          { ...gereksinim("Kubernetes", "must", ["kubernetes"]), type: "skill" },
+        ]),
+        evidence: [kanit("Takım içinde birlikte çalıştım")],
+        evidenceVectors: [V.yakin],
+        conceptVectors: [V.yakin, V.yakin],
+      },
+      { ...DEFAULT_SCORING_CONFIG, semanticTypes: ["soft"] },
+    )
+
+    expect(sadeceSoft.requirements[0]!.status).toBe("matched")
+    expect(sadeceSoft.requirements[0]!.method).toBe("semantic")
+    expect(sadeceSoft.requirements[1]!.status).toBe("missing")
+  })
+
+  it("öntanımlı kapsam bütün türleri içerir", () => {
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([gereksinim("Arayüz", "must", ["arayüz"])]),
+      evidence: [kanit("Panel geliştirdim")],
+      evidenceVectors: [V.yakin],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.method).toBe("semantic")
+  })
+})

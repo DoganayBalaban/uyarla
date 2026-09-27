@@ -16,6 +16,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "eval": "dotenv -e ../../.env -- tsx eval/run.ts",
     "eval:sweep": "dotenv -e ../../.env -- tsx eval/sweep.ts",
+    "eval:kapsam": "dotenv -e ../../.env -- tsx eval/kapsam.ts",
     "eval:prepare": "dotenv -e ../../.env -- tsx eval/prepare.ts",
     "eval:segment": "dotenv -e ../../.env -- tsx eval/karsilastir.ts",
     "eval:adapt": "dotenv -e ../../.env -- tsx eval/uyarla.ts"

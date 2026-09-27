@@ -7,29 +7,25 @@ Sıra önem değil kayıt sırası. Önceliklendirme her sprint başında yapıl
 
 ---
 
-## 1. Kalan 3 uydurma eşleşme
+## 1. Kalan 3 uydurma eşleşme — KISMEN KAPANDI (K-37)
 
 **Kaynak:** K-24, K-25 · değerlendirme taban çizgisi (25 Eylül 2026)
 
-Üçü de yeni mezun CV'sinde ve anlamsal eşleşmeden geliyor:
+**Durum:** Üçten biri kapandı. `experience` türü gereksinimler artık yalnızca
+anlatı kanıtıyla (`role`, `bullet`) karşılanabiliyor; beceri listesi onlar için
+kanıt sayılmıyor. Ölçüm: isabet %91,1 → **%92,9**, uydurma 3 → **2**, kaçırma
+2'de sabit (K-37).
 
-```
-Gereksinim: "Generative AI Yetkinlikleri, OpenAI, Azure OpenAI, Anthropic Claude"
-Kanıt     : "YAPAY ZEKA EĞİTMENİ · Bir Eğitim Vakfı – Teknoloji Atölyesi"
-```
+**Kalan 2 uydurma** ikisi de `skill` türü gereksinim ve ikisi de yeni mezunun
+beceri listesindeki `Yapay Zeka Araçları` satırına düşüyor (0,7056 ve 0,6687).
+Tür kısıtı bunları eleyemiyor: gereksinim gerçekten bir beceri gereksinimi,
+kanıt gerçekten bir beceri kaydı. Eşik de eleyemiyor — uydurmaların benzerliği
+meşru eşleşmelerin bandının tam içinde, en yakın iki komşu arasında 0,0007 var
+(K-37).
 
-Öğrencilere yapay zekâ temelleri anlatmak, üretken yapay zekâ API'leriyle
-profesyonel yetkinlik değil. Ama anlamsal olarak yakın düşüyorlar.
-
-**Neden eşik ayarıyla çözülmez:** Eşik taraması (K-24) gösterdi ki eşiği
-yükseltmek bu üçünü elerken doğru eşleşmeleri de eliyor. Sorun benzerlik
-değerinde değil, gereksinimin **profesyonel deneyim** boyutunun hiç
-değerlendirilmemesinde.
-
-**Olası yön:** Gereksinimin `type` alanı zaten var (`skill` / `experience` /
-`education` / `soft`). `experience` türü gereksinimlerde kanıtın `role` veya
-`bullet` olması aranabilir, `skill` kanıtı yeterli sayılmayabilir.
-Değerlendirme setinde ölçülmeli.
+**Sonraki aday:** madde #15'teki güven tabanı, ya da beceri satırlarının
+"şemsiye terim mi, somut teknoloji mi" ayrımı. İkincisi henüz formüle
+edilmedi.
 
 ---
 
@@ -100,17 +96,25 @@ gerekmiyor. Kayda geçiyor ki ileride bir denetimde şaşırtmasın.
 
 ---
 
-## 7. Anlamsal katmanın kapsamı
+## 7. Anlamsal katmanın kapsamı — KAPANDI (K-37, reddedildi)
 
-**Kaynak:** K-15, K-23, K-24
+**Kaynak:** K-15, K-23, K-24 · **Kapanış:** 27 Eylül 2026
 
-Anlamsal eşleştirme kavram düzeyine indikten sonra 9 eşleşme üretiyor (önce
-sıfırdı). Ama 3 uydurmanın da kaynağı o.
+Hipotez şuydu: anlamsal eşleşmeyi yalnızca `soft` türü gereksinimlerde
+kullanmak. K-15 bu kapıyı açık bırakmıştı.
 
-Denenmemiş bir daraltma: anlamsal eşleşmeyi yalnızca `soft` türü
-gereksinimlerde kullanmak. Teknik terimleri zaten kelime eşleşmesi yakalıyor;
-anlamsal katmanın asıl katkısı "takım çalışmasına yatkın" gibi ifadelerde.
-Değerlendirme setinde ölçülebilir.
+**Ölçüm kapattı.** `pnpm eval:kapsam`: isabet %91,1'den **%85,7'ye** düşüyor,
+kaçırma 2'den 8'e çıkıyor. Sebebi verinin kendisinde — değerlendirme setindeki
+beş ilanda **hiç `soft` türü gereksinim yok**, yani kapsam `soft`'a
+daraltılınca anlamsal katman tümüyle susuyor.
+
+Bulgu, katmanın ne işe yaradığını da söylüyor: yumuşak beceriler değil,
+çapraz dilli ve eş anlamlı teknik eşleşmeler (`Yazılım Mühendisliği` ↔
+`Yazılım Geliştirme`).
+
+`semanticTypes` yapılandırması yerinde duruyor: set büyüdüğünde (#4) tarama
+tekrarlanabilsin diye. `soft` gereksinim içeren bir ilan eklendiğinde bu
+hipotez yeniden ölçülmeye değer.
 
 ## 8 · İki sütunlu CV'lerde metin sırası bozuluyor
 
@@ -245,3 +249,43 @@ bağlantı kullanıldığında siliniyor, yani pencere küçük. Kapatmak için
 `value` üzerinde metin eşleşmesi gerekir — geri alınamaz bir silme işleminde
 bulanık eşleşme istemedik. Bekleyen bağlantıları süresi geçince toplayan ayrı
 bir temizlik adımı doğru yol.
+
+## 15 · Kalan 2 uydurma: şemsiye beceri terimi
+
+**Kaynak:** K-37 · 27 Eylül 2026
+
+K-37 üç uydurmadan birini kapattı. Kalan ikisi de `cv-c__ilan-1` çiftinde,
+ikisi de `skill` türü ve ikisi de yeni mezunun beceri listesindeki tek bir
+satıra düşüyor: **`Yapay Zeka Araçları`**.
+
+```
+"Yapay Zeka Araçları"  ↔  "Generative AI"                 0,7056
+"Yapay Zeka Araçları"  ↔  "Otonom karar mekanizmaları"     0,6687
+```
+
+**Neden K-37'nin tür kısıtı bunları elemiyor:** Gereksinim gerçekten bir
+beceri gereksinimi ve kanıt gerçekten bir beceri kaydı. Tür uyuşuyor; sorun
+kanıtın **belirsizliğinde**. "Yapay Zeka Araçları" bir şemsiye terim ve gömme
+uzayında altındaki her şeye yakın duruyor.
+
+**Neden eşik ayarı da çözmüyor:** K-37'nin ölçtüğü üzere uydurmaların
+benzerliği meşru eşleşmelerin bandının tam içinde — en düşük uydurma (0,6687)
+ile en düşük meşru eşleşme (0,6694) arasında 0,0007 var.
+
+**Aday yönler — hiçbiri ölçülmedi:**
+
+1. **Güven tabanı.** Anlamsal eşleşmenin `confidence` katkısına alt sınır
+   koymak. Bu fikir bu turda gündeme geldi ama ölçümü kayda geçmeden oturum
+   kesildi; **rakamı yok, benimsenmeden önce ölçülmeli.**
+2. **Şemsiye terim tespiti.** Çok sayıda kavrama eşit yakınlıkta duran kanıtı
+   ayırt edici saymamak — bir kanıt her şeye yakınsa hiçbir şeyin kanıtı
+   değildir.
+3. **Kavram özgüllüğü.** İlan kavramı bir ürün/marka adıysa (OpenAI, Azure
+   OpenAI, Anthropic Claude) anlamsal eşleşmeyi kapatmak; marka adları
+   lafzen ya geçer ya geçmez.
+
+Üçü de `pnpm eval:kapsam`'a varyant olarak eklenip ölçülebilir. Altyapı hazır.
+
+**Uyarı:** Bu iki uydurma tek bir CV'deki tek bir satırdan geliyor. Set
+büyümeden (#4, #5) bu kadar dar bir vakaya kural yazmak, o kuralın yalnızca
+bu satır için doğru olması riskini taşıyor.

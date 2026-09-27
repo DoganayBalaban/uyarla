@@ -1,3 +1,6 @@
+import type { Requirement } from "../schemas/job.js"
+import type { Evidence } from "./evidence.js"
+
 /**
  * Skor sabitleri. Tek yerde toplanıyor; değerlendirme setinde (Görev 13)
  * ayarlanacak — koda dağılmıyor (spec §7).
@@ -9,7 +12,32 @@ export interface ScoringConfig {
   niceWeight: number
   /** Bu değerin altındaki kosinüs benzerliği eşleşme sayılmaz. */
   semanticThreshold: number
+  /**
+   * Anlamsal eşleşmenin devreye girdiği gereksinim türleri.
+   *
+   * Yapılandırılabilir olmasının sebebi ölçüm: birikmiş işler #7 "anlamsal
+   * katmanı yalnızca soft türünde kullan" diyordu ve bu kapsam olmadan
+   * hipotez sınanamazdı (K-36). Sınandı, reddedildi — ama set büyüdüğünde
+   * (birikmiş işler #4) tarama tekrarlanabilsin diye kapsam kaldı.
+   */
+  semanticTypes: readonly Requirement["type"][]
+  /**
+   * Her gereksinim türünün kanıt sayabildiği kanıt türleri.
+   *
+   * Gereksinimin türü, onu karşılayabilecek kanıtın türünü sınırlar: bir
+   * *deneyim* gereksinimini beceri listesindeki bir satır karşılamaz, çünkü
+   * beceri listesi bir iddiadır — nerede, ne kadar, hangi rolde kullanıldığını
+   * söylemez (K-36).
+   */
+  evidenceKindsByType: Readonly<Record<Requirement["type"], readonly Evidence["kind"][]>>
 }
+
+const BUTUN_KANIT_TURLERI: readonly Evidence["kind"][] = [
+  "role",
+  "bullet",
+  "skill",
+  "education",
+]
 
 /**
  * Başlangıç değerleri hipotezdir. Eşik bilinçli olarak yüksek: uydurma
@@ -20,4 +48,19 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   mustWeight: 2.0,
   niceWeight: 1.0,
   semanticThreshold: 0.65,
+  // Bütün türler: anlamsal katmanı soft'a daraltmak 10 çiftte isabeti
+  // %91,1'den %85,7'ye düşürüyor (K-36).
+  semanticTypes: ["skill", "experience", "education", "soft"],
+  evidenceKindsByType: {
+    skill: BUTUN_KANIT_TURLERI,
+    // Yalnızca anlatı kanıtı: deneyim gereksinimini beceri listesi ya da
+    // diploma satırı karşılamaz. Ölçümde uydurmayı 3'ten 2'ye indirdi ve
+    // hiçbir meşru eşleşmeyi düşürmedi (K-36).
+    experience: ["role", "bullet"],
+    // Eğitim gereksinimini yalnızca eğitim kanıtına daraltmak ölçümde iki
+    // meşru eşleşmeyi düşürüyor: ilan "Yazılım Mühendisliği" derken CV'nin
+    // beceri satırı "Yazılım Geliştirme" köprüyü kuruyor (K-36).
+    education: BUTUN_KANIT_TURLERI,
+    soft: BUTUN_KANIT_TURLERI,
+  },
 }
