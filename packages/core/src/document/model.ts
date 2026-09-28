@@ -1,3 +1,4 @@
+import { resumeLanguage, type Dil } from "../normalize/language.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 
 export interface DocumentEntry {
@@ -25,12 +26,22 @@ export interface DocumentModel {
   sections: DocumentSection[]
 }
 
+/**
+ * Bölüm başlıkları CV'nin dilinde. Sabit Türkçe başlıklar İngilizce bir
+ * CV'yi "DENEYİM", "BECERİLER" başlıklarıyla indirtiyordu (K-39).
+ */
+const BASLIKLAR: Record<Dil, Record<"deneyim" | "egitim" | "beceriler" | "diller" | "sertifikalar", string>> = {
+  tr: { deneyim: "DENEYİM", egitim: "EĞİTİM", beceriler: "BECERİLER", diller: "DİLLER", sertifikalar: "SERTİFİKALAR" },
+  en: { deneyim: "EXPERIENCE", egitim: "EDUCATION", beceriler: "SKILLS", diller: "LANGUAGES", sertifikalar: "CERTIFICATIONS" },
+}
+
 export function toDocumentModel(profile: ResumeProfile): DocumentModel {
   const sections: DocumentSection[] = []
+  const b = BASLIKLAR[resumeLanguage(profile)]
 
   if (profile.experience.length > 0) {
     sections.push({
-      title: "DENEYİM",
+      title: b.deneyim,
       entries: profile.experience.map((job) => ({
         heading: `${job.title} · ${job.company}`,
         subheading: `${job.startDate} – ${job.endDate}`,
@@ -41,7 +52,7 @@ export function toDocumentModel(profile: ResumeProfile): DocumentModel {
 
   if (profile.education.length > 0) {
     sections.push({
-      title: "EĞİTİM",
+      title: b.egitim,
       entries: profile.education.map((edu) => ({
         heading: [edu.school, edu.degree, edu.field].filter(Boolean).join(" · "),
         // startDate eski profillerde yok (bkz. EducationSchema).
@@ -55,21 +66,21 @@ export function toDocumentModel(profile: ResumeProfile): DocumentModel {
   // ayrıştırıyor ve madde listesi belgeyi gereksiz uzatıyor.
   if (profile.skills.length > 0) {
     sections.push({
-      title: "BECERİLER",
+      title: b.beceriler,
       entries: [{ heading: null, subheading: null, lines: [profile.skills.join(", ")] }],
     })
   }
 
   if (profile.languages.length > 0) {
     sections.push({
-      title: "DİLLER",
+      title: b.diller,
       entries: [{ heading: null, subheading: null, lines: [profile.languages.join(", ")] }],
     })
   }
 
   if (profile.certifications.length > 0) {
     sections.push({
-      title: "SERTİFİKALAR",
+      title: b.sertifikalar,
       entries: [{ heading: null, subheading: null, lines: profile.certifications }],
     })
   }

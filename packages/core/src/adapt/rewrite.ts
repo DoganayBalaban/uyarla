@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ExtractResult, LlmProvider } from "../llm/types.js"
+import type { Dil } from "../normalize/language.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { TermAlignment } from "../schemas/adaptation.js"
 import { toJsonSchema } from "../schemas/toJsonSchema.js"
@@ -42,7 +43,11 @@ export interface BulletTask {
   bullet: string
   /** Modele gösterilecek ilan terimleri (adapt/targets.ts). */
   targets: string[]
+  /** CV'nin dili; yazım bu dilde kalır (K-39). Verilmezse Türkçe. */
+  language?: Dil
 }
+
+const DIL_ADI: Record<Dil, string> = { tr: "Türkçe", en: "İngilizce" }
 
 export interface BulletRewrite {
   text: string
@@ -69,7 +74,11 @@ export async function rewriteBullet(
     prompt: BULLET_PROMPT,
     schemaName: "aligned_bullet",
     schema: bulletJsonSchema,
-    input: `Madde: ${task.bullet}\nİlanın terimleri: ${task.targets.join(", ")}`,
+    input: [
+      `Madde: ${task.bullet}`,
+      `İlanın terimleri: ${task.targets.join(", ")}`,
+      `Dil: ${DIL_ADI[task.language ?? "tr"]}`,
+    ].join("\n"),
   })
   const sonuc = BulletParseSchema.parse(data)
   // Boş dönüş maddeyi silmek anlamına gelirdi; orijinal korunur.
@@ -89,12 +98,15 @@ export async function rewriteSummary(
     posting: JobPostingData
     /** CV'de kelimesi geçen ilan kavramları (supportedConceptTerms). */
     supportedTerms: string[]
+    /** CV'nin dili; özet bu dilde kalır (K-39). Verilmezse Türkçe. */
+    language?: Dil
   },
 ): Promise<ExtractResult<string>> {
   const metin = [
     `Özet: ${input.summary}`,
     `Pozisyon: ${input.posting.position}`,
     `CV'de geçen ve ilanın aradığı kavramlar: ${input.supportedTerms.join(", ") || "—"}`,
+    `Dil: ${DIL_ADI[input.language ?? "tr"]}`,
   ].join("\n")
 
   const { data, tokens } = await llm.extract({

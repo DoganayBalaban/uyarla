@@ -32,8 +32,10 @@ Kesin kurallar:
   %40 azalttım" YAZMA.
 - Terim uyumu dışında kelime değiştirme. "ile" yerine "kullanarak",
   "yaptım" yerine "gerçekleştirdim" gibi eş anlamlı değişiklikler YAPMA.
-- Doğal ve akıcı Türkçe yaz; cümle dil bilgisi açısından eksiksiz olsun.
-  Tek cümle kalsın, maddenin dilinde yaz.
+- Girdideki "Dil" satırında yazan dilde yaz; maddeyi ÇEVİRME. İlan teriminin
+  bu dildeki karşılığını kullan.
+- Doğal ve akıcı yaz; cümle dil bilgisi açısından eksiksiz olsun. Tek cümle
+  kalsın.
 
 Örnek:
 Madde: Satış verilerini Excel'de özetleyip yönetime her hafta sundum.
@@ -63,7 +65,9 @@ Kesin kurallar:
   neden-sonuç ilişkileri kurma.
 - Sayıları DEĞİŞTİRME, SİLME.
 - Listedeki terimleri cümle içinde doğal yazımla kullan ("birim testleri").
-- Birinci tekil şahısla, sade ve akıcı Türkçe yaz. "uzmanı olarak",
-  "tutkulu", "sonuç odaklı" gibi kalıp ve abartılı ifadeler kullanma.
+- Girdideki "Dil" satırında yazan dilde yaz; özeti ÇEVİRME.
+- Birinci tekil şahısla, sade ve akıcı yaz. "uzmanı olarak", "tutkulu",
+  "sonuç odaklı" (İngilizcede "passionate", "results-driven") gibi kalıp ve
+  abartılı ifadeler kullanma.
 - Her cümle dil bilgisi açısından eksiksiz olsun.
 - En fazla üç cümle.`

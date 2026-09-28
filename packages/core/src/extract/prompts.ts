@@ -25,14 +25,20 @@ Her deneyimin altındaki maddeleri bullets dizisine koy.
 sourceRef alanına, o maddenin ham metindeki BİREBİR kopyasını yaz.
 Metni değiştirme, kısaltma veya düzeltme. Bir kelimesini bile değiştirme.
 
+Hiçbir alanı ÇEVİRME. CV İngilizceyse unvan, kurum ve maddeler İngilizce,
+Türkçeyse Türkçe kalsın; text alanı da maddenin özgün dilinde olsun.
+
 Tarihler metinde nasıl yazıldıysa öyle kalsın ("2022-01", "Ocak 2022", "2022").
-Devam eden işler için endDate alanına "halen" yaz.
+Devam eden işlerde bitiş metinde nasıl yazıyorsa öyle kalsın ("halen",
+"Günümüz", "Present"). Hiçbir şey yazmıyorsa CV'nin dilinde yaz: Türkçe CV'de
+"halen", İngilizce CV'de "Present".
 CV'de olmayan hiçbir bilgi ekleme.`
 
 export const EDUCATION_PROMPT = `Sana bir CV'nin eğitim bölümü verilecek.
 Her eğitim kaydı için okul, derece, bölüm, başlangıç yılı ve bitiş yılını çıkar.
 "2017 – 2021" gibi bir aralıkta ilk yıl başlangıç, ikincisi bitiştir.
-Devam eden eğitimde bitiş için "halen" yaz.
+Devam eden eğitimde bitişi metinde yazdığı gibi bırak ("halen", "Present").
+Okul, derece ve bölüm adlarını ÇEVİRME; CV'de hangi dildeyse öyle kalsın.
 Bilgi yoksa null yaz. CV'de olmayan hiçbir bilgi ekleme.`
 
 export const SKILLS_PROMPT = `Sana bir CV'nin beceriler bölümü verilecek.
@@ -64,6 +70,7 @@ Bilinen dilleri ve sertifikaları ayrı dizilere koy.
 Dilleri seviyesiyle birlikte, CV'de yazdığı gibi yaz: "İngilizce (ileri)",
 "Almanca B1". Seviyeyi atma.
 Terim içindeki noktayı koru: "Next.js", "Vue.js", "ASP.NET".
+Hiçbir terimi ÇEVİRME: "English (Fluent)" İngilizce kalsın.
 CV'de olmayan hiçbir şey ekleme.`
 
 export const JOB_PROMPT = `Sana bir iş ilanının metni verilecek.

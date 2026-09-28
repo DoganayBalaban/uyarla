@@ -102,3 +102,23 @@ describe("toDocumentModel", () => {
     expect(bos.name).toBe("Elif Yılmaz")
   })
 })
+
+describe("toDocumentModel · dil", () => {
+  it("İngilizce CV'de bölüm başlıklarını İngilizce yazar", () => {
+    const m = toDocumentModel({
+      ...profil,
+      summary: "Frontend developer with 4 years of experience building web applications.",
+      experience: [
+        {
+          company: "Acme",
+          title: "Frontend Developer",
+          startDate: "2022",
+          endDate: "Present",
+          bullets: [{ text: "Built the dashboard with React and reduced load time by 40%", sourceRef: "Built the dashboard with React and reduced load time by 40%" }],
+        },
+      ],
+    })
+    expect(m.sections.map((s) => s.title)).toContain("EXPERIENCE")
+    expect(m.sections.map((s) => s.title)).not.toContain("DENEYİM")
+  })
+})

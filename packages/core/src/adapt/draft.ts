@@ -1,4 +1,5 @@
 import { cosineSimilarity } from "../llm/embedding.js"
+import { resumeLanguage } from "../normalize/language.js"
 import type { EmbeddingProvider, LlmProvider } from "../llm/types.js"
 import {
   AdaptationDraftSchema,
@@ -66,7 +67,13 @@ export async function buildAdaptationDraft(
     ...maddeler.map((m) => m.original),
     ...kavramMetinleri,
   ])
-  const hedefler = alignmentTargets(
+  // Terim uyumu yalnızca CV ile ilan aynı dildeyse: Türkçe bir ilan
+  // terimini İngilizce bir maddeye yazdırmak çeviri olur, kelime düzeyinde
+  // doğrulanamaz ve adayın CV'sinin dilini bozar (K-39). Özet yazımı
+  // etkilenmiyor; ona verilen terimler CV'nin kendi metninden geliyor.
+  const dil = resumeLanguage(profile)
+  const ayniDil = dil === posting.language
+  const tumHedefler = alignmentTargets(
     {
       bullets: maddeler.map((m) => m.original),
       bulletVectors: hedefVektorleri.slice(0, maddeler.length),
@@ -76,6 +83,7 @@ export async function buildAdaptationDraft(
     },
     input.targetOptions ?? DEFAULT_TARGET_OPTIONS,
   )
+  const hedefler = ayniDil ? tumHedefler : tumHedefler.map(() => [])
 
   // 2. Yazım.
   input.onStage?.("yeniden_yaziliyor")
@@ -86,6 +94,7 @@ export async function buildAdaptationDraft(
       maddeler.map((m, i) => ({
         bullet: m.original,
         targets: hedefler[i]!.map((h) => h.label),
+        language: dil,
       })),
     ),
     profile.summary
@@ -93,6 +102,7 @@ export async function buildAdaptationDraft(
           summary: profile.summary,
           posting,
           supportedTerms: supportedConceptTerms(posting, cvMetni),
+          language: dil,
         })
       : Promise.resolve(null),
   ])
@@ -166,7 +176,11 @@ export async function buildAdaptationDraft(
     // bir denemedir. Uçtan uca testte bu, "…bütçeyi optimize ederek Bütçe
     // yönetimi gerçekleştirdim" gibi reddedilmesi kesin cümleleri kullanıcının
     // önüne koyuyordu (K-38).
-    if (verification.status !== "ok") {
+    //
+    // Doğrulanmış terim uyumu taşımayan değişiklik de önerilmiyor: madde
+    // yazımının tek amacı terim uyumu. Uyumsuz bir değişiklik ya sessiz bir
+    // çeviri ya da eş anlamlı kelime oyunudur (K-38, K-39).
+    if (verification.status !== "ok" || dogrulanan.length === 0) {
       return { ...madde, rewritten: madde.original, verification: TEMIZ, alignments: [], decision: "accepted" }
     }
 
@@ -178,7 +192,7 @@ export async function buildAdaptationDraft(
       // Terim uyumu taşıyan madde onay bekliyor: dayanak kodda doğrulanıyor
       // ama "bu terim deneyimini doğru anlatıyor mu" sorusunu gömme
       // benzerliği yanıtlayamıyor, yanıtı adayın kendisi biliyor (K-38).
-      decision: dogrulanan.length === 0 ? "accepted" : "pending",
+      decision: "pending",
     }
   })
 

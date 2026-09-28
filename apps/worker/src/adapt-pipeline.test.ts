@@ -182,8 +182,9 @@ describe("runAdaptation", () => {
 
     await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
 
-    expect(kayit.draft!.bullets[0]!.rewritten).toBe("React ile paneli geliştirdim")
-    expect(kayit.draft!.bullets[0]!.decision).toBe("accepted")
+    // Birinci madde temiz ama terim uyumu taşımıyor: o da önerilmiyor,
+    // çünkü madde yazımının tek amacı terim uyumu (K-39).
+    expect(kayit.draft!.bullets[0]!.rewritten).toBe("React ile panel yaptım")
     const ikinci = kayit.draft!.bullets[1]!
     expect(ikinci.rewritten).toBe(ikinci.original)
     expect(ikinci.decision).toBe("accepted")
@@ -281,6 +282,37 @@ describe("runAdaptation", () => {
       expect(madde.rewritten).toBe(madde.original)
       expect(madde.decision).toBe("accepted")
     }
+  })
+
+  it("İngilizce CV'yi Türkçe ilana uyarlarken maddeleri çevirmez, özeti İngilizce yazdırır", async () => {
+    // K-39: İngilizce CV Türkçeye çevriliyordu. Diller farklıysa terim uyumu
+    // kapalı (maddeler modele gitmiyor), özet yazımına dil açıkça veriliyor.
+    const { store, kayit } = sahteStore()
+    const ingilizce: ResumeProfile = {
+      ...profil,
+      summary: "Frontend developer with experience in React.",
+      experience: [
+        {
+          company: "Acme",
+          title: "Developer",
+          startDate: "2022",
+          endDate: "Present",
+          bullets: [
+            { text: "Built the admin panel with React", sourceRef: "Built the admin panel with React" },
+            { text: "Reduced load time by 40%", sourceRef: "Reduced load time by 40%" },
+          ],
+        },
+      ],
+    }
+    store.getAdaptationContext = vi.fn(async () => ({ profile: ingilizce, posting: ilan, result: skor }))
+    const llm = yansitanLlm()
+
+    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+
+    const cagrilar = vi.mocked(llm.extract).mock.calls.map((c) => c[0].input)
+    expect(cagrilar.filter((g) => g.startsWith("Madde:"))).toHaveLength(0)
+    expect(cagrilar.find((g) => g.startsWith("Özet:"))).toContain("Dil: İngilizce")
+    for (const madde of kayit.draft!.bullets) expect(madde.rewritten).toBe(madde.original)
   })
 
   it("bir madde patlarsa o madde orijinal kalır, diğerleri etkilenmez", async () => {
