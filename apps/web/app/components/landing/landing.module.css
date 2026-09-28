@@ -1490,3 +1490,12 @@
     gap: 2.5rem;
   }
 }
+
+/* ——— Fotoğraflar ——— */
+
+.foto {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}

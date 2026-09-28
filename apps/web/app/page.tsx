@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { FotoYeri } from "./components/landing/FotoYeri"
 import { Gezinme } from "./components/landing/Gezinme"
 import { Ikon, type IkonAdi } from "./components/landing/Ikon"
@@ -227,11 +228,15 @@ export default function Home() {
             </div>
 
             <div className={s.heroGorsel}>
-              <FotoYeri
+              <Image
                 id="foto-hero"
-                oran="4 / 5"
-                aciklama="Doğal ışıkta dizüstünde CV'sine bakan genç profesyonel, Türkiye'den tanıdık bir mekân"
-                className={s.heroFoto}
+                src="/foto/hero.jpg"
+                alt="Galata Kulesi'ne bakan bir kafede dizüstünde CV'sini inceleyen genç bir yazılımcı"
+                width={1086}
+                height={1358}
+                sizes="(max-width: 900px) 92vw, 520px"
+                priority
+                className={`${s.heroFoto} ${s.foto}`}
               />
               <div className={s.heroKartUst}>
                 <SkorKarti />
