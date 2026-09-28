@@ -36,7 +36,15 @@ export interface DraftInput {
   onStage?: (stage: "yeniden_yaziliyor" | "kontrol_ediliyor") => void
   targetOptions?: TargetOptions
   alignmentConfig?: AlignmentConfig
+  /**
+   * Yazılıp önerilmeyen her madde için çağrılır. Ürün bunu kullanmıyor;
+   * değerlendirme betiği hangi kuralın ne kadar yazım attığını ölçüyor.
+   */
+  onDiscard?: (bulletId: string, reason: DiscardReason) => void
 }
+
+/** Yazımın neden atıldığı: bilgi kaybı, doğrulama uyarısı, uyumsuz değişiklik. */
+export type DiscardReason = "korunmadi" | "uyarili" | "uyumsuz"
 
 const TEMIZ: Verification = { status: "ok", issues: [] }
 
@@ -159,6 +167,7 @@ export async function buildAdaptationDraft(
       bases: dogrulanan.map((d) => d.basis),
     })
     if (!korunuyor.ok) {
+      input.onDiscard?.(madde.id, "korunmadi")
       return { ...madde, rewritten: madde.original, verification: TEMIZ, alignments: [], decision: "accepted" }
     }
 
@@ -181,6 +190,7 @@ export async function buildAdaptationDraft(
     // yazımının tek amacı terim uyumu. Uyumsuz bir değişiklik ya sessiz bir
     // çeviri ya da eş anlamlı kelime oyunudur (K-38, K-39).
     if (verification.status !== "ok" || dogrulanan.length === 0) {
+      input.onDiscard?.(madde.id, verification.status !== "ok" ? "uyarili" : "uyumsuz")
       return { ...madde, rewritten: madde.original, verification: TEMIZ, alignments: [], decision: "accepted" }
     }
 

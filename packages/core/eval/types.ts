@@ -44,28 +44,26 @@ export interface EvalTotals {
   bySemantic: number
 }
 
-/** Bir çiftin uyarlama ölçümü (spec §12). */
+/** Bir çiftin uyarlama ölçümü (spec §12, K-38). */
 export interface AdaptMetrics {
   id: string
   bulletCount: number
-  /** Doğrulamadan uyarıyla dönen madde sayısı. */
-  flaggedCount: number
-  /** Hangi kontrolün kaç kez devreye girdiği. */
-  byKind: Record<string, number>
+  /** CV ile ilan aynı dilde mi; değilse maddelere terim hedefi verilmiyor (K-39). */
+  sameLanguage: boolean
+  /** Modele hedefle gönderilen madde sayısı. */
+  rewrittenCount: number
+  /** Kullanıcıya onay için önerilen madde sayısı. */
+  proposedCount: number
+  /** Yazılıp atılan maddeler, nedene göre (adapt/draft.ts). */
+  discarded: Record<string, number>
+  /** Özet yazımı kabul edildi mi. */
+  summaryAccepted: boolean
+  /** Maddelerden beceri listesine eklenen terimler. */
+  addedSkills: string[]
   scoreBefore: number
-  /** Tüm yeniden yazımlar kabul edilmiş varsayımıyla: uyarlamanın üst sınırı. */
-  scoreAfter: number
-  /**
-   * Yalnızca doğrulamayı geçen maddeler kabul edilmiş varsayımıyla.
-   *
-   * Ürünün gerçek vaadi bu. Üst sınır, kullanıcının reddedeceği uydurma
-   * içerikten gelen kazancı da sayıyor — ilk koşuda bir çift 0'dan 33'e
-   * çıkmıştı ama 8 maddenin 6'sı işaretliydi.
-   */
-  scoreAfterCleanOnly: number
+  /** Yalnızca önerilen maddeler onaylanmış varsayımıyla. */
+  scoreBullets: number
+  /** Önerilen maddeler, özet ve eklenen beceriler: kullanıcının göreceği sonuç. */
+  scoreFull: number
   durationMs: number
-  /** Yeniden yazımı patlayan madde sayısı (spec §13). */
-  failedCount: number
-  /** Modelin maddeyi hiç değiştirmediği durumlar; prompt zayıflığının işareti. */
-  unchangedCount: number
 }
