@@ -139,9 +139,21 @@ export function kavramGeciyor(metin: string, concept: Concept): boolean {
 }
 
 function etiket(concept: Concept): string {
+  const term = dogalYazim(concept.term)
   // Seçenek grubunun terimi zaten üyelerini sayıyor: "Jest / Cypress".
-  if (concept.term.includes(" / ") || concept.synonyms.length === 0) return concept.term
-  return `${concept.term} (${concept.synonyms.join(", ")})`
+  if (concept.term.includes(" / ") || concept.synonyms.length === 0) return term
+  return `${term} (${concept.synonyms.join(", ")})`
+}
+
+/**
+ * Betimleyici terim cümle içinde küçük harfle başlar. İlandaki madde başı
+ * büyük harfi ("Bütçe yönetimi") modele olduğu gibi gidince yazım cümle
+ * ortasında büyük harf taşıyordu (K-38). Özel adlara dokunulmuyor.
+ */
+export function dogalYazim(term: string): string {
+  if (ozelAdMi({ term, synonyms: [] })) return term
+  const [ilk, ...geri] = [...term]
+  return ilk ? ilk.toLocaleLowerCase("tr") + geri.join("") : term
 }
 
 /**
@@ -174,7 +186,7 @@ export function supportedConceptTerms(posting: JobPostingData, cvText: string): 
       // CV'de gerçekten geçen biçim veriliyor, kavramın kanonik adı değil:
       // model yalnızca adayın kendi kelimesini öne çıkarabilsin.
       const uye = [concept.term, ...concept.synonyms].find((t) => containsKeyword(cvText, t))
-      if (uye) terimler.push(uye)
+      if (uye) terimler.push(dogalYazim(uye))
     }
   }
   return [...new Set(terimler)]

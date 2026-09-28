@@ -160,16 +160,25 @@ export async function buildAdaptationDraft(
       allowedTerms: dogrulanan.map((d) => d.concept.term),
     })
 
+    // Uydurma, sayı ya da sapma uyarısı alan yazım da önerilmiyor. K-26'da
+    // uyarılı madde kullanıcıya gösterilip karara bırakılıyordu; ama artık
+    // yalnızca hedefi olan maddeler yazılıyor ve uyarılı bir yazım başarısız
+    // bir denemedir. Uçtan uca testte bu, "…bütçeyi optimize ederek Bütçe
+    // yönetimi gerçekleştirdim" gibi reddedilmesi kesin cümleleri kullanıcının
+    // önüne koyuyordu (K-38).
+    if (verification.status !== "ok") {
+      return { ...madde, rewritten: madde.original, verification: TEMIZ, alignments: [], decision: "accepted" }
+    }
+
     return {
       ...madde,
       rewritten: yeni,
       verification,
       alignments: dogrulanan.map(({ term, basis }) => ({ term, basis })),
-      // K-26: risk tabanlı onay. Uyarı taşıyan madde karar bekliyor. Terim
-      // uyumu taşıyan madde de: dayanak kodda doğrulanıyor ama "bu terim
-      // deneyimini doğru anlatıyor mu" sorusunu gömme benzerliği
-      // yanıtlayamıyor, yanıtı adayın kendisi biliyor (K-38).
-      decision: verification.status === "ok" && dogrulanan.length === 0 ? "accepted" : "pending",
+      // Terim uyumu taşıyan madde onay bekliyor: dayanak kodda doğrulanıyor
+      // ama "bu terim deneyimini doğru anlatıyor mu" sorusunu gömme
+      // benzerliği yanıtlayamıyor, yanıtı adayın kendisi biliyor (K-38).
+      decision: dogrulanan.length === 0 ? "accepted" : "pending",
     }
   })
 

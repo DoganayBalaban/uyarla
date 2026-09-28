@@ -50,7 +50,7 @@ describe("alignmentTargets", () => {
       conceptVectors: [[1, 0], [1, 0], [1, 0]],
       result: sonuc,
     })
-    expect(hedefler!.map((h) => h.label)).toEqual(["Web performansı"])
+    expect(hedefler!.map((h) => h.label)).toEqual(["web performansı"])
   })
 
   it("özel adı, benzerliği ne olursa olsun hedef yapmaz", () => {
@@ -83,7 +83,7 @@ describe("alignmentTargets", () => {
       conceptVectors: [[0.4, 0.9165]],
       result: butceSonuc,
     })
-    expect(hedefler!.map((h) => h.label)).toEqual(["Bütçe yönetimi"])
+    expect(hedefler!.map((h) => h.label)).toEqual(["bütçe yönetimi"])
   })
 
   it("her kavramı yalnızca en yakın maddeye verir", () => {
@@ -94,7 +94,7 @@ describe("alignmentTargets", () => {
       conceptVectors: [[1, 0], [1, 0], [1, 0]],
       result: sonuc,
     })
-    expect(hedefler.map((h) => h.map((x) => x.label))).toEqual([["Web performansı"], []])
+    expect(hedefler.map((h) => h.map((x) => x.label))).toEqual([["web performansı"], []])
   })
 
   it("eşiğin altındaki kavramı vermez", () => {

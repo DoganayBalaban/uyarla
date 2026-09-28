@@ -171,9 +171,10 @@ describe("runAdaptation", () => {
     expect(kayit.draft!.skillOrder).toEqual(["React", "Excel"])
   })
 
-  it("temiz maddeyi accepted, uyarılı maddeyi pending yapar", async () => {
-    // K-26: risk tabanlı onay. Doğrulamayı geçen madde tek tıkla geri
-    // alınır; uyarı taşıyan madde indirmeyi bloklar.
+  it("uyarı alan yazımı önermez, madde olduğu gibi kalır", async () => {
+    // K-38: yalnızca hedefi olan maddeler yazılıyor; uyarılı bir yazım
+    // başarısız bir denemedir ve kullanıcının önüne konmuyor (K-26'nın yerini
+    // alıyor). Burada ikinci madde kaynağında olmayan bir sayı ekliyor.
     const { store, kayit } = sahteStore()
     const llm = sahteLlm((girdi) =>
       girdi.includes("%40") ? "Süreyi %40 düşürdüm, hızı %90 artırdım" : "React ile paneli geliştirdim",
@@ -181,16 +182,12 @@ describe("runAdaptation", () => {
 
     await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
 
+    expect(kayit.draft!.bullets[0]!.rewritten).toBe("React ile paneli geliştirdim")
     expect(kayit.draft!.bullets[0]!.decision).toBe("accepted")
-    expect(kayit.draft!.bullets[1]!.decision).toBe("pending")
-    expect(kayit.draft!.bullets[1]!.verification.issues[0]!.kind).toBe("number_mismatch")
-  })
-
-  it("uyarılı madde varsa durum draft kalır", async () => {
-    const { store, kayit } = sahteStore()
-    const llm = sahteLlm((girdi) => (girdi.includes("%40") ? "Süreyi %40 düşürdüm, hızı %90 artırdım" : "yeni"))
-    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
-    expect(kayit.status).toBe("draft")
+    const ikinci = kayit.draft!.bullets[1]!
+    expect(ikinci.rewritten).toBe(ikinci.original)
+    expect(ikinci.decision).toBe("accepted")
+    expect(kayit.status).toBe("ready")
   })
 
   it("hepsi temizse durum ready olur", async () => {
@@ -203,14 +200,12 @@ describe("runAdaptation", () => {
     expect(kayit.status).toBe("ready")
   })
 
-  it("bir maddeye ilan terimi sızarsa onu pending yapar", async () => {
+  it("bir maddeye ilan terimi sızarsa yazımı önermez", async () => {
     // Uydurmanın en tehlikeli biçimi (spec §7.2): model ilanın istediğini
     // CV'ye yazıveriyor. Burada React, ikinci maddenin kaynağında geçmiyor.
     const { store, kayit } = sahteStore()
     await runAdaptation(
       {
-        // İkinci maddenin sayısı korunuyor; yazım yalnızca kaynağında olmayan
-        // React'i ekliyor.
         llm: sahteLlm((girdi) =>
           girdi.includes("%40") ? "React ile süreyi %40 düşürdüm" : "React ile paneli geliştirdim",
         ),
@@ -221,8 +216,8 @@ describe("runAdaptation", () => {
     )
 
     const ikinci = kayit.draft!.bullets[1]!
-    expect(ikinci.decision).toBe("pending")
-    expect(ikinci.verification.issues.map((i) => i.kind)).toContain("posting_term_injected")
+    expect(ikinci.rewritten).toBe(ikinci.original)
+    expect(ikinci.rewritten).not.toContain("React")
   })
 
   it("dayanağı maddede geçen terim uyumunu kaydeder ve onaya bırakır", async () => {
@@ -253,7 +248,7 @@ describe("runAdaptation", () => {
     expect(ilk.decision).toBe("pending")
   })
 
-  it("dayanağı maddede geçmeyen terimi uydurma sayar", async () => {
+  it("dayanağı maddede geçmeyen terimi uydurma sayar ve yazımı önermez", async () => {
     const { store, kayit } = sahteStore()
     const llm: LlmProvider = {
       extract: vi.fn(async ({ input }) => ({
@@ -270,9 +265,9 @@ describe("runAdaptation", () => {
     await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
 
     const ilk = kayit.draft!.bullets[0]!
+    expect(ilk.rewritten).toBe(ilk.original)
     expect(ilk.alignments).toEqual([])
-    expect(ilk.decision).toBe("pending")
-    expect(ilk.verification.issues.map((i) => i.kind)).toContain("posting_term_injected")
+    expect(ilk.decision).toBe("accepted")
   })
 
   it("kaynaktaki bilgiyi kaybeden yazımı önermez, madde olduğu gibi kalır", async () => {

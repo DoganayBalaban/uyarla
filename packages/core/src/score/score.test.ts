@@ -596,7 +596,11 @@ describe("score · özel adlarda anlamsal eşleşme kapalı (K-38)", () => {
     ]) {
       expect(ozelAdMi({ term, synonyms: [] })).toBe(true)
     }
-    for (const term of ["Web performansı", "birim testleri", "tasarım sistemi", "yapay zeka"]) {
+    for (const term of [
+      "Web performansı", "birim testleri", "tasarım sistemi", "yapay zeka",
+      // Başlık düzeninde Türkçe alan adı: K-37'nin meşru anlamsal eşleşmesi.
+      "Yazılım Mühendisliği",
+    ]) {
       expect(ozelAdMi({ term, synonyms: [] })).toBe(false)
     }
     // Eş anlamlılardan biri betimleyiciyse kavram özel ad sayılmaz.

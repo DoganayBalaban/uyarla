@@ -126,6 +126,11 @@ export function ozelAdMi(concept: { term: string; synonyms: string[] }): boolean
     // Uçtan uca testte "A/B testleri" beceri listesindeki "İçerik
     // Pazarlaması"yla anlamca eşleşmişti (K-38).
     if (kelimeler.some((k) => /[\p{N}/#+]/u.test(k) || /\p{Lu}.*\p{Lu}/u.test(k))) return true
+    // Yalnızca baş harfi büyük kelimelerden oluşan ifade Türkçe harf
+    // taşıyorsa özel ad değil, başlık düzeninde yazılmış bir alan adıdır:
+    // "Yazılım Mühendisliği" ↔ "Yazılım Geliştirme" değerlendirme setindeki
+    // meşru anlamsal eşleşmelerden biri (K-37) ve açık kalmalı.
+    if (/[çğıöşüÇĞİÖŞÜ]/u.test(metin)) return false
     return kelimeler.every((k) => /^[\p{Lu}\p{N}]/u.test(k) || /[.]/u.test(k))
   }
   return [concept.term, ...concept.synonyms].every(ad)
