@@ -306,3 +306,21 @@ ile en düşük meşru eşleşme (0,6694) arasında 0,0007 var.
 **Uyarı:** Bu iki uydurma tek bir CV'deki tek bir satırdan geliyor. Set
 büyümeden (#4, #5) bu kadar dar bir vakaya kural yazmak, o kuralın yalnızca
 bu satır için doğru olması riskini taşıyor.
+
+---
+
+## 16 · CSP satır içi betiğe izin veriyor
+
+**Durum:** Açık · **Öncelik:** Düşük
+
+Güvenlik başlıkları `next.config.mjs`'te. CSP dış kaynaktan betiği, çerçeve
+içine alınmayı, başka adrese form gönderimini ve `<base>` kaçırmayı
+kapatıyor; ama `script-src 'unsafe-inline'` içeriyor, çünkü Next'in hidrasyon
+betikleri satır içi. Tam koruma nonce ister: her istek middleware'den geçer ve
+statik sayfalar dinamik olur. XSS'e karşı asıl savunma şu an React'in
+kaçışlaması; `dangerouslySetInnerHTML` kullanılmıyor.
+
+**Dağıtım notu:** `sitemap.xml`, `robots.txt` ve OG görseli statik üretiliyor
+ve kök adresi `BETTER_AUTH_URL`'den derleme anında alıyor. Üretim derlemesi bu
+değişken doğru adrese ayarlıyken alınmalı; aksi hâlde sitemap
+`localhost:3000`'i gösterir.

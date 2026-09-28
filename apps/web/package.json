@@ -13,6 +13,7 @@
   "dependencies": {
     "@uyarla/core": "workspace:*",
     "@uyarla/db": "workspace:*",
+    "@uyarla/fonts": "workspace:*",
     "@uyarla/worker": "workspace:*",
     "better-auth": "^1.7.6",
     "bullmq": "^5.20.0",

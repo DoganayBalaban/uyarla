@@ -26,6 +26,9 @@ importers:
       '@uyarla/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@uyarla/fonts':
+        specifier: workspace:*
+        version: link:../../packages/fonts
       '@uyarla/worker':
         specifier: workspace:*
         version: link:../worker
