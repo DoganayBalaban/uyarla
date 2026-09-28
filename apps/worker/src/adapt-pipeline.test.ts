@@ -51,6 +51,12 @@ const ilan: JobPostingData = {
       // olamıyor (K-38), maddeler ancak böyle bir hedefle modele gidiyor.
       concepts: [{ term: "konteyner yönetimi", synonyms: [] }],
     },
+    {
+      text: "Süreç iyileştirme deneyimi",
+      type: "skill",
+      importance: "must",
+      concepts: [{ term: "süreç iyileştirme", synonyms: [] }],
+    },
   ],
 }
 
@@ -75,6 +81,15 @@ const skor: ScoreResult = {
       evidence: null,
       matchedConcepts: [],
       missingConcepts: ["konteyner yönetimi"],
+    },
+    {
+      requirement: ilan.requirements[2]!,
+      status: "missing",
+      confidence: 0,
+      method: null,
+      evidence: null,
+      matchedConcepts: [],
+      missingConcepts: ["süreç iyileştirme"],
     },
   ],
 }
@@ -123,8 +138,16 @@ function yansitanLlm(): LlmProvider {
   }
 }
 
-/** Her metne aynı vektörü veren sahte embedding — sapma hep 1.0 çıkar. */
-const sahteEmbedding = { embed: vi.fn(async (t: string[]) => t.map(() => [1, 0])) }
+/**
+ * İki kümeli sahte embedding: "süre" geçen metinler bir yönde, diğerleri
+ * öbür yönde. Böylece "konteyner yönetimi" birinci maddeye, "süreç
+ * iyileştirme" ikinci maddeye en yakın oluyor; her kavram tek maddeye
+ * verildiği için (K-38) iki maddenin de hedefi olması bunu gerektiriyor.
+ * Yazım ile kaynağı aynı kümede kaldığı sürece sapma 1.0 çıkar.
+ */
+const sahteEmbedding = {
+  embed: vi.fn(async (t: string[]) => t.map((m) => (/s[üu]re/i.test(m) ? [0, 1] : [1, 0]))),
+}
 
 describe("runAdaptation", () => {
   it("her madde için bir çağrı yapar ve taslağı kaydeder", async () => {
@@ -153,7 +176,7 @@ describe("runAdaptation", () => {
     // alınır; uyarı taşıyan madde indirmeyi bloklar.
     const { store, kayit } = sahteStore()
     const llm = sahteLlm((girdi) =>
-      girdi.includes("%40") ? "Süreyi %90 düşürdüm" : "React ile paneli geliştirdim",
+      girdi.includes("%40") ? "Süreyi %40 düşürdüm, hızı %90 artırdım" : "React ile paneli geliştirdim",
     )
 
     await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
@@ -165,7 +188,7 @@ describe("runAdaptation", () => {
 
   it("uyarılı madde varsa durum draft kalır", async () => {
     const { store, kayit } = sahteStore()
-    const llm = sahteLlm((girdi) => (girdi.includes("%40") ? "Süreyi %90 düşürdüm" : "yeni"))
+    const llm = sahteLlm((girdi) => (girdi.includes("%40") ? "Süreyi %40 düşürdüm, hızı %90 artırdım" : "yeni"))
     await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
     expect(kayit.status).toBe("draft")
   })
@@ -185,7 +208,15 @@ describe("runAdaptation", () => {
     // CV'ye yazıveriyor. Burada React, ikinci maddenin kaynağında geçmiyor.
     const { store, kayit } = sahteStore()
     await runAdaptation(
-      { llm: sahteLlm(() => "React ile paneli geliştirdim"), embedding: sahteEmbedding, store },
+      {
+        // İkinci maddenin sayısı korunuyor; yazım yalnızca kaynağında olmayan
+        // React'i ekliyor.
+        llm: sahteLlm((girdi) =>
+          girdi.includes("%40") ? "React ile süreyi %40 düşürdüm" : "React ile paneli geliştirdim",
+        ),
+        embedding: sahteEmbedding,
+        store,
+      },
       { adaptationId: "a1" },
     )
 
@@ -242,6 +273,19 @@ describe("runAdaptation", () => {
     expect(ilk.alignments).toEqual([])
     expect(ilk.decision).toBe("pending")
     expect(ilk.verification.issues.map((i) => i.kind)).toContain("posting_term_injected")
+  })
+
+  it("kaynaktaki bilgiyi kaybeden yazımı önermez, madde olduğu gibi kalır", async () => {
+    // K-38: "sayfa yüklenme süresini %40 azalttım" → "web performansı %40
+    // azalttım" gibi anlamı bozan ya da sayıyı düşüren yazımlar gösterilmiyor.
+    const { store, kayit } = sahteStore()
+    const llm = sahteLlm((girdi) => (girdi.includes("%40") ? "Süreyi azalttım" : "Panel yaptım"))
+    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+
+    for (const madde of kayit.draft!.bullets) {
+      expect(madde.rewritten).toBe(madde.original)
+      expect(madde.decision).toBe("accepted")
+    }
   })
 
   it("bir madde patlarsa o madde orijinal kalır, diğerleri etkilenmez", async () => {

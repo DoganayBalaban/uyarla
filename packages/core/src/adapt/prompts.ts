@@ -21,21 +21,27 @@ Böylece işe alım sistemleri adayın gerçek deneyimini tanır.
 
 Kesin kurallar:
 - Bir ilan terimini YALNIZCA maddede aynı şeyi anlatan bir ifade varsa kullan.
+- Maddedeki o ifadeyi SİLME. İlan terimini ifadenin YANINA ekle; ifade olduğu
+  gibi kalsın.
 - Kullandığın her terim için o ifadeyi maddeden BİREBİR kopyala ve "alignments"
   listesine { "term": ilan terimi, "basis": maddedeki ifade } olarak yaz.
 - Maddede karşılığı olmayan terimi KULLANMA. Hiçbir terim uymuyorsa maddeyi
   olduğu gibi döndür ve "alignments" listesini boş bırak.
 - Maddedeki teknoloji adlarının, sayıların ve işin kapsamının HEPSİNİ koru.
+  Sayının neyi ölçtüğünü değiştirme: "süreyi %40 azalttım" ise "performansı
+  %40 azalttım" YAZMA.
 - Terim uyumu dışında kelime değiştirme. "ile" yerine "kullanarak",
   "yaptım" yerine "gerçekleştirdim" gibi eş anlamlı değişiklikler YAPMA.
-- Doğal ve akıcı yaz, tek cümle kalsın, maddenin dilinde yaz.
+- Doğal ve akıcı Türkçe yaz; cümle dil bilgisi açısından eksiksiz olsun.
+  Tek cümle kalsın, maddenin dilinde yaz.
 
 Örnek:
 Madde: Satış verilerini Excel'de özetleyip yönetime her hafta sundum.
 İlanın terimleri: raporlama, Power BI
-Çıktı: { "rewritten": "Satış verilerini Excel'de özetleyip yönetime her hafta raporladım.",
-         "alignments": [{ "term": "raporlama", "basis": "yönetime her hafta sundum" }] }
-(Power BI maddede geçmediği için kullanılmadı.)`
+Çıktı: { "rewritten": "Satış verilerini Excel'de özetleyip yönetime her hafta sunarak düzenli raporlama yaptım.",
+         "alignments": [{ "term": "raporlama", "basis": "yönetime her hafta" }] }
+(Özgün ifade "yönetime her hafta" yerinde duruyor. Power BI maddede geçmediği
+için kullanılmadı.)`
 
 /**
  * Özet yazımı. Kaynak artık yalnızca özet değil CV'nin tamamı: maddelerde
@@ -49,9 +55,14 @@ geçen, ilanın da aradığı kavramlar verilecek.
 özette doğal biçimde öne çıkar.
 
 Kesin kurallar:
+- Özetteki deneyim yılını, unvanı ve alanı KORU; özetin ilk cümlesi adayın kim
+  olduğunu söylemeye devam etsin.
 - Yalnızca özette ve listede olan bilgileri kullan. Listede olmayan hiçbir
   teknoloji, deneyim yılı, unvan veya başarı yazma.
-- Sayıları DEĞİŞTİRME.
+- Ayrı bilgileri birbirine bağlama: "X yaparak Y sağladım" gibi CV'de olmayan
+  neden-sonuç ilişkileri kurma.
+- Sayıları DEĞİŞTİRME, SİLME.
+- Listedeki terimleri cümle içinde doğal yazımla kullan ("birim testleri").
 - Birinci tekil şahısla, sade ve akıcı Türkçe yaz. "uzmanı olarak",
   "tutkulu", "sonuç odaklı" gibi kalıp ve abartılı ifadeler kullanma.
 - Her cümle dil bilgisi açısından eksiksiz olsun.

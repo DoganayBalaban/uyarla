@@ -1,5 +1,5 @@
 import { cosineSimilarity } from "../llm/embedding.js"
-import { containsKeyword } from "../normalize/turkish.js"
+import { containsKeyword, normalizeTokens } from "../normalize/turkish.js"
 import type { Concept, JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { ozelAdMi, type ScoreResult } from "../score/score.js"
@@ -81,27 +81,56 @@ export function alignmentTargets(
   opts: TargetOptions = DEFAULT_TARGET_OPTIONS,
 ): AlignmentTarget[][] {
   const acik = openConcepts(input.posting, input.result)
+    // Özel adlar (GraphQL, Docker, Storybook) hedef olamaz: bir teknolojiyi
+    // kullanıp kullanmadığın yeniden ifadeyle değişmez. Gömme benzerliği
+    // bunu ayırt edemiyor; ölçümde "GraphQL" ile "REST API'lerle
+    // entegrasyon" 0,64 çıktı, "SSR" ile "sunucu tarafı render" 0,54 (K-38).
+    .filter(({ concept }) => !ozelAdMi(concept))
 
-  return input.bullets.map((madde, i) => {
-    const maddeVektoru = input.bulletVectors[i]
-    if (!maddeVektoru) return []
+  // Her kavram yalnızca ona en yakın maddeye veriliyor. Aynı terimi birden
+  // çok maddeye yazdırmak skora bir şey katmıyor, zorlama cümle üretiyordu
+  // ("…ürün sayfalarını geliştirerek web performansı sağladım").
+  const adaylar: Array<{ madde: number; concept: Concept; benzerlik: number }> = []
+  for (const { concept, index } of acik) {
+    const v = input.conceptVectors[index]
+    if (!v) continue
+    let enIyi: { madde: number; benzerlik: number } | null = null
+    input.bullets.forEach((madde, i) => {
+      const mv = input.bulletVectors[i]
+      if (!mv || kavramGeciyor(madde, concept)) return
+      // Tüm madde ile kısa bir kavramı karşılaştırınca gömme sinyali
+      // sulanıyor: "Bütçe yönetimi" ile "aylık 150.000 TL bütçeyi optimize
+      // ettim" yalnızca 0,42 çıktı. Kavramın bir içerik kelimesi maddede
+      // (kök düzeyinde) geçiyorsa aday güçlenir; bu sinyal gömme modelinden
+      // bağımsız (K-38).
+      const benzerlik = cosineSimilarity(mv, v) + (kelimeOrtakMi(madde, concept.term) ? KELIME_BONUSU : 0)
+      if (!enIyi || benzerlik > enIyi.benzerlik) enIyi = { madde: i, benzerlik }
+    })
+    const secilen = enIyi as { madde: number; benzerlik: number } | null
+    if (secilen && secilen.benzerlik >= opts.minSimilarity) adaylar.push({ concept, ...secilen })
+  }
 
-    return acik
-      // Özel adlar (GraphQL, Docker, Storybook) hedef olamaz: bir teknolojiyi
-      // kullanıp kullanmadığın yeniden ifadeyle değişmez. Gömme benzerliği
-      // bunu ayırt edemiyor; ölçümde "GraphQL" ile "REST API'lerle
-      // entegrasyon" 0,64 çıktı, "SSR" ile "sunucu tarafı render" 0,54 (K-38).
-      .filter(({ concept }) => !ozelAdMi(concept))
-      .filter(({ concept }) => !kavramGeciyor(madde, concept))
-      .map(({ concept, index }) => {
-        const v = input.conceptVectors[index]
-        return { concept, benzerlik: v ? cosineSimilarity(maddeVektoru, v) : 0 }
-      })
-      .filter((x) => x.benzerlik >= opts.minSimilarity)
+  return input.bullets.map((_, i) =>
+    adaylar
+      .filter((a) => a.madde === i)
       .sort((a, b) => b.benzerlik - a.benzerlik)
       .slice(0, opts.maxPerBullet)
-      .map(({ concept }) => ({ label: etiket(concept), concept }))
-  })
+      .map(({ concept }) => ({ label: etiket(concept), concept })),
+  )
+}
+
+const KELIME_BONUSU = 0.1
+
+/**
+ * Kavramın en az dört harfli bir kökü maddede geçiyor mu. Önek eşleşmesi:
+ * kaynaştırma harfi kökte kalabiliyor ("bütçeyi" → "bütçey", "bütçe" →
+ * "bütçe").
+ */
+function kelimeOrtakMi(madde: string, terim: string): boolean {
+  const maddeKokleri = normalizeTokens(madde)
+  return normalizeTokens(terim).some(
+    (k) => k.length >= 4 && maddeKokleri.some((m) => m.startsWith(k) || (m.length >= 4 && k.startsWith(m))),
+  )
 }
 
 /** Kavramın terimi ya da eş anlamlılarından biri metinde geçiyor mu. */

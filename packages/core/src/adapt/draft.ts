@@ -10,6 +10,7 @@ import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { conceptTexts, type ScoreResult } from "../score/score.js"
 import { DEFAULT_ALIGNMENT_CONFIG, verifyAlignments, type AlignmentConfig } from "../verify/alignment.js"
+import { preservesSource } from "../verify/preserve.js"
 import { verifyRewrite } from "../verify/verify.js"
 import { bulletId } from "./profile.js"
 import { rewriteBullets, rewriteSummary } from "./rewrite.js"
@@ -138,6 +139,19 @@ export async function buildAdaptationDraft(
       hizalamaCfg,
     )
 
+    // Bilgi kaybeden yazım gösterilmiyor bile: madde olduğu gibi kalıyor.
+    // Kullanıcıya bozuk bir cümle gösterip reddettirmek yerine hiç önermemek
+    // daha dürüst ve daha az yorucu (verify/preserve.ts).
+    const korunuyor = preservesSource({
+      rewritten: yeni,
+      source: madde.sourceRef,
+      posting,
+      bases: dogrulanan.map((d) => d.basis),
+    })
+    if (!korunuyor.ok) {
+      return { ...madde, rewritten: madde.original, verification: TEMIZ, alignments: [], decision: "accepted" }
+    }
+
     const verification = verifyRewrite({
       rewritten: yeni,
       source: madde.sourceRef,
@@ -163,9 +177,16 @@ export async function buildAdaptationDraft(
   // özette öne çıkarmak uydurma değil. Uyarı taşıyorsa reddediliyor; özet
   // indirmeyi bloklamıyor, kullanıcının görmediği metni çıktıya koymaktansa
   // orijinal korunuyor.
-  const ozetYazimi = ozet?.data ?? profile.summary ?? ""
+  //
+  // Özgün özetteki sayıları (deneyim yılı) ve ilan kavramlarını kaybeden
+  // yazım da gösterilmiyor; özet olduğu gibi kalıyor.
+  const ozetKorunuyor =
+    !!profile.summary &&
+    !!ozet &&
+    preservesSource({ rewritten: ozet.data, source: profile.summary, posting }).ok
+  const ozetYazimi = ozetKorunuyor ? ozet!.data : (profile.summary ?? "")
   const ozetDogrulama =
-    profile.summary && ozet
+    profile.summary && ozetKorunuyor
       ? verifyRewrite({ rewritten: ozetYazimi, source: cvMetni, posting })
       : TEMIZ
 

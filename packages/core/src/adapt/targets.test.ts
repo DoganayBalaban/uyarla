@@ -66,6 +66,37 @@ describe("alignmentTargets", () => {
     expect(hedefler).toEqual([])
   })
 
+  it("kavramın kökü maddede geçiyorsa eşiğin biraz altındaki kavramı da verir", () => {
+    const butceIlan: JobPostingData = {
+      ...ilan,
+      requirements: [gereksinim("Bütçe yönetimi", [{ term: "Bütçe yönetimi", synonyms: [] }])],
+    }
+    const butceSonuc: ScoreResult = {
+      ...sonuc,
+      requirements: [{ ...sonuc.requirements[0]!, requirement: butceIlan.requirements[0]!, missingConcepts: ["Bütçe yönetimi"] }],
+    }
+    // cos([1,0],[0.4,0.9165]) ≈ 0.40: tek başına eşiğin altında.
+    const [hedefler] = alignmentTargets({
+      bullets: ["Aylık 150.000 TL bütçeyi optimize ettim"],
+      bulletVectors: [[1, 0]],
+      posting: butceIlan,
+      conceptVectors: [[0.4, 0.9165]],
+      result: butceSonuc,
+    })
+    expect(hedefler!.map((h) => h.label)).toEqual(["Bütçe yönetimi"])
+  })
+
+  it("her kavramı yalnızca en yakın maddeye verir", () => {
+    const hedefler = alignmentTargets({
+      bullets: ["Sayfa yüklenme süresini azalttım", "Ürün sayfaları geliştirdim"],
+      bulletVectors: [[1, 0], [0.8, 0.6]],
+      posting: ilan,
+      conceptVectors: [[1, 0], [1, 0], [1, 0]],
+      result: sonuc,
+    })
+    expect(hedefler.map((h) => h.map((x) => x.label))).toEqual([["Web performansı"], []])
+  })
+
   it("eşiğin altındaki kavramı vermez", () => {
     const [hedefler] = alignmentTargets({
       bullets: maddeler,
