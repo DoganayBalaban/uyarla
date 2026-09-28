@@ -1650,3 +1650,43 @@ indirilen PDF'in tamamı İngilizce kaldı (başlıklar, "Present", "English
 **Açık:** Çapraz dilli eşleşme zayıf: "Takım içinde mentorluk ve kod
 incelemesi" İngilizce CV'deki "Reviewed code… mentored new hires" ile
 eşleşmedi. Birikmiş işler #11'deki çapraz dilli sözlük bu açığı kapatır.
+
+---
+
+## K-40 · Eşikler BGE-M3 ile ölçüldü; uyarlama ölçümü ürünün yolundan geçiyor
+
+**Tarih:** 28 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 3+
+
+**Eşik taraması** (`pnpm eval:sweep`, 10 çift, BGE-M3):
+
+| Eşik | İsabet | Kaçırma | Uydurma |
+|---|---|---|---|
+| 0,60 | %87,5 | 2 | 5 |
+| **0,65** | **%94,6** | **2** | **1** |
+| 0,70 | %92,9 | 4 | 0 |
+
+`semanticThreshold` 0,65'te kalıyor. 0,70 son uydurmayı da siliyor ama iki
+doğru eşleşmeyi kaybettiriyor; CV'de olan bir becerinin "yok" görünmesi daha
+zararlı.
+
+**Uyarlama ölçümü:** `eval:adapt` yazımları kendi yolundan doğruluyordu ve
+ürünün attığı yazımları (bilgi kaybı, uyarı, uyumsuz değişiklik) kabul
+sayıyordu. Artık `buildAdaptationDraft` kullanıyor, model yanıtlarını istek
+özetine göre önbellekliyor ve atılan her yazımı gerekçesiyle raporluyor
+(`--ayrinti`).
+
+**Gerekçe çıktısının bulduğu üç kusur** (Türkçe CV'de 7 yazımın 7'si
+atılıyordu):
+
+- Düzeltme işareti katlanmıyordu: "yapay zekâ" ≠ "yapay zeka".
+  `normalizeText` â/î/û'yu katlıyor.
+- Eğitim şartı madde hedefi olabiliyordu; model deneyim maddesine bölüm adı
+  yazıyordu. `openConcepts` eğitim türünü atlıyor.
+- Dayanağın son fiilinin bağlaca çevrilmesi ("sağladım" → "sağlayarak") ifade
+  kaybı sayılıyordu. Aynı kökten olumlu çekim kabul; kök değişirse ya da fiil
+  olumsuzlanırsa kayıp.
+
+**Ölçüm (Gemma E4B):** önerilen yazım %40 → %58 (Türkçe CV 0/7 → 3/6),
+ortalama skor +1,0 → +1,2, puanlama isabeti %94,6'da kaldı. Kalan 8 atmanın
+hepsi gerçek uydurma (ilandan sayı kopyalama, anlamsız ek, kelime değiştirme);
+kod tarafında kapatılacak bir şey kalmadı, üretim modeliyle yeniden ölçülmeli.
