@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { buildAdaptationDraft, type DiscardReason } from "../src/adapt/draft.js"
+import { buildAdaptationDraft, type Discard } from "../src/adapt/draft.js"
 import { rescore } from "../src/adapt/rescore.js"
 import {
   OpenAiCompatibleEmbeddingProvider,
@@ -44,6 +44,7 @@ import type { AdaptMetrics, EvalPair } from "./types.js"
  * Kullanım:
  *   pnpm eval:adapt              önbellekten ölç, eksik yanıtları üret
  *   pnpm eval:adapt --refresh    bütün yanıtları yenile
+ *   pnpm eval:adapt --ayrinti    atılan her yazımı gerekçesiyle göster
  */
 const KOK = import.meta.dirname
 const CACHE = join(KOK, "cache")
@@ -86,6 +87,7 @@ class OnbellekliLlm implements LlmProvider {
 
 async function main() {
   const tazele = process.argv.includes("--refresh")
+  const ayrinti = process.argv.includes("--ayrinti")
   const llmConfig = llmConfigFromEnv()
   const embedding = new OpenAiCompatibleEmbeddingProvider(embeddingConfigFromEnv())
 
@@ -127,14 +129,16 @@ async function main() {
       tazele,
     )
     const atilan: Record<string, number> = {}
+    const atilanlar: Discard[] = []
     const { draft } = await buildAdaptationDraft({
       llm,
       embedding,
       profile: profil,
       posting: ilan,
       result: sonuc,
-      onDiscard: (_id, neden: DiscardReason) => {
-        atilan[neden] = (atilan[neden] ?? 0) + 1
+      onDiscard: (d) => {
+        atilanlar.push(d)
+        if (d.id !== "ozet") atilan[d.reason] = (atilan[d.reason] ?? 0) + 1
       },
     })
     llm.kaydet()
@@ -168,6 +172,10 @@ async function main() {
         draft.summary.decision === "accepted" &&
         draft.summary.rewritten !== profil.summary,
       addedSkills: draft.addedSkills ?? [],
+      discards: atilanlar.map((d) => ({
+        ...d,
+        original: d.id === "ozet" ? (profil.summary ?? "") : (draft.bullets.find((b) => b.id === d.id)?.original ?? ""),
+      })),
       scoreBefore: sonuc.score,
       scoreBullets: await rescore({ profile: profil, posting: ilan, draft: yalnizMaddeler }, embedding),
       scoreFull: await rescore({ profile: profil, posting: ilan, draft: onayli }, embedding),
@@ -188,6 +196,13 @@ async function main() {
         ` · skor ${m.scoreBefore} → madde ${m.scoreBullets} → tam ${m.scoreFull}` +
         (llm.yeniCagri ? ` · yeni çağrı ${llm.yeniCagri}` : ""),
     )
+    for (const d of m.discards) {
+      console.log(`      ✗ ${d.id} ${d.reason}: ${d.detail}`)
+      if (ayrinti) {
+        console.log(`          önce : ${d.original}`)
+        console.log(`          sonra: ${d.rewritten}`)
+      }
+    }
   }
 
   const topla = (f: (m: AdaptMetrics) => number) => metrics.reduce((t, m) => t + f(m), 0)

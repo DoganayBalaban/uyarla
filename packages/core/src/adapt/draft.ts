@@ -40,7 +40,16 @@ export interface DraftInput {
    * Yazılıp önerilmeyen her madde için çağrılır. Ürün bunu kullanmıyor;
    * değerlendirme betiği hangi kuralın ne kadar yazım attığını ölçüyor.
    */
-  onDiscard?: (bulletId: string, reason: DiscardReason) => void
+  onDiscard?: (discard: Discard) => void
+}
+
+export interface Discard {
+  /** Madde kimliği; özet için "ozet". */
+  id: string
+  reason: DiscardReason
+  /** Kuralın gerekçesi: kaybolan ifade ya da doğrulama uyarıları. */
+  detail: string
+  rewritten: string
 }
 
 /** Yazımın neden atıldığı: bilgi kaybı, doğrulama uyarısı, uyumsuz değişiklik. */
@@ -167,7 +176,7 @@ export async function buildAdaptationDraft(
       bases: dogrulanan.map((d) => d.basis),
     })
     if (!korunuyor.ok) {
-      input.onDiscard?.(madde.id, "korunmadi")
+      input.onDiscard?.({ id: madde.id, reason: "korunmadi", detail: korunuyor.reason, rewritten: yeni })
       return { ...madde, rewritten: madde.original, verification: TEMIZ, alignments: [], decision: "accepted" }
     }
 
@@ -190,7 +199,15 @@ export async function buildAdaptationDraft(
     // yazımının tek amacı terim uyumu. Uyumsuz bir değişiklik ya sessiz bir
     // çeviri ya da eş anlamlı kelime oyunudur (K-38, K-39).
     if (verification.status !== "ok" || dogrulanan.length === 0) {
-      input.onDiscard?.(madde.id, verification.status !== "ok" ? "uyarili" : "uyumsuz")
+      input.onDiscard?.({
+        id: madde.id,
+        reason: verification.status !== "ok" ? "uyarili" : "uyumsuz",
+        detail:
+          verification.status !== "ok"
+            ? verification.issues.map((u) => `${u.kind}: ${u.detail}`).join(" | ")
+            : `doğrulanan uyum yok (iddia: ${maddeIddialari.map((a) => `${a.term} ← ${a.basis}`).join("; ") || "yok"})`,
+        rewritten: yeni,
+      })
       return { ...madde, rewritten: madde.original, verification: TEMIZ, alignments: [], decision: "accepted" }
     }
 
@@ -213,15 +230,27 @@ export async function buildAdaptationDraft(
   //
   // Özgün özetteki sayıları (deneyim yılı) ve ilan kavramlarını kaybeden
   // yazım da gösterilmiyor; özet olduğu gibi kalıyor.
-  const ozetKorunuyor =
-    !!profile.summary &&
-    !!ozet &&
-    preservesSource({ rewritten: ozet.data, source: profile.summary, posting }).ok
+  const ozetKoruma =
+    profile.summary && ozet
+      ? preservesSource({ rewritten: ozet.data, source: profile.summary, posting })
+      : null
+  const ozetKorunuyor = !!ozetKoruma?.ok
+  if (ozet && ozetKoruma && !ozetKoruma.ok) {
+    input.onDiscard?.({ id: "ozet", reason: "korunmadi", detail: ozetKoruma.reason, rewritten: ozet.data })
+  }
   const ozetYazimi = ozetKorunuyor ? ozet!.data : (profile.summary ?? "")
   const ozetDogrulama =
     profile.summary && ozetKorunuyor
       ? verifyRewrite({ rewritten: ozetYazimi, source: cvMetni, posting })
       : TEMIZ
+  if (ozetDogrulama.status !== "ok") {
+    input.onDiscard?.({
+      id: "ozet",
+      reason: "uyarili",
+      detail: ozetDogrulama.issues.map((u) => `${u.kind}: ${u.detail}`).join(" | "),
+      rewritten: ozetYazimi,
+    })
+  }
 
   const eklenenBeceriler = skillsFromBullets(profile, posting)
   const draft = AdaptationDraftSchema.parse({

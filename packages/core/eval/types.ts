@@ -60,6 +60,14 @@ export interface AdaptMetrics {
   summaryAccepted: boolean
   /** Maddelerden beceri listesine eklenen terimler. */
   addedSkills: string[]
+  /** Atılan yazımlar: özgün metin, yazım ve atan kuralın gerekçesi. */
+  discards: Array<{
+    id: string
+    reason: string
+    detail: string
+    original: string
+    rewritten: string
+  }>
   scoreBefore: number
   /** Yalnızca önerilen maddeler onaylanmış varsayımıyla. */
   scoreBullets: number
