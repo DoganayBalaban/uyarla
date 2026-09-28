@@ -1624,3 +1624,29 @@ takıldı ve gösterilmedi. Bu doğru davranış; kazanç üretim modeliyle yeni
   `pnpm eval` ve `pnpm eval:adapt` üzerinden yeniden ölçülmeli.
 - Özel ad sezgisi başlık düzenindeki İngilizce genel ifadelerde ("Project
   Management") anlamsal köprüyü kapatıyor; setle ölçülmeli.
+
+---
+
+## K-39 · CV'nin dili korunur; dil kodda belirlenir
+
+**Tarih:** 28 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 3+
+
+**Bağlam:** İngilizce CV uyarlanırken Türkçeye çevriliyordu. Sebep prompt'larda:
+madde prompt'u hem "Türkçe yaz" hem "maddenin dilinde yaz" diyordu, özet
+prompt'u doğrudan "Türkçe yaz" diyordu. Belge başlıkları (DENEYİM, BECERİLER)
+ve çıkarımın "halen" zorlaması da İngilizce CV'ye Türkçe sızdırıyordu.
+
+**Karar:** Dil kararı modele bırakılmıyor. `detectLanguage` CV'nin dilini
+kodda belirliyor, prompt girdisine açıkça yazılıyor ("Dil: İngilizce") ve
+belge başlıkları ona göre seçiliyor. Çıkarım prompt'ları hiçbir alanı
+çevirmiyor. CV ile ilan farklı dildeyse madde terim uyumu kapalı: Türkçe ilan
+terimini İngilizce maddeye yazdırmak çeviridir ve kelime düzeyinde
+doğrulanamaz. Ön yazı ilanın dilinde kalıyor; o metin şirkete gidiyor.
+
+**Ölçüm:** İngilizce CV + Türkçe ilan, gerçek model. Profil, uyarlanmış özet ve
+indirilen PDF'in tamamı İngilizce kaldı (başlıklar, "Present", "English
+(fluent)", "2017 – 2021").
+
+**Açık:** Çapraz dilli eşleşme zayıf: "Takım içinde mentorluk ve kod
+incelemesi" İngilizce CV'deki "Reviewed code… mentored new hires" ile
+eşleşmedi. Birikmiş işler #11'deki çapraz dilli sözlük bu açığı kapatır.
