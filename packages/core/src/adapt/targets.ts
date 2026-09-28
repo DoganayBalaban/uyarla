@@ -2,7 +2,7 @@ import { cosineSimilarity } from "../llm/embedding.js"
 import { containsKeyword } from "../normalize/turkish.js"
 import type { Concept, JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import type { ScoreResult } from "../score/score.js"
+import { ozelAdMi, type ScoreResult } from "../score/score.js"
 
 /**
  * Terim uyumu (K-38).
@@ -31,9 +31,14 @@ export interface TargetOptions {
   maxPerBullet: number
 }
 
+/**
+ * Uçtan uca ölçümde (qwen3-embedding) maddeye gerçekten yakın betimleyici
+ * kavramlar 0,49–0,50 bandında, zayıf ilgililer 0,40 civarındaydı. Gömme
+ * modeline bağlı bir değer: BGE-M3 ile yeniden ölçülmeli.
+ */
 export const DEFAULT_TARGET_OPTIONS: TargetOptions = {
-  minSimilarity: 0.5,
-  maxPerBullet: 3,
+  minSimilarity: 0.45,
+  maxPerBullet: 2,
 }
 
 /**
@@ -82,6 +87,11 @@ export function alignmentTargets(
     if (!maddeVektoru) return []
 
     return acik
+      // Özel adlar (GraphQL, Docker, Storybook) hedef olamaz: bir teknolojiyi
+      // kullanıp kullanmadığın yeniden ifadeyle değişmez. Gömme benzerliği
+      // bunu ayırt edemiyor; ölçümde "GraphQL" ile "REST API'lerle
+      // entegrasyon" 0,64 çıktı, "SSR" ile "sunucu tarafı render" 0,54 (K-38).
+      .filter(({ concept }) => !ozelAdMi(concept))
       .filter(({ concept }) => !kavramGeciyor(madde, concept))
       .map(({ concept, index }) => {
         const v = input.conceptVectors[index]
@@ -132,8 +142,10 @@ export function supportedConceptTerms(posting: JobPostingData, cvText: string): 
   const terimler: string[] = []
   for (const req of posting.requirements) {
     for (const concept of req.concepts) {
+      // CV'de gerçekten geçen biçim veriliyor, kavramın kanonik adı değil:
+      // model yalnızca adayın kendi kelimesini öne çıkarabilsin.
       const uye = [concept.term, ...concept.synonyms].find((t) => containsKeyword(cvText, t))
-      if (uye) terimler.push(concept.term.includes(" / ") ? uye : concept.term)
+      if (uye) terimler.push(uye)
     }
   }
   return [...new Set(terimler)]

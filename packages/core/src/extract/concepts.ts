@@ -168,8 +168,10 @@ function cumleKavramlari(cumle: string, parantezler: string[]): Concept[] {
     const esler: string[] = []
     const yalin = oge.replace(/\u0000(\d+)\u0000/g, (_, n: string) => {
       const icerik = parantezIcerigi(parantezler[Number(n)] ?? "")
+      // Tek terim kısaltma ya da eş anlamlı ("(SSR)", "(WCAG)"); çok terim
+      // örnek listesi, aşağıda ayrı kavram oluyor.
       if (icerik.length > 1) listeOrnekleri = icerik
-      esler.push(...icerik)
+      else esler.push(...icerik)
       return " "
     })
     const term = temizle(yalin)
@@ -183,21 +185,26 @@ function cumleKavramlari(cumle: string, parantezler: string[]): Concept[] {
   }
 
   ortakBasiDagit(parcalar)
-  if (listeOrnekleri.length > 0) {
-    for (const p of parcalar) {
-      for (const ornek of listeOrnekleri) if (!p.synonyms.includes(ornek)) p.synonyms.push(ornek)
-    }
-  }
 
-  if (secenekli && parcalar.length > 1) {
-    return [
-      {
-        term: parcalar.map((p) => p.term).join(" / "),
-        synonyms: [...new Set(parcalar.flatMap((p) => [p.term, ...p.synonyms]))],
-      },
-    ]
+  const sonuc: Concept[] =
+    secenekli && parcalar.length > 1
+      ? [
+          {
+            term: parcalar.map((p) => p.term).join(" / "),
+            synonyms: [...new Set(parcalar.flatMap((p) => [p.term, ...p.synonyms]))],
+          },
+        ]
+      : parcalar
+
+  // Çok öğeli parantez ("Jest, Playwright veya Cypress") eş anlamlı değil,
+  // örnek araç listesi: ayrı bir seçenek kavramı oluyor. Eş anlamlı sayılsaydı
+  // yalnızca Jest bilen aday "entegrasyon testleri"ni de karşılamış
+  // sayılıyor, özet yazımı da bu terimi kaynağında yokken kullanabiliyordu
+  // (K-38).
+  if (listeOrnekleri.length > 1) {
+    sonuc.push({ term: listeOrnekleri.join(" / "), synonyms: listeOrnekleri })
   }
-  return parcalar
+  return sonuc
 }
 
 /** "Birim ve entegrasyon testleri" → "Birim testleri", "entegrasyon testleri". */

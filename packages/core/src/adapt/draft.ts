@@ -151,9 +151,11 @@ export async function buildAdaptationDraft(
       rewritten: yeni,
       verification,
       alignments: dogrulanan.map(({ term, basis }) => ({ term, basis })),
-      // K-26: risk tabanlı onay. Doğrulamayı geçen madde varsayılan olarak
-      // kabul, uyarı taşıyan madde karar bekliyor.
-      decision: verification.status === "ok" ? "accepted" : "pending",
+      // K-26: risk tabanlı onay. Uyarı taşıyan madde karar bekliyor. Terim
+      // uyumu taşıyan madde de: dayanak kodda doğrulanıyor ama "bu terim
+      // deneyimini doğru anlatıyor mu" sorusunu gömme benzerliği
+      // yanıtlayamıyor, yanıtı adayın kendisi biliyor (K-38).
+      decision: verification.status === "ok" && dogrulanan.length === 0 ? "accepted" : "pending",
     }
   })
 

@@ -1,5 +1,6 @@
 import { containsKeyword, normalizeText } from "../normalize/turkish.js"
 import type { Concept } from "../schemas/job.js"
+import { ozelAdMi } from "../score/score.js"
 import type { TermAlignment } from "../schemas/adaptation.js"
 
 export interface AlignmentConfig {
@@ -8,10 +9,11 @@ export interface AlignmentConfig {
 }
 
 /**
- * Başlangıç değeri. Uçtan uca testte "SSR" ↔ "sunucu tarafı render",
- * "Web performansı" ↔ "sayfa yüklenme süresini %40 azalttım" bu bandın
- * üstünde; "Kubernetes" ↔ "dağıtım yaptım" gibi zorlama bağlar altında
- * kalmalı. Değerlendirme setiyle ayarlanmalı.
+ * Yalnızca kaba bir emniyet. Ölçümde gömme benzerliği dürüst uyumu zorlama
+ * bağdan ayıramadı: "Web performansı" ↔ "sayfa yüklenme süresini %40
+ * azalttım" 0,53, "tasarım sistemi" ↔ "Figma tasarımlarını" 0,57 (zorlama).
+ * Bu yüzden son söz kullanıcıda: terim uyumu taşıyan madde onay bekliyor
+ * (adapt/draft.ts).
  */
 export const DEFAULT_ALIGNMENT_CONFIG: AlignmentConfig = {
   minSimilarity: 0.5,
@@ -49,6 +51,9 @@ export function verifyAlignments(
       ),
     )
     if (!concept) return
+    // Özel ad hiçbir dayanakla hizalanamaz; hedef seçimi de onları
+    // vermiyor, bu ikinci emniyet (bkz. adapt/targets.ts).
+    if (ozelAdMi(concept)) return
     if (!dayanakGecerli(a.basis, input.source)) return
     if ((input.similarities[i] ?? 0) < cfg.minSimilarity) return
     dogrulanan.push({ ...a, concept })

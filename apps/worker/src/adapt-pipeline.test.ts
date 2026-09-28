@@ -44,17 +44,19 @@ const ilan: JobPostingData = {
       concepts: [{ term: "React", synonyms: [] }],
     },
     {
-      text: "Kubernetes deneyimi",
+      text: "Konteyner yönetimi deneyimi",
       type: "skill",
       importance: "must",
-      concepts: [{ term: "Kubernetes", synonyms: [] }],
+      // Betimleyici kavram: özel adlar (Kubernetes gibi) terim uyumu hedefi
+      // olamıyor (K-38), maddeler ancak böyle bir hedefle modele gidiyor.
+      concepts: [{ term: "konteyner yönetimi", synonyms: [] }],
     },
   ],
 }
 
 const skor: ScoreResult = {
   score: 50,
-  missingKeywords: ["Kubernetes"],
+  missingKeywords: ["konteyner yönetimi"],
   requirements: [
     {
       requirement: ilan.requirements[0]!,
@@ -72,7 +74,7 @@ const skor: ScoreResult = {
       method: null,
       evidence: null,
       matchedConcepts: [],
-      missingConcepts: ["Kubernetes"],
+      missingConcepts: ["konteyner yönetimi"],
     },
   ],
 }
@@ -192,9 +194,10 @@ describe("runAdaptation", () => {
     expect(ikinci.verification.issues.map((i) => i.kind)).toContain("posting_term_injected")
   })
 
-  it("dayanağı maddede geçen terim uyumunu kabul eder ve kaydeder", async () => {
+  it("dayanağı maddede geçen terim uyumunu kaydeder ve onaya bırakır", async () => {
     // K-38: model ilan terimini kullandığında dayanağını maddeden birebir
-    // gösteriyor; dayanak kaynakta geçiyorsa uydurma sayılmıyor.
+    // gösteriyor; dayanak kaynakta geçiyorsa uydurma sayılmıyor. Terimin
+    // deneyimi doğru anlatıp anlatmadığına ise kullanıcı karar veriyor.
     const { store, kayit } = sahteStore()
     const llm: LlmProvider = {
       extract: vi.fn(async ({ input }) => {
@@ -203,8 +206,8 @@ describe("runAdaptation", () => {
         }
         return {
           data: {
-            rewritten: "React ve Kubernetes ile panel yaptım",
-            alignments: [{ term: "Kubernetes", basis: "panel yaptım" }],
+            rewritten: "React ile konteyner yönetimi paneli yaptım",
+            alignments: [{ term: "konteyner yönetimi", basis: "panel yaptım" }],
           } as never,
           tokens: 1,
         }
@@ -214,9 +217,9 @@ describe("runAdaptation", () => {
     await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
 
     const ilk = kayit.draft!.bullets[0]!
-    expect(ilk.alignments).toEqual([{ term: "Kubernetes", basis: "panel yaptım" }])
+    expect(ilk.alignments).toEqual([{ term: "konteyner yönetimi", basis: "panel yaptım" }])
     expect(ilk.verification.status).toBe("ok")
-    expect(ilk.decision).toBe("accepted")
+    expect(ilk.decision).toBe("pending")
   })
 
   it("dayanağı maddede geçmeyen terimi uydurma sayar", async () => {
@@ -225,8 +228,8 @@ describe("runAdaptation", () => {
       extract: vi.fn(async ({ input }) => ({
         data: (input.startsWith("Madde: React")
           ? {
-              rewritten: "React ve Kubernetes ile panel yaptım",
-              alignments: [{ term: "Kubernetes", basis: "konteyner yönettim" }],
+              rewritten: "React ile konteyner yönetimi paneli yaptım",
+              alignments: [{ term: "konteyner yönetimi", basis: "sunucu kurdum" }],
             }
           : { rewritten: input.split("\n")[0]!.replace(/^(Madde|Özet): /, ""), alignments: [] }) as never,
         tokens: 1,

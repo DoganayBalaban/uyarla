@@ -265,6 +265,9 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
   const degismeyenler = sirali.filter(({ madde }) => madde.rewritten === madde.original)
   const kararVerilen = degisenler.length - bekleyen
   const eklenenler = new Set(draft.addedSkills ?? [])
+  const onayBekleyenUyum = degisenler.filter(
+    ({ madde }) => madde.decision === "pending" && (madde.alignments?.length ?? 0) > 0,
+  ).length
   const once = durum.scoreBefore ?? 0
   const sonra = durum.scoreAfter ?? 0
   const fark = sonra - once
@@ -292,7 +295,9 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
             <p className="mt-2 text-sm text-gri">
               {fark > 0
                 ? `Deneyimini ilanın terimleriyle anlattık; skorun ${fark} puan arttı. Her değişikliği aşağıda görebilir, istemediğini eski hâline döndürebilirsin.`
-                : sonra === once
+                : onayBekleyenUyum > 0
+                  ? `${onayBekleyenUyum} maddede deneyimini ilanın terimiyle anlattık. Doğru bulduklarını onayladığında skorun güncellenir.`
+                  : sonra === once
                   ? "Skor değişmedi. İlanın aradığı şeylerin CV'nde bir karşılığını bulamadık; olmayan bir deneyimi eklemiyoruz."
                   : "Değişiklikleri aşağıda tek tek görebilir, istemediğini eski hâline döndürebilirsin."}
             </p>
@@ -395,6 +400,13 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
                         ))}
                       </ul>
                     )}
+                    {madde.decision === "pending" &&
+                      madde.verification.status === "ok" &&
+                      (madde.alignments?.length ?? 0) > 0 && (
+                        <p className="mt-3 text-sm font-medium text-metin">
+                          Bu terim deneyimini doğru anlatıyorsa yeni hâlini seç; anlatmıyorsa eski hâli kalsın.
+                        </p>
+                      )}
                   </li>
                 ))}
               </ol>

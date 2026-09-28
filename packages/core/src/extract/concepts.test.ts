@@ -89,10 +89,13 @@ describe("splitIntoConcepts · Türkçe yapılar", () => {
     ])
   })
 
-  it("ortak başı dağıtır ve parantezdeki örnekleri listenin tümüne bağlar", () => {
+  it("ortak başı dağıtır, parantezdeki örnek listesini ayrı seçenek kavramı yapar", () => {
+    // Örnekler eş anlamlı değil: yalnızca Jest bilen aday entegrasyon
+    // testini karşılamış sayılmamalı.
     expect(kavram("Birim ve entegrasyon testleri (Jest, Playwright veya Cypress)")).toEqual([
-      { term: "Birim testleri", synonyms: ["Jest", "Playwright", "Cypress"] },
-      { term: "entegrasyon testleri", synonyms: ["Jest", "Playwright", "Cypress"] },
+      { term: "Birim testleri", synonyms: [] },
+      { term: "entegrasyon testleri", synonyms: [] },
+      { term: "Jest / Playwright / Cypress", synonyms: ["Jest", "Playwright", "Cypress"] },
     ])
   })
 
