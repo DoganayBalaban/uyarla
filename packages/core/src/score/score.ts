@@ -109,6 +109,38 @@ export function score(
   }
 }
 
+/**
+ * Kavram bir özel ad mı: teknoloji, ürün, marka. Her kelimesi büyük harfle
+ * başlıyor ya da rakam/simge taşıyorsa ("GraphQL", "CI/CD", "Next.js",
+ * "Google Analytics 4", "Docker") evet; içinde küçük harfle başlayan bir
+ * kelime varsa ("Web performansı", "birim testleri") hayır. Eş anlamlıların
+ * da hepsi özel ad olmalı: "erişilebilirlik (WCAG)" gibi bir kavram anlamsal
+ * eşleşmeye açık kalıyor.
+ */
+export function ozelAdMi(concept: { term: string; synonyms: string[] }): boolean {
+  const ad = (metin: string) => {
+    const kelimeler = metin.trim().split(/\s+/).filter(Boolean)
+    if (kelimeler.length === 0 || kelimeler.length > 3) return false
+    // Güçlü işaret taşıyan tek bir kelime yeter: simge, rakam ya da birden
+    // çok büyük harf ("A/B testleri", "SQL sorguları", "TikTok reklamları").
+    // Uçtan uca testte "A/B testleri" beceri listesindeki "İçerik
+    // Pazarlaması"yla anlamca eşleşmişti (K-38).
+    if (kelimeler.some((k) => /[\p{N}/#+]/u.test(k) || /\p{Lu}.*\p{Lu}/u.test(k))) return true
+    // Yalnızca baş harfi büyük kelimelerden oluşan ifade Türkçe harf
+    // taşıyorsa özel ad değil, başlık düzeninde yazılmış bir alan adıdır:
+    // "Yazılım Mühendisliği" ↔ "Yazılım Geliştirme" değerlendirme setindeki
+    // meşru anlamsal eşleşmelerden biri (K-37) ve açık kalmalı.
+    if (/[çğıöşüÇĞİÖŞÜ]/u.test(metin)) return false
+    return kelimeler.every((k) => /^[\p{Lu}\p{N}]/u.test(k) || /[.]/u.test(k))
+  }
+  return [concept.term, ...concept.synonyms].every(ad)
+}
+
+/** Kanıt türünün katkı çarpanı; yalnızca özet indirimli (bkz. summaryWeight). */
+function kanitCarpani(kanit: Evidence, cfg: ScoringConfig): number {
+  return kanit.kind === "summary" ? cfg.summaryWeight : 1
+}
+
 function matchRequirement(
   requirement: Requirement,
   conceptVectors: number[][],
@@ -151,31 +183,46 @@ function matchRequirement(
     // matchText kullanılıyor, text değil: text deneyim maddelerinde unvan ön
     // eki taşıyor ve unvana denk gelen bir kelime tüm maddelerle eşleşip
     // kanıt olarak rastgele birini seçtiriyordu (K-13).
+    //
+    // Kanıtlar tam ağırlıklılar önde olacak şekilde sıralı (özet sonda), yani
+    // ilk bulunan aynı zamanda en güçlü olanı.
     const kelimeKaniti = uygunKanitlar.find((item) =>
       aranacaklar.some((terim) => containsKeyword(item.evidence.matchText, terim)),
     )?.evidence
     if (kelimeKaniti) {
       karsilanan.push(concept.term)
-      agirlik += 1
+      agirlik += kanitCarpani(kelimeKaniti, cfg)
       ilkKanit ??= kelimeKaniti
       kelimeVar = true
       continue
     }
 
     // 2. Anlamsal eşleşme — kavram düzeyinde.
+    //
+    // Eşik ham benzerliğe uygulanıyor, sıralama ise katkıya (benzerlik ×
+    // kanıt çarpanı): eşiği geçen bir madde, biraz daha benzer bir özet
+    // cümlesine tercih ediliyor.
+    //
+    // Özel adlarda (teknoloji, ürün, marka) anlamsal eşleşme kapalı: böyle bir
+    // ad CV'de ya geçer ya geçmez. Gömme uzayı teknoloji adlarını birbirine
+    // yakın koyuyor ve uçtan uca testte "GraphQL" beceri listesindeki
+    // "Next.js" ile (0,74), "CI/CD" de "Git" ile (0,71) eşleşti; ikisi de
+    // CV'de olmayan yetkinlikti (K-38, birikmiş işler #15 seçenek 3).
     const vektor = conceptVectors[i]
-    if (vektor && anlamsalAcik) {
-      let enIyi: { similarity: number; evidence: Evidence } | null = null
+    if (vektor && anlamsalAcik && !ozelAdMi(concept)) {
+      let enIyi: { similarity: number; katki: number; evidence: Evidence } | null = null
       for (const { evidence: kanit, vector: kanitVektoru } of uygunKanitlar) {
         if (!kanitVektoru) continue
         const benzerlik = cosineSimilarity(vektor, kanitVektoru)
-        if (!enIyi || benzerlik > enIyi.similarity) {
-          enIyi = { similarity: benzerlik, evidence: kanit }
+        if (benzerlik < cfg.semanticThreshold) continue
+        const katki = benzerlik * kanitCarpani(kanit, cfg)
+        if (!enIyi || katki > enIyi.katki) {
+          enIyi = { similarity: benzerlik, katki, evidence: kanit }
         }
       }
-      if (enIyi && enIyi.similarity >= cfg.semanticThreshold) {
+      if (enIyi) {
         karsilanan.push(concept.term)
-        agirlik += enIyi.similarity
+        agirlik += enIyi.katki
         ilkKanit ??= enIyi.evidence
         anlamsalVar = true
         continue

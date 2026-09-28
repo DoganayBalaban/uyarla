@@ -19,7 +19,7 @@ const profil: ResumeProfile = {
       ],
     },
   ],
-  education: [{ school: "İTÜ", degree: "Lisans", field: "Bilgisayar", endDate: "2021" }],
+  education: [{ school: "İTÜ", degree: "Lisans", field: "Bilgisayar", startDate: null, endDate: "2021" }],
   skills: ["Excel", "React"],
   languages: ["İngilizce"],
   certifications: ["AWS"],

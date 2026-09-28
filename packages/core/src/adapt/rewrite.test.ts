@@ -48,65 +48,98 @@ describe("mustConceptTerms", () => {
   })
 })
 
+/** Hedefli görev: her maddeye bir ilan terimi. */
+const gorev = (bullet: string, targets = ["Web performansı"]) => ({ bullet, targets })
+
 describe("rewriteBullet", () => {
-  it("yeniden yazılmış maddeyi ve token sayısını döndürür", async () => {
-    const llm = sahteLlm("React ile müşteri panelini hayata geçirdim")
-    const sonuc = await rewriteBullet(llm, {
-      bullet: "React ile panel yaptım",
-      posting: ilan,
-    })
-    expect(sonuc.data).toBe("React ile müşteri panelini hayata geçirdim")
+  it("yazılmış maddeyi, uyumları ve token sayısını döndürür", async () => {
+    const llm: LlmProvider = {
+      extract: vi.fn(async () => ({
+        data: {
+          rewritten: "Sayfa yüklenme süresini %40 azaltarak web performansını iyileştirdim",
+          alignments: [{ term: "Web performansı", basis: "sayfa yüklenme süresini" }],
+        } as never,
+        tokens: 12,
+      })),
+    }
+    const sonuc = await rewriteBullet(llm, gorev("Sayfa yüklenme süresini %40 azalttım"))
+    expect(sonuc.data.text).toContain("web performansını")
+    expect(sonuc.data.alignments).toEqual([
+      { term: "Web performansı", basis: "sayfa yüklenme süresini" },
+    ])
     expect(sonuc.tokens).toBe(12)
   })
 
-  it("modele yalnızca o maddeyi verir, ilan kavramlarını vermez", async () => {
-    // Ölçümle karar verildi: kavramlar verildiğinde model onları CV'de
-    // geçmedikleri hâlde maddelere sokuyordu (93 maddenin %63'ü işaretlendi,
-    // 165 uyarının hepsi enjeksiyon) ve dürüst skor kazancı sıfırdı.
+  it("modele yalnızca maddeyi ve o maddenin hedeflerini verir", async () => {
+    // K-29: ilanın bütün kavramları verildiğinde model onları maddelere
+    // sokuyordu. K-38: yalnızca maddeye yakın hedefler veriliyor.
     const llm = sahteLlm("x")
-    await rewriteBullet(llm, { bullet: "Panel geliştirdim", posting: ilan })
+    await rewriteBullet(llm, gorev("Panel geliştirdim", ["arayüz"]))
 
     const cagri = vi.mocked(llm.extract).mock.calls[0]![0]
     expect(cagri.input).toContain("Panel geliştirdim")
-    // İlanda geçen ama maddede geçmeyen hiçbir terim girdiye sızmamalı.
+    expect(cagri.input).toContain("arayüz")
     for (const terim of ["React", "Kubernetes", "Frontend Geliştirici", "Acme"]) {
       expect(cagri.input).not.toContain(terim)
     }
   })
 
+  it("hedefi olmayan maddeyi modele göndermez, olduğu gibi döndürür", async () => {
+    // Hedefsiz yazım yalnızca eş anlamlı kelime değişikliği üretiyordu (K-38).
+    const llm = sahteLlm("değişti")
+    const sonuc = await rewriteBullet(llm, gorev("Panel geliştirdim", []))
+    expect(llm.extract).not.toHaveBeenCalled()
+    expect(sonuc.data).toEqual({ text: "Panel geliştirdim", alignments: [] })
+    expect(sonuc.tokens).toBe(0)
+  })
+
   it("boş dönerse orijinali korur", async () => {
     // Model boş string döndürebiliyor; maddeyi silmek veri kaybı olurdu.
     const llm = sahteLlm("   ")
-    const sonuc = await rewriteBullet(llm, { bullet: "React ile panel yaptım", posting: ilan })
-    expect(sonuc.data).toBe("React ile panel yaptım")
+    const sonuc = await rewriteBullet(llm, gorev("React ile panel yaptım"))
+    expect(sonuc.data.text).toBe("React ile panel yaptım")
+  })
+
+  it("uyum listesini atlayan yanıtı patlatmaz", async () => {
+    const llm = sahteLlm("React ile paneli geliştirdim")
+    const sonuc = await rewriteBullet(llm, gorev("React ile panel yaptım"))
+    expect(sonuc.data.alignments).toEqual([])
   })
 })
 
 describe("rewriteSummary", () => {
   it("özeti yeniden yazar", async () => {
-    const llm = sahteLlm("React odaklı frontend geliştirici")
+    const llm = sahteLlm("React odaklı frontend geliştiriciyim")
     const sonuc = await rewriteSummary(llm, {
       summary: "Frontend geliştirici",
       posting: ilan,
+      supportedTerms: ["React"],
     })
-    expect(sonuc.data).toBe("React odaklı frontend geliştirici")
+    expect(sonuc.data).toBe("React odaklı frontend geliştiriciyim")
   })
 
-  it("modele pozisyon adını da verir", async () => {
+  it("modele pozisyon adını ve CV'de geçen ilan kavramlarını verir", async () => {
     // Özet kullanıcının kendini tanıttığı yer; vurguyu role göre değiştirmek
-    // meşru (spec §6.1).
+    // meşru (spec §6.1). CV'de geçmeyen kavram (Kubernetes) verilmez.
     const llm = sahteLlm("x")
-    await rewriteSummary(llm, { summary: "Frontend geliştirici", posting: ilan })
-    expect(vi.mocked(llm.extract).mock.calls[0]![0].input).toContain("Frontend Geliştirici")
+    await rewriteSummary(llm, {
+      summary: "Frontend geliştirici",
+      posting: ilan,
+      supportedTerms: ["React"],
+    })
+    const girdi = vi.mocked(llm.extract).mock.calls[0]![0].input
+    expect(girdi).toContain("Frontend Geliştirici")
+    expect(girdi).toContain("React")
+    expect(girdi).not.toContain("Kubernetes")
   })
 })
 
 describe("rewriteBullets", () => {
-  it("her madde için ayrı çağrı yapar", async () => {
+  it("hedefi olan her madde için ayrı çağrı yapar", async () => {
     const llm = sahteLlm("yeni")
-    const sonuclar = await rewriteBullets(llm, ["bir", "iki", "üç"], ilan)
-    expect(llm.extract).toHaveBeenCalledTimes(3)
-    expect(sonuclar.map((s) => s?.data)).toEqual(["yeni", "yeni", "yeni"])
+    const sonuclar = await rewriteBullets(llm, [gorev("bir"), gorev("iki", []), gorev("üç")])
+    expect(llm.extract).toHaveBeenCalledTimes(2)
+    expect(sonuclar.map((s) => s?.data.text)).toEqual(["yeni", "iki", "yeni"])
   })
 
   it("bir madde patlarsa yalnızca o madde null olur", async () => {
@@ -120,8 +153,8 @@ describe("rewriteBullets", () => {
         return { data: { rewritten: "yeni" } as never, tokens: 5 }
       }),
     }
-    const sonuclar = await rewriteBullets(llm, ["bir", "iki", "üç"], ilan)
-    expect(sonuclar.map((s) => s?.data ?? null)).toEqual(["yeni", null, "yeni"])
+    const sonuclar = await rewriteBullets(llm, [gorev("bir"), gorev("iki"), gorev("üç")])
+    expect(sonuclar.map((s) => s?.data.text ?? null)).toEqual(["yeni", null, "yeni"])
   })
 
   it("eşzamanlı çağrı sayısını sınırlar ve sırayı korur", async () => {
@@ -140,14 +173,14 @@ describe("rewriteBullets", () => {
       }),
     }
     const maddeler = ["a", "b", "c", "d", "e", "f", "g"]
-    const sonuclar = await rewriteBullets(llm, maddeler, ilan, 3)
+    const sonuclar = await rewriteBullets(llm, maddeler.map((m) => gorev(m)), 3)
     expect(enFazla).toBe(3)
-    expect(sonuclar.map((s) => s?.data)).toEqual(maddeler.map((m) => `${m}!`))
+    expect(sonuclar.map((s) => s?.data.text)).toEqual(maddeler.map((m) => `${m}!`))
   })
 
   it("boş listede çağrı yapmaz", async () => {
     const llm = sahteLlm("yeni")
-    expect(await rewriteBullets(llm, [], ilan)).toEqual([])
+    expect(await rewriteBullets(llm, [])).toEqual([])
     expect(llm.extract).not.toHaveBeenCalled()
   })
 })

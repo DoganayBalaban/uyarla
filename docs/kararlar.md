@@ -1576,3 +1576,77 @@ beceri kaydı. Sonraki adayı birikmiş işler #15'te duruyor.
 `evidenceKindsByType` yapılandırmada duruyor ki set büyüdüğünde (birikmiş
 işler #4) tarama tekrarlanabilsin — `semanticThreshold`'un `eval:sweep` için
 durmasıyla aynı gerekçe.
+
+---
+
+## K-38 · Uçtan uca testin bulguları: kavram bölme, kanıt, terim uyumu
+
+**Tarih:** 28 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 3+
+**Birikmiş işler #10'u kapatır, #15'in 3. seçeneğini uygular.**
+
+**Bağlam:** Uygulama gerçek bileşenlerle (Postgres, Redis, worker, Gemma 4
+E4B) iki kurgusal adayla baştan sona kullanıldı. Değerlendirme seti bu
+ortamda yoktu; bulgular iki ilan ve iki CV'den geliyor ve setle yeniden
+ölçülmeli. Embedding olarak BGE-M3 yerine qwen3-embedding kullanıldı
+(BGE-M3 ortama indirilemedi), yani anlamsal eşikler birebir aynı değil.
+
+### Bulgular ve kararlar
+
+| # | Bulgu | Karar |
+|---|---|---|
+| 1 | Kavram bölücü Türkçe yapıları ayıramıyordu: "TypeScript ile en az 4 yıl profesyonel", "Cypress)" | "ile", "veya" (seçenek), parantez (eş anlamlı ya da örnek listesi), ortak baş, fiil kalıpları ve dolgular tanınıyor |
+| 2 | Noktalı beceriler (Next.js, Vue.js) cümle sanılıp düşüyordu; indirilen CV'de de yoktu | Yalnızca sondaki ya da boşluktan önceki nokta cümle işareti |
+| 3 | Diller bölümü ve özet kanıt sayılmıyordu | İkisi de kanıt; özet 0,75 çarpanlı |
+| 4 | Genel eğitim gereksinimi hiçbir diplomayla eşleşmiyordu | "Üniversite mezunu" kavramına çevriliyor |
+| 5 | Madde yazımı ilansızdı; skor hiç değişmiyordu (25 → 25) | Terim uyumu: maddeye yakın, açık ve betimleyici kavramlar veriliyor; model dayanak gösteriyor, dayanak kodda doğrulanıyor |
+| 6 | Özel adlar anlamca eşleşiyordu: "GraphQL" ↔ "Next.js" 0,74, "CI/CD" ↔ "Git" 0,71 | Özel adlarda anlamsal eşleşme kapalı (#15, 3. seçenek) |
+| 7 | Gömme benzerliği dürüst uyumu zorlamadan ayıramıyor: "GraphQL" ↔ "REST API'lerle entegrasyon" 0,64, "SSR" ↔ "sunucu tarafı render" 0,54 | Özel adlar uyum hedefi olamıyor; terim uyumu taşıyan madde kullanıcı onayı bekliyor |
+| 8 | Model anlamı ters çevirdi ("web performansı %40 azalttım"), özet deneyim yılını düşürdü | Bilgi kaybeden yazım önerilmiyor (#10): dayanak, kaynak kavramları ve sayılar korunmalı |
+| 9 | Uyarılı yazımlar kullanıcıya reddedilmesi kesin cümleler olarak gidiyordu | K-26 değişti: uyarılı madde yazımı önerilmiyor, madde olduğu gibi kalıyor |
+
+### Ölçüm (iki çift, gerçek model)
+
+| | Önce | Sonra |
+|---|---|---|
+| Frontend adayı · analiz | 25 · 4/11 · 2 kaçırma, sahte "eksik" kavramlar | 53 · 6/11 · sahte eşleşme yok |
+| Frontend adayı · uyarlama | 25 → 25 | 53 → 56 (özet + maddelerden eklenen beceri) |
+| Pazarlama adayı · analiz | 25 · 2/7 | 54 · 6/7 |
+| Pazarlama adayı · uyarlama | — | 54 → 54 (özet yıl ve unvanı koruyor) |
+
+Uyarlamanın kazancı küçük kaldı. Sebebi ölçülebilir: Gemma E4B'nin terim uyumu
+denemelerinin çoğu (anlam kaydırma, dayanağı silme) yeni koruma kontrollerine
+takıldı ve gösterilmedi. Bu doğru davranış; kazanç üretim modeliyle yeniden
+ölçülmeli (birikmiş işler #3).
+
+### Açık kalanlar
+
+- Eşikler (`semanticThreshold`, hedef için 0,45, uyum için 0,5) BGE-M3 ile
+  `pnpm eval` ve `pnpm eval:adapt` üzerinden yeniden ölçülmeli.
+- Özel ad sezgisi başlık düzenindeki İngilizce genel ifadelerde ("Project
+  Management") anlamsal köprüyü kapatıyor; setle ölçülmeli.
+
+---
+
+## K-39 · CV'nin dili korunur; dil kodda belirlenir
+
+**Tarih:** 28 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 3+
+
+**Bağlam:** İngilizce CV uyarlanırken Türkçeye çevriliyordu. Sebep prompt'larda:
+madde prompt'u hem "Türkçe yaz" hem "maddenin dilinde yaz" diyordu, özet
+prompt'u doğrudan "Türkçe yaz" diyordu. Belge başlıkları (DENEYİM, BECERİLER)
+ve çıkarımın "halen" zorlaması da İngilizce CV'ye Türkçe sızdırıyordu.
+
+**Karar:** Dil kararı modele bırakılmıyor. `detectLanguage` CV'nin dilini
+kodda belirliyor, prompt girdisine açıkça yazılıyor ("Dil: İngilizce") ve
+belge başlıkları ona göre seçiliyor. Çıkarım prompt'ları hiçbir alanı
+çevirmiyor. CV ile ilan farklı dildeyse madde terim uyumu kapalı: Türkçe ilan
+terimini İngilizce maddeye yazdırmak çeviridir ve kelime düzeyinde
+doğrulanamaz. Ön yazı ilanın dilinde kalıyor; o metin şirkete gidiyor.
+
+**Ölçüm:** İngilizce CV + Türkçe ilan, gerçek model. Profil, uyarlanmış özet ve
+indirilen PDF'in tamamı İngilizce kaldı (başlıklar, "Present", "English
+(fluent)", "2017 – 2021").
+
+**Açık:** Çapraz dilli eşleşme zayıf: "Takım içinde mentorluk ve kod
+incelemesi" İngilizce CV'deki "Reviewed code… mentored new hires" ile
+eşleşmedi. Birikmiş işler #11'deki çapraz dilli sözlük bu açığı kapatır.

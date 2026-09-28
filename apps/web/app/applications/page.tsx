@@ -15,9 +15,9 @@ export default function ApplicationsPage() {
         className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(60%_100%_at_50%_0%,rgb(43_78_255/0.08),transparent)]"
       />
       <OturumCubugu genis />
-      <div className="relative mx-auto max-w-7xl px-4 pt-8 pb-20 sm:px-6 sm:pt-10">
+      <main className="relative mx-auto max-w-7xl px-4 pt-8 pb-20 sm:px-6 sm:pt-10">
         <Pano />
-      </div>
+      </main>
     </div>
   )
 }

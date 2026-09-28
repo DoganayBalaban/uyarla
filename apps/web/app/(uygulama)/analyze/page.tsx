@@ -254,7 +254,10 @@ export default function AnalyzePage() {
       </motion.header>
 
       {(error || state?.status === "failed") && (
-        <div className="mb-6 flex items-start gap-3 rounded-kart border border-kirmizi/30 bg-kirmizi/5 p-4 text-sm">
+        <div
+          role="alert"
+          className="mb-6 flex items-start gap-3 rounded-kart border border-kirmizi/30 bg-kirmizi/5 p-4 text-sm"
+        >
           <TriangleAlert className="mt-0.5 size-4 shrink-0 text-kirmizi" aria-hidden />
           <p className="m-0 text-metin">{error ?? state?.error}</p>
         </div>

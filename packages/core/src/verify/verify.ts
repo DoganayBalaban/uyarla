@@ -42,6 +42,8 @@ export interface VerifyInput {
    * kesin olan ilk iki kontrol yine çalışır.
    */
   vectors?: { rewritten: number[]; source: number[] }
+  /** Dayanağı doğrulanmış kavram terimleri; uydurma sayılmaz (K-38). */
+  allowedTerms?: readonly string[]
 }
 
 /**
@@ -57,7 +59,7 @@ export function verifyRewrite(
 ): Verification {
   const issues = [
     ...checkNumbers(input.rewritten, input.source),
-    ...checkPostingTermInjection(input.rewritten, input.source, input.posting),
+    ...checkPostingTermInjection(input.rewritten, input.source, input.posting, input.allowedTerms),
     ...(input.vectors
       ? checkSemanticDrift(input.vectors.rewritten, input.vectors.source, cfg.driftThreshold)
       : []),

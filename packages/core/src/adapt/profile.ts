@@ -45,7 +45,8 @@ export function applyAdaptation(
         // sourceRef asla değişmez: doğrulamanın tek kaynağı bu.
       })),
     })),
-    skills: sirala(profile.skills, draft.skillOrder),
+    // Eklenen beceriler adayın kendi maddelerinden geliyor (K-38).
+    skills: sirala([...profile.skills, ...(draft.addedSkills ?? [])], draft.skillOrder),
     // Eğitim, diller ve sertifikalar dokunulmadan geçer (spec §6.4).
   }
 }

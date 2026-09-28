@@ -26,7 +26,9 @@ describe("CV profili şeması", () => {
         ],
       },
     ],
-    education: [{ school: "İTÜ", degree: "Lisans", field: "Bilgisayar Müh.", endDate: "2021" }],
+    education: [
+      { school: "İTÜ", degree: "Lisans", field: "Bilgisayar Müh.", startDate: "2017", endDate: "2021" },
+    ],
     skills: ["React", "TypeScript"],
     languages: ["Türkçe", "İngilizce"],
     certifications: [],

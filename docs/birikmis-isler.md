@@ -161,7 +161,12 @@ dağıtıma dahil etmek, (b) fontu alt kümeye indirip base64 olarak bir .ts
 dosyasına gömmek (~40 KB), (c) belge üretimini tümüyle worker'a taşımak.
 Dağıtım kararı verildiğinde seçilecek.
 
-## 10 · Yeniden yazım eşleşen terimi düşürebiliyor
+## 10 · Yeniden yazım eşleşen terimi düşürebiliyor · KAPANDI (K-38)
+
+**Kapanış (28 Eylül 2026):** `verify/preserve.ts` kaynakta geçen ilan
+kavramlarının, sayıların ve terim uyumu dayanağının yazımda korunmasını
+şart koşuyor; tutmazsa yazım önerilmiyor. Uyarı eklemek yerine yazımı
+hiç göstermemek, aşağıdaki yanlış alarm kaygısını da ortadan kaldırıyor.
 
 **Ne:** Dürüst bir yeniden ifade, kaynakta geçen ve ilanla eşleşen bir terimi
 düşürebiliyor. Ölçülen örnek:
@@ -256,7 +261,13 @@ bağlantı kullanıldığında siliniyor, yani pencere küçük. Kapatmak için
 bulanık eşleşme istemedik. Bekleyen bağlantıları süresi geçince toplayan ayrı
 bir temizlik adımı doğru yol.
 
-## 15 · Kalan 2 uydurma: şemsiye beceri terimi
+## 15 · Kalan 2 uydurma: şemsiye beceri terimi · KISMEN (K-38)
+
+**Güncelleme (28 Eylül 2026):** 3. seçenek (kavram özgüllüğü) uygulandı:
+özel adlarda anlamsal eşleşme kapalı. Uçtan uca testte "GraphQL" ↔
+"Next.js" ve "CI/CD" ↔ "Git" sahte eşleşmelerini kapattı. Değerlendirme
+setiyle ölçülmedi; "Yapay Zeka Araçları" vakası (şemsiye terim) için 2.
+seçenek hâlâ açık.
 
 **Kaynak:** K-37 · 27 Eylül 2026
 

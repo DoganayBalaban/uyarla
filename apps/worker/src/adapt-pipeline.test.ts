@@ -44,17 +44,25 @@ const ilan: JobPostingData = {
       concepts: [{ term: "React", synonyms: [] }],
     },
     {
-      text: "Kubernetes deneyimi",
+      text: "Konteyner yönetimi deneyimi",
       type: "skill",
       importance: "must",
-      concepts: [{ term: "Kubernetes", synonyms: [] }],
+      // Betimleyici kavram: özel adlar (Kubernetes gibi) terim uyumu hedefi
+      // olamıyor (K-38), maddeler ancak böyle bir hedefle modele gidiyor.
+      concepts: [{ term: "konteyner yönetimi", synonyms: [] }],
+    },
+    {
+      text: "Süreç iyileştirme deneyimi",
+      type: "skill",
+      importance: "must",
+      concepts: [{ term: "süreç iyileştirme", synonyms: [] }],
     },
   ],
 }
 
 const skor: ScoreResult = {
   score: 50,
-  missingKeywords: ["Kubernetes"],
+  missingKeywords: ["konteyner yönetimi"],
   requirements: [
     {
       requirement: ilan.requirements[0]!,
@@ -72,7 +80,16 @@ const skor: ScoreResult = {
       method: null,
       evidence: null,
       matchedConcepts: [],
-      missingConcepts: ["Kubernetes"],
+      missingConcepts: ["konteyner yönetimi"],
+    },
+    {
+      requirement: ilan.requirements[2]!,
+      status: "missing",
+      confidence: 0,
+      method: null,
+      evidence: null,
+      matchedConcepts: [],
+      missingConcepts: ["süreç iyileştirme"],
     },
   ],
 }
@@ -121,8 +138,16 @@ function yansitanLlm(): LlmProvider {
   }
 }
 
-/** Her metne aynı vektörü veren sahte embedding — sapma hep 1.0 çıkar. */
-const sahteEmbedding = { embed: vi.fn(async (t: string[]) => t.map(() => [1, 0])) }
+/**
+ * İki kümeli sahte embedding: "süre" geçen metinler bir yönde, diğerleri
+ * öbür yönde. Böylece "konteyner yönetimi" birinci maddeye, "süreç
+ * iyileştirme" ikinci maddeye en yakın oluyor; her kavram tek maddeye
+ * verildiği için (K-38) iki maddenin de hedefi olması bunu gerektiriyor.
+ * Yazım ile kaynağı aynı kümede kaldığı sürece sapma 1.0 çıkar.
+ */
+const sahteEmbedding = {
+  embed: vi.fn(async (t: string[]) => t.map((m) => (/s[üu]re/i.test(m) ? [0, 1] : [1, 0]))),
+}
 
 describe("runAdaptation", () => {
   it("her madde için bir çağrı yapar ve taslağı kaydeder", async () => {
@@ -146,26 +171,24 @@ describe("runAdaptation", () => {
     expect(kayit.draft!.skillOrder).toEqual(["React", "Excel"])
   })
 
-  it("temiz maddeyi accepted, uyarılı maddeyi pending yapar", async () => {
-    // K-26: risk tabanlı onay. Doğrulamayı geçen madde tek tıkla geri
-    // alınır; uyarı taşıyan madde indirmeyi bloklar.
+  it("uyarı alan yazımı önermez, madde olduğu gibi kalır", async () => {
+    // K-38: yalnızca hedefi olan maddeler yazılıyor; uyarılı bir yazım
+    // başarısız bir denemedir ve kullanıcının önüne konmuyor (K-26'nın yerini
+    // alıyor). Burada ikinci madde kaynağında olmayan bir sayı ekliyor.
     const { store, kayit } = sahteStore()
     const llm = sahteLlm((girdi) =>
-      girdi.includes("%40") ? "Süreyi %90 düşürdüm" : "React ile paneli geliştirdim",
+      girdi.includes("%40") ? "Süreyi %40 düşürdüm, hızı %90 artırdım" : "React ile paneli geliştirdim",
     )
 
     await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
 
-    expect(kayit.draft!.bullets[0]!.decision).toBe("accepted")
-    expect(kayit.draft!.bullets[1]!.decision).toBe("pending")
-    expect(kayit.draft!.bullets[1]!.verification.issues[0]!.kind).toBe("number_mismatch")
-  })
-
-  it("uyarılı madde varsa durum draft kalır", async () => {
-    const { store, kayit } = sahteStore()
-    const llm = sahteLlm((girdi) => (girdi.includes("%40") ? "Süreyi %90 düşürdüm" : "yeni"))
-    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
-    expect(kayit.status).toBe("draft")
+    // Birinci madde temiz ama terim uyumu taşımıyor: o da önerilmiyor,
+    // çünkü madde yazımının tek amacı terim uyumu (K-39).
+    expect(kayit.draft!.bullets[0]!.rewritten).toBe("React ile panel yaptım")
+    const ikinci = kayit.draft!.bullets[1]!
+    expect(ikinci.rewritten).toBe(ikinci.original)
+    expect(ikinci.decision).toBe("accepted")
+    expect(kayit.status).toBe("ready")
   })
 
   it("hepsi temizse durum ready olur", async () => {
@@ -178,18 +201,118 @@ describe("runAdaptation", () => {
     expect(kayit.status).toBe("ready")
   })
 
-  it("bir maddeye ilan terimi sızarsa onu pending yapar", async () => {
+  it("bir maddeye ilan terimi sızarsa yazımı önermez", async () => {
     // Uydurmanın en tehlikeli biçimi (spec §7.2): model ilanın istediğini
     // CV'ye yazıveriyor. Burada React, ikinci maddenin kaynağında geçmiyor.
     const { store, kayit } = sahteStore()
     await runAdaptation(
-      { llm: sahteLlm(() => "React ile paneli geliştirdim"), embedding: sahteEmbedding, store },
+      {
+        llm: sahteLlm((girdi) =>
+          girdi.includes("%40") ? "React ile süreyi %40 düşürdüm" : "React ile paneli geliştirdim",
+        ),
+        embedding: sahteEmbedding,
+        store,
+      },
       { adaptationId: "a1" },
     )
 
     const ikinci = kayit.draft!.bullets[1]!
-    expect(ikinci.decision).toBe("pending")
-    expect(ikinci.verification.issues.map((i) => i.kind)).toContain("posting_term_injected")
+    expect(ikinci.rewritten).toBe(ikinci.original)
+    expect(ikinci.rewritten).not.toContain("React")
+  })
+
+  it("dayanağı maddede geçen terim uyumunu kaydeder ve onaya bırakır", async () => {
+    // K-38: model ilan terimini kullandığında dayanağını maddeden birebir
+    // gösteriyor; dayanak kaynakta geçiyorsa uydurma sayılmıyor. Terimin
+    // deneyimi doğru anlatıp anlatmadığına ise kullanıcı karar veriyor.
+    const { store, kayit } = sahteStore()
+    const llm: LlmProvider = {
+      extract: vi.fn(async ({ input }) => {
+        if (!input.startsWith("Madde: React")) {
+          return { data: { rewritten: input.split("\n")[0]!.replace(/^(Madde|Özet): /, "") } as never, tokens: 1 }
+        }
+        return {
+          data: {
+            rewritten: "React ile konteyner yönetimi paneli yaptım",
+            alignments: [{ term: "konteyner yönetimi", basis: "panel yaptım" }],
+          } as never,
+          tokens: 1,
+        }
+      }),
+    }
+
+    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+
+    const ilk = kayit.draft!.bullets[0]!
+    expect(ilk.alignments).toEqual([{ term: "konteyner yönetimi", basis: "panel yaptım" }])
+    expect(ilk.verification.status).toBe("ok")
+    expect(ilk.decision).toBe("pending")
+  })
+
+  it("dayanağı maddede geçmeyen terimi uydurma sayar ve yazımı önermez", async () => {
+    const { store, kayit } = sahteStore()
+    const llm: LlmProvider = {
+      extract: vi.fn(async ({ input }) => ({
+        data: (input.startsWith("Madde: React")
+          ? {
+              rewritten: "React ile konteyner yönetimi paneli yaptım",
+              alignments: [{ term: "konteyner yönetimi", basis: "sunucu kurdum" }],
+            }
+          : { rewritten: input.split("\n")[0]!.replace(/^(Madde|Özet): /, ""), alignments: [] }) as never,
+        tokens: 1,
+      })),
+    }
+
+    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+
+    const ilk = kayit.draft!.bullets[0]!
+    expect(ilk.rewritten).toBe(ilk.original)
+    expect(ilk.alignments).toEqual([])
+    expect(ilk.decision).toBe("accepted")
+  })
+
+  it("kaynaktaki bilgiyi kaybeden yazımı önermez, madde olduğu gibi kalır", async () => {
+    // K-38: "sayfa yüklenme süresini %40 azalttım" → "web performansı %40
+    // azalttım" gibi anlamı bozan ya da sayıyı düşüren yazımlar gösterilmiyor.
+    const { store, kayit } = sahteStore()
+    const llm = sahteLlm((girdi) => (girdi.includes("%40") ? "Süreyi azalttım" : "Panel yaptım"))
+    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+
+    for (const madde of kayit.draft!.bullets) {
+      expect(madde.rewritten).toBe(madde.original)
+      expect(madde.decision).toBe("accepted")
+    }
+  })
+
+  it("İngilizce CV'yi Türkçe ilana uyarlarken maddeleri çevirmez, özeti İngilizce yazdırır", async () => {
+    // K-39: İngilizce CV Türkçeye çevriliyordu. Diller farklıysa terim uyumu
+    // kapalı (maddeler modele gitmiyor), özet yazımına dil açıkça veriliyor.
+    const { store, kayit } = sahteStore()
+    const ingilizce: ResumeProfile = {
+      ...profil,
+      summary: "Frontend developer with experience in React.",
+      experience: [
+        {
+          company: "Acme",
+          title: "Developer",
+          startDate: "2022",
+          endDate: "Present",
+          bullets: [
+            { text: "Built the admin panel with React", sourceRef: "Built the admin panel with React" },
+            { text: "Reduced load time by 40%", sourceRef: "Reduced load time by 40%" },
+          ],
+        },
+      ],
+    }
+    store.getAdaptationContext = vi.fn(async () => ({ profile: ingilizce, posting: ilan, result: skor }))
+    const llm = yansitanLlm()
+
+    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+
+    const cagrilar = vi.mocked(llm.extract).mock.calls.map((c) => c[0].input)
+    expect(cagrilar.filter((g) => g.startsWith("Madde:"))).toHaveLength(0)
+    expect(cagrilar.find((g) => g.startsWith("Özet:"))).toContain("Dil: İngilizce")
+    for (const madde of kayit.draft!.bullets) expect(madde.rewritten).toBe(madde.original)
   })
 
   it("bir madde patlarsa o madde orijinal kalır, diğerleri etkilenmez", async () => {

@@ -30,20 +30,29 @@ const ilan: JobPostingData = {
 }
 
 describe("rewriteBullet · gerçek model", () => {
-  it("bir maddeyi yeniden yazar ve doğrulamadan geçer", async () => {
+  it("dayanağı olan terimi kullanır, dayanağı olmayanı kullanmaz", async () => {
     const llm = new LmStudioProvider(llmConfigFromEnv())
     const kaynak = "React ile müşteri panelini geliştirdim ve yüklenme süresini %40 düşürdüm"
 
-    const { data: yeni } = await rewriteBullet(llm, { bullet: kaynak, posting: ilan })
-    const dogrulama = verifyRewrite({ rewritten: yeni, source: kaynak, posting: ilan })
+    const { data } = await rewriteBullet(llm, {
+      bullet: kaynak,
+      targets: ["Web performansı", "Kubernetes"],
+    })
+    const dogrulama = verifyRewrite({
+      rewritten: data.text,
+      source: kaynak,
+      posting: ilan,
+      allowedTerms: data.alignments.map((a) => a.term),
+    })
 
     console.log(`[ölçüm] kaynak: ${kaynak}`)
-    console.log(`[ölçüm] yazım : ${yeni}`)
+    console.log(`[ölçüm] yazım : ${data.text}`)
+    console.log(`[ölçüm] uyum  : ${JSON.stringify(data.alignments)}`)
     console.log(`[ölçüm] uyarı : ${dogrulama.issues.map((i) => i.kind).join(", ") || "yok"}`)
 
-    expect(yeni.length).toBeGreaterThan(0)
-    expect(yeni).not.toBe(kaynak)
-    // CV'de olmayan Kubernetes eklenmemeli.
-    expect(dogrulama.issues.filter((i) => i.kind === "posting_term_injected")).toEqual([])
+    expect(data.text.length).toBeGreaterThan(0)
+    // CV'de karşılığı olmayan Kubernetes eklenmemeli.
+    expect(data.text).not.toMatch(/kubernetes/i)
+    expect(dogrulama.issues.filter((i) => i.kind === "number_mismatch")).toEqual([])
   })
 })

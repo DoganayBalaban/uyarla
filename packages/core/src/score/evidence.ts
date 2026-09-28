@@ -24,7 +24,13 @@ export interface Evidence {
    * eşleştiğinde kullanıcıya unvan gösterilir.
    */
   matchText: string
-  kind: "role" | "bullet" | "skill" | "education"
+  /**
+   * `language` ve `summary` sonradan eklendi (K-38): "İyi derecede İngilizce"
+   * gereksinimi Diller bölümünde "İngilizce (ileri)" yazan adayda eksik
+   * çıkıyordu, "3 yıllık performans pazarlaması deneyimi" özette yazdığı
+   * hâlde görülmüyordu.
+   */
+  kind: "role" | "bullet" | "skill" | "education" | "language" | "summary"
   /** Ham CV metnindeki karşılığı; Sprint 2 uydurma kontrolü için. */
   sourceRef: string | null
 }
@@ -58,5 +64,25 @@ export function collectEvidence(profile: ResumeProfile): Evidence[] {
     evidence.push({ text: metin, matchText: metin, kind: "education", sourceRef: null })
   }
 
+  for (const dil of profile.languages) {
+    evidence.push({ text: dil, matchText: dil, kind: "language", sourceRef: null })
+  }
+
+  // Özet en sonda: kelime eşleşmesi ilk uygun kanıtı aldığı için aynı terim
+  // bir maddede de geçiyorsa kullanıcıya madde gösterilir. Cümle cümle
+  // bölünüyor ki kanıt olarak koca paragraf değil ilgili cümle görünsün.
+  for (const cumle of ozetCumleleri(profile.summary)) {
+    evidence.push({ text: cumle, matchText: cumle, kind: "summary", sourceRef: null })
+  }
+
   return evidence
+}
+
+function ozetCumleleri(ozet: string | null): string[] {
+  if (!ozet) return []
+  return ozet
+    .replace(/\s+/g, " ")
+    .split(/(?<=[.!?])\s+(?=\p{Lu})/u)
+    .map((c) => c.trim())
+    .filter((c) => c.length > 0)
 }

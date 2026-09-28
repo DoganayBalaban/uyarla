@@ -34,7 +34,7 @@ export async function extractJobPosting(
     ...draft,
     requirements: draft.requirements.map((req) => ({
       ...req,
-      concepts: splitIntoConcepts(req.text),
+      concepts: splitIntoConcepts(req.text, req.type),
     })),
   })
 

@@ -1,6 +1,7 @@
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, getSession } from "@/lib/authz"
+import { analizHataMesaji } from "@/lib/hataMesaji"
 import { analyzeQueue } from "@/lib/queue"
 
 export const runtime = "nodejs"
@@ -42,11 +43,14 @@ export async function GET(
       })
     }
 
+    // Sürmekte olan ve düşen işlerde de sahiplik şart: aksi hâlde sıralı iş
+    // kimliğiyle başkasının iş durumu ve hata metni okunabiliyordu (K-38).
+    // Analiz kaydı henüz tamamlanmamış olabileceği için sahip iş verisinden
+    // okunuyor.
+    ensureOwner((job.data as { userId?: string } | undefined)?.userId ?? null, await getSession())
+
     if (state === "failed") {
-      return NextResponse.json({
-        status: "failed",
-        error: job.failedReason ?? "Analiz tamamlanamadı.",
-      })
+      return NextResponse.json({ status: "failed", error: analizHataMesaji(job) })
     }
 
     const progress = job.progress as { stage?: string } | number

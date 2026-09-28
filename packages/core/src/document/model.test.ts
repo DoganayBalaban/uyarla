@@ -18,7 +18,7 @@ const profil: ResumeProfile = {
       ],
     },
   ],
-  education: [{ school: "İTÜ", degree: "Lisans", field: "Bilgisayar", endDate: "2021" }],
+  education: [{ school: "İTÜ", degree: "Lisans", field: "Bilgisayar", startDate: null, endDate: "2021" }],
   skills: ["React", "TypeScript"],
   languages: ["İngilizce (C1)"],
   certifications: ["AWS Cloud Practitioner"],
@@ -68,7 +68,7 @@ describe("toDocumentModel", () => {
   it("eğitimde eksik alanları atlar", () => {
     const m = toDocumentModel({
       ...profil,
-      education: [{ school: "İTÜ", degree: null, field: null, endDate: null }],
+      education: [{ school: "İTÜ", degree: null, field: null, startDate: null, endDate: null }],
     })
     const egitim = m.sections.find((s) => s.title === "EĞİTİM")!
     expect(egitim.entries[0]!.heading).toBe("İTÜ")
@@ -100,5 +100,25 @@ describe("toDocumentModel", () => {
     })
     expect(bos.sections).toEqual([])
     expect(bos.name).toBe("Elif Yılmaz")
+  })
+})
+
+describe("toDocumentModel · dil", () => {
+  it("İngilizce CV'de bölüm başlıklarını İngilizce yazar", () => {
+    const m = toDocumentModel({
+      ...profil,
+      summary: "Frontend developer with 4 years of experience building web applications.",
+      experience: [
+        {
+          company: "Acme",
+          title: "Frontend Developer",
+          startDate: "2022",
+          endDate: "Present",
+          bullets: [{ text: "Built the dashboard with React and reduced load time by 40%", sourceRef: "Built the dashboard with React and reduced load time by 40%" }],
+        },
+      ],
+    })
+    expect(m.sections.map((s) => s.title)).toContain("EXPERIENCE")
+    expect(m.sections.map((s) => s.title)).not.toContain("DENEYİM")
   })
 })

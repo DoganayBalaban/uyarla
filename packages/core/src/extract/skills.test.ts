@@ -148,6 +148,29 @@ describe("flattenSkillLines · gerçek CV'lerden çıkan kirlilikler", () => {
   })
 })
 
+describe("flattenSkillLines · noktalı teknoloji adları", () => {
+  it("Next.js, Vue.js ve ASP.NET'i cümle sanıp atmaz", () => {
+    // K-38: uçtan uca testte bu iki beceri indirilen CV'den kaybolmuştu.
+    expect(
+      flattenSkillLines({
+        lines: [
+          { label: "", items: ["React", "Next.js", "Vue.js", "Node.js", "ASP.NET Core"] },
+        ],
+        languages: [], certifications: [],
+      }),
+    ).toEqual(["React", "Next.js", "Vue.js", "Node.js", "ASP.NET Core"])
+  })
+
+  it("sonu noktalı kısa öğeyi yine cümle sayar", () => {
+    expect(
+      flattenSkillLines({
+        lines: [{ label: "Takım çalışması", items: ["Uyumlu çalışırım."] }],
+        languages: [], certifications: [],
+      }),
+    ).toEqual(["Takım çalışması"])
+  })
+})
+
 describe("flattenSkillLines · cümle sızıntısı", () => {
   it("etiket bir cümleyse beceri saymaz", () => {
     // Bölümlemenin karıştığı CV'lerde deneyim maddeleri beceri bloğuna

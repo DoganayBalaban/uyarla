@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { conceptTexts, score } from "./score.js"
+import { conceptTexts, ozelAdMi, score } from "./score.js"
 import { DEFAULT_SCORING_CONFIG } from "./config.js"
 import type { Evidence } from "./evidence.js"
 import type { ResumeProfile } from "../schemas/resume.js"
@@ -501,6 +501,110 @@ describe("score · gereksinim türüne göre kanıt kapsamı (K-36)", () => {
     })
 
     expect(sonuc.requirements[0]!.evidence!.text).toBe("Panel arayüzü geliştirdim")
+  })
+
+  it("experience gereksinimi özet cümlesiyle indirimli karşılanır", () => {
+    // K-38: "3 yıllık performans pazarlaması deneyimi" özette yazan aday
+    // "En az 3 yıl performans pazarlaması deneyimi" gereksiniminde eksik
+    // görünüyordu.
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([turluGereksinim("experience", "performans pazarlaması")]),
+      evidence: [turluKanit("Performans pazarlamasında 3 yıllık deneyim.", "summary")],
+      evidenceVectors: [V.uzak],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.status).toBe("matched")
+    expect(sonuc.requirements[0]!.confidence).toBe(DEFAULT_SCORING_CONFIG.summaryWeight)
+  })
+
+  it("aynı kavram maddede de geçiyorsa özet yerine madde kanıt olur", () => {
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([turluGereksinim("experience", "kubernetes")]),
+      evidence: [
+        turluKanit("Kubernetes ile dağıtım yaptım", "bullet"),
+        turluKanit("Kubernetes meraklısıyım.", "summary"),
+      ],
+      evidenceVectors: [V.uzak, V.uzak],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.confidence).toBe(1)
+    expect(sonuc.requirements[0]!.evidence!.kind).toBe("bullet")
+  })
+
+  it("anlamsal eşleşmede eşiği geçen madde, biraz daha benzer özete tercih edilir", () => {
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([turluGereksinim("experience", "arayüz")]),
+      evidence: [
+        turluKanit("Kullanıcı deneyimine önem veririm.", "summary"),
+        turluKanit("Panel geliştirdim", "bullet"),
+      ],
+      evidenceVectors: [V.yakin, V.orta],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.evidence!.kind).toBe("bullet")
+  })
+
+  it("dil gereksinimi Diller bölümüyle karşılanır", () => {
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([turluGereksinim("skill", "İngilizce")]),
+      evidence: [turluKanit("İngilizce (ileri)", "language")],
+      evidenceVectors: [V.uzak],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.status).toBe("matched")
+    expect(sonuc.requirements[0]!.confidence).toBe(1)
+  })
+})
+
+describe("score · özel adlarda anlamsal eşleşme kapalı (K-38)", () => {
+  it("teknoloji adı başka bir teknoloji adıyla anlamca eşleşmez", () => {
+    // Uçtan uca testte "GraphQL" beceri listesindeki "Next.js" ile 0,74
+    // benzerlikte eşleşmişti; CV'de GraphQL yoktu.
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([esAnlamliGereksinim("GraphQL ile çalışmış olmak", "must", "GraphQL", [])]),
+      evidence: [{ text: "Next.js", matchText: "Next.js", kind: "skill", sourceRef: null }],
+      evidenceVectors: [V.yakin],
+      conceptVectors: [V.yakin],
+    })
+    expect(sonuc.requirements[0]!.status).toBe("missing")
+  })
+
+  it("betimleyici kavram anlamsal eşleşmeye açık kalır", () => {
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([esAnlamliGereksinim("Web performansı", "must", "Web performansı", [])]),
+      evidence: [kanit("Sayfa yüklenme süresini %40 azalttım")],
+      evidenceVectors: [V.yakin],
+      conceptVectors: [V.yakin],
+    })
+    expect(sonuc.requirements[0]!.method).toBe("semantic")
+  })
+
+  it("özel adı tanır", () => {
+    for (const term of [
+      "GraphQL", "CI/CD", "Next.js", "Google Analytics 4", "Docker", "C#",
+      "A/B testleri", "SQL sorguları", "Google Tag Manager",
+    ]) {
+      expect(ozelAdMi({ term, synonyms: [] })).toBe(true)
+    }
+    for (const term of [
+      "Web performansı", "birim testleri", "tasarım sistemi", "yapay zeka",
+      // Başlık düzeninde Türkçe alan adı: K-37'nin meşru anlamsal eşleşmesi.
+      "Yazılım Mühendisliği",
+    ]) {
+      expect(ozelAdMi({ term, synonyms: [] })).toBe(false)
+    }
+    // Eş anlamlılardan biri betimleyiciyse kavram özel ad sayılmaz.
+    expect(ozelAdMi({ term: "WCAG", synonyms: ["erişilebilirlik"] })).toBe(false)
   })
 })
 
