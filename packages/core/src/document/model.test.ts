@@ -18,7 +18,7 @@ const profil: ResumeProfile = {
       ],
     },
   ],
-  education: [{ school: "İTÜ", degree: "Lisans", field: "Bilgisayar", endDate: "2021" }],
+  education: [{ school: "İTÜ", degree: "Lisans", field: "Bilgisayar", startDate: null, endDate: "2021" }],
   skills: ["React", "TypeScript"],
   languages: ["İngilizce (C1)"],
   certifications: ["AWS Cloud Practitioner"],
@@ -68,7 +68,7 @@ describe("toDocumentModel", () => {
   it("eğitimde eksik alanları atlar", () => {
     const m = toDocumentModel({
       ...profil,
-      education: [{ school: "İTÜ", degree: null, field: null, endDate: null }],
+      education: [{ school: "İTÜ", degree: null, field: null, startDate: null, endDate: null }],
     })
     const egitim = m.sections.find((s) => s.title === "EĞİTİM")!
     expect(egitim.entries[0]!.heading).toBe("İTÜ")

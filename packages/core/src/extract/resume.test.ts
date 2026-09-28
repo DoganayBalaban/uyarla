@@ -41,7 +41,7 @@ const RESPONSES: Record<string, unknown> = {
   },
   resume_education: {
     education: [
-      { school: "İTÜ", degree: null, field: "Bilgisayar Mühendisliği", endDate: "2021" },
+      { school: "İTÜ", degree: null, field: "Bilgisayar Mühendisliği", startDate: null, endDate: "2021" },
     ],
   },
   resume_skills: {

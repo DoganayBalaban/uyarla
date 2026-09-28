@@ -19,7 +19,7 @@ const PROFILE: ResumeProfile = {
     },
   ],
   education: [
-    { school: "İTÜ", degree: "Lisans", field: "Bilgisayar Müh.", endDate: "2021" },
+    { school: "İTÜ", degree: "Lisans", field: "Bilgisayar Müh.", startDate: null, endDate: "2021" },
   ],
   skills: ["React", "TypeScript"],
   languages: ["İngilizce"],
@@ -90,6 +90,24 @@ describe("collectEvidence", () => {
       certifications: [],
     }
     expect(collectEvidence(bos)).toEqual([])
+  })
+
+  it("dilleri kanıt olarak ekler", () => {
+    const diller = collectEvidence(PROFILE).filter((e) => e.kind === "language")
+    expect(diller.map((e) => e.text)).toEqual(["İngilizce"])
+  })
+
+  it("özeti cümle cümle, listenin sonunda kanıt yapar", () => {
+    const kanitlar = collectEvidence({
+      ...PROFILE,
+      summary: "Performans pazarlamasında 3 yıllık deneyim. Veriye dayalı\nkampanya yönetimi yapıyorum.",
+    })
+    const ozet = kanitlar.filter((e) => e.kind === "summary")
+    expect(ozet.map((e) => e.text)).toEqual([
+      "Performans pazarlamasında 3 yıllık deneyim.",
+      "Veriye dayalı kampanya yönetimi yapıyorum.",
+    ])
+    expect(kanitlar.slice(-2)).toEqual(ozet)
   })
 
   it("deneyimi olmayan ama becerisi olan profilde beceri kanıtları kalır", () => {

@@ -192,6 +192,55 @@ describe("runAdaptation", () => {
     expect(ikinci.verification.issues.map((i) => i.kind)).toContain("posting_term_injected")
   })
 
+  it("dayanağı maddede geçen terim uyumunu kabul eder ve kaydeder", async () => {
+    // K-38: model ilan terimini kullandığında dayanağını maddeden birebir
+    // gösteriyor; dayanak kaynakta geçiyorsa uydurma sayılmıyor.
+    const { store, kayit } = sahteStore()
+    const llm: LlmProvider = {
+      extract: vi.fn(async ({ input }) => {
+        if (!input.startsWith("Madde: React")) {
+          return { data: { rewritten: input.split("\n")[0]!.replace(/^(Madde|Özet): /, "") } as never, tokens: 1 }
+        }
+        return {
+          data: {
+            rewritten: "React ve Kubernetes ile panel yaptım",
+            alignments: [{ term: "Kubernetes", basis: "panel yaptım" }],
+          } as never,
+          tokens: 1,
+        }
+      }),
+    }
+
+    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+
+    const ilk = kayit.draft!.bullets[0]!
+    expect(ilk.alignments).toEqual([{ term: "Kubernetes", basis: "panel yaptım" }])
+    expect(ilk.verification.status).toBe("ok")
+    expect(ilk.decision).toBe("accepted")
+  })
+
+  it("dayanağı maddede geçmeyen terimi uydurma sayar", async () => {
+    const { store, kayit } = sahteStore()
+    const llm: LlmProvider = {
+      extract: vi.fn(async ({ input }) => ({
+        data: (input.startsWith("Madde: React")
+          ? {
+              rewritten: "React ve Kubernetes ile panel yaptım",
+              alignments: [{ term: "Kubernetes", basis: "konteyner yönettim" }],
+            }
+          : { rewritten: input.split("\n")[0]!.replace(/^(Madde|Özet): /, ""), alignments: [] }) as never,
+        tokens: 1,
+      })),
+    }
+
+    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+
+    const ilk = kayit.draft!.bullets[0]!
+    expect(ilk.alignments).toEqual([])
+    expect(ilk.decision).toBe("pending")
+    expect(ilk.verification.issues.map((i) => i.kind)).toContain("posting_term_injected")
+  })
+
   it("bir madde patlarsa o madde orijinal kalır, diğerleri etkilenmez", async () => {
     // spec §13: madde başına izolasyon.
     let sayac = 0

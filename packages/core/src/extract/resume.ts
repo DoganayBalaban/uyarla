@@ -113,7 +113,8 @@ export async function extractResumeProfile(
   const profile = ResumeProfileSchema.parse({
     fullName: header.fullName,
     headline: header.headline,
-    summary: stripLeadingHeading(blocks.summaryBlock) || null,
+    // PDF satır sonları cümle ortasında kalıyor; özet düz yazıdır (K-38).
+    summary: stripLeadingHeading(blocks.summaryBlock).replace(/\s*\n\s*/g, " ").trim() || null,
     experience: experience ? ExperienceListSchema.parse(experience.data).experience : [],
     education: education ? EducationListSchema.parse(education.data).education : [],
     ...(skills ? duzlestir(SkillLinesSchema.parse(skills.data)) : BOS_BECERI),

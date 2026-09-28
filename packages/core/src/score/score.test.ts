@@ -502,6 +502,66 @@ describe("score · gereksinim türüne göre kanıt kapsamı (K-36)", () => {
 
     expect(sonuc.requirements[0]!.evidence!.text).toBe("Panel arayüzü geliştirdim")
   })
+
+  it("experience gereksinimi özet cümlesiyle indirimli karşılanır", () => {
+    // K-38: "3 yıllık performans pazarlaması deneyimi" özette yazan aday
+    // "En az 3 yıl performans pazarlaması deneyimi" gereksiniminde eksik
+    // görünüyordu.
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([turluGereksinim("experience", "performans pazarlaması")]),
+      evidence: [turluKanit("Performans pazarlamasında 3 yıllık deneyim.", "summary")],
+      evidenceVectors: [V.uzak],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.status).toBe("matched")
+    expect(sonuc.requirements[0]!.confidence).toBe(DEFAULT_SCORING_CONFIG.summaryWeight)
+  })
+
+  it("aynı kavram maddede de geçiyorsa özet yerine madde kanıt olur", () => {
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([turluGereksinim("experience", "kubernetes")]),
+      evidence: [
+        turluKanit("Kubernetes ile dağıtım yaptım", "bullet"),
+        turluKanit("Kubernetes meraklısıyım.", "summary"),
+      ],
+      evidenceVectors: [V.uzak, V.uzak],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.confidence).toBe(1)
+    expect(sonuc.requirements[0]!.evidence!.kind).toBe("bullet")
+  })
+
+  it("anlamsal eşleşmede eşiği geçen madde, biraz daha benzer özete tercih edilir", () => {
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([turluGereksinim("experience", "arayüz")]),
+      evidence: [
+        turluKanit("Kullanıcı deneyimine önem veririm.", "summary"),
+        turluKanit("Panel geliştirdim", "bullet"),
+      ],
+      evidenceVectors: [V.yakin, V.orta],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.evidence!.kind).toBe("bullet")
+  })
+
+  it("dil gereksinimi Diller bölümüyle karşılanır", () => {
+    const sonuc = score({
+      profile: PROFILE,
+      posting: ilan([turluGereksinim("skill", "İngilizce")]),
+      evidence: [turluKanit("İngilizce (ileri)", "language")],
+      evidenceVectors: [V.uzak],
+      conceptVectors: [V.yakin],
+    })
+
+    expect(sonuc.requirements[0]!.status).toBe("matched")
+    expect(sonuc.requirements[0]!.confidence).toBe(1)
+  })
 })
 
 describe("score · anlamsal katmanın tür kapsamı (K-36)", () => {

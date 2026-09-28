@@ -30,7 +30,9 @@ Devam eden işler için endDate alanına "halen" yaz.
 CV'de olmayan hiçbir bilgi ekleme.`
 
 export const EDUCATION_PROMPT = `Sana bir CV'nin eğitim bölümü verilecek.
-Her eğitim kaydı için okul, derece, bölüm ve bitiş yılını çıkar.
+Her eğitim kaydı için okul, derece, bölüm, başlangıç yılı ve bitiş yılını çıkar.
+"2017 – 2021" gibi bir aralıkta ilk yıl başlangıç, ikincisi bitiştir.
+Devam eden eğitimde bitiş için "halen" yaz.
 Bilgi yoksa null yaz. CV'de olmayan hiçbir bilgi ekleme.`
 
 export const SKILLS_PROMPT = `Sana bir CV'nin beceriler bölümü verilecek.
@@ -59,6 +61,9 @@ Kategori adını ayrı bir terim olarak yazma.
 
 Yalnız başına duran bölüm başlıkları için kayıt aç, "items" boş kalsın.
 Bilinen dilleri ve sertifikaları ayrı dizilere koy.
+Dilleri seviyesiyle birlikte, CV'de yazdığı gibi yaz: "İngilizce (ileri)",
+"Almanca B1". Seviyeyi atma.
+Terim içindeki noktayı koru: "Next.js", "Vue.js", "ASP.NET".
 CV'de olmayan hiçbir şey ekleme.`
 
 export const JOB_PROMPT = `Sana bir iş ilanının metni verilecek.

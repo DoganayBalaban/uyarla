@@ -44,7 +44,8 @@ export function toDocumentModel(profile: ResumeProfile): DocumentModel {
       title: "EĞİTİM",
       entries: profile.education.map((edu) => ({
         heading: [edu.school, edu.degree, edu.field].filter(Boolean).join(" · "),
-        subheading: edu.endDate,
+        // startDate eski profillerde yok (bkz. EducationSchema).
+        subheading: edu.startDate && edu.endDate ? `${edu.startDate} – ${edu.endDate}` : edu.endDate,
         lines: [],
       })),
     })
@@ -79,7 +80,10 @@ export function toDocumentModel(profile: ResumeProfile): DocumentModel {
     contact: profile.headline,
     // Boş özet null sayılıyor: uyarlama reddedilmiş bir özette boş metin
     // bırakabiliyor ve belgede başlıksız bir boşluk çıkardı.
-    summary: profile.summary?.trim() || null,
+    // PDF'ten gelen satır sonları cümlenin ortasında duruyor ve belgede
+    // kırık satır olarak görünüyordu (K-38). Önceden kaydedilmiş profiller
+    // için burada da birleştiriliyor.
+    summary: profile.summary?.replace(/\s*\n\s*/g, " ").trim() || null,
     sections,
   }
 }

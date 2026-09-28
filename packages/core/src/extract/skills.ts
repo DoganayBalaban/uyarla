@@ -70,9 +70,17 @@ export function flattenSkillLines(data: SkillLines): string[] {
   ]
 }
 
-/** Kısa ve nokta içermeyen metin terimdir; değilse cümledir. */
+/**
+ * Kısa ve cümle noktası taşımayan metin terimdir; değilse cümledir.
+ *
+ * Kelime içindeki nokta cümle işareti değil: "Next.js", "Vue.js", "Node.js",
+ * "ASP.NET". İlk sürüm her noktayı cümle sayıyordu ve bu beceriler sessizce
+ * listeden düşüyor, indirilen CV'de de kayboluyordu (K-38). Cümle noktası
+ * sonda ya da boşluktan önce durur.
+ */
 function terimGibiMi(metin: string): boolean {
-  return metin.length <= MAX_BECERI_UZUNLUGU && !metin.includes(".")
+  const t = metin.trim()
+  return t.length <= MAX_BECERI_UZUNLUGU && !/\.(\s|$)/.test(t)
 }
 
 function bolumBasligiMi(metin: string): boolean {

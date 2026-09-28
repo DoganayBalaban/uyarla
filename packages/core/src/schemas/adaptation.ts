@@ -17,6 +17,16 @@ export const VerificationSchema = z.object({
   issues: z.array(VerificationIssueSchema),
 })
 
+/**
+ * Yazımda ilanın terimine çevrilen bir ifade ve maddedeki dayanağı (K-38).
+ * Kullanıcıya "SSR terimi senin 'sunucu tarafı render' ifadene dayanıyor"
+ * diye gösteriliyor.
+ */
+export const TermAlignmentSchema = z.object({
+  term: z.string(),
+  basis: z.string(),
+})
+
 export const AdaptedSummarySchema = z.object({
   original: z.string().nullable(),
   rewritten: z.string(),
@@ -35,6 +45,11 @@ export const AdaptedBulletSchema = z.object({
   rewritten: z.string(),
   verification: VerificationSchema,
   /**
+   * Doğrulanmış terim uyumları. Bu alandan önce kaydedilmiş taslaklarda
+   * yok; okuyan kod boş diziye düşmeli.
+   */
+  alignments: z.array(TermAlignmentSchema).optional(),
+  /**
    * "pending" yalnızca uyarı taşıyan maddelerde olur ve indirmeyi bloklar
    * (K-26).
    */
@@ -44,10 +59,17 @@ export const AdaptedBulletSchema = z.object({
 export const AdaptationDraftSchema = z.object({
   summary: AdaptedSummarySchema,
   bullets: z.array(AdaptedBulletSchema),
-  /** İlana göre sıralanmış beceri listesi; küme değişmez (K-27). */
+  /** İlana göre sıralanmış beceri listesi (eklenenler dahil). */
   skillOrder: z.array(z.string()),
+  /**
+   * CV'nin deneyim maddelerinde geçen, ilanın istediği, ama beceri listesinde
+   * olmayan terimler (K-38). K-27 "küme değişmez" diyordu; bu istisna uydurma
+   * değil, çünkü terim adayın kendi maddesinde yazıyor. Eski taslaklarda yok.
+   */
+  addedSkills: z.array(z.string()).optional(),
 })
 
+export type TermAlignment = z.infer<typeof TermAlignmentSchema>
 export type VerificationIssue = z.infer<typeof VerificationIssueSchema>
 export type Verification = z.infer<typeof VerificationSchema>
 export type AdaptedSummary = z.infer<typeof AdaptedSummarySchema>

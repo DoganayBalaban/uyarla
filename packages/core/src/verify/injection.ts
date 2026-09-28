@@ -17,13 +17,21 @@ export function checkPostingTermInjection(
   rewritten: string,
   source: string,
   posting: JobPostingData,
+  /**
+   * Dayanağı doğrulanmış kavram terimleri (verify/alignment.ts). Bunlar
+   * kaynakta lafzen geçmese de uyarı almaz: maddede aynı şeyi anlatan bir
+   * ifade olduğu kodda kanıtlandı (K-38).
+   */
+  allowedTerms: readonly string[] = [],
 ): VerificationIssue[] {
   const kavramlar = posting.requirements.flatMap((r) => r.concepts)
   const uyarilar: VerificationIssue[] = []
   const gorulen = new Set<string>()
+  const izinli = new Set(allowedTerms)
 
   for (const kavram of kavramlar) {
     if (gorulen.has(kavram.term)) continue
+    if (izinli.has(kavram.term)) continue
 
     const aranacaklar = [kavram.term, ...kavram.synonyms]
     const yazimdaVar = aranacaklar.some((t) => containsKeyword(rewritten, t))

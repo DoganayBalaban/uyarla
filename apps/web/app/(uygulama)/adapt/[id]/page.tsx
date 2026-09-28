@@ -6,10 +6,12 @@ import { motion, useReducedMotion } from "motion/react"
 import {
   ArrowRight,
   Check,
+  ChevronDown,
   CircleAlert,
   Download,
   FileText,
   LayoutGrid,
+  Link2,
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react"
@@ -44,6 +46,8 @@ interface Bullet {
   original: string
   rewritten: string
   verification: Verification
+  /** İlanın terimine çevrilen ifade ve dayanağı; eski taslaklarda yok. */
+  alignments?: Array<{ term: string; basis: string }>
   decision: "accepted" | "rejected" | "pending"
 }
 
@@ -56,6 +60,8 @@ interface Draft {
   }
   bullets: Bullet[]
   skillOrder: string[]
+  /** CV'nin maddelerinden beceri listesine eklenenler; eski taslaklarda yok. */
+  addedSkills?: string[]
 }
 
 interface Durum {
@@ -252,7 +258,13 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
 
   const { draft } = durum
   const bekleyen = draft.bullets.filter((b) => b.decision === "pending").length
-  const kararVerilen = draft.bullets.length - bekleyen
+  // Hedefi olmayan maddeler hiç yazılmıyor (K-38); onlar ayrı, katlanmış
+  // listede duruyor ki kullanıcı yalnızca gerçekten değişenlere baksın.
+  const sirali = draft.bullets.map((madde, i) => ({ madde, sira: i + 1 }))
+  const degisenler = sirali.filter(({ madde }) => madde.rewritten !== madde.original)
+  const degismeyenler = sirali.filter(({ madde }) => madde.rewritten === madde.original)
+  const kararVerilen = degisenler.length - bekleyen
+  const eklenenler = new Set(draft.addedSkills ?? [])
   const once = durum.scoreBefore ?? 0
   const sonra = durum.scoreAfter ?? 0
   const fark = sonra - once
@@ -278,9 +290,11 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
             <p className="text-xs font-semibold tracking-wider text-gri uppercase">Uyarlama</p>
             <h1 className="mt-1 text-3xl">CV&apos;n hazır</h1>
             <p className="mt-2 text-sm text-gri">
-              {sonra === once
-                ? "Skor değişmedi. Yeniden ifade her zaman eşleşme kazandırmaz; eksik olan şey ilanda aranıp CV'nde gerçekten bulunmayan deneyim olabilir."
-                : "Değişiklikleri aşağıda tek tek görebilir, istemediğini eski hâline döndürebilirsin."}
+              {fark > 0
+                ? `Deneyimini ilanın terimleriyle anlattık; skorun ${fark} puan arttı. Her değişikliği aşağıda görebilir, istemediğini eski hâline döndürebilirsin.`
+                : sonra === once
+                  ? "Skor değişmedi. İlanın aradığı şeylerin CV'nde bir karşılığını bulamadık; olmayan bir deneyimi eklemiyoruz."
+                  : "Değişiklikleri aşağıda tek tek görebilir, istemediğini eski hâline döndürebilirsin."}
             </p>
           </div>
 
@@ -330,53 +344,100 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
           <motion.section {...giris(0.1)} className="rounded-kart border border-cizgi bg-kart p-5 sm:p-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="m-0 text-lg">Deneyim maddeleri</h2>
-              <p className="m-0 text-sm text-gri">
-                {kararVerilen}/{draft.bullets.length} karar verildi
+              {degisenler.length > 0 && (
+                <p className="m-0 text-sm text-gri">
+                  {kararVerilen}/{degisenler.length} karar verildi
+                </p>
+              )}
+            </div>
+            {degisenler.length > 0 ? (
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zemin">
+                <div
+                  className="h-full rounded-full bg-mavi transition-[width] duration-500"
+                  style={{ width: `${(kararVerilen / degisenler.length) * 100}%` }}
+                />
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-gri">
+                Maddelerinde ilanın terimleriyle anlatılabilecek bir şey bulamadık, o yüzden olduğu gibi bıraktık.
               </p>
-            </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zemin">
-              <div
-                className="h-full rounded-full bg-mavi transition-[width] duration-500"
-                style={{ width: `${draft.bullets.length ? (kararVerilen / draft.bullets.length) * 100 : 100}%` }}
-              />
-            </div>
+            )}
 
-            <ol className="mt-5 space-y-3">
-              {draft.bullets.map((madde, i) => (
-                <li
-                  key={madde.id}
-                  className={cn(
-                    "rounded-buton border p-4 transition",
-                    madde.decision === "pending" ? "border-mavi/30 bg-mavi/[0.03]" : "border-cizgi",
-                  )}
-                >
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs font-semibold text-gri">
-                      Madde {i + 1}
-                      {madde.decision === "pending" && <span className="ml-2 text-mavi">· Karar bekliyor</span>}
-                    </span>
-                    <Secim deger={madde.decision} mesgul={mesgul} onSec={(d) => void karar(madde.id, d)} />
-                  </div>
-                  <KontrolUyarisi v={madde.verification} />
-                  <Fark original={madde.original} rewritten={madde.rewritten} />
-                </li>
-              ))}
-            </ol>
+            {degisenler.length > 0 && (
+              <ol className="mt-5 space-y-3">
+                {degisenler.map(({ madde, sira }) => (
+                  <li
+                    key={madde.id}
+                    className={cn(
+                      "rounded-buton border p-4 transition",
+                      madde.decision === "pending" ? "border-mavi/30 bg-mavi/[0.03]" : "border-cizgi",
+                    )}
+                  >
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs font-semibold text-gri">
+                        Madde {sira}
+                        {madde.decision === "pending" && <span className="ml-2 text-mavi">· Karar bekliyor</span>}
+                      </span>
+                      <Secim deger={madde.decision} mesgul={mesgul} onSec={(d) => void karar(madde.id, d)} />
+                    </div>
+                    <KontrolUyarisi v={madde.verification} />
+                    <Fark original={madde.original} rewritten={madde.rewritten} />
+                    {(madde.alignments?.length ?? 0) > 0 && (
+                      <ul className="mt-3 space-y-1.5">
+                        {madde.alignments!.map((a) => (
+                          <li key={a.term} className="flex gap-2 text-sm text-gri">
+                            <Link2 className="mt-0.5 size-3.5 shrink-0 text-mavi" aria-hidden />
+                            <span>
+                              <span className="font-semibold text-metin">{a.term}</span>, senin{" "}
+                              <span className="text-metin">&ldquo;{a.basis}&rdquo;</span> ifadene dayanıyor.
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            )}
+
+            {degismeyenler.length > 0 && (
+              <details className="group mt-4">
+                <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-gri">
+                  Olduğu gibi kalan maddeler ({degismeyenler.length})
+                  <ChevronDown className="size-4 transition group-open:rotate-180" aria-hidden />
+                </summary>
+                <ul className="mt-3 space-y-2">
+                  {degismeyenler.map(({ madde }) => (
+                    <li key={madde.id} className="rounded-buton bg-zemin px-3 py-2 text-sm">
+                      {madde.original}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
           </motion.section>
 
           <motion.section {...giris(0.14)} className="rounded-kart border border-cizgi bg-kart p-5 sm:p-6">
             <h2 className="m-0 text-lg">Beceriler</h2>
             <p className="mt-1 text-sm text-gri">
-              İlana en çok uyanlar başa alındı. Hiçbir beceri eklenmedi veya silinmedi.
+              {eklenenler.size > 0
+                ? "İlanın aradığı ve deneyim maddelerinde geçen beceriler listeye eklendi; ilana en çok uyanlar başa alındı. Hiçbir beceri silinmedi."
+                : "İlana en çok uyanlar başa alındı. Hiçbir beceri eklenmedi veya silinmedi."}
             </p>
             <ol className="mt-4 flex flex-wrap gap-2">
               {draft.skillOrder.map((b, i) => (
                 <li
                   key={b}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-cizgi bg-zemin px-3 py-1 text-sm"
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm",
+                    eklenenler.has(b) ? "border-mavi/40 bg-mavi/10" : "border-cizgi bg-zemin",
+                  )}
                 >
                   <span className="text-xs font-semibold text-gri tabular-nums">{i + 1}</span>
                   {b}
+                  {eklenenler.has(b) && (
+                    <span className="text-[11px] font-semibold text-mavi dark:text-[#8ea2ff]">CV&apos;nden</span>
+                  )}
                 </li>
               ))}
             </ol>

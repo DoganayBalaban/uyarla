@@ -109,6 +109,11 @@ export function score(
   }
 }
 
+/** Kanıt türünün katkı çarpanı; yalnızca özet indirimli (bkz. summaryWeight). */
+function kanitCarpani(kanit: Evidence, cfg: ScoringConfig): number {
+  return kanit.kind === "summary" ? cfg.summaryWeight : 1
+}
+
 function matchRequirement(
   requirement: Requirement,
   conceptVectors: number[][],
@@ -151,31 +156,40 @@ function matchRequirement(
     // matchText kullanılıyor, text değil: text deneyim maddelerinde unvan ön
     // eki taşıyor ve unvana denk gelen bir kelime tüm maddelerle eşleşip
     // kanıt olarak rastgele birini seçtiriyordu (K-13).
+    //
+    // Kanıtlar tam ağırlıklılar önde olacak şekilde sıralı (özet sonda), yani
+    // ilk bulunan aynı zamanda en güçlü olanı.
     const kelimeKaniti = uygunKanitlar.find((item) =>
       aranacaklar.some((terim) => containsKeyword(item.evidence.matchText, terim)),
     )?.evidence
     if (kelimeKaniti) {
       karsilanan.push(concept.term)
-      agirlik += 1
+      agirlik += kanitCarpani(kelimeKaniti, cfg)
       ilkKanit ??= kelimeKaniti
       kelimeVar = true
       continue
     }
 
     // 2. Anlamsal eşleşme — kavram düzeyinde.
+    //
+    // Eşik ham benzerliğe uygulanıyor, sıralama ise katkıya (benzerlik ×
+    // kanıt çarpanı): eşiği geçen bir madde, biraz daha benzer bir özet
+    // cümlesine tercih ediliyor.
     const vektor = conceptVectors[i]
     if (vektor && anlamsalAcik) {
-      let enIyi: { similarity: number; evidence: Evidence } | null = null
+      let enIyi: { similarity: number; katki: number; evidence: Evidence } | null = null
       for (const { evidence: kanit, vector: kanitVektoru } of uygunKanitlar) {
         if (!kanitVektoru) continue
         const benzerlik = cosineSimilarity(vektor, kanitVektoru)
-        if (!enIyi || benzerlik > enIyi.similarity) {
-          enIyi = { similarity: benzerlik, evidence: kanit }
+        if (benzerlik < cfg.semanticThreshold) continue
+        const katki = benzerlik * kanitCarpani(kanit, cfg)
+        if (!enIyi || katki > enIyi.katki) {
+          enIyi = { similarity: benzerlik, katki, evidence: kanit }
         }
       }
-      if (enIyi && enIyi.similarity >= cfg.semanticThreshold) {
+      if (enIyi) {
         karsilanan.push(concept.term)
-        agirlik += enIyi.similarity
+        agirlik += enIyi.katki
         ilkKanit ??= enIyi.evidence
         anlamsalVar = true
         continue

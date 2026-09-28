@@ -17,7 +17,9 @@ const PROFIL: ResumeProfile = {
       bullets: [{ text: "React ile panel geliştirdi", sourceRef: "React ile müşteri paneli geliştirdim" }],
     },
   ],
-  education: [{ school: "İstanbul Üniversitesi", degree: "Lisans", field: "Bilgisayar", endDate: "2021" }],
+  education: [
+    { school: "İstanbul Üniversitesi", degree: "Lisans", field: "Bilgisayar", startDate: null, endDate: "2021" },
+  ],
   skills: ["React", "TypeScript"],
   languages: ["İngilizce"],
   certifications: [],

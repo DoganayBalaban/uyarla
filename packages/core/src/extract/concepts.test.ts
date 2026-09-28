@@ -32,14 +32,19 @@ describe("splitIntoConcepts · gerçek ilanlardan", () => {
     expect(terimler("At least 2 years of Kubernetes experience")).toEqual(["Kubernetes"])
   })
 
-  it("İngilizce dolgu kalıplarını atar", () => {
-    expect(terimler("Hands on with LangChain, LangGraph, or equivalent agent frameworks")).toEqual([
-      "LangChain", "LangGraph", "agent",
-    ])
+  it("İngilizce dolgu kalıplarını atar, 'or' listesini seçenek sayar", () => {
+    const [kavram, ...fazla] = splitIntoConcepts(
+      "Hands on with LangChain, LangGraph, or equivalent agent frameworks",
+    )
+    expect(fazla).toHaveLength(0)
+    expect(kavram!.term).toBe("LangChain / LangGraph / agent")
+    expect(kavram!.synonyms).toEqual(["LangChain", "LangGraph", "agent"])
   })
 
-  it("tek kavramlı gereksinimi bozmaz", () => {
-    expect(terimler("Kubernetes ile konteyner yönetimi zorunludur")).toHaveLength(1)
+  it("'ile' araç ve işi ayrı kavram yapar, sondaki dolguyu atar", () => {
+    expect(terimler("Kubernetes ile konteyner yönetimi zorunludur")).toEqual([
+      "Kubernetes", "konteyner yönetimi",
+    ])
   })
 
   it("kavram çıkmayan gereksinimde metnin tamamını tek kavram sayar", () => {
@@ -56,5 +61,102 @@ describe("splitIntoConcepts · gerçek ilanlardan", () => {
 
   it("boş metinde tek kavram döner", () => {
     expect(splitIntoConcepts("   ")).toHaveLength(1)
+  })
+})
+
+/**
+ * Uçtan uca testte çöp kavram üreten gereksinimler (K-38). İki ilan: fintech
+ * frontend ve e-ticaret performans pazarlama.
+ */
+describe("splitIntoConcepts · Türkçe yapılar", () => {
+  const kavram = (metin: string, tur?: Parameters<typeof splitIntoConcepts>[1]) =>
+    splitIntoConcepts(metin, tur)
+
+  it("'ile'den sonraki süre ve dolgu kalıbını atar", () => {
+    expect(terimler("React ve TypeScript ile en az 4 yıl profesyonel deneyim")).toEqual([
+      "React", "TypeScript",
+    ])
+  })
+
+  it("parantezdeki kısaltmayı önündeki kavramın eş anlamlısı yapar", () => {
+    expect(kavram("Next.js ile sunucu tarafı render (SSR) deneyimi")).toEqual([
+      { term: "Next.js", synonyms: [] },
+      { term: "sunucu tarafı render", synonyms: ["SSR"] },
+    ])
+    expect(kavram("Web performansı ve erişilebilirlik (WCAG) konusunda bilgi")).toEqual([
+      { term: "Web performansı", synonyms: [] },
+      { term: "erişilebilirlik", synonyms: ["WCAG"] },
+    ])
+  })
+
+  it("ortak başı dağıtır ve parantezdeki örnekleri listenin tümüne bağlar", () => {
+    expect(kavram("Birim ve entegrasyon testleri (Jest, Playwright veya Cypress)")).toEqual([
+      { term: "Birim testleri", synonyms: ["Jest", "Playwright", "Cypress"] },
+      { term: "entegrasyon testleri", synonyms: ["Jest", "Playwright", "Cypress"] },
+    ])
+  })
+
+  it("yardımcı fiilleri ve 'hakimiyet' gibi dolguları atar", () => {
+    expect(terimler("GraphQL ile çalışmış olmak")).toEqual(["GraphQL"])
+    expect(kavram("CI/CD süreçlerine (GitHub Actions) hakimiyet")).toEqual([
+      { term: "CI/CD", synonyms: ["GitHub Actions"] },
+    ])
+    expect(terimler("Takım içinde mentorluk ve kod incelemesi deneyimi")).toEqual([
+      "mentorluk", "kod incelemesi",
+    ])
+  })
+
+  it("baştaki seviye ifadesini büyük İ ile de atar", () => {
+    expect(terimler("İyi derecede İngilizce")).toEqual(["İngilizce"])
+  })
+
+  it("'veya' listesini tek seçenekli kavram yapar", () => {
+    expect(kavram("Fintech veya ödeme sistemleri deneyimi")).toEqual([
+      { term: "Fintech / ödeme sistemleri", synonyms: ["Fintech", "ödeme sistemleri"] },
+    ])
+  })
+
+  it("sondaki iş adını atar", () => {
+    expect(terimler("Storybook ile tasarım sistemi geliştirme")).toEqual([
+      "Storybook", "tasarım sistemi",
+    ])
+  })
+
+  it("tamlamadan marka adını, birliktelik ekinden terimi çıkarır", () => {
+    expect(
+      terimler("Google Ads, Meta Ads ve TikTok Ads kampanyalarının kurulumu ve optimizasyonu"),
+    ).toEqual(["Google Ads", "Meta Ads", "TikTok Ads"])
+    expect(terimler("Bütçe yönetimi ve ROAS hedefleriyle çalışma deneyimi")).toEqual([
+      "Bütçe yönetimi", "ROAS",
+    ])
+  })
+
+  it("ulaçla bağlanmış iki işi ayırır, mastarı ada çevirir", () => {
+    expect(terimler("A/B testleri tasarlayıp sonuçlarını raporlamak")).toEqual([
+      "A/B testleri", "raporlama",
+    ])
+  })
+
+  it("'ile'den önceki seçenek listesini ve sonraki işi ayırır", () => {
+    expect(terimler("SQL veya Looker Studio ile veri analizi yapabilmek")).toEqual([
+      "SQL / Looker Studio", "veri analizi",
+    ])
+  })
+
+  it("'takip' ve 'sahip' kelimelerini ulaç sanmaz", () => {
+    expect(terimler("Jira ile proje takip deneyimi")).toEqual(["Jira", "proje takip"])
+  })
+
+  it("genel eğitim gereksinimini derece kavramına çevirir", () => {
+    const [k] = kavram("Üniversitelerin ilgili bölümlerinden mezun", "education")
+    expect(k!.term).toBe("Üniversite mezunu")
+    expect(k!.synonyms).toContain("lisans")
+  })
+
+  it("alanı belirtilmiş eğitim gereksinimini genelleştirmez", () => {
+    expect(terimler("Bilgisayar Mühendisliği mezunu")).not.toContain("Üniversite mezunu")
+    expect(
+      kavram("Bilgisayar Mühendisliği bölümünden mezun", "education")[0]!.term,
+    ).not.toBe("Üniversite mezunu")
   })
 })

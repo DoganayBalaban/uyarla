@@ -3,13 +3,16 @@ import { join } from "node:path"
 import { bulletId } from "../src/adapt/profile.js"
 import { rescore } from "../src/adapt/rescore.js"
 import { rewriteBullets } from "../src/adapt/rewrite.js"
+import { alignmentTargets } from "../src/adapt/targets.js"
 import {
   OpenAiCompatibleEmbeddingProvider,
+  cosineSimilarity,
   embeddingConfigFromEnv,
 } from "../src/llm/embedding.js"
+import { verifyAlignments } from "../src/verify/alignment.js"
 import { LmStudioProvider } from "../src/llm/lmstudio.js"
 import { llmConfigFromEnv } from "../src/llm/types.js"
-import type { AdaptationDraft, AdaptedBullet } from "../src/schemas/adaptation.js"
+import type { AdaptationDraft, AdaptedBullet, TermAlignment } from "../src/schemas/adaptation.js"
 import type { JobPostingData } from "../src/schemas/job.js"
 import type { ResumeProfile } from "../src/schemas/resume.js"
 import { collectEvidence } from "../src/score/evidence.js"
@@ -52,6 +55,8 @@ interface YazimOnbellegi {
     original: string
     sourceRef: string
     rewritten: string
+    /** Modelin iddia ettiği terim-dayanak eşlemeleri (K-38). */
+    alignments?: TermAlignment[]
     /** Yeniden yazım çağrısı patladı mı (spec §13). */
     failed: boolean
   }>
@@ -83,16 +88,38 @@ async function yazimlariAl(
     })),
   )
 
+  // Hedefler ürünle aynı yoldan seçiliyor (buildAdaptationDraft ile aynı
+  // kurallar); bu koşu yalnızca madde yazımının kazancını ölçüyor.
+  const embedding = new OpenAiCompatibleEmbeddingProvider(embeddingConfigFromEnv())
+  const kanitlar = collectEvidence(profil)
+  const kavramlar = conceptTexts(ilan)
+  const skorVektorleri = await embedding.embed([...kanitlar.map((k) => k.text), ...kavramlar])
+  const sonuc = score({
+    profile: profil,
+    posting: ilan,
+    evidence: kanitlar,
+    evidenceVectors: skorVektorleri.slice(0, kanitlar.length),
+    conceptVectors: skorVektorleri.slice(kanitlar.length),
+  })
+  const hedefVektorleri = await embedding.embed([...maddeler.map((m) => m.original), ...kavramlar])
+  const hedefler = alignmentTargets({
+    bullets: maddeler.map((m) => m.original),
+    bulletVectors: hedefVektorleri.slice(0, maddeler.length),
+    posting: ilan,
+    conceptVectors: hedefVektorleri.slice(maddeler.length),
+    result: sonuc,
+  })
+
   const yazimlar = await rewriteBullets(
     llm,
-    maddeler.map((m) => m.original),
-    ilan,
+    maddeler.map((m, i) => ({ bullet: m.original, targets: hedefler[i]!.map((h) => h.label) })),
   )
 
   const onbellek: YazimOnbellegi = {
     bullets: maddeler.map((m, i) => ({
       ...m,
-      rewritten: yazimlar[i]?.data ?? m.original,
+      rewritten: yazimlar[i]?.data.text ?? m.original,
+      alignments: yazimlar[i]?.data.alignments ?? [],
       failed: yazimlar[i] === null,
     })),
   }
@@ -142,7 +169,25 @@ async function main() {
     const byKind: Record<string, number> = {}
     let flaggedCount = 0
 
+    // Uyumlar üründeki kurallarla doğrulanıyor: dayanak kaynakta geçmeli ve
+    // terimle anlamca yakın olmalı (verify/alignment.ts).
+    const tumKavramlar = ilan.requirements.flatMap((r) => r.concepts)
+    const iddialar = yazimlar.flatMap((y, i) => (y.alignments ?? []).map((a) => ({ i, ...a })))
+    const uyumVektorleri = iddialar.length
+      ? await embedding.embed([...iddialar.map((a) => a.term), ...iddialar.map((a) => a.basis)])
+      : []
+
     const dogrulanmis = yazimlar.map((y, i) => {
+      const benim = iddialar.map((a, j) => ({ ...a, j })).filter((a) => a.i === i)
+      const izinli = verifyAlignments({
+        alignments: benim.map(({ term, basis }) => ({ term, basis })),
+        source: y.sourceRef,
+        targets: tumKavramlar,
+        similarities: benim.map((a) =>
+          cosineSimilarity(uyumVektorleri[a.j]!, uyumVektorleri[iddialar.length + a.j]!),
+        ),
+      }).map((d) => d.concept.term)
+
       // Patlayan madde orijinal hâliyle kalıyor ve doğrulamaya sokulmuyor:
       // kullanıcının kendi cümlesini uyarmak anlamsız (spec §13).
       const verification = y.failed
@@ -156,6 +201,7 @@ async function main() {
                 rewritten: vektorler[i]!,
                 source: vektorler[yazimlar.length + i]!,
               },
+              allowedTerms: izinli,
             },
             cfg,
           )

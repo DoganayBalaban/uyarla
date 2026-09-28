@@ -23,6 +23,12 @@ export const EducationSchema = z.object({
   school: z.string(),
   degree: z.string().nullable(),
   field: z.string().nullable(),
+  /**
+   * Başlangıç yılı. Sonradan eklendi: yalnızca bitiş yılı tutulduğu için
+   * "2017 – 2021" indirilen CV'de "2021"e dönüşüyordu (K-38). Bu alandan önce
+   * kaydedilmiş profillerde yok; okuyan kod `undefined`'a hazırlıklı olmalı.
+   */
+  startDate: z.string().nullable(),
   endDate: z.string().nullable(),
 })
 
