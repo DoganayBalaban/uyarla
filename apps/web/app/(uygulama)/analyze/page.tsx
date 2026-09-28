@@ -15,6 +15,14 @@ import {
 } from "lucide-react"
 import { girisAdresi } from "@/lib/donus"
 import { asamalariTuret } from "@/lib/asamalar"
+import {
+  aktifAnaliziBaslat,
+  aktifAnaliziGuncelle,
+  aktifAnaliziOku,
+  aktifAnaliziTemizle,
+  sonucAdresi,
+  yanitiIsle,
+} from "@/lib/aktifAnaliz"
 import { AsamaCizelgesi } from "../../components/ui/AsamaCizelgesi"
 import { CvYukleme } from "../../components/ui/CvYukleme"
 import { SkorSonucu, type ScoreResultView } from "../../components/SkorSonucu"
@@ -98,14 +106,64 @@ export default function AnalyzePage() {
   // geliştirme modunda efekti iki kez çalıştırmasına karşı: iki uyarlama
   // isteği gitmesin.
   useEffect(() => {
-    const analysisId = new URLSearchParams(window.location.search).get("uyarla")
-    if (!analysisId || devamBasladi.current) return
-    devamBasladi.current = true
-    setDevamEdiliyor(true)
-    void uyarla(analysisId)
-    // uyarla her çizimde yeniden tanımlanıyor; efekt yalnızca ilk açılışta.
+    const parametreler = new URLSearchParams(window.location.search)
+    const analysisId = parametreler.get("uyarla")
+    if (analysisId && !devamBasladi.current) {
+      devamBasladi.current = true
+      setDevamEdiliyor(true)
+      void uyarla(analysisId)
+      return
+    }
+
+    // Kalıcı sonuç adresi: `?analiz=<id>`. Sayfa yenilense de, panodan ya da
+    // sağ alttaki bildirimden gelinse de sonuç buradan açılıyor (K3).
+    const kalici = parametreler.get("analiz")
+    if (kalici) {
+      void sonucuYukle(kalici)
+      return
+    }
+
+    // Başka sayfaya geçip "Analize dön" ile gelindi: süren analiz kaldığı
+    // yerden izleniyor, bitmiş ama görülmemiş sonuç gösteriliyor.
+    const aktif = aktifAnaliziOku()
+    if (aktif?.durum === "running") {
+      setState({ status: "running", stage: aktif.asama })
+      setBusy(true)
+      poll(aktif.jobId)
+    } else if (aktif?.durum === "completed" && aktif.analysisId && !aktif.goruldu) {
+      void sonucuYukle(aktif.analysisId)
+    } else if (aktif?.durum === "failed" && !aktif.goruldu) {
+      setError(aktif.hata ?? "Analiz tamamlanamadı.")
+      aktifAnaliziTemizle()
+    }
+    // uyarla ve poll her çizimde yeniden tanımlanıyor; efekt yalnızca ilk açılışta.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Sayfadan ayrılınca yoklama duruyor; izlemeyi sağ alttaki bildirim devralıyor.
+  const yoklama = useRef<ReturnType<typeof setInterval> | null>(null)
+  useEffect(() => () => {
+    if (yoklama.current) clearInterval(yoklama.current)
+  }, [])
+
+  async function sonucuYukle(analysisId: string) {
+    setState({ status: "running" })
+    try {
+      const cevap = await fetch(`/api/analysis/${encodeURIComponent(analysisId)}`)
+      if (!cevap.ok) {
+        setState(null)
+        setError("Bu analizi bulamadık. Yeni bir analiz başlatabilirsin.")
+        return
+      }
+      const govde = (await cevap.json()) as AnalysisResponse
+      setState(govde)
+      const aktif = aktifAnaliziOku()
+      if (aktif?.analysisId === analysisId) aktifAnaliziGuncelle(aktif.jobId, { goruldu: true })
+    } catch {
+      setState(null)
+      setError("Sonucu alamadık. Sayfayı yenileyip tekrar dener misin?")
+    }
+  }
 
   /** Uyarlamayı başlatır ve uyarlama ekranına geçer. */
   async function uyarla(analysisId: string) {
@@ -158,7 +216,9 @@ export default function AnalyzePage() {
         setBusy(false)
         return
       }
-      // Çizelge hemen görünsün; ilk yoklama bir saniye sonra geliyor.
+      // Çizelge hemen görünsün; ilk yoklama bir saniye sonra geliyor. Kayıt,
+      // kullanıcı başka sayfaya geçerse sağ alttaki bildirimin izlemesi için.
+      aktifAnaliziBaslat(body.jobId)
       setState({ status: "running" })
       poll(body.jobId)
     } catch {
@@ -168,25 +228,44 @@ export default function AnalyzePage() {
   }
 
   function poll(jobId: string) {
+    if (yoklama.current) clearInterval(yoklama.current)
     const timer = setInterval(async () => {
       try {
         const response = await fetch(`/api/analyze/${jobId}`)
-        const body: AnalysisResponse = await response.json()
+        const body: AnalysisResponse & { score?: number | null } = await response.json()
+        if (!response.ok) {
+          // İş artık yok (kuyruk temizlendi) ya da başkasına ait.
+          clearInterval(timer)
+          aktifAnaliziTemizle()
+          setState(null)
+          setError("Bu analizi artık bulamıyoruz. Yeni bir analiz başlatabilirsin.")
+          setBusy(false)
+          return
+        }
         setState(body)
+        yanitiIsle(jobId, body)
 
         if (body.status === "completed" || body.status === "failed") {
           clearInterval(timer)
           setBusy(false)
+          // Kullanıcı sonucu bu sayfada görüyor: bildirim gösterilmesin.
+          aktifAnaliziGuncelle(jobId, { goruldu: true })
+          // Adres kalıcı sonuca dönüyor; yenilenirse sonuç kaybolmaz (K3).
+          if (body.status === "completed" && body.analysisId) {
+            window.history.replaceState(null, "", sonucAdresi(body.analysisId))
+          }
         }
       } catch {
-        clearInterval(timer)
-        setError("Sonucu alamadık. Sayfayı yenileyip tekrar dener misin?")
-        setBusy(false)
+        // Ağ kesintisi: bir sonraki turda tekrar denenir.
       }
     }, 1000)
+    yoklama.current = timer
   }
 
   function basaDon() {
+    if (yoklama.current) clearInterval(yoklama.current)
+    aktifAnaliziTemizle()
+    window.history.replaceState(null, "", "/analyze")
     setState(null)
     setError(null)
     setBusy(false)

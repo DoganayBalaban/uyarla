@@ -1,4 +1,5 @@
 import "./globals.css"
+import { AnalizBildirimi } from "./components/AnalizBildirimi"
 
 export const metadata = {
   title: "uyarla · Her ilana, doğru CV.",
@@ -18,7 +19,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Süren analizi her sayfada izleyen sağ alt bildirimi. */}
+        <AnalizBildirimi />
+      </body>
     </html>
   )
 }

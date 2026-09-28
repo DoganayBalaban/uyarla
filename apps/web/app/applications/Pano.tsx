@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { girisAdresi } from "@/lib/donus"
+import { sonucAdresi } from "@/lib/aktifAnaliz"
 import {
   ASAMALAR,
   ASAMA_ETIKETI,
@@ -315,7 +316,16 @@ function Kart({
       className="group rounded-buton border border-cizgi bg-kart p-3.5 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition hover:border-mavi/30 hover:shadow-md active:cursor-grabbing"
     >
       <div className="flex items-start gap-1.5">
-        <h3 className="m-0 flex-1 text-[15px] leading-snug">{kart.pozisyon}</h3>
+        <h3 className="m-0 flex-1 text-[15px] leading-snug">
+          {/* Analiz sonucuna kalıcı adres; önceden sonuca geri dönmenin yolu yoktu (K3). */}
+          <a
+            href={sonucAdresi(kart.analysisId)}
+            draggable={false}
+            className="text-metin no-underline hover:text-mavi hover:underline"
+          >
+            {kart.pozisyon}
+          </a>
+        </h3>
         <GripVertical
           className="mt-0.5 size-4 shrink-0 cursor-grab text-gri opacity-0 transition group-hover:opacity-100"
           aria-hidden
