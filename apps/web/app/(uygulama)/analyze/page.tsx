@@ -1,16 +1,30 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { motion } from "motion/react"
+import {
+  ArrowRight,
+  FileCheck2,
+  Gauge,
+  Link2,
+  LoaderCircle,
+  RotateCcw,
+  SearchCheck,
+  ShieldCheck,
+  TriangleAlert,
+} from "lucide-react"
 import { girisAdresi } from "@/lib/donus"
+import { asamalariTuret } from "@/lib/asamalar"
+import { AsamaCizelgesi } from "../../components/ui/AsamaCizelgesi"
+import { CvYukleme } from "../../components/ui/CvYukleme"
 import { SkorSonucu, type ScoreResultView } from "../../components/SkorSonucu"
 
-/** Marka rehberi §10.2'deki yükleme metinleri. */
-const STAGE_TEXT: Record<string, string> = {
-  cv_okunuyor: "CV'ni okuyoruz…",
-  ilan_okunuyor: "İlanı okuyoruz…",
-  karsilastiriliyor: "İlanla karşılaştırıyoruz…",
-  tamamlandi: "Hazır.",
-}
+/** Marka rehberi §10.2'deki yükleme metinleri; aşama çizelgesinin satırları. */
+const ASAMALAR = [
+  { id: "cv_okunuyor", baslik: "CV'ni okuyoruz", aciklama: "Deneyim, eğitim ve becerilerin ayrıştırılıyor." },
+  { id: "ilan_okunuyor", baslik: "İlanı okuyoruz", aciklama: "Gereksinimler ve aranan kavramlar çıkarılıyor." },
+  { id: "karsilastiriliyor", baslik: "İlanla karşılaştırıyoruz", aciklama: "Her gereksinim CV'nde kanıtıyla aranıyor." },
+]
 
 interface AnalysisResponse {
   status: "running" | "completed" | "failed"
@@ -21,6 +35,23 @@ interface AnalysisResponse {
   modelId?: string | null
   error?: string
   result?: ScoreResultView | null
+}
+
+const girdiSinifi =
+  "w-full rounded-buton border border-cizgi bg-kart px-3.5 py-2.5 text-sm text-metin outline-none transition placeholder:text-gri/70 focus:border-mavi focus:ring-4 focus:ring-mavi/15"
+
+function AdimBasligi({ no, baslik, aciklama }: { no: number; baslik: string; aciklama: string }) {
+  return (
+    <div className="mb-3 flex items-start gap-3">
+      <span className="grid size-7 shrink-0 place-items-center rounded-full bg-mavi text-sm font-bold text-white">
+        {no}
+      </span>
+      <div>
+        <p className="m-0 font-semibold">{baslik}</p>
+        <p className="m-0 text-sm text-gri">{aciklama}</p>
+      </div>
+    </div>
+  )
 }
 
 export default function AnalyzePage() {
@@ -127,6 +158,8 @@ export default function AnalyzePage() {
         setBusy(false)
         return
       }
+      // Çizelge hemen görünsün; ilk yoklama bir saniye sonra geliyor.
+      setState({ status: "running" })
       poll(body.jobId)
     } catch {
       setError("Sunucuya ulaşamadık. Bağlantını kontrol edip tekrar dener misin?")
@@ -153,120 +186,201 @@ export default function AnalyzePage() {
     }, 1000)
   }
 
+  function basaDon() {
+    setState(null)
+    setError(null)
+    setBusy(false)
+  }
+
   // Sonuç geldiğinde form gizleniyor: ekranda tek iş olsun.
   const sonucVar = state?.status === "completed" && state.result
+  const calisiyor = state?.status === "running"
 
   // Girişten dönüşte form bir an bile görünmesin; başarılıysa sayfa
   // uyarlama ekranına geçiyor, değilse hata ile birlikte form geri geliyor.
   if (devamEdiliyor) {
     return (
-      <main className="py-16 text-center">
-        <span className="mx-auto block size-8 animate-spin rounded-full border-2 border-cizgi border-t-mavi" />
-        <h1 className="mt-6 text-2xl">Uyarlaman hazırlanıyor…</h1>
+      <div className="mx-auto max-w-md rounded-kart border border-cizgi bg-kart p-10 text-center shadow-sm">
+        <LoaderCircle className="mx-auto size-8 text-mavi motion-safe:animate-spin" aria-hidden />
+        <h1 className="mt-5 text-2xl">Uyarlaman hazırlanıyor…</h1>
         <p className="mt-2 text-sm text-gri">Kaldığın yerden devam ediyoruz.</p>
-      </main>
+      </div>
+    )
+  }
+
+  if (sonucVar && state.result) {
+    return (
+      <SkorSonucu
+        sonuc={state.result}
+        durationMs={state.durationMs}
+        tokenUsage={state.tokenUsage}
+        modelId={state.modelId}
+        uyarlaniyor={busy}
+        hata={error}
+        onUyarla={state.analysisId ? () => uyarla(state.analysisId!) : undefined}
+        onYeniAnaliz={basaDon}
+      />
+    )
+  }
+
+  if (calisiyor) {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <AsamaCizelgesi
+          baslik="Analizin hazırlanıyor"
+          altBaslik="Genelde bir dakika kadar sürüyor. Sayfadan ayrılma."
+          asamalar={asamalariTuret(ASAMALAR, state?.stage ?? null)}
+        />
+      </div>
     )
   }
 
   return (
-    <main>
-      {!sonucVar && (
-        <>
-          <h1 className="text-3xl">CV&apos;ni ilanla karşılaştır</h1>
-          <p className="mt-2 text-sm text-gri">
-            CV&apos;ni yükle → ilanı yapıştır → skorunu gör. Kayıt gerekmez.
-          </p>
+    <div>
+      <motion.header
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="mb-8 max-w-2xl"
+      >
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-cizgi bg-kart px-3 py-1 text-xs font-semibold text-gri">
+          <span className="size-1.5 rounded-full bg-mercan" aria-hidden />
+          Ücretsiz · Kayıt gerekmez
+        </span>
+        <h1 className="mt-4 mb-0 text-3xl tracking-tight sm:text-4xl">CV&apos;ni ilanla karşılaştır</h1>
+        <p className="mt-2 text-gri">
+          CV&apos;ni yükle, ilanı yapıştır. Uyumunu ve eksik anahtar kelimeleri hemen gör.
+        </p>
+      </motion.header>
 
-          <form onSubmit={onSubmit} className="mt-6 space-y-4">
-            <div>
-              <label htmlFor="cv" className="mb-1 block font-semibold">
-                CV&apos;n (PDF veya Word)
-              </label>
-              <input id="cv" type="file" name="cv" accept=".pdf,.docx" required />
-            </div>
-            <div>
-              <label htmlFor="ilanUrl" className="mb-1 block font-semibold">
-                İlan bağlantısı <span className="font-normal text-gri">(isteğe bağlı)</span>
-              </label>
-              <div className="flex gap-2">
-                <input
-                  id="ilanUrl"
-                  type="url"
-                  inputMode="url"
-                  value={ilanUrl}
-                  onChange={(e) => setIlanUrl(e.target.value)}
-                  onKeyDown={(e) => {
-                    // Enter formu (analizi) göndermesin; bağlantıyı getirsin.
-                    if (e.key === "Enter") {
-                      e.preventDefault()
-                      void ilaniGetir()
-                    }
-                  }}
-                  placeholder="https://www.kariyer.net/is-ilani/…"
-                  className="min-w-0 flex-1 rounded-buton border border-cizgi bg-white p-2.5 font-govde text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => void ilaniGetir()}
-                  disabled={!ilanUrl.trim() || ilanDurumu?.tur === "yukleniyor"}
-                  className="shrink-0 rounded-buton border border-cizgi px-4 font-semibold disabled:cursor-not-allowed disabled:opacity-45"
-                >
-                  {ilanDurumu?.tur === "yukleniyor" ? "Getiriliyor…" : "İlanı getir"}
-                </button>
-              </div>
-              {ilanDurumu?.tur === "tamam" && (
-                <p className="mt-1.5 text-sm text-yesil">✓ {ilanDurumu.metin}</p>
-              )}
-              {ilanDurumu?.tur === "hata" && (
-                <p className="mt-1.5 text-sm text-kehribar">{ilanDurumu.metin}</p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="jobText" className="mb-1 block font-semibold">
-                İlan metni
-              </label>
-              <textarea
-                id="jobText"
-                name="jobText"
-                ref={ilanKutusu}
-                rows={12}
-                required
-                placeholder="İlanın tamamını yapıştır — gereksinimler bölümü dahil. Bağlantıyı yukarıya yapıştırırsan buraya kendiliğinden gelir."
-                className="w-full rounded-buton border border-cizgi bg-white p-2.5 font-govde text-sm"
+      {(error || state?.status === "failed") && (
+        <div className="mb-6 flex items-start gap-3 rounded-kart border border-kirmizi/30 bg-kirmizi/5 p-4 text-sm">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-kirmizi" aria-hidden />
+          <p className="m-0 text-metin">{error ?? state?.error}</p>
+        </div>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <form onSubmit={onSubmit} className="rounded-kart border border-cizgi bg-kart p-5 shadow-sm sm:p-7">
+          <AdimBasligi no={1} baslik="CV'n" aciklama="Başvuracağın CV'nin güncel hâli." />
+          <CvYukleme />
+
+          <div className="my-7 h-px bg-cizgi" />
+
+          <AdimBasligi no={2} baslik="İlan" aciklama="Bağlantıyı yapıştır ya da metni kutuya ekle." />
+          <label htmlFor="ilanUrl" className="sr-only">
+            İlan bağlantısı
+          </label>
+          <div className="flex gap-2">
+            <div className="relative min-w-0 flex-1">
+              <Link2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gri" aria-hidden />
+              <input
+                id="ilanUrl"
+                type="url"
+                inputMode="url"
+                value={ilanUrl}
+                onChange={(e) => setIlanUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  // Enter formu (analizi) göndermesin; bağlantıyı getirsin.
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    void ilaniGetir()
+                  }
+                }}
+                placeholder="https://www.kariyer.net/is-ilani/…"
+                className={`${girdiSinifi} pl-9`}
               />
             </div>
             <button
-              type="submit"
-              disabled={busy}
-              className="rounded-buton bg-mavi px-6 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
+              type="button"
+              onClick={() => void ilaniGetir()}
+              disabled={!ilanUrl.trim() || ilanDurumu?.tur === "yukleniyor"}
+              className="inline-flex shrink-0 items-center gap-2 rounded-buton border border-cizgi bg-kart px-4 text-sm font-semibold transition-colors hover:border-metin/25 disabled:cursor-not-allowed disabled:opacity-45"
             >
-              {busy ? "Çalışıyor…" : "Skorumu gör"}
+              {ilanDurumu?.tur === "yukleniyor" && <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden />}
+              {ilanDurumu?.tur === "yukleniyor" ? "Getiriliyor…" : "İlanı getir"}
             </button>
-          </form>
-        </>
-      )}
+          </div>
+          {ilanDurumu?.tur === "tamam" && (
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-yesil dark:text-[#4ade80]">
+              <FileCheck2 className="size-4" aria-hidden />
+              {ilanDurumu.metin}
+            </p>
+          )}
+          {ilanDurumu?.tur === "hata" && <p className="mt-2 text-sm text-kehribar">{ilanDurumu.metin}</p>}
 
-      {error && <p className="mt-4 text-kirmizi">{error}</p>}
-
-      {state?.status === "running" && (
-        <p className="mt-4">{STAGE_TEXT[state.stage ?? ""] ?? "Çalışıyor…"}</p>
-      )}
-
-      {state?.status === "failed" && <p className="mt-4 text-kirmizi">{state.error}</p>}
-
-      {sonucVar && state.result && (
-        <>
-          <h1 className="text-3xl">Skorun</h1>
-          <SkorSonucu
-            sonuc={state.result}
-            durationMs={state.durationMs}
-            tokenUsage={state.tokenUsage}
-            modelId={state.modelId}
-            uyarlaniyor={busy}
-            onUyarla={state.analysisId ? () => uyarla(state.analysisId!) : undefined}
+          <label htmlFor="jobText" className="mt-4 mb-1.5 block text-sm font-medium">
+            İlan metni
+          </label>
+          <textarea
+            id="jobText"
+            name="jobText"
+            ref={ilanKutusu}
+            rows={10}
+            required
+            placeholder="İlanın tamamını yapıştır — gereksinimler bölümü dahil. Bağlantıyı yukarıya yapıştırırsan buraya kendiliğinden gelir."
+            className={`${girdiSinifi} resize-y leading-relaxed`}
           />
-        </>
-      )}
-    </main>
+
+          <button
+            type="submit"
+            disabled={busy}
+            className="group mt-6 flex w-full items-center justify-center gap-2 rounded-buton bg-mavi px-6 py-3.5 font-semibold text-white shadow-[0_10px_24px_-12px_rgb(43_78_255/0.8)] transition hover:-translate-y-px hover:bg-[#2442e0] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {busy ? (
+              <>
+                <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden />
+                Gönderiliyor…
+              </>
+            ) : (
+              <>
+                Skorumu gör
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+              </>
+            )}
+          </button>
+        </form>
+
+        <aside className="space-y-4">
+          <div className="rounded-kart border border-cizgi bg-kart p-5 shadow-sm">
+            <p className="m-0 text-sm font-semibold">Ne göreceksin</p>
+            <ul className="mt-3 list-none space-y-3 p-0 text-sm">
+              {[
+                { Ikon: Gauge, b: "ATS uyum skoru", m: "CV'nin bu ilana ne kadar uyduğu." },
+                { Ikon: SearchCheck, b: "Eksik anahtar kelimeler", m: "Her gereksinim, CV'ndeki kanıtıyla." },
+                { Ikon: FileCheck2, b: "Biçim kontrolü", m: "ATS CV'ni doğru okuyabiliyor mu." },
+              ].map(({ Ikon, b, m }) => (
+                <li key={b} className="flex gap-3">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-buton bg-mavi/10 text-mavi dark:text-[#8ea2ff]">
+                    <Ikon className="size-4" aria-hidden />
+                  </span>
+                  <span>
+                    <span className="block font-medium">{b}</span>
+                    <span className="text-gri">{m}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="flex gap-3 rounded-kart border border-cizgi bg-kart/60 p-4 text-sm text-gri">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0 text-yesil dark:text-[#4ade80]" aria-hidden />
+            <p className="m-0">
+              CV&apos;n izinsiz kimseyle paylaşılmaz.{" "}
+              <a href="/privacy" className="font-medium text-metin underline underline-offset-2">
+                KVKK metni
+              </a>
+            </p>
+          </div>
+          {state?.status === "failed" && (
+            <button
+              onClick={basaDon}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-buton border border-cizgi bg-kart px-4 py-2.5 text-sm font-semibold"
+            >
+              <RotateCcw className="size-4" aria-hidden /> Baştan başla
+            </button>
+          )}
+        </aside>
+      </div>
+    </div>
   )
 }

@@ -1,6 +1,18 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
+import {
+  ArrowRight,
+  CalendarDays,
+  CircleAlert,
+  GripVertical,
+  Inbox,
+  LayoutGrid,
+  Plus,
+  StickyNote,
+} from "lucide-react"
+import { cn } from "@/lib/cn"
 import { girisAdresi } from "@/lib/donus"
 import {
   ASAMALAR,
@@ -25,6 +37,18 @@ function skorEtiketi(skor: number): { metin: string; sinif: string } {
   return { metin: "Düşük", sinif: "bg-kirmizi/10 text-kirmizi dark:bg-kirmizi/20 dark:text-[#f87171]" }
 }
 
+/** Aşama durum bildirdiği için durum renkleri burada yerinde (rehber §9.2). */
+const SUTUN_RENGI: Record<Asama, string> = {
+  saved: "bg-gri",
+  applied: "bg-mavi",
+  interview: "bg-kehribar",
+  offer: "bg-yesil",
+  rejected: "bg-kirmizi",
+}
+
+/** Sürükle-bırak verisinin türü; başka sürüklemelerle karışmasın. */
+const SURUKLE_TURU = "application/x-uyarla-kart"
+
 const TARIH = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short" })
 
 /** Sütun başlığının altındaki kısa metin; rehber §6.2 tonunda. */
@@ -36,6 +60,8 @@ const SUTUN_ALTI: Partial<Record<Asama, string>> = {
 
 export function Pano() {
   const [yukleme, setYukleme] = useState<Yukleme>({ durum: "yukleniyor" })
+  const [hedef, setHedef] = useState<Asama | null>(null)
+  const azHareket = useReducedMotion() ?? false
 
   useEffect(() => {
     void (async () => {
@@ -73,23 +99,34 @@ export function Pano() {
     if (!cevap.ok) setYukleme({ durum: "hazir", kartlar: onceki })
   }
 
-  if (yukleme.durum === "yukleniyor") return <p className="text-sm text-gri">Panon yükleniyor…</p>
-  if (yukleme.durum === "hata") return <p className="text-kehribar">{yukleme.mesaj}</p>
+  if (yukleme.durum === "yukleniyor") return <PanoIskeleti />
+  if (yukleme.durum === "hata") {
+    return (
+      <p role="alert" className="flex items-center gap-2 rounded-kart border border-cizgi bg-kart p-5 text-kirmizi dark:text-[#f87171]">
+        <CircleAlert className="size-5 shrink-0" aria-hidden />
+        {yukleme.mesaj}
+      </p>
+    )
+  }
   if (yukleme.durum === "giris") {
     return (
-      <main className="max-w-md py-10">
-        <h1 className="text-3xl">Başvuru panon</h1>
-        <p className="mt-3 text-gri">
+      <div className="mx-auto max-w-md rounded-kart border border-cizgi bg-kart p-8 text-center shadow-sm">
+        <span className="mx-auto grid size-12 place-items-center rounded-full bg-mavi/10 text-mavi">
+          <LayoutGrid className="size-6" aria-hidden />
+        </span>
+        <h1 className="mt-4 text-2xl">Başvuru panon</h1>
+        <p className="mt-2 text-sm text-gri">
           Hangi ilana hangi CV ile başvurduğunu görmek için giriş yap. Kayıtsız yaptığın
           analizler hesabına taşınır.
         </p>
         <a
           href={girisAdresi("/applications")}
-          className="mt-6 inline-block rounded-buton bg-mavi px-6 py-3 font-semibold text-white no-underline"
+          className="mt-6 inline-flex items-center gap-2 rounded-buton bg-mavi px-6 py-3 font-semibold text-white no-underline shadow-sm shadow-mavi/30"
         >
           Giriş yap
+          <ArrowRight className="size-4" aria-hidden />
         </a>
-      </main>
+      </div>
     )
   }
 
@@ -99,44 +136,88 @@ export function Pano() {
   const mulakat = sutunlar.interview.length + sutunlar.offer.length
 
   return (
-    <main>
+    <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="m-0 text-3xl">Başvuru panon</h1>
-          <p className="mt-2 text-sm text-gri">
+          <p className="mt-1.5 text-sm text-gri">
             {kartlar.length === 0
               ? "Her analiz buraya bir kart olarak düşer."
-              : `${kartlar.length} ilan · ${basvurulan} başvuru · ${mulakat} mülakat`}
+              : "Kartları sürükleyerek ya da aşama menüsünden taşıyabilirsin."}
           </p>
         </div>
         <a
           href="/analyze"
-          className="rounded-buton bg-mavi px-5 py-2.5 font-semibold text-white no-underline"
+          className="inline-flex items-center gap-2 rounded-buton bg-mavi px-5 py-2.5 font-semibold text-white no-underline shadow-sm shadow-mavi/30 transition hover:bg-mavi/90"
         >
+          <Plus className="size-4" aria-hidden />
           Yeni analiz
         </a>
       </div>
 
+      {kartlar.length > 0 && (
+        <dl className="mt-6 grid grid-cols-3 gap-3 sm:max-w-lg">
+          {(
+            [
+              ["İlan", kartlar.length],
+              ["Başvuru", basvurulan],
+              ["Mülakat", mulakat],
+            ] as const
+          ).map(([etiket, sayi]) => (
+            <div key={etiket} className="rounded-kart border border-cizgi bg-kart px-4 py-3">
+              <dt className="text-xs font-semibold text-gri">{etiket}</dt>
+              <dd className="m-0 font-baslik text-2xl font-extrabold tabular-nums">{sayi}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
       {kartlar.length === 0 ? (
-        <div className="mt-10 rounded-kart border border-dashed border-cizgi p-10 text-center">
+        <div className="mt-10 rounded-kart border border-dashed border-cizgi bg-kart/60 p-10 text-center">
+          <span className="mx-auto grid size-12 place-items-center rounded-full bg-mavi/10 text-mavi">
+            <Inbox className="size-6" aria-hidden />
+          </span>
           {/* Rehber §10.2: boş pano metni, birebir. */}
-          <p className="m-0 font-baslik text-xl font-extrabold">Henüz başvuru yok.</p>
+          <p className="m-0 mt-4 font-baslik text-xl font-extrabold">Henüz başvuru yok.</p>
           <p className="mt-2 text-gri">İlk ilanını yapıştır, birlikte başlayalım.</p>
           <a
             href="/analyze"
-            className="mt-6 inline-block rounded-buton bg-mavi px-6 py-3 font-semibold text-white no-underline"
+            className="mt-6 inline-flex items-center gap-2 rounded-buton bg-mavi px-6 py-3 font-semibold text-white no-underline shadow-sm shadow-mavi/30"
           >
             İlk analizini yap
+            <ArrowRight className="size-4" aria-hidden />
           </a>
         </div>
       ) : (
-        <div className="mt-8 grid gap-4 md:grid-flow-col md:auto-cols-[minmax(14rem,1fr)] md:overflow-x-auto md:pb-2 xl:grid-flow-row xl:grid-cols-5 xl:overflow-visible">
+        <div className="mt-6 grid gap-4 md:grid-flow-col md:auto-cols-[minmax(15rem,1fr)] md:overflow-x-auto md:pb-2 xl:grid-flow-row xl:grid-cols-5 xl:overflow-visible">
           {ASAMALAR.map((asama) => (
-            <section key={asama} className="rounded-kart border border-cizgi bg-metin/[0.03] p-3">
-              <header className="px-1 pb-3">
-                <h2 className="m-0 flex items-center justify-between text-sm">
+            <section
+              key={asama}
+              onDragOver={(e) => {
+                if (!e.dataTransfer.types.includes(SURUKLE_TURU)) return
+                e.preventDefault()
+                setHedef(asama)
+              }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHedef(null)
+              }}
+              onDrop={(e) => {
+                e.preventDefault()
+                setHedef(null)
+                const id = e.dataTransfer.getData(SURUKLE_TURU)
+                const kart = kartlar.find((k) => k.analysisId === id)
+                if (kart && kart.asama !== asama) void guncelle(id, { asama })
+              }}
+              className={cn(
+                "flex flex-col rounded-kart border bg-metin/[0.025] p-2.5 transition-colors",
+                hedef === asama ? "border-mavi/50 bg-mavi/[0.06]" : "border-cizgi",
+              )}
+            >
+              <header className="px-1.5 pt-1 pb-3">
+                <h2 className="m-0 flex items-center gap-2 text-sm">
+                  <span aria-hidden className={cn("size-2 rounded-full", SUTUN_RENGI[asama])} />
                   {ASAMA_ETIKETI[asama]}
-                  <span className="rounded-full bg-kart px-2 py-0.5 text-xs font-semibold text-gri">
+                  <span className="ml-auto rounded-full bg-kart px-2 py-0.5 text-xs font-semibold text-gri tabular-nums">
                     {sutunlar[asama].length}
                   </span>
                 </h2>
@@ -144,16 +225,51 @@ export function Pano() {
                   <p className="m-0 mt-1 text-xs text-gri">{SUTUN_ALTI[asama]}</p>
                 )}
               </header>
-              <div className="space-y-3">
-                {sutunlar[asama].map((k) => (
-                  <Kart key={k.analysisId} kart={k} onGuncelle={guncelle} />
-                ))}
+              <div className="flex min-h-16 flex-1 flex-col gap-2.5">
+                <AnimatePresence initial={false}>
+                  {sutunlar[asama].map((k) => (
+                    <motion.div
+                      key={k.analysisId}
+                      layout={!azHareket}
+                      initial={azHareket ? false : { opacity: 0, scale: 0.97 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={azHareket ? undefined : { opacity: 0, scale: 0.97 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Kart kart={k} onGuncelle={guncelle} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                {sutunlar[asama].length === 0 && (
+                  <p className="m-0 grid flex-1 place-items-center rounded-buton border border-dashed border-cizgi px-3 py-5 text-center text-xs text-gri">
+                    Kartı buraya bırak
+                  </p>
+                )}
               </div>
             </section>
           ))}
         </div>
       )}
-    </main>
+    </div>
+  )
+}
+
+/** Yüklenirken sütunların kabaca şekli. */
+function PanoIskeleti() {
+  return (
+    <div aria-busy="true" aria-label="Panon yükleniyor">
+      <div className="h-8 w-56 rounded-buton bg-metin/[0.06] motion-safe:animate-pulse" />
+      <div className="mt-8 grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+        {ASAMALAR.map((a, i) => (
+          <div key={a} className="space-y-2.5 rounded-kart border border-cizgi p-2.5">
+            <div className="h-4 w-24 rounded bg-metin/[0.06]" />
+            {Array.from({ length: i < 2 ? 2 : 1 }, (_, j) => (
+              <div key={j} className="h-24 rounded-buton bg-metin/[0.05] motion-safe:animate-pulse" />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -190,9 +306,22 @@ function Kart({
   }
 
   return (
-    <article className="rounded-buton border border-cizgi bg-kart p-3.5 shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
-      <h3 className="m-0 text-[15px] leading-snug">{kart.pozisyon}</h3>
-      <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+    <article
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData(SURUKLE_TURU, kart.analysisId)
+        e.dataTransfer.effectAllowed = "move"
+      }}
+      className="group rounded-buton border border-cizgi bg-kart p-3.5 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition hover:border-mavi/30 hover:shadow-md active:cursor-grabbing"
+    >
+      <div className="flex items-start gap-1.5">
+        <h3 className="m-0 flex-1 text-[15px] leading-snug">{kart.pozisyon}</h3>
+        <GripVertical
+          className="mt-0.5 size-4 shrink-0 cursor-grab text-gri opacity-0 transition group-hover:opacity-100"
+          aria-hidden
+        />
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
         {etiket && kart.skor !== null && (
           <span
             className={`rounded-full px-2 py-0.5 text-xs font-bold ${etiket.sinif}`}
@@ -201,7 +330,10 @@ function Kart({
             {kart.skor} · {etiket.metin}
           </span>
         )}
-        <span className="text-xs text-gri">{TARIH.format(new Date(kart.olusturulma))}</span>
+        <span className="inline-flex items-center gap-1 text-xs text-gri">
+          <CalendarDays className="size-3.5" aria-hidden />
+          {TARIH.format(new Date(kart.olusturulma))}
+        </span>
       </div>
 
       {notAcik ? (
@@ -224,7 +356,7 @@ function Kart({
         </button>
       ) : null}
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-cizgi pt-3">
         <label className="sr-only" htmlFor={`asama-${kart.analysisId}`}>
           Aşama
         </label>
@@ -232,7 +364,7 @@ function Kart({
           id={`asama-${kart.analysisId}`}
           value={kart.asama}
           onChange={(e) => void onGuncelle(kart.analysisId, { asama: e.target.value as Asama })}
-          className="rounded-buton border border-cizgi bg-kart px-2 py-1.5 text-sm"
+          className="rounded-buton border border-cizgi bg-kart px-2 py-1 text-xs font-medium"
         >
           {ASAMALAR.map((a) => (
             <option key={a} value={a}>
@@ -256,7 +388,11 @@ function Kart({
         )}
 
         {!notAcik && !kart.not && (
-          <button onClick={() => setNotAcik(true)} className="ml-auto text-sm text-gri hover:text-metin">
+          <button
+            onClick={() => setNotAcik(true)}
+            className="ml-auto inline-flex items-center gap-1 text-sm text-gri hover:text-metin"
+          >
+            <StickyNote className="size-3.5" aria-hidden />
             Not ekle
           </button>
         )}
