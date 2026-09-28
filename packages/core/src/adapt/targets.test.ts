@@ -97,6 +97,37 @@ describe("alignmentTargets", () => {
     expect(hedefler.map((h) => h.map((x) => x.label))).toEqual([["web performansı"], []])
   })
 
+  it("eğitim şartını madde hedefi yapmaz", () => {
+    // eval:adapt, cv-c: model bir deneyim maddesine "bilgisayar
+    // mühendisliği" bölümünü yazıyordu.
+    const egitimIlani: JobPostingData = {
+      ...ilan,
+      requirements: [
+        gereksinim("Bilgisayar Mühendisliği mezunu", [{ term: "Bilgisayar Mühendisliği", synonyms: [] }], "education"),
+        ilan.requirements[0]!,
+      ],
+    }
+    const [hedefler] = alignmentTargets({
+      bullets: maddeler,
+      bulletVectors: [[1, 0]],
+      posting: egitimIlani,
+      conceptVectors: [[1, 0], [1, 0]],
+      result: {
+        ...sonuc,
+        requirements: egitimIlani.requirements.map((requirement) => ({
+          requirement,
+          status: "missing",
+          confidence: 0,
+          method: null,
+          evidence: null,
+          matchedConcepts: [],
+          missingConcepts: [requirement.concepts[0]!.term],
+        })),
+      },
+    })
+    expect(hedefler!.map((h) => h.label)).toEqual(["web performansı"])
+  })
+
   it("eşiğin altındaki kavramı vermez", () => {
     const [hedefler] = alignmentTargets({
       bullets: maddeler,

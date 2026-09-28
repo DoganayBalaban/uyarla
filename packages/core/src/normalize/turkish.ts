@@ -75,6 +75,12 @@ export function normalizeText(text: string): string {
     // yerel belirtmek şart.
     .toLocaleLowerCase("tr")
     .replace(/ı/g, "i")
+    // Düzeltme işareti yazıma göre değişiyor: ilan "yapay zekâ", CV "yapay
+    // zeka" yazınca iki taraf buluşamıyor, uydurma kontrolü de CV'deki
+    // kelimeyi yazımda "uydurulmuş" sayıyordu (eval:adapt, cv-c).
+    .replace(/â/g, "a")
+    .replace(/î/g, "i")
+    .replace(/û/g, "u")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim()
     .replace(/\s+/g, " ")

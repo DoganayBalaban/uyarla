@@ -64,4 +64,38 @@ describe("preservesSource", () => {
     })
     expect(sonuc).toEqual({ ok: false, reason: "sayı kayboldu: 4" })
   })
+
+  describe("fiil çekimi (eval:adapt, cv-c)", () => {
+    const kaynak = "Öğrencilerin proje geliştirme süreçlerine teknik destek sağladım."
+    const yaz = (rewritten: string, dayanak = "teknik destek sağladım.") =>
+      preservesSource({ rewritten, source: kaynak, posting: ilan, bases: [dayanak] }).ok
+
+    it("bağlaca çevrilen fiili dayanak sayar", () => {
+      expect(
+        yaz("Öğrencilerin proje geliştirme süreçlerine teknik destek sağlayarak problem çözme yetkinliklerini gösterdim."),
+      ).toBe(true)
+      expect(yaz("Eğitim içeriklerini sürekli geliştirerek yeni gelişmeleri takip ettim.", "sürekli geliştirdim")).toBe(
+        true,
+      )
+    })
+
+    it("kökü değişen fiili kabul etmez", () => {
+      expect(
+        yaz(
+          "Akademik personel ve öğrenciler arasında iletişim süreçlerini erişim yönetimi ile sağladım.",
+          "iletişim süreçlerini yönettim.",
+        ),
+      ).toBe(false)
+    })
+
+    it("olumsuzlanan fiili kabul etmez", () => {
+      expect(yaz("Öğrencilere teknik destek sağlamadım.")).toBe(false)
+    })
+
+    it("fiilden önceki kelime değişirse kabul etmez", () => {
+      expect(
+        yaz("Organizasyon ve raporlama ile paydaş yönetimine katkı sağladım.", "ekip yönetimine katkı sağladım."),
+      ).toBe(false)
+    })
+  })
 })

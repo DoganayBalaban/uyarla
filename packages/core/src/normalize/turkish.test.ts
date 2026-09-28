@@ -29,6 +29,11 @@ describe("normalizeText", () => {
     expect(normalizeText("  React   Native ")).toBe("react native")
   })
 
+  it("düzeltme işaretini katlar", () => {
+    expect(normalizeText("Yapay zekâ")).toBe(normalizeText("yapay zeka"))
+    expect(containsKeyword("Yapay zeka temelleri üzerine eğitim verdim", "Yapay zekâ")).toBe(true)
+  })
+
   it("boş metinde boş döner", () => {
     expect(normalizeText("   ")).toBe("")
   })

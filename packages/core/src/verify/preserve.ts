@@ -1,4 +1,4 @@
-import { containsKeyword } from "../normalize/turkish.js"
+import { containsKeyword, normalizeText } from "../normalize/turkish.js"
 import type { JobPostingData } from "../schemas/job.js"
 
 /**
@@ -25,7 +25,7 @@ export function preservesSource(input: {
   bases?: readonly string[]
 }): { ok: true } | { ok: false; reason: string } {
   for (const dayanak of input.bases ?? []) {
-    if (!containsKeyword(input.rewritten, dayanak)) {
+    if (!dayanakDuruyor(input.rewritten, dayanak)) {
       return { ok: false, reason: `dayanak kayboldu: ${dayanak}` }
     }
   }
@@ -44,6 +44,38 @@ export function preservesSource(input: {
   }
 
   return { ok: true }
+}
+
+/**
+ * Dayanak yazımda duruyor mu. Son kelime geçmiş zaman fiiliyse ("teknik
+ * destek sağladım") aynı kökten olumlu bir çekimi de kabul ediliyor: terimi
+ * eklemek için cümleyi uzatan model fiili bağlaca çeviriyor ("teknik destek
+ * sağlayarak …"). Anlam korunuyor ama kelime eşleşmesi bunu kayıp sayıyordu;
+ * Türkçe CV'de yazımların çoğu bu yüzden atılıyordu (eval:adapt, cv-c).
+ *
+ * Kök değişirse ("yönettim" → "sağladım") ya da fiil olumsuzlanırsa
+ * ("sağlamadım") dayanak kaybolmuş sayılıyor.
+ */
+function dayanakDuruyor(yazim: string, dayanak: string): boolean {
+  if (containsKeyword(yazim, dayanak)) return true
+
+  const onceki = normalizeText(dayanak).split(" ")
+  const kok = fiilKoku(onceki.pop() ?? "")
+  if (!kok) return false
+
+  const kelimeler = normalizeText(yazim).split(" ")
+  for (let i = onceki.length; i < kelimeler.length; i++) {
+    const kelime = kelimeler[i]!
+    if (!kelime.startsWith(kok) || /^m[ae]/.test(kelime.slice(kok.length))) continue
+    if (kelimeler.slice(i - onceki.length, i).join(" ") === onceki.join(" ")) return true
+  }
+  return false
+}
+
+/** Birinci şahıs geçmiş zaman fiilinin kökü: "sağladım" → "sağla". */
+function fiilKoku(kelime: string): string | null {
+  const eslesme = /^(.{3,}?)[dt][iuü][mk]$/.exec(kelime)
+  return eslesme ? eslesme[1]! : null
 }
 
 function sayilar(metin: string): string[] {

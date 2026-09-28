@@ -54,6 +54,13 @@ export function openConcepts(
   let index = 0
   posting.requirements.forEach((req, r) => {
     const sonuc = result.requirements[r]
+    // Eğitim şartı bir deneyim maddesine yazılarak karşılanamaz: model
+    // "öğrencilerin bilgisayar mühendisliği proje süreçlerine destek
+    // sağladım" gibi bir bölüm uyduruyordu (eval:adapt, cv-c).
+    if (req.type === "education") {
+      index += req.concepts.length
+      return
+    }
     for (const concept of req.concepts) {
       const eksik = sonuc?.missingConcepts.includes(concept.term) ?? true
       const yalnizAnlamsal = sonuc?.method === "semantic"
