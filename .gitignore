@@ -31,3 +31,6 @@ veri/
 # Değerlendirme çıkarım önbelleği — türetilebilir, depoda durmasına gerek yok
 packages/core/eval/cache/
 packages/core/eval/inceleme.md
+
+# Ajan worktree'leri — geçici, depoya girmez.
+.claude/

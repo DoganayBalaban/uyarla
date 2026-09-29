@@ -1,0 +1,266 @@
+{
+  "model": "google/gemma-4-e4b",
+  "metrics": [
+    {
+      "id": "cv-a__ilan-1",
+      "bulletCount": 9,
+      "sameLanguage": false,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "discards": [],
+      "scoreBefore": 34,
+      "scoreBullets": 34,
+      "scoreFull": 34,
+      "durationMs": 5565
+    },
+    {
+      "id": "cv-a__ilan-2",
+      "bulletCount": 9,
+      "sameLanguage": false,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "discards": [],
+      "scoreBefore": 21,
+      "scoreBullets": 21,
+      "scoreFull": 21,
+      "durationMs": 5507
+    },
+    {
+      "id": "cv-a__ilan-3",
+      "bulletCount": 9,
+      "sameLanguage": true,
+      "rewrittenCount": 3,
+      "proposedCount": 1,
+      "discarded": {
+        "uyumsuz": 1,
+        "uyarili": 1
+      },
+      "summaryAccepted": true,
+      "addedSkills": [
+        "grounding"
+      ],
+      "discards": [
+        {
+          "id": "0-0",
+          "reason": "uyumsuz",
+          "detail": "doğrulanan uyum yok (iddia: observability for LLM systems ← )",
+          "rewritten": "Developing enterprise AI assistants and LLM-powered workflows for internal use cases, providing observability for LLM systems.",
+          "original": "Developing enterprise AI assistants and LLM-powered workflows for internal use cases."
+        },
+        {
+          "id": "0-2",
+          "reason": "uyarili",
+          "detail": "posting_term_injected: Bu maddede \"on-call attached\" geçiyor ama senin yazdığın hâlinde yok.",
+          "rewritten": "Developing agentic workflows with tool calling and MCP integrations, including Jira/Atlassian and Outlook-based capabilities. on-call attached.",
+          "original": "Developing agentic workflows with tool calling and MCP integrations, including Jira/Atlassian and Outlook-based capabilities."
+        }
+      ],
+      "scoreBefore": 11,
+      "scoreBullets": 13,
+      "scoreFull": 13,
+      "durationMs": 4972
+    },
+    {
+      "id": "cv-a__ilan-5",
+      "bulletCount": 9,
+      "sameLanguage": true,
+      "rewrittenCount": 6,
+      "proposedCount": 4,
+      "discarded": {
+        "uyarili": 2
+      },
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "discards": [
+        {
+          "id": "0-0",
+          "reason": "uyarili",
+          "detail": "posting_term_injected: Bu maddede \"including hands-on work with LLM\" geçiyor ama senin yazdığın hâlinde yok.",
+          "rewritten": "Developing enterprise AI assistants and LLM-powered workflows for internal use cases, including hands-on work with LLM and intelligent assistant.",
+          "original": "Developing enterprise AI assistants and LLM-powered workflows for internal use cases."
+        },
+        {
+          "id": "1-1",
+          "reason": "uyarili",
+          "detail": "posting_term_injected: Bu maddede \"data engineering\" geçiyor ama senin yazdığın hâlinde yok.",
+          "rewritten": "Developed REST APIs and backend services with FastAPI, SSE, Supabase/PostgreSQL, and Docker for data engineering.",
+          "original": "Developed REST APIs and backend services with FastAPI, SSE, Supabase/PostgreSQL, and Docker."
+        }
+      ],
+      "scoreBefore": 20,
+      "scoreBullets": 25,
+      "scoreFull": 25,
+      "durationMs": 5366
+    },
+    {
+      "id": "cv-b__ilan-1",
+      "bulletCount": 8,
+      "sameLanguage": false,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "discards": [],
+      "scoreBefore": 5,
+      "scoreBullets": 5,
+      "scoreFull": 5,
+      "durationMs": 3424
+    },
+    {
+      "id": "cv-b__ilan-3",
+      "bulletCount": 8,
+      "sameLanguage": true,
+      "rewrittenCount": 4,
+      "proposedCount": 3,
+      "discarded": {
+        "uyarili": 1
+      },
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "discards": [
+        {
+          "id": "0-1",
+          "reason": "uyarili",
+          "detail": "number_mismatch: Bu maddede \"5\" sayısı geçiyor ama senin yazdığın hâlinde yok. | number_mismatch: Bu maddede \"7\" sayısı geçiyor ama senin yazdığın hâlinde yok.",
+          "rewritten": "Defect Tracking & Issue Resolution: Identify, document, and follow up on defects using structured bug reporting while collaborating with development teams to ensure timely resolution during the at least 5 hours overlap with PST timezone (7am-5pm).",
+          "original": "Defect Tracking & Issue Resolution: Identify, document, and follow up on defects using structured bug reporting while collaborating with development teams to ensure timely resolution."
+        }
+      ],
+      "scoreBefore": 1,
+      "scoreBullets": 4,
+      "scoreFull": 4,
+      "durationMs": 4608
+    },
+    {
+      "id": "cv-b__ilan-4",
+      "bulletCount": 8,
+      "sameLanguage": false,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "discards": [],
+      "scoreBefore": 0,
+      "scoreBullets": 0,
+      "scoreFull": 0,
+      "durationMs": 3266
+    },
+    {
+      "id": "cv-c__ilan-1",
+      "bulletCount": 11,
+      "sameLanguage": true,
+      "rewrittenCount": 1,
+      "proposedCount": 0,
+      "discarded": {
+        "uyarili": 1
+      },
+      "summaryAccepted": false,
+      "addedSkills": [],
+      "discards": [
+        {
+          "id": "0-1",
+          "reason": "uyarili",
+          "detail": "posting_term_injected: Bu maddede \"Bilgisayar Mühendisliği\" geçiyor ama senin yazdığın hâlinde yok. | posting_term_injected: Bu maddede \"Yazılım Mühendisliği\" geçiyor ama senin yazdığın hâlinde yok.",
+          "rewritten": "Öğrencilerin bilgisayar mühendisliği ve yazılım mühendisliği proje geliştirme süreçlerine teknik destek sağladım.",
+          "original": "Öğrencilerin proje geliştirme süreçlerine teknik destek sağladım."
+        }
+      ],
+      "scoreBefore": 18,
+      "scoreBullets": 18,
+      "scoreFull": 18,
+      "durationMs": 3455
+    },
+    {
+      "id": "cv-c__ilan-2",
+      "bulletCount": 11,
+      "sameLanguage": true,
+      "rewrittenCount": 4,
+      "proposedCount": 0,
+      "discarded": {
+        "uyarili": 1,
+        "korunmadi": 3
+      },
+      "summaryAccepted": false,
+      "addedSkills": [],
+      "discards": [
+        {
+          "id": "0-0",
+          "reason": "uyarili",
+          "detail": "posting_term_injected: Bu maddede \"Yapay zekâ\" geçiyor ama senin yazdığın hâlinde yok.",
+          "rewritten": "Yapay zeka temelleri üzerine uygulamalı eğitimler vererek yapay zekâ konusunda bilgi aktardım.",
+          "original": "Yapay zeka temelleri üzerine uygulamalı eğitimler verdim."
+        },
+        {
+          "id": "0-1",
+          "reason": "korunmadi",
+          "detail": "dayanak kayboldu: teknik destek sağladım",
+          "rewritten": "Öğrencilerin proje geliştirme süreçlerine teknik destek sağlayarak problem çözme yetkinliklerini gösterdim.",
+          "original": "Öğrencilerin proje geliştirme süreçlerine teknik destek sağladım."
+        },
+        {
+          "id": "3-1",
+          "reason": "korunmadi",
+          "detail": "dayanak kayboldu: iletişim süreçlerini yönettim.",
+          "rewritten": "Akademik personel ve öğrenciler arasında iletişim süreçlerini erişim yönetimi ile sağladım.",
+          "original": "Akademik personel ve öğrenciler arasında iletişim süreçlerini yönettim."
+        },
+        {
+          "id": "3-2",
+          "reason": "korunmadi",
+          "detail": "dayanak kayboldu: ekip yönetimine katkı sağladım.",
+          "rewritten": "Organizasyon ve raporlama ile paydaş yönetimine katkı sağladım.",
+          "original": "Organizasyon, raporlama ve ekip yönetimine katkı sağladım."
+        }
+      ],
+      "scoreBefore": 6,
+      "scoreBullets": 6,
+      "scoreFull": 6,
+      "durationMs": 5021
+    },
+    {
+      "id": "cv-c__ilan-4",
+      "bulletCount": 11,
+      "sameLanguage": true,
+      "rewrittenCount": 2,
+      "proposedCount": 0,
+      "discarded": {
+        "korunmadi": 2
+      },
+      "summaryAccepted": false,
+      "addedSkills": [],
+      "discards": [
+        {
+          "id": "0-1",
+          "reason": "korunmadi",
+          "detail": "dayanak kayboldu: teknik destek sağladım.",
+          "rewritten": "Öğrencilerin proje geliştirme süreçlerine teknik destek sağlayarak problem çözme yeteneğine sahip oldum.",
+          "original": "Öğrencilerin proje geliştirme süreçlerine teknik destek sağladım."
+        },
+        {
+          "id": "1-2",
+          "reason": "korunmadi",
+          "detail": "dayanak kayboldu: sürekli geliştirdim",
+          "rewritten": "Eğitim içeriklerini sürekli geliştirerek yeni gelişmeleri yakından takip ettim.",
+          "original": "Eğitim içeriklerini sürekli geliştirdim."
+        }
+      ],
+      "scoreBefore": 10,
+      "scoreBullets": 10,
+      "scoreFull": 10,
+      "durationMs": 3364
+    }
+  ],
+  "atilan": {
+    "uyumsuz": 1,
+    "uyarili": 6,
+    "korunmadi": 5
+  }
+}
