@@ -226,18 +226,38 @@ de kullanıcının işi.
 **Ne zaman gerekli:** K3'ten (22 Kasım) önce. Ödeme alan bir ürünün giriş
 e-postası spam klasörüne düşerse kullanıcı hiç giremez.
 
-## 13 · Anonim kullanıcı kayıtları birikiyor
+## 13 · Anonim kullanıcı kayıtları birikiyor · KAPANDI (27 Eylül 2026)
 
 **Ne:** Kayıt olmadan giden ziyaretçilerin `User`, `Resume`, `JobPosting` ve
 `Analysis` kayıtları veritabanında kalıyor. Kayıt olanların anonim kaydı
 `onLinkAccount` sonrası siliniyor, ama olmayanların kalıyor.
 
-**Neden şimdi değil:** Tek kullanıcılı geliştirmede sorun değil ve temizlik
-işi bir zamanlanmış görev gerektiriyor (henüz altyapı yok).
+**Nasıl kapandı:** `apps/web/lib/temizlik.ts` 30 günden eski, `isAnonymous`
+alanı tam `true` olan kullanıcıları bulup `lib/silme.ts`'e devrediyor — hesap
+silme akışıyla (#14) aynı kod, iki kopya yok. Çağıran betik:
+`pnpm --filter @uyarla/web temizlik` (öntanımlı DENEME kipi, silmek için
+`--sil`). Tümleşik test kayıtlı kullanıcının, `isAnonymous` NULL olanın ve
+30 günden yeni ziyaretçinin verisine dokunulmadığını gerçek veritabanında
+doğruluyor. Saklama süresi ve deneme kipi kararı K-41'de.
 
-**Ne zaman gerekli:** Trafik başladığında. Ayrıca KVKW açısından:
-kullanılmayan CV'lerin süresiz saklanması savunulabilir değil. 30 gün
-sonra silen bir iş yeterli.
+**Kalan açık — cron yok.** Betik elle çalıştırılıyor. Zamanlanmış görev
+altyapısı dağıtım kararına bağlı (K-02: worker ayrı sunucuda, Vercel'in
+fonksiyonları sürekli çalışamıyor). Dağıtım netleştiğinde tek satırlık iş.
+
+**AÇIK KALAN — cron kurulumu dağıtım kararına bağlı.** Betik var, onu günde
+bir çalıştıracak bir şey yok. Seçenekler dağıtım topolojisine göre (K-02):
+
+- **Vercel Cron** → `/api/temizlik` gibi bir uç açıp `CRON_SECRET` ile
+  korumak. Tek dezavantaj: silme işi web katmanının fonksiyon süresine bağlı
+  kalıyor.
+- **Worker sunucusunda `node-cron` ya da sistem `crontab`** → süre sınırı
+  yok, ama worker şu anda kimlik ve kullanıcı verisi bilmiyor (spec §4) ve o
+  sınırı aşmak gerekir.
+- **`crontab` + `pnpm --filter @uyarla/web temizlik --sil`** → en az kod,
+  worker'ın sınırını da bozmuyor; sunucuda depo ağacının durmasını istiyor.
+
+**Ne zaman gerekli:** Trafik başladığında. Dağıtım kararı verilirken bu üç
+seçenekten biri seçilmeli; kod tarafında yapılacak iş yalnızca tetikleme.
 
 ## 14 · Hesap silme akışı yok · KAPANDI (27 Eylül 2026)
 
