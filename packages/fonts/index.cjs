@@ -18,19 +18,57 @@ const { dirname, join } = require("node:path")
  *     döndürüyor ve dosya açılamıyor
  *
  * Dosya sisteminden okumak bundler'ın görüş alanının tümüyle dışında.
+ *
+ * Bu paketin `serverExternalPackages` içinde olması işe yaramıyor: K-42'de
+ * ölçüldü, `next build` çıktısında bu dosyanın kaynağı
+ * `.next/server/chunks/*.js` içine olduğu gibi gömülmüş çıkıyor. Yani
+ * `__dirname` ve `require.resolve` gibi modülün diskteki yerine bağlı her
+ * şey paketlenmiş kopyada anlamını yitiriyor. Aşağıdaki arama bunu
+ * varsayarak yazıldı.
  */
 
-/** Depo kökünü cwd'den yukarı yürüyerek bulur. */
-function depoKoku() {
+/** Font dosyalarının bulunduğu dizinin depo köküne göre yolu. */
+const ARANAN_DIZIN = join("packages", "fonts", "ttf")
+
+/** Varlığı sınanan dosya; dizin adı tek başına yeterli kanıt değil. */
+const ISARET_DOSYASI = "DejaVuSans.ttf"
+
+/**
+ * Font dizinini bulur.
+ *
+ * İki aday sırayla deneniyor, ikisi de var olan bir dosyayla doğrulanıyor:
+ *
+ * 1. `__dirname/ttf` — bu dosya gerçek bir CJS modülü olarak yüklendiğinde
+ *    (worker, testler, `tsx`) kesin doğru cevap ve cwd'den bağımsız.
+ *    Paketlenmiş kopyada `__dirname` başka bir yeri gösterir; o yüzden
+ *    sonucu sınanıyor, güvenilmiyor.
+ *
+ * 2. cwd'den yukarı yürüyüp `packages/fonts/ttf` aramak — paketlenmiş kod
+ *    için kalan tek yol. ARANAN HEDEFİN KENDİSİ; eskiden
+ *    `pnpm-workspace.yaml` aranıyordu ve o, depo ağacının diskte durmasını
+ *    şart koşuyordu. Dağıtımda depo ağacı yok, yalnızca
+ *    `outputFileTracingIncludes` ile kopyalanan `packages/fonts/ttf` var
+ *    (bkz. `apps/web/next.config.mjs`). İlk adayın cwd'nin kendisi olması
+ *    önemli: Vercel'de işlev kökü (`/var/task`) doğrudan bu dizini taşıyor,
+ *    yukarıda hiçbir şey yok.
+ */
+function fontDizini() {
+  const yanindaki = join(__dirname, "ttf")
+  if (existsSync(join(yanindaki, ISARET_DOSYASI))) return yanindaki
+
   let dizin = process.cwd()
   for (let i = 0; i < 10; i++) {
-    if (existsSync(join(dizin, "pnpm-workspace.yaml"))) return dizin
+    const aday = join(dizin, ARANAN_DIZIN)
+    if (existsSync(join(aday, ISARET_DOSYASI))) return aday
     const ust = dirname(dizin)
     if (ust === dizin) break
     dizin = ust
   }
+
   throw new Error(
-    "Font dizini bulunamadı: pnpm-workspace.yaml aranarak depo köküne ulaşılamadı.",
+    `Font dizini bulunamadı: ne ${yanindaki} ne de ${process.cwd()} ve üstündeki ` +
+      `dizinlerde ${ARANAN_DIZIN} var. Dağıtımda bu, next.config.mjs'deki ` +
+      `outputFileTracingIncludes girdisinin font dizinini kopyalamadığı anlamına gelir.`,
   )
 }
 
@@ -46,7 +84,7 @@ let onbellek = null
 function fontYollari() {
   if (onbellek) return onbellek
 
-  const dizin = join(depoKoku(), "packages", "fonts", "ttf")
+  const dizin = fontDizini()
   const yollar = {
     /**
      * DejaVu Sans. pdfkit'in gömülü Helvetica'sı WinAnsi kodlaması kullanıyor

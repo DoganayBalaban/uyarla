@@ -1733,3 +1733,67 @@ dağıtım topolojisine (K-02) bağlı bir karar ve kodda yapılacak iş yalnız
 sağlayıcıda açık olmayabilir ve silme sırasını SQL'de ikinci kez yazmak
 gerekirdi) · BullMQ tekrarlayan işi (worker kimlik ve kullanıcı verisi
 bilmiyor, spec §4 sınırını bozardı).
+
+## K-42 · Font dosyaları dağıtıma elle dahil ediliyor; arama hedefi değişti
+
+**Tarih:** 29 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 2+
+**Birikmiş işler #9'u kapatır.**
+
+**Karar:** `next.config.mjs` font dizinini indirme route'unun izine elle
+ekliyor, ve `@uyarla/fonts` artık depo kökünü değil **hedefin kendisini**
+arıyor.
+
+**Sorun:** K-30 fontları çalışma anında dosya sisteminden okumaya karar
+vermişti (bundler'ın üç yolu da kırılmıştı) ama arama `pnpm-workspace.yaml`
+üzerinden gidiyordu — yani depo ağacının diskte durmasını şart koşuyordu.
+Dağıtımda depo ağacı yok.
+
+**Ölçüm:** `next build` dosya izlemesi yalnızca **statik** bağımlılıkları
+görüyor. Hiçbir yerde `import "….ttf"` olmadığı için izlemede **sıfır** font
+dosyası çıkıyordu; PDF indirme üretimde çalışma anında patlardı.
+
+```js
+outputFileTracingRoot: depoKoku,               // tahmin apps/web'de kalabiliyor
+outputFileTracingIncludes: {
+  "/api/adapt/[id]/download": ["../../packages/fonts/ttf/**"],
+}
+```
+
+LICENSE de dahil: DejaVu yeniden dağıtılıyor, lisansı yanında gitmeli.
+
+**Arama iki adaya indi ve ikisi de işaret dosyasıyla doğrulanıyor:**
+
+1. `__dirname/ttf` — gerçek bir CJS modülü olarak yüklendiğinde (worker,
+   testler, `tsx`) kesin cevap ve cwd'den bağımsız.
+2. cwd'den yukarı yürüyüp `packages/fonts/ttf` aramak — paketlenmiş kod için
+   kalan tek yol. Aranan artık hedefin kendisi, depo işareti değil.
+
+### Negatif kontrol — bu kararın tek gerçek kanıtı
+
+K-30 pahalı bir ders bırakmıştı: bir yaklaşım derlemeyi geçmiş ama çalışma
+anında 500 vermişti. "Derleme geçti" bu işte kanıt sayılmıyor.
+
+Yordam: `UYARLA_STANDALONE=1` ile derle, **depodaki `packages/fonts/ttf`
+dizinini geçici olarak gizle**, cwd'yi standalone köküne al ve PDF üret.
+
+```
+standalone çıktısında : packages/fonts/ttf/{DejaVuSans.ttf, DejaVuSans-Bold.ttf, LICENSE}
+depo fontları gizli   : çözümleme standalone kopyasını buldu
+üretilen PDF          : 17 132 bayt
+metin katmanı         : "Şeyma Çağlar / AI Mühendisi · İstanbul / Yapay zekâ ve yazılım…"
+```
+
+Depo ağacı olmadan, yalnızca izlemenin kopyaladığı dosyalarla Türkçe
+karakterler doğru çıkıyor.
+
+**`output: "standalone"` bir kapının arkasında.** Vercel onu kullanmıyor,
+kendi işlevlerini `.nft.json` izlerinden kuruyor; ama izin ne kopyaladığını
+dosya sisteminde görmenin tek yerel yolu standalone çıktısı. Her derlemeye
+~70 MB kopyalama bindirmesin diye `UYARLA_STANDALONE` ile açılıyor.
+
+**Yan bulgu:** `serverExternalPackages` yalnızca uygulamanın KENDİ kodundan
+gelen import'lara uygulanıyor. `transpilePackages` içindeki bir paketten
+gelen import'ta uygulanmıyor — `pdfkit`, `docx`, `@prisma/client` ve
+`@uyarla/fonts` derleme çıktısında paketlenmiş hâlde duruyor; yalnızca
+`bullmq` ve `ioredis` (doğrudan `apps/web/lib`'den import ediliyorlar)
+gerçekten dışarıda kalıyor.
