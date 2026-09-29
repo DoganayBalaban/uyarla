@@ -139,7 +139,17 @@ olabilir" uyarısıyla kullanıcıya gösteriyor; DOCX'te `w:cols` ile tanımlı
 çok sütunlu düzen doğrudan "sorun" olarak işaretleniyor. Çıkarım sırası
 hâlâ düzeltilmiyor.
 
-## 9 · Font yolu depo köküne bağlı
+## 9 · Font yolu depo köküne bağlı · KAPANDI (K-42, 29 Eylül 2026)
+
+**Nasıl kapandı:** `next.config.mjs` font dizinini indirme route'unun izine
+elle ekliyor (`outputFileTracingIncludes`) ve `@uyarla/fonts` artık depo
+işareti değil hedefin kendisini arıyor. Negatif kontrolle doğrulandı: depodaki
+fontlar gizliyken, standalone çıktısındaki kopyalarla Türkçe karakterleri
+doğru bir PDF üretildi.
+
+**Aşağıdaki metin kapanmadan önceki durumu anlatıyor; kayıt için duruyor.**
+
+### Önceki durum
 
 **Ne:** `@uyarla/fonts` font dosyalarını, `process.cwd()`'den yukarı yürüyüp
 `pnpm-workspace.yaml` arayarak buluyor. Yani depo ağacının çalışma anında
@@ -344,3 +354,30 @@ kaçışlaması; `dangerouslySetInnerHTML` kullanılmıyor.
 ve kök adresi `BETTER_AUTH_URL`'den derleme anında alıyor. Üretim derlemesi bu
 değişken doğru adrese ayarlıyken alınmalı; aksi hâlde sitemap
 `localhost:3000`'i gösterir.
+
+## 17 · Prisma sorgu motoru standalone çıktısında yok
+
+**Kaynak:** K-42'nin negatif kontrolü · 29 Eylül 2026
+
+**Ne:** `UYARLA_STANDALONE=1` ile üretilen çıktıda sunucu ayağa kalkıyor ve
+tanıtım sayfası 200 dönüyor, ama veritabanına giden her istek düşüyor: Prisma
+sorgu motoru ikilisi izlemeye girmemiş.
+
+```
+Prisma Client could not locate the Query Engine
+  …/apps/web/.next/standalone/apps/web/.prisma/client
+```
+
+**Nasıl bulundu:** Font düzeltmesinin negatif kontrolünü standalone sunucu
+üzerinden yapmaya çalışırken. Font kontrolü sonunda motora ihtiyaç duymayan
+bir yoldan yapıldı, ama bu ayrı sorun ortaya çıktı.
+
+**Neden şimdi değil:** Font sorunuyla aynı aileden (dosya izlemesi ikili
+dosyaları görmüyor) ama ayrı bir düzeltme: `outputFileTracingIncludes`'a
+motor dosyalarının eklenmesi, ya da Prisma'nın `binaryTargets`
+yapılandırması. Tek bir PR'a iki dağıtım sorununu sıkıştırmak ikisini de
+doğrulanamaz kılardı.
+
+**Ne zaman gerekli:** Dağıtımdan önce. Vercel `output: "standalone"`
+kullanmıyor ve kendi izini kuruyor, yani orada sorun çıkmayabilir — ama
+bilinmiyor ve ilk dağıtımda ölçülmeli.
