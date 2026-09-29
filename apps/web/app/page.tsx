@@ -1,4 +1,5 @@
-import { FotoYeri } from "./components/landing/FotoYeri"
+import Image from "next/image"
+import { Foto } from "./components/landing/Foto"
 import { Gezinme } from "./components/landing/Gezinme"
 import { Ikon, type IkonAdi } from "./components/landing/Ikon"
 import {
@@ -126,24 +127,28 @@ const BENTO: { ikon: IkonAdi; baslik: string; metin: string; yakinda?: boolean; 
 const PERSONALAR = [
   {
     id: "foto-persona-1",
+    alt: "Kampüs kafesinde dizüstüyle çalışan yeni mezun",
     kim: "Yeni mezun",
     soz: "Deneyimin az değil, doğru anlatılmamış.",
     foto: "Kampüste ya da kafede dizüstüyle çalışan yeni mezun, doğal ışık",
   },
   {
     id: "foto-persona-2",
+    alt: "Evde mutfak masasında dizüstünün yanında not alan bir kadın",
     kim: "Kariyer değiştiren",
     soz: "Eski işindeki becerileri yeni alanın diliyle anlat.",
     foto: "Evden çalışan, not alan 30'lu yaşlarda biri, sıcak tonlar",
   },
   {
     id: "foto-persona-3",
+    alt: "Ortak çalışma alanında dizüstünde belge inceleyen deneyimli bir profesyonel",
     kim: "Deneyimli profesyonel",
     soz: "Az ama isabetli başvuru. Her biri ilana özel.",
     foto: "Ofiste ya da ortak çalışma alanında deneyimli profesyonel, takım elbisesiz",
   },
   {
     id: "foto-persona-4",
+    alt: "Pencere önünde dizüstünden görüntülü görüşme yapan genç bir profesyonel",
     kim: "Yurt dışına başvuran",
     soz: "Türkçe CV'nden ilana özel İngilizce CV.",
     foto: "Pencere önünde video görüşmesi yapan genç profesyonel",
@@ -227,11 +232,15 @@ export default function Home() {
             </div>
 
             <div className={s.heroGorsel}>
-              <FotoYeri
+              <Image
                 id="foto-hero"
-                oran="4 / 5"
-                aciklama="Doğal ışıkta dizüstünde CV'sine bakan genç profesyonel, Türkiye'den tanıdık bir mekân"
-                className={s.heroFoto}
+                src="/foto/hero.jpg"
+                alt="Galata Kulesi'ne bakan bir kafede dizüstünde CV'sini inceleyen genç bir yazılımcı"
+                width={1086}
+                height={1358}
+                sizes="(max-width: 900px) 92vw, 520px"
+                priority
+                className={`${s.heroFoto} ${s.foto}`}
               />
               <div className={s.heroKartUst}>
                 <SkorKarti />
@@ -314,10 +323,14 @@ export default function Home() {
                 <DosyaCipleri />
               </div>
               <div className={s.ozellikGorsel}>
-                <FotoYeri
+                <Foto
                   id="foto-cikti"
+                  dosya="cikti.png"
                   oran="5 / 4"
                   aciklama="Masada basılı CV ya da ekranda açık PDF; elde kahve, sade kompozisyon"
+                  alt="Kafe masasında basılı bir CV, açık dizüstü ve bir fincan Türk kahvesi"
+                  sizes="(max-width: 900px) 92vw, 560px"
+                  className={s.ciktiFoto}
                 />
               </div>
             </div>
@@ -411,7 +424,15 @@ export default function Home() {
               {PERSONALAR.map((p) => (
                 <figure key={p.id} className={s.persona}>
                   {p.yakinda && <span className={`${s.yakinda} ${s.personaRozet}`}>Yakında</span>}
-                  <FotoYeri id={p.id} oran="3 / 4" aciklama={p.foto} className={s.personaFoto} />
+                  <Foto
+                    id={p.id}
+                    dosya={`${p.id.replace("foto-", "")}.png`}
+                    oran="3 / 4"
+                    aciklama={p.foto}
+                    alt={p.alt}
+                    sizes="(max-width: 640px) 92vw, (max-width: 1100px) 45vw, 280px"
+                    className={s.personaFoto}
+                  />
                   <figcaption className={s.personaAlt}>
                     <span className={s.personaKim}>{p.kim}</span>
                     <span className={s.personaSoz}>“{p.soz}”</span>
@@ -461,10 +482,13 @@ export default function Home() {
                   <Ikon ad="ok" boyut={18} />
                 </a>
               </div>
-              <FotoYeri
+              <Foto
                 id="foto-son-cagri"
+                dosya="son-cagri.png"
                 oran="1 / 1"
                 aciklama="Telefonda mülakat daveti e-postasını okuyup gülümseyen biri"
+                alt="Telefonunda güzel bir haber okuyup gülümseyen genç biri"
+                sizes="(max-width: 900px) 80vw, 360px"
                 className={s.sonCagriFoto}
               />
             </div>

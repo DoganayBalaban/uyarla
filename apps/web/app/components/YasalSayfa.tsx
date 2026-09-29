@@ -1,4 +1,5 @@
 import { YASAL } from "@/lib/yasal"
+import { Logo } from "./Logo"
 
 /**
  * KVKK aydınlatma metni ve kullanım koşulları için ortak okuma düzeni:
@@ -17,13 +18,7 @@ export function YasalSayfa({
     <div className="min-h-dvh bg-white dark:bg-gece">
       <header className="border-b border-cizgi">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5">
-          <a href="/" className="inline-flex items-center gap-2.5 font-baslik text-xl font-extrabold tracking-tight text-metin">
-            <span aria-hidden="true" className="relative h-6 w-5">
-              <span className="absolute inset-0 -translate-x-0.5 -rotate-12 rounded-[5px] bg-mavi/30" />
-              <span className="absolute inset-0 rounded-[5px] bg-mavi" />
-            </span>
-            uyarla
-          </a>
+          <Logo />
           <a href="/" className="text-sm font-medium text-gri hover:text-metin">
             ← Ana sayfa
           </a>
