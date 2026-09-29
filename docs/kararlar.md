@@ -1690,3 +1690,46 @@ atılıyordu):
 ortalama skor +1,0 → +1,2, puanlama isabeti %94,6'da kaldı. Kalan 8 atmanın
 hepsi gerçek uydurma (ilandan sayı kopyalama, anlamsız ek, kelime değiştirme);
 kod tarafında kapatılacak bir şey kalmadı, üretim modeliyle yeniden ölçülmeli.
+
+
+## K-41 · Anonim temizlik saklama süresi 30 gün, betik öntanımlı deneme kipinde
+
+**Tarih:** 27 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** KVKK / Sprint 3B
+
+**Karar:** Kayıt olmadan giden ziyaretçinin verisi 30 gün sonra siliniyor.
+Temizlik mantığı `apps/web/lib/temizlik.ts`'te saf ve test edilebilir duruyor;
+onu çağıran betik `pnpm --filter @uyarla/web temizlik` ve **öntanımlı olarak
+hiçbir şey silmiyor** — silmek `--sil` bayrağı istiyor.
+
+**Neden 30 gün — ve bu değer ÖLÇÜLMEDİ, TAHMİN.** Üst sınırı KVKK koyuyor:
+kullanılmayan bir CV'nin süresiz saklanması savunulabilir değil. Alt sınırı
+huni koyuyor: ziyaretçi bir ay içinde dönüp kayıt olabilir ve devralma (K-34)
+o kaydın durmasına bağlı. 30 gün ikisinin arasında seçilmiş bir sayı, ölçülmüş
+bir eşik değil. Hız limiti değerlerinde olduğu gibi (spec §9) yapılandırmada
+duruyor; gerçek rakam, kayıt olan ziyaretçilerin ilk analizden kaç gün sonra
+döndüğü verisi biriktiğinde ölçülecek.
+
+**Neden öntanımlı deneme kipi:** Geri alınamaz bir işi çalıştırmak açık bir
+niyet istemeli. Yanlışlıkla çalıştırılan bir silme betiği, hiç yazılmamış bir
+betikten kötü.
+
+**Koşulun iki kritik ayrıntısı:**
+
+- `isAnonymous: true` tam eşitlik, doğruluk değeri değil. Alan şemada nullable
+  (`Boolean?`, K-34) ve `not: false` yazılsaydı NULL taşıyan kayıtlı hesaplar
+  da eşleşirdi.
+- Kesim `lt`, `lte` değil. Sınırda duran kaydı bırakıyoruz: geri alınamaz bir
+  işlemde eşitlik hâlinde silmemek doğru taraf.
+
+**Silme mantığı paylaşılıyor, kopyalanmıyor.** Temizlik işi kendi silme kodunu
+yazmıyor, `lib/silme.ts`'e devrediyor (K-36). İki kopya tutmak, biri
+düzeltilip öteki unutulduğunda veri sızdırırdı.
+
+**Zamanlama henüz bağlanmadı.** Betik var, onu günde bir çalıştıran bir şey
+yok; seçenekler ve gerekçeleri `docs/birikmis-isler.md` madde 13'te. Tetikleme
+dağıtım topolojisine (K-02) bağlı bir karar ve kodda yapılacak iş yalnızca o.
+
+**Değerlendirilen alternatifler:** Postgres'te `pg_cron` (yönetilen
+sağlayıcıda açık olmayabilir ve silme sırasını SQL'de ikinci kez yazmak
+gerekirdi) · BullMQ tekrarlayan işi (worker kimlik ve kullanıcı verisi
+bilmiyor, spec §4 sınırını bozardı).
