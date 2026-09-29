@@ -2,7 +2,7 @@
  * Giriş ekranının sağındaki görsel panel.
  *
  * Arkada ipeksi kurdeleler, önde CV'deki kavramların döndüğü bir yörünge,
- * ortada skor halkası ve altta bir kullanıcı yorumu kartı.
+ * ortada skor halkası ve altta ürünün sözlerini taşıyan bir kart.
  *
  * Tamamen dekoratif; ekran okuyucudan gizli.
  */
@@ -22,19 +22,17 @@ const KAVRAMLAR: { metin: string; r: number; aci: number; eksik?: boolean }[] = 
 const HALKALAR = [26, 50, 74, 96]
 
 /**
- * YER TUTUCU YORUM — gerçek değil, yayından önce değiştirilmeli.
- *
- * Marka rehberi §11: yalnızca gerçek kullanıcıların açık izniyle, gerçek
- * isim veya onaylı takma adla yorum yayımlanır. Ad ve unvan bilerek
- * "yer tutucu" görünüyor ki gerçek sanılıp canlıya çıkmasın.
+ * Alt karttaki sözler. Burada önceden yer tutucu bir kullanıcı yorumu
+ * duruyordu; marka rehberi §11 yalnızca gerçek kullanıcının açık izniyle
+ * yorum yayımlamaya izin veriyor. Gerçek yorum gelene kadar kartta ürünün
+ * kodda karşılığı olan sözleri duruyor (tanıtım sayfasındaki güven satırıyla
+ * aynı).
  */
-const YORUM = {
-  metin:
-    "Aynı CV ile aylarca başvurdum, dönüş yoktu. Uyarla eksik anahtar kelimeleri gösterdi, deneyimimi ilanın diliyle yeniden yazdı; hiçbir şey uydurmadı.",
-  ad: "Ad Soyad",
-  unvan: "Yeni mezun · Frontend Geliştirici",
-  basHarfler: "AS",
-}
+const SOZLER = [
+  "Deneyimin uydurulmaz; her değişiklik CV'ndeki bir ifadeye dayanır.",
+  "Her değişikliği sen onaylarsın.",
+  "Uyarlanmış CV'ni sade bir şablonla PDF ya da DOCX olarak indirirsin.",
+]
 
 export function GirisGorseli() {
   return (
@@ -124,23 +122,22 @@ export function GirisGorseli() {
         Aynı deneyim, doğru anlatım.
       </p>
 
-      {/* Alt kart: kullanıcı yorumu. */}
-      <figure className="absolute inset-x-6 bottom-6 sm:inset-x-10 sm:bottom-10 motion-safe:animate-yuzme">
+      {/* Alt kart: ürünün sözleri. */}
+      <div className="absolute inset-x-6 bottom-6 sm:inset-x-10 sm:bottom-10 motion-safe:animate-yuzme">
         <div className="max-w-sm rounded-kart border border-white/20 bg-white/10 p-5 text-white shadow-2xl backdrop-blur-xl">
-          <div className="flex items-center gap-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#8ea2ff] to-mavi font-baslik text-sm font-extrabold">
-              {YORUM.basHarfler}
-            </span>
-            <figcaption>
-              <p className="text-sm font-semibold">{YORUM.ad}</p>
-              <p className="text-xs text-white/60">{YORUM.unvan}</p>
-            </figcaption>
-          </div>
-          <blockquote className="mt-3 text-sm leading-relaxed text-white/85">
-            “{YORUM.metin}”
-          </blockquote>
+          <p className="font-baslik text-sm font-extrabold tracking-tight">Uyarla'nın sözü</p>
+          <ul className="mt-3 space-y-2 text-sm leading-relaxed text-white/85">
+            {SOZLER.map((soz) => (
+              <li key={soz} className="flex gap-2.5">
+                <svg viewBox="0 0 16 16" className="mt-1 size-3.5 shrink-0 text-[#4ade80]" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M3 8.5l3.2 3L13 5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {soz}
+              </li>
+            ))}
+          </ul>
         </div>
-      </figure>
+      </div>
     </div>
   )
 }
