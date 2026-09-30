@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from "react"
 import { signOut, useSession } from "@/lib/authClient"
 import { cn } from "@/lib/cn"
 import { loginPath } from "@/lib/returnPath"
-import { CONTAINER as CONTAINER } from "@/components/layout/PageShell"
+import { CONTAINER } from "@/components/layout/PageShell"
 
 /**
  * Bütün sayfaların üst çubuğu; kök layout'ta bir kez çiziliyor. Yapı, yükseklik
@@ -59,17 +59,17 @@ export function Navbar() {
   const onLanding = path === "/"
 
   return (
-    <header className="sticky top-0 z-40 border-b border-cizgi bg-kart/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border bg-card/85 backdrop-blur-md">
       <div className={cn(CONTAINER, "flex h-16 max-w-[75rem] items-center gap-2")}>
         <Link
           href={registered ? "/dashboard" : "/"}
           aria-label="uyarla ana sayfa"
-          className="mr-4 inline-flex items-center gap-2.5 font-baslik text-xl font-extrabold tracking-tight text-metin no-underline"
+          className="mr-4 inline-flex items-center gap-2.5 font-heading text-xl font-extrabold tracking-tight text-foreground no-underline"
         >
           {/* Rehber §9.1: üst üste iki belge, biri hafif eğik. */}
           <span aria-hidden className="relative h-6 w-5">
-            <span className="absolute inset-0 -translate-x-0.5 -rotate-12 rounded-[5px] bg-mavi/30" />
-            <span className="absolute inset-0 rounded-[5px] bg-mavi" />
+            <span className="absolute inset-0 -translate-x-0.5 -rotate-12 rounded-[5px] bg-brand-blue/30" />
+            <span className="absolute inset-0 rounded-[5px] bg-brand-blue" />
           </span>
           uyarla
         </Link>
@@ -84,8 +84,8 @@ export function Navbar() {
                     href={href}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
-                      "inline-flex items-center gap-2 rounded-buton px-2.5 py-2 text-sm font-medium no-underline transition-colors sm:px-3",
-                      isActive ? "bg-mavi/10 text-mavi" : "text-gri hover:bg-zemin hover:text-metin",
+                      "inline-flex items-center gap-2 rounded-button px-2.5 py-2 text-sm font-medium no-underline transition-colors sm:px-3",
+                      isActive ? "bg-brand-blue/10 text-brand-blue" : "text-muted hover:bg-background hover:text-foreground",
                     )}
                   >
                     <Icon className="size-4" aria-hidden />
@@ -99,7 +99,7 @@ export function Navbar() {
                   <Link
                     key={href}
                     href={href}
-                    className="hidden rounded-buton px-3 py-2 text-sm font-medium text-gri no-underline transition-colors hover:text-metin md:inline-flex"
+                    className="hidden rounded-button px-3 py-2 text-sm font-medium text-muted no-underline transition-colors hover:text-foreground md:inline-flex"
                   >
                     {label}
                   </Link>
@@ -118,7 +118,7 @@ export function Navbar() {
             <>
               <Link
                 href={loginPath(path)}
-                className="inline-flex items-center gap-2 rounded-buton px-3 py-2 text-sm font-semibold text-metin no-underline transition-colors hover:bg-zemin"
+                className="inline-flex items-center gap-2 rounded-button px-3 py-2 text-sm font-semibold text-foreground no-underline transition-colors hover:bg-background"
               >
                 <LogIn className="size-4" aria-hidden />
                 Giriş yap
@@ -126,7 +126,7 @@ export function Navbar() {
               {onLanding && (
                 <Link
                   href="/analyze"
-                  className="hidden rounded-buton bg-mavi px-4 py-2 text-sm font-semibold text-white no-underline shadow-sm shadow-mavi/30 transition hover:bg-mavi/90 sm:inline-flex"
+                  className="hidden rounded-button bg-brand-blue px-4 py-2 text-sm font-semibold text-white no-underline shadow-sm shadow-brand-blue/30 transition hover:bg-brand-blue/90 sm:inline-flex"
                 >
                   Ücretsiz skorumu gör
                 </Link>
@@ -183,7 +183,7 @@ function AccountMenu({ userEmail, isActive }: { userEmail: string; isActive: boo
 
   const initial = (userEmail[0] ?? "?").toLocaleUpperCase("tr-TR")
   const item =
-    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-metin no-underline outline-none hover:bg-zemin focus-visible:bg-zemin"
+    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-foreground no-underline outline-none hover:bg-background focus-visible:bg-background"
 
   return (
     <div ref={wrapper} className="relative">
@@ -195,11 +195,11 @@ function AccountMenu({ userEmail, isActive }: { userEmail: string; isActive: boo
         aria-label="Hesap menüsü"
         onClick={() => setOpen((a) => !a)}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full py-1 pr-2 pl-1 text-gri transition-colors hover:bg-zemin hover:text-metin",
-          (open || isActive) && "bg-zemin text-metin",
+          "inline-flex items-center gap-1.5 rounded-full py-1 pr-2 pl-1 text-muted transition-colors hover:bg-background hover:text-foreground",
+          (open || isActive) && "bg-background text-foreground",
         )}
       >
-        <span className="grid size-8 place-items-center rounded-full bg-mavi font-baslik text-sm font-extrabold text-white">
+        <span className="grid size-8 place-items-center rounded-full bg-brand-blue font-heading text-sm font-extrabold text-white">
           {initial}
         </span>
         <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} aria-hidden />
@@ -211,29 +211,29 @@ function AccountMenu({ userEmail, isActive }: { userEmail: string; isActive: boo
           role="menu"
           aria-label="Hesap"
           onKeyDown={handleArrows}
-          className="absolute top-full right-0 mt-2 w-64 rounded-kart border border-cizgi bg-kart p-1.5 shadow-lg shadow-black/10"
+          className="absolute top-full right-0 mt-2 w-64 rounded-card border border-border bg-card p-1.5 shadow-lg shadow-black/10"
         >
           <div className="px-3 pt-2 pb-2.5">
-            <p className="m-0 text-xs text-gri">Giriş yapılan hesap</p>
-            <p className="m-0 mt-0.5 truncate text-sm font-semibold text-metin" title={userEmail}>
+            <p className="m-0 text-xs text-muted">Giriş yapılan hesap</p>
+            <p className="m-0 mt-0.5 truncate text-sm font-semibold text-foreground" title={userEmail}>
               {userEmail}
             </p>
           </div>
-          <div className="my-1 h-px bg-cizgi" role="separator" />
+          <div className="my-1 h-px bg-border" role="separator" />
           <Link role="menuitem" tabIndex={-1} onClick={() => setOpen(false)} href="/account" className={item}>
-            <Settings className="size-4 text-gri" aria-hidden />
+            <Settings className="size-4 text-muted" aria-hidden />
             Hesap ayarları
           </Link>
-          <div className="my-1 h-px bg-cizgi" role="separator" />
+          <div className="my-1 h-px bg-border" role="separator" />
           <Link role="menuitem" tabIndex={-1} onClick={() => setOpen(false)} href="/privacy" className={item}>
-            <ShieldCheck className="size-4 text-gri" aria-hidden />
+            <ShieldCheck className="size-4 text-muted" aria-hidden />
             KVKK aydınlatma metni
           </Link>
           <Link role="menuitem" tabIndex={-1} onClick={() => setOpen(false)} href="/terms" className={item}>
-            <FileText className="size-4 text-gri" aria-hidden />
+            <FileText className="size-4 text-muted" aria-hidden />
             Kullanım koşulları
           </Link>
-          <div className="my-1 h-px bg-cizgi" role="separator" />
+          <div className="my-1 h-px bg-border" role="separator" />
           <button
             role="menuitem"
             tabIndex={-1}
@@ -244,7 +244,7 @@ function AccountMenu({ userEmail, isActive }: { userEmail: string; isActive: boo
             }}
             className={item}
           >
-            <LogOut className="size-4 text-gri" aria-hidden />
+            <LogOut className="size-4 text-muted" aria-hidden />
             Çıkış yap
           </button>
         </div>

@@ -11,8 +11,8 @@ export const metadata = { title: "Kullanım koşulları · uyarla" }
 export default function TermsPage() {
   return (
     <LegalPage
-      baslik="Kullanım koşulları"
-      ozet="Uyarla'yı kullanırken neye söz verdiğimizi, neye söz vermediğimizi ve senden ne beklediğimizi anlatıyoruz."
+      title="Kullanım koşulları"
+      summary="Uyarla'yı kullanırken neye söz verdiğimizi, neye söz vermediğimizi ve senden ne beklediğimizi anlatıyoruz."
     >
       <section>
         <h2>1. Hizmet</h2>

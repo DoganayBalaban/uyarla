@@ -3,8 +3,8 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, it, expect, afterEach, beforeAll } from "vitest"
 import { prisma } from "@uyarla/db"
-import { deletionOperations as deletionOperations } from "@/server/deleteAccount"
-import { cleanupAnonymousUsers as cleanupAnonymousUsers } from "@/server/cleanupAnonymousUsers"
+import { deletionOperations } from "@/server/deleteAccount"
+import { cleanupAnonymousUsers } from "@/server/cleanupAnonymousUsers"
 
 const toClean: string[] = []
 let storage: string

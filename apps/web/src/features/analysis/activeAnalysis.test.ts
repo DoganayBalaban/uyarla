@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import {
-  startActiveAnalysis as startActiveAnalysis,
-  updateActiveAnalysis as updateActiveAnalysis,
-  readActiveAnalysis as readActiveAnalysis,
-  clearActiveAnalysis as clearActiveAnalysis,
-  resultPath as resultPath,
-  handleResponse as handleResponse,
+  startActiveAnalysis,
+  updateActiveAnalysis,
+  readActiveAnalysis,
+  clearActiveAnalysis,
+  resultPath,
+  handleResponse,
 } from "@/features/analysis/activeAnalysis"
 
 /** Testler node ortamında; tarayıcının iki yüzeyi elle sağlanıyor. */

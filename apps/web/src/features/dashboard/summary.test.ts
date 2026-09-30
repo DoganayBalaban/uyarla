@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { summarize as summarize } from "@/features/dashboard/summary"
+import { summarize } from "@/features/dashboard/summary"
 import type { BoardCard } from "@/features/applications/board"
 
 function card(suffix: Partial<BoardCard> = {}): BoardCard {

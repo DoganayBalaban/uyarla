@@ -1,5 +1,5 @@
 import { PageShell } from "@/components/layout/PageShell"
-import { ApplicationBoard as ApplicationBoard } from "@/features/applications/components/ApplicationBoard"
+import { ApplicationBoard } from "@/features/applications/components/ApplicationBoard"
 
 export const metadata = { title: "Başvuru panosu · uyarla" }
 

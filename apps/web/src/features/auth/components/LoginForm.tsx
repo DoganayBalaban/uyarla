@@ -5,8 +5,8 @@ import { useEffect, useState } from "react"
 import { signIn } from "@/lib/authClient"
 import { suggestEmail, mailAppFor } from "@/features/auth/emailHints"
 import type { Provider } from "@/features/auth/providers"
-import { LoginVisual as LoginVisual } from "@/features/auth/components/LoginVisual"
-import { SocialLogin as SocialLogin, girisHataAdresi } from "@/features/auth/components/SocialLogin"
+import { LoginVisual } from "@/features/auth/components/LoginVisual"
+import { SocialLogin, girisHataAdresi } from "@/features/auth/components/SocialLogin"
 
 /**
  * Better Auth'un hata kodlarını Türkçe mesaja çeviriyor.
@@ -26,12 +26,12 @@ function Logo() {
   return (
     <Link
       href="/"
-      className="inline-flex items-center gap-2.5 font-baslik text-xl font-extrabold tracking-tight text-metin"
+      className="inline-flex items-center gap-2.5 font-heading text-xl font-extrabold tracking-tight text-foreground"
     >
       {/* Rehber §9.1: üst üste iki belge, biri hafif eğik. */}
       <span aria-hidden="true" className="relative h-6 w-5">
-        <span className="absolute inset-0 -translate-x-0.5 -rotate-12 rounded-[5px] bg-mavi/30" />
-        <span className="absolute inset-0 rounded-[5px] bg-mavi" />
+        <span className="absolute inset-0 -translate-x-0.5 -rotate-12 rounded-[5px] bg-brand-blue/30" />
+        <span className="absolute inset-0 rounded-[5px] bg-brand-blue" />
       </span>
       uyarla
     </Link>
@@ -111,11 +111,11 @@ export function LoginForm({
   }
 
   return (
-    <div className="flex min-h-dvh bg-white dark:bg-gece">
+    <div className="flex min-h-dvh bg-white dark:bg-brand-night">
       <div className="flex w-full flex-col px-6 py-6 sm:px-10 lg:w-1/2 lg:px-16 xl:px-24">
         <header className="flex items-center justify-between">
           <Logo />
-          <Link href="/" className="text-sm font-medium text-gri transition-colors hover:text-metin">
+          <Link href="/" className="text-sm font-medium text-muted transition-colors hover:text-foreground">
             ← Ana sayfa
           </Link>
         </header>
@@ -123,7 +123,7 @@ export function LoginForm({
         <main className="mx-auto flex w-full max-w-[26rem] flex-1 flex-col justify-center py-12">
           {state === "sent" ? (
             <div>
-              <span className="grid size-14 place-items-center rounded-2xl bg-mavi/10 text-mavi dark:text-[#8ea2ff]">
+              <span className="grid size-14 place-items-center rounded-2xl bg-brand-blue/10 text-brand-blue dark:text-[#8ea2ff]">
                 <svg
                   viewBox="0 0 24 24"
                   className="size-7"
@@ -138,14 +138,14 @@ export function LoginForm({
                   <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                 </svg>
               </span>
-              <h1 className="mt-6 font-baslik text-4xl font-extrabold tracking-tight sm:text-5xl">
+              <h1 className="mt-6 font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">
                 Posta kutunu kontrol et
               </h1>
-              <p className="mt-4 text-base leading-relaxed text-gri">
-                <strong className="font-semibold text-metin">{email}</strong> adresine bir giriş
+              <p className="mt-4 text-base leading-relaxed text-muted">
+                <strong className="font-semibold text-foreground">{email}</strong> adresine bir giriş
                 bağlantısı gönderdik. Bağlantı 15 dakika geçerli.
               </p>
-              <p className="mt-2 text-sm text-gri">Gelmediyse spam klasörüne bak.</p>
+              <p className="mt-2 text-sm text-muted">Gelmediyse spam klasörüne bak.</p>
 
               <div className="mt-8 space-y-3">
                 {mailApp && (
@@ -153,7 +153,7 @@ export function LoginForm({
                     href={mailApp.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-mavi px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(43_78_255/0.8)] transition hover:-translate-y-px hover:bg-[#2442e0]"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(43_78_255/0.8)] transition hover:-translate-y-px hover:bg-[#2442e0]"
                   >
                     {mailApp.action}
                     <span aria-hidden="true">↗</span>
@@ -164,7 +164,7 @@ export function LoginForm({
                   type="button"
                   onClick={() => void resend()}
                   disabled={remaining > 0}
-                  className="w-full rounded-2xl border border-cizgi px-5 py-3.5 font-semibold text-metin transition-colors hover:bg-zemin disabled:cursor-not-allowed disabled:text-gri disabled:hover:bg-transparent dark:hover:bg-white/5"
+                  className="w-full rounded-2xl border border-border px-5 py-3.5 font-semibold text-foreground transition-colors hover:bg-background disabled:cursor-not-allowed disabled:text-muted disabled:hover:bg-transparent dark:hover:bg-white/5"
                 >
                   {remaining > 0 ? (
                     <>
@@ -180,9 +180,9 @@ export function LoginForm({
 
                 <p role="status" className="min-h-5 text-center text-sm">
                   {loginError ? (
-                    <span className="text-kehribar">{loginError}</span>
+                    <span className="text-brand-amber">{loginError}</span>
                   ) : resent ? (
-                    <span className="text-yesil">Yeni bağlantı gönderildi. En son geleni kullan.</span>
+                    <span className="text-brand-green">Yeni bağlantı gönderildi. En son geleni kullan.</span>
                   ) : null}
                 </p>
               </div>
@@ -193,23 +193,23 @@ export function LoginForm({
                   setLoginError(null)
                   setState("idle")
                 }}
-                className="mt-2 w-full text-center text-sm font-medium text-gri underline-offset-4 hover:text-metin hover:underline"
+                className="mt-2 w-full text-center text-sm font-medium text-muted underline-offset-4 hover:text-foreground hover:underline"
               >
                 Başka bir e-posta kullan
               </button>
             </div>
           ) : (
             <div>
-              <h1 className="font-baslik text-4xl font-extrabold tracking-tight sm:text-5xl">
+              <h1 className="font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">
                 Hoş geldin
               </h1>
-              <p className="mt-4 text-base leading-relaxed text-gri">
+              <p className="mt-4 text-base leading-relaxed text-muted">
                 E-postanı bırak, sana bir giriş bağlantısı gönderelim. Hesabın yoksa bu adımla
                 oluşur.
               </p>
 
               <form onSubmit={submit} className="mt-10">
-                <label htmlFor="email" className="mb-2 block text-sm font-medium text-metin">
+                <label htmlFor="email" className="mb-2 block text-sm font-medium text-foreground">
                   E-posta adresi
                 </label>
                 <input
@@ -223,15 +223,15 @@ export function LoginForm({
                   placeholder="aday@ornek.com"
                   aria-invalid={loginError ? true : undefined}
                   aria-describedby={loginError ? "giris-hata" : undefined}
-                  className="w-full rounded-2xl border border-transparent bg-zemin px-5 py-4 dark:bg-white/5 text-base text-metin outline-none ring-mavi/25 transition placeholder:text-gri/80 focus:border-mavi focus:bg-white focus:ring-4 dark:focus:bg-white/10"
+                  className="w-full rounded-2xl border border-transparent bg-background px-5 py-4 dark:bg-white/5 text-base text-foreground outline-none ring-brand-blue/25 transition placeholder:text-muted/80 focus:border-brand-blue focus:bg-white focus:ring-4 dark:focus:bg-white/10"
                 />
 
                 {suggestion && (
-                  <p className="mt-3 text-sm text-gri">
+                  <p className="mt-3 text-sm text-muted">
                     <button
                       type="button"
                       onClick={() => setEmail(suggestion)}
-                      className="font-semibold text-mavi underline-offset-4 hover:underline dark:text-[#8ea2ff]"
+                      className="font-semibold text-brand-blue underline-offset-4 hover:underline dark:text-[#8ea2ff]"
                     >
                       {suggestion}
                     </button>{" "}
@@ -240,7 +240,7 @@ export function LoginForm({
                 )}
 
                 {loginError && (
-                  <p id="giris-hata" role="alert" className="mt-3 text-sm text-kehribar">
+                  <p id="giris-hata" role="alert" className="mt-3 text-sm text-brand-amber">
                     {loginError}
                   </p>
                 )}
@@ -248,7 +248,7 @@ export function LoginForm({
                 <button
                   type="submit"
                   disabled={state === "sending"}
-                  className="group mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-mavi px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(43_78_255/0.8)] transition hover:-translate-y-px hover:bg-[#2442e0] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="group mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(43_78_255/0.8)] transition hover:-translate-y-px hover:bg-[#2442e0] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {state === "sending" ? (
                     <>
@@ -266,15 +266,15 @@ export function LoginForm({
                 </button>
               </form>
 
-              <div className="my-7 flex items-center gap-4 text-xs text-gri">
-                <span className="h-px flex-1 bg-cizgi" />
+              <div className="my-7 flex items-center gap-4 text-xs text-muted">
+                <span className="h-px flex-1 bg-border" />
                 ya da şununla devam et
-                <span className="h-px flex-1 bg-cizgi" />
+                <span className="h-px flex-1 bg-border" />
               </div>
 
               <SocialLogin open={enabledProviders} returnTo={returnTo} />
 
-              <ul className="mt-9 space-y-2.5 text-sm text-gri">
+              <ul className="mt-9 space-y-2.5 text-sm text-muted">
                 {[
                   "Skorunu görmek için hesap gerekmez",
                   "CV'n izinsiz kimseyle paylaşılmaz",
@@ -283,7 +283,7 @@ export function LoginForm({
                   <li key={m} className="flex items-center gap-2.5">
                     <svg
                       viewBox="0 0 24 24"
-                      className="size-4 shrink-0 text-yesil"
+                      className="size-4 shrink-0 text-brand-green"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
@@ -301,13 +301,13 @@ export function LoginForm({
           )}
         </main>
 
-        <footer className="text-xs text-gri">
+        <footer className="text-xs text-muted">
           Devam ederek{" "}
-          <Link href="/terms" className="underline underline-offset-2 hover:text-metin">
+          <Link href="/terms" className="underline underline-offset-2 hover:text-foreground">
             kullanım koşullarını
           </Link>{" "}
           kabul etmiş olursun. Verilerinin nasıl işlendiği{" "}
-          <Link href="/privacy" className="underline underline-offset-2 hover:text-metin">
+          <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
             KVKK aydınlatma metninde
           </Link>
           .

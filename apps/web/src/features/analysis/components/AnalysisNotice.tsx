@@ -15,7 +15,7 @@ import {
   handleResponse,
   type ActiveAnalysis,
 } from "@/features/analysis/activeAnalysis"
-import { skorDurumu as scoreStatus } from "@/features/analysis/components/ScoreRing"
+import { scoreStatus } from "@/lib/scoreStatus"
 
 const POLL_MS = 3000
 const DONE_TITLE = "✓ Analizin hazır · uyarla"
@@ -148,7 +148,7 @@ export function AnalysisNotice() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reducedMotion ? undefined : { opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="pointer-events-auto w-full max-w-sm rounded-kart border border-cizgi bg-kart p-4 shadow-xl shadow-gece/10"
+            className="pointer-events-auto w-full max-w-sm rounded-card border border-border bg-card p-4 shadow-xl shadow-brand-night/10"
           >
             {record.status === "running" && (
               <RunningNotice
@@ -179,18 +179,18 @@ function RunningNotice({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-mavi/10 text-mavi">
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand-blue/10 text-brand-blue">
         <LoaderCircle className="size-5 motion-safe:animate-spin" aria-hidden />
       </span>
       <div className="min-w-0 flex-1">
         <p className="m-0 font-semibold">Analizin hazırlanıyor</p>
-        <p className="m-0 mt-0.5 text-sm text-gri">
+        <p className="m-0 mt-0.5 text-sm text-muted">
           {(record.stage && STAGE_SHORT_LABEL[record.stage]) ?? "Sıraya alındı"} · bitince haber vereceğiz
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Link
             href="/analyze"
-            className="inline-flex items-center gap-1.5 rounded-buton bg-mavi px-3 py-1.5 text-sm font-semibold text-white no-underline transition hover:bg-mavi/90"
+            className="inline-flex items-center gap-1.5 rounded-button bg-brand-blue px-3 py-1.5 text-sm font-semibold text-white no-underline transition hover:bg-brand-blue/90"
           >
             Analize dön
             <ArrowRight className="size-3.5" aria-hidden />
@@ -199,7 +199,7 @@ function RunningNotice({
             <button
               type="button"
               onClick={onAskPermission}
-              className="inline-flex items-center gap-1.5 rounded-buton border border-cizgi px-3 py-1.5 text-sm font-medium text-metin transition hover:border-mavi/40 hover:text-mavi"
+              className="inline-flex items-center gap-1.5 rounded-button border border-border px-3 py-1.5 text-sm font-medium text-foreground transition hover:border-brand-blue/40 hover:text-brand-blue"
             >
               <BellRing className="size-3.5" aria-hidden />
               Tarayıcıdan da haber ver
@@ -215,13 +215,13 @@ function DoneNotice({ record, onClose }: { record: ActiveAnalysis; onClose: () =
   const state = record.score != null ? scoreStatus(record.score) : null
   return (
     <div className="flex items-start gap-3">
-      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-yesil/10 text-yesil dark:text-[#4ade80]">
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand-green/10 text-brand-green dark:text-[#4ade80]">
         <CircleCheck className="size-5" aria-hidden />
       </span>
       <div className="min-w-0 flex-1">
         <p className="m-0 font-semibold">Analizin hazır</p>
         {state && record.score != null && (
-          <p className="m-0 mt-0.5 text-sm text-gri">
+          <p className="m-0 mt-0.5 text-sm text-muted">
             Uyum skorun <span className={`font-semibold ${state.textClass}`}>{record.score} · {state.label}</span>
           </p>
         )}
@@ -229,7 +229,7 @@ function DoneNotice({ record, onClose }: { record: ActiveAnalysis; onClose: () =
           <Link
             href={resultPath(record.analysisId)}
             onClick={onClose}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-buton bg-mavi px-3 py-1.5 text-sm font-semibold text-white no-underline transition hover:bg-mavi/90"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-button bg-brand-blue px-3 py-1.5 text-sm font-semibold text-white no-underline transition hover:bg-brand-blue/90"
           >
             Sonucu gör
             <ArrowRight className="size-3.5" aria-hidden />
@@ -244,16 +244,16 @@ function DoneNotice({ record, onClose }: { record: ActiveAnalysis; onClose: () =
 function FailedNotice({ record, onClose }: { record: ActiveAnalysis; onClose: () => void }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-kirmizi/10 text-kirmizi dark:text-[#f87171]">
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand-red/10 text-brand-red dark:text-[#f87171]">
         <CircleAlert className="size-5" aria-hidden />
       </span>
       <div className="min-w-0 flex-1">
         <p className="m-0 font-semibold">Analiz tamamlanamadı</p>
-        <p className="m-0 mt-0.5 text-sm text-gri">{record.error ?? "Birkaç dakika sonra tekrar dener misin?"}</p>
+        <p className="m-0 mt-0.5 text-sm text-muted">{record.error ?? "Birkaç dakika sonra tekrar dener misin?"}</p>
         <Link
           href="/analyze"
           onClick={onClose}
-          className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-mavi no-underline dark:text-[#8ea2ff]"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue no-underline dark:text-[#8ea2ff]"
         >
           Tekrar dene
           <ArrowRight className="size-3.5" aria-hidden />
@@ -270,7 +270,7 @@ function CloseButton({ onClose }: { onClose: () => void }) {
       type="button"
       onClick={onClose}
       aria-label="Bildirimi kapat"
-      className="-m-1 grid size-7 shrink-0 place-items-center rounded-full text-gri transition hover:bg-zemin hover:text-metin"
+      className="-m-1 grid size-7 shrink-0 place-items-center rounded-full text-muted transition hover:bg-background hover:text-foreground"
     >
       <X className="size-4" aria-hidden />
     </button>

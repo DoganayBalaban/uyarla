@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { TRANSIENT_ERROR_MESSAGE as TRANSIENT_ERROR_MESSAGE, analysisErrorMessage as analysisErrorMessage } from "@/server/analysisErrorMessage"
+import { TRANSIENT_ERROR_MESSAGE, analysisErrorMessage } from "@/server/analysisErrorMessage"
 
 describe("analysisErrorMessage", () => {
   it("shows the message of a permanent error that failed on the first attempt", () => {

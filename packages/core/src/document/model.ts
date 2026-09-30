@@ -1,4 +1,4 @@
-import { resumeLanguage, type Language as Language } from "../normalize/language.js"
+import { resumeLanguage, type Language } from "../normalize/language.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 
 export interface DocumentEntry {

@@ -20,7 +20,7 @@ import type { JobPostingData } from "../src/schemas/job.js"
 import type { ResumeProfile } from "../src/schemas/resume.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { conceptTexts, score } from "../src/score/score.js"
-import { cacheDir as cacheDir, type AdaptMetrics, type EvalPair } from "./types.js"
+import { cacheDir, type AdaptMetrics, type EvalPair } from "./types.js"
 
 /**
  * Uyarlama değerlendirme koşusu (spec §12).

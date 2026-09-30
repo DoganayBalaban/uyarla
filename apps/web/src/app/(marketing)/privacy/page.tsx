@@ -12,8 +12,8 @@ export const metadata = { title: "KVKK aydınlatma metni · uyarla" }
 export default function PrivacyPage() {
   return (
     <LegalPage
-      baslik="KVKK aydınlatma metni"
-      ozet="CV'n kişisel veri. Hangisini neden işlediğimizi, kimlerle paylaştığımızı ve nasıl silebileceğini burada sade Türkçeyle anlatıyoruz."
+      title="KVKK aydınlatma metni"
+      summary="CV'n kişisel veri. Hangisini neden işlediğimizi, kimlerle paylaştığımızı ve nasıl silebileceğini burada sade Türkçeyle anlatıyoruz."
     >
       <section>
         <h2>Kısaca</h2>

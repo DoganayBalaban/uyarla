@@ -15,11 +15,11 @@ export function ScoreRing({ score = 47, sizePx = 112 }: { score?: number; sizePx
   const r = 44
   const circumference = 2 * Math.PI * r
   const state = score >= 70 ? "Yüksek" : score >= 40 ? "Orta" : "Düşük"
-  const textClass = score >= 70 ? "var(--yesil)" : score >= 40 ? "var(--kehribar)" : "var(--kirmizi)"
+  const textClass = score >= 70 ? "var(--brand-green)" : score >= 40 ? "var(--brand-amber)" : "var(--brand-red)"
   return (
-    <div className={s.halka} style={{ width: sizePx, height: sizePx, fontSize: (sizePx / 112) * 16 }}>
+    <div className={s.ring} style={{ width: sizePx, height: sizePx, fontSize: (sizePx / 112) * 16 }}>
       <svg viewBox="0 0 100 100" width={sizePx} height={sizePx} aria-hidden="true">
-        <circle cx="50" cy="50" r={r} fill="none" stroke="var(--cizgi)" strokeWidth="8" />
+        <circle cx="50" cy="50" r={r} fill="none" stroke="var(--border)" strokeWidth="8" />
         <circle
           cx="50"
           cy="50"
@@ -32,9 +32,9 @@ export function ScoreRing({ score = 47, sizePx = 112 }: { score?: number; sizePx
           transform="rotate(-90 50 50)"
         />
       </svg>
-      <div className={s.halkaIc}>
-        <span className={s.halkaRakam}>{score}</span>
-        <span className={s.halkaDurum} style={{ color: textClass }}>
+      <div className={s.ringInner}>
+        <span className={s.ringNumber}>{score}</span>
+        <span className={s.ringStatus} style={{ color: textClass }}>
           {state}
         </span>
       </div>
@@ -58,43 +58,43 @@ export function HeroApp() {
   const missing = ["Jest", "Erişilebilirlik", "CI/CD", "Figma"]
   const matchedList = ["React", "TypeScript", "REST API", "Git"]
   return (
-    <div className={s.pencere}>
-      <div className={s.pencereUst}>
-        <span className={s.pencereLogo}>
-          <span className={s.logoSembol} aria-hidden="true">
+    <div className={s.appWindow}>
+      <div className={s.appWindowTop}>
+        <span className={s.appWindowLogo}>
+          <span className={s.logoMark} aria-hidden="true">
             <span />
             <span />
           </span>
           uyarla
         </span>
-        <span className={`${s.pencereLink} ${s.pencereLinkAktif}`}>
+        <span className={`${s.appWindowLink} ${s.appWindowLinkActive}`}>
           <Icon name="score" size={15} /> Yeni analiz
         </span>
-        <span className={s.pencereLink}>
+        <span className={s.appWindowLink}>
           <Icon name="columns" size={15} /> Başvuru panosu
         </span>
       </div>
 
-      <div className={s.pencereGovde}>
-        <p className={s.pencereBaslikMetin}>Kıdemli Frontend Geliştirici</p>
-        <p className={s.mockKucuk}>Acme Yazılım</p>
+      <div className={s.appWindowBody}>
+        <p className={s.appWindowTitle}>Kıdemli Frontend Geliştirici</p>
+        <p className={s.mockSmall}>Acme Yazılım</p>
 
-        <div className={s.pencereIzgara}>
-          <div className={`${s.pencereKart} ${s.pencereSkor}`}>
+        <div className={s.appWindowGrid}>
+          <div className={`${s.appWindowCard} ${s.appWindowScore}`}>
             <ScoreRing sizePx={96} />
             <div>
-              <p className={s.skorKartiCumle}>Bu ilana uyumun %47.</p>
-              <p className={s.mockKucuk}>4 eksik anahtar kelime var. Çoğu anlatımla ilgili.</p>
+              <p className={s.scoreSentence}>Bu ilana uyumun %47.</p>
+              <p className={s.mockSmall}>4 eksik anahtar kelime var. Çoğu anlatımla ilgili.</p>
             </div>
-            <span className={s.sahteBirincil}>Bu ilana uyarla</span>
+            <span className={s.fakePrimary}>Bu ilana uyarla</span>
           </div>
 
-          <div className={s.pencereKart}>
-            <p className={s.pencereKartBaslik}>5 gereksinimden 3'ü karşılanıyor</p>
-            <ul className={s.pencereListe}>
+          <div className={s.appWindowCard}>
+            <p className={s.appWindowCardTitle}>5 gereksinimden 3'ü karşılanıyor</p>
+            <ul className={s.appWindowList}>
               {requirementList.map((g) => (
                 <li key={g.text}>
-                  <span className={g.matched ? s.durumEslesti : s.durumEksik}>
+                  <span className={g.matched ? s.statusMatched : s.statusMissing}>
                     <Icon name={g.matched ? "check" : "x"} size={12} />
                   </span>
                   {g.text}
@@ -103,37 +103,37 @@ export function HeroApp() {
             </ul>
           </div>
 
-          <div className={s.pencereKart}>
-            <p className={s.pencereKartBaslik}>Eksik anahtar kelimeler</p>
-            <div className={s.cipler}>
+          <div className={s.appWindowCard}>
+            <p className={s.appWindowCardTitle}>Eksik anahtar kelimeler</p>
+            <div className={s.chips}>
               {missing.map((k) => (
-                <span key={k} className={`${s.cip} ${s.cipEksik}`}>
+                <span key={k} className={`${s.chip} ${s.chipMissing}`}>
                   <Icon name="x" size={12} /> {k}
                 </span>
               ))}
             </div>
-            <p className={s.pencereKartBaslik}>Eşleşenler</p>
-            <div className={s.cipler}>
+            <p className={s.appWindowCardTitle}>Eşleşenler</p>
+            <div className={s.chips}>
               {matchedList.map((k) => (
-                <span key={k} className={`${s.cip} ${s.cipEslesen}`}>
+                <span key={k} className={`${s.chip} ${s.chipMatched}`}>
                   <Icon name="check" size={12} /> {k}
                 </span>
               ))}
             </div>
           </div>
 
-          <div className={`${s.pencereKart} ${s.pencereGenis}`}>
-            <p className={s.pencereKartBaslik}>Deneyim, Acme Yazılım, 2. madde</p>
-            <div className={s.pencereOnceSonra}>
-              <div className={s.onceSonraBlok}>
-                <span className={s.onceSonraRozet}>Önce</span>
+          <div className={`${s.appWindowCard} ${s.appWindowWide}`}>
+            <p className={s.appWindowCardTitle}>Deneyim, Acme Yazılım, 2. madde</p>
+            <div className={s.appWindowBeforeAfter}>
+              <div className={s.beforeAfterBlock}>
+                <span className={s.beforeAfterBadge}>Önce</span>
                 <p>Müşteri paneli projesinde görev aldım, React kullandım.</p>
               </div>
-              <div className={`${s.onceSonraBlok} ${s.onceSonraYeni}`}>
-                <span className={`${s.onceSonraRozet} ${s.onceSonraRozetYeni}`}>Sonra</span>
+              <div className={`${s.beforeAfterBlock} ${s.beforeAfterNew}`}>
+                <span className={`${s.beforeAfterBadge} ${s.beforeAfterBadgeNew}`}>Sonra</span>
                 <p>
-                  <span className="rounded bg-yesil/20 px-0.5">React ve TypeScript ile</span> müşteri{" "}
-                  <span className="rounded bg-yesil/20 px-0.5">panelini geliştirdim.</span>
+                  <span className="rounded bg-brand-green/20 px-0.5">React ve TypeScript ile</span> müşteri{" "}
+                  <span className="rounded bg-brand-green/20 px-0.5">panelini geliştirdim.</span>
                 </p>
               </div>
             </div>
@@ -147,20 +147,20 @@ export function HeroApp() {
 /** Hero'da pencerenin kenarından taşan kart: uydurma kontrolünün yakaladığı madde. */
 export function HeroCheck() {
   return (
-    <div className={`${s.mock} ${s.heroKontrol}`}>
-      <span className="inline-block rounded-full bg-kehribar/20 px-2 py-0.5 text-xs font-bold text-kehribar">
+    <div className={`${s.mock} ${s.heroCheck}`}>
+      <span className="inline-block rounded-full bg-brand-amber/20 px-2 py-0.5 text-xs font-bold text-brand-amber">
         Kontrol et
       </span>
-      <p className={s.uyariMetin}>
-        <span className="text-gri line-through">Stajyerlerin uyumuna destek oldum.</span>{" "}
-        <span className="rounded bg-yesil/20 px-0.5">4 kişilik ekibe liderlik ettim.</span>
+      <p className={s.warningText}>
+        <span className="text-muted line-through">Stajyerlerin uyumuna destek oldum.</span>{" "}
+        <span className="rounded bg-brand-green/20 px-0.5">4 kişilik ekibe liderlik ettim.</span>
       </p>
-      <p className="mt-1.5 text-sm text-kehribar">
+      <p className="mt-1.5 text-sm text-brand-amber">
         Orijinal maddede “liderlik” ve “4 kişi” geçmiyor. Bu ifade deneyimini abartıyor olabilir.
       </p>
-      <div className={s.uyariButonlar}>
-        <span className={s.sahteIkincil}>Eski hâli kalsın</span>
-        <span className={s.sahteBirincil}>Yeni hâlini kullan</span>
+      <div className={s.warningButtons}>
+        <span className={s.fakeSecondary}>Eski hâli kalsın</span>
+        <span className={s.fakePrimary}>Yeni hâlini kullan</span>
       </div>
     </div>
   )
@@ -168,7 +168,7 @@ export function HeroCheck() {
 
 /** Gereksinim listesi: her eşleşme CV'deki kanıtıyla birlikte. */
 export function RequirementList() {
-  const satirlar: { text: string; state: "matched" | "missing"; evidence?: string; importance: string }[] = [
+  const rows: { text: string; state: "matched" | "missing"; evidence?: string; importance: string }[] = [
     { text: "React ile arayüz geliştirme", state: "matched", evidence: "“…React kullandım” · Deneyim", importance: "Zorunlu" },
     { text: "TypeScript", state: "matched", evidence: "Beceriler bölümü", importance: "Zorunlu" },
     { text: "Birim testi (Jest, Testing Library)", state: "missing", importance: "Zorunlu" },
@@ -176,25 +176,25 @@ export function RequirementList() {
     { text: "Ekiple kod incelemesi", state: "matched", evidence: "“Haftalık kod incelemelerine katıldım” · Deneyim", importance: "Tercihen" },
   ]
   return (
-    <div className={`${s.mock} ${s.mockGenis}`}>
-      <div className={s.mockUst}>
+    <div className={`${s.mock} ${s.mockWide}`}>
+      <div className={s.mockTop}>
         <div>
-          <p className={s.mockEtiket}>İlan gereksinimleri</p>
-          <p className={s.mockBaslikMetin}>5 gereksinimden 3'ü karşılanıyor</p>
+          <p className={s.mockLabel}>İlan gereksinimleri</p>
+          <p className={s.mockTitle}>5 gereksinimden 3'ü karşılanıyor</p>
         </div>
         <ScoreRing sizePx={72} />
       </div>
-      <ul className={s.gereksinimler}>
-        {satirlar.map((g) => (
+      <ul className={s.requirements}>
+        {rows.map((g) => (
           <li key={g.text}>
-            <span className={g.state === "matched" ? s.durumEslesti : s.durumEksik}>
+            <span className={g.state === "matched" ? s.statusMatched : s.statusMissing}>
               <Icon name={g.state === "matched" ? "check" : "x"} size={14} />
             </span>
             <div>
-              <p className={s.gereksinimMetin}>
-                {g.text} <span className={s.onem}>{g.importance}</span>
+              <p className={s.requirementText}>
+                {g.text} <span className={s.importance}>{g.importance}</span>
               </p>
-              <p className={s.mockKucuk}>{g.evidence ?? "CV'nde karşılığı bulunamadı"}</p>
+              <p className={s.mockSmall}>{g.evidence ?? "CV'nde karşılığı bulunamadı"}</p>
             </div>
           </li>
         ))}
@@ -206,26 +206,26 @@ export function RequirementList() {
 /** Önce/sonra: eklenen yeşil vurgulu, çıkarılan üstü çizili gri (rehber §9.5). */
 export function BeforeAfter() {
   return (
-    <div className={`${s.mock} ${s.mockGenis}`}>
-      <p className={s.mockEtiket}>Deneyim · Acme Yazılım · 2. madde</p>
-      <div className={s.onceSonra}>
-        <div className={s.onceSonraBlok}>
-          <span className={s.onceSonraRozet}>Önce</span>
+    <div className={`${s.mock} ${s.mockWide}`}>
+      <p className={s.mockLabel}>Deneyim · Acme Yazılım · 2. madde</p>
+      <div className={s.beforeAfter}>
+        <div className={s.beforeAfterBlock}>
+          <span className={s.beforeAfterBadge}>Önce</span>
           <p>Müşteri paneli projesinde görev aldım, React kullandım.</p>
         </div>
-        <div className={s.onceSonraOk}>
+        <div className={s.beforeAfterArrow}>
           <Icon name="ok" size={18} />
         </div>
-        <div className={`${s.onceSonraBlok} ${s.onceSonraYeni}`}>
-          <span className={`${s.onceSonraRozet} ${s.onceSonraRozetYeni}`}>Sonra</span>
+        <div className={`${s.beforeAfterBlock} ${s.beforeAfterNew}`}>
+          <span className={`${s.beforeAfterBadge} ${s.beforeAfterBadgeNew}`}>Sonra</span>
           <p>
-            <span className="rounded bg-yesil/20 px-0.5">React ve TypeScript ile</span> müşteri{" "}
-            <span className="text-gri line-through">paneli projesinde görev aldım, React kullandım.</span>{" "}
-            <span className="rounded bg-yesil/20 px-0.5">panelini geliştirdim.</span>
+            <span className="rounded bg-brand-green/20 px-0.5">React ve TypeScript ile</span> müşteri{" "}
+            <span className="text-muted line-through">paneli projesinde görev aldım, React kullandım.</span>{" "}
+            <span className="rounded bg-brand-green/20 px-0.5">panelini geliştirdim.</span>
           </p>
         </div>
       </div>
-      <div className={s.kaynak}>
+      <div className={s.source}>
         <Icon name="eye" size={14} />
         Kaynak: Senin yazdığın madde ve Beceriler bölümün. Yeni olgu eklenmedi.
       </div>
@@ -236,20 +236,20 @@ export function BeforeAfter() {
 /** Uydurma kontrolünün yakaladığı madde: karar verilmeden indirme kapalı. */
 export function WarningCard() {
   return (
-    <div className={`${s.mock} ${s.mockGenis}`}>
-      <span className="mb-1.5 inline-block rounded-full bg-kehribar/20 px-2 py-0.5 text-xs font-bold text-kehribar">Kontrol et</span>
-      <p className={s.uyariMetin}>
-        <span className="text-gri line-through">Stajyerlerin uyumuna destek oldum.</span>{" "}
-        <span className="rounded bg-yesil/20 px-0.5">4 kişilik ekibe liderlik ettim.</span>
+    <div className={`${s.mock} ${s.mockWide}`}>
+      <span className="mb-1.5 inline-block rounded-full bg-brand-amber/20 px-2 py-0.5 text-xs font-bold text-brand-amber">Kontrol et</span>
+      <p className={s.warningText}>
+        <span className="text-muted line-through">Stajyerlerin uyumuna destek oldum.</span>{" "}
+        <span className="rounded bg-brand-green/20 px-0.5">4 kişilik ekibe liderlik ettim.</span>
       </p>
-      <p className="mt-1.5 text-sm text-kehribar">
+      <p className="mt-1.5 text-sm text-brand-amber">
         Orijinal maddede “liderlik” ve “4 kişi” geçmiyor. Bu ifade deneyimini abartıyor olabilir.
       </p>
-      <div className={s.uyariButonlar}>
-        <span className={s.sahteIkincil}>Eski hâli kalsın</span>
-        <span className={s.sahteBirincil}>Yeni hâlini kullan</span>
+      <div className={s.warningButtons}>
+        <span className={s.fakeSecondary}>Eski hâli kalsın</span>
+        <span className={s.fakePrimary}>Yeni hâlini kullan</span>
       </div>
-      <div className={s.kilitSatiri}>
+      <div className={s.lockLine}>
         <Icon name="lock" size={14} />
         İşaretli maddelere karar verene kadar indirme kapalı.
       </div>
@@ -259,19 +259,19 @@ export function WarningCard() {
 
 export function FileChips() {
   return (
-    <div className={s.dosyalar}>
-      <div className={s.dosya}>
-        <span className={`${s.dosyaTur} ${s.dosyaPdf}`}>PDF</span>
+    <div className={s.files}>
+      <div className={s.file}>
+        <span className={`${s.fileType} ${s.filePdf}`}>PDF</span>
         <div>
-          <p className={s.dosyaAd}>Ayse_Yilmaz_Frontend.pdf</p>
-          <p className={s.mockKucuk}>Metni seçilebilir · ATS okur</p>
+          <p className={s.fileName}>Ayse_Yilmaz_Frontend.pdf</p>
+          <p className={s.mockSmall}>Metni seçilebilir · ATS okur</p>
         </div>
       </div>
-      <div className={s.dosya}>
-        <span className={`${s.dosyaTur} ${s.dosyaDocx}`}>DOCX</span>
+      <div className={s.file}>
+        <span className={`${s.fileType} ${s.fileDocx}`}>DOCX</span>
         <div>
-          <p className={s.dosyaAd}>Ayse_Yilmaz_Frontend.docx</p>
-          <p className={s.mockKucuk}>Word'de düzenlemeye devam et</p>
+          <p className={s.fileName}>Ayse_Yilmaz_Frontend.docx</p>
+          <p className={s.mockSmall}>Word'de düzenlemeye devam et</p>
         </div>
       </div>
     </div>

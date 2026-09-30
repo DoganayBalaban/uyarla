@@ -14,7 +14,8 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { FormatReportCard as FormatReport, type FormatReportView } from "@/features/analysis/components/FormatReport"
-import { ScoreRing as ScoreRing, skorDurumu as scoreStatus } from "@/features/analysis/components/ScoreRing"
+import { ScoreRing } from "@/features/analysis/components/ScoreRing"
+import { scoreStatus } from "@/lib/scoreStatus"
 
 export interface RequirementResult {
   requirement: { text: string; importance: string; type: string }
@@ -89,22 +90,22 @@ export function ScoreResult({
       {/* Skor kartı. */}
       <motion.div
         {...entrance(0)}
-        className="relative overflow-hidden rounded-kart border border-cizgi bg-kart p-6 shadow-sm sm:p-8"
+        className="relative overflow-hidden rounded-card border border-border bg-card p-6 shadow-sm sm:p-8"
       >
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-mavi/10 blur-3xl"
+          className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-brand-blue/10 blur-3xl"
         />
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
           <ScoreRing score={result.score} size={148} className="shrink-0 self-center sm:self-auto" />
 
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold tracking-wider text-gri uppercase">Uyum skoru</p>
+            <p className="text-xs font-semibold tracking-wider text-muted uppercase">Uyum skoru</p>
             <h1 className="mt-1 text-2xl sm:text-3xl">
               {result.requirements.length} gereksinimin{" "}
               <span className={state.textClass}>{satisfiedCount} tanesi</span> karşılanıyor
             </h1>
-            <p className="mt-2 text-sm text-gri">
+            <p className="mt-2 text-sm text-muted">
               {missing > 0
                 ? "Uyarladığımızda eksikleri deneyiminin izin verdiği ölçüde kapatıyoruz; olmayan bir şeyi eklemiyoruz."
                 : "CV'n bu ilanın istediklerini karşılıyor. Yine de anlatımı ilanın diline yaklaştırabilirsin."}
@@ -114,7 +115,7 @@ export function ScoreResult({
               {onAdapt && (
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-buton bg-mavi px-5 py-3 font-semibold text-white shadow-sm shadow-mavi/30 transition hover:bg-mavi/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-button bg-brand-blue px-5 py-3 font-semibold text-white shadow-sm shadow-brand-blue/30 transition hover:bg-brand-blue/90 disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={adapting}
                   onClick={onAdapt}
                 >
@@ -130,7 +131,7 @@ export function ScoreResult({
               {onYeniAnaliz && (
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-buton border border-cizgi bg-kart px-4 py-3 text-sm font-semibold transition hover:border-mavi/40 hover:text-mavi"
+                  className="inline-flex items-center gap-2 rounded-button border border-border bg-card px-4 py-3 text-sm font-semibold transition hover:border-brand-blue/40 hover:text-brand-blue"
                   onClick={onYeniAnaliz}
                 >
                   <RotateCcw className="size-4" aria-hidden />
@@ -142,7 +143,7 @@ export function ScoreResult({
             {error && (
               <p
                 role="alert"
-                className="mt-4 flex items-start gap-2 rounded-buton bg-kirmizi/10 px-3 py-2 text-sm text-kirmizi dark:text-[#f87171]"
+                className="mt-4 flex items-start gap-2 rounded-button bg-brand-red/10 px-3 py-2 text-sm text-brand-red dark:text-[#f87171]"
               >
                 <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
                 {error}
@@ -159,10 +160,10 @@ export function ScoreResult({
       )}
 
       {/* Gereksinimler. */}
-      <motion.div {...entrance(0.14)} className="rounded-kart border border-cizgi bg-kart p-5 sm:p-6">
+      <motion.div {...entrance(0.14)} className="rounded-card border border-border bg-card p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="m-0 text-lg">Gereksinimler</h2>
-          <div role="tablist" aria-label="Gereksinimleri süz" className="inline-flex rounded-buton bg-zemin p-1 text-sm">
+          <div role="tablist" aria-label="Gereksinimleri süz" className="inline-flex rounded-button bg-background p-1 text-sm">
             {(
               [
                 ["all", `Hepsi · ${result.requirements.length}`],
@@ -178,7 +179,7 @@ export function ScoreResult({
                 onClick={() => setFilter(val)}
                 className={cn(
                   "rounded-[8px] px-3 py-1.5 font-medium transition",
-                  activeFilter === val ? "bg-kart text-metin shadow-sm" : "text-gri hover:text-metin",
+                  activeFilter === val ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground",
                 )}
               >
                 {label}
@@ -188,9 +189,9 @@ export function ScoreResult({
         </div>
 
         {visible.length === 0 ? (
-          <p className="mt-4 text-sm text-gri">Bu süzgeçte gereksinim yok.</p>
+          <p className="mt-4 text-sm text-muted">Bu süzgeçte gereksinim yok.</p>
         ) : (
-          <ul className="mt-4 divide-y divide-cizgi">
+          <ul className="mt-4 divide-y divide-border">
             {visible.map((item, i) => (
               <RequirementRow key={`${activeFilter}-${i}`} item={item} />
             ))}
@@ -199,19 +200,19 @@ export function ScoreResult({
       </motion.div>
 
       {/* Eksik kavramlar. */}
-      <motion.div {...entrance(0.2)} className="rounded-kart border border-cizgi bg-kart p-5 sm:p-6">
+      <motion.div {...entrance(0.2)} className="rounded-card border border-border bg-card p-5 sm:p-6">
         <h2 className="m-0 text-lg">Eksik kavramlar</h2>
-        <p className="mt-1 text-sm text-gri">İlanda geçen ama CV&apos;nde karşılığını bulamadığımız kavramlar.</p>
+        <p className="mt-1 text-sm text-muted">İlanda geçen ama CV&apos;nde karşılığını bulamadığımız kavramlar.</p>
         {result.missingKeywords.length === 0 ? (
-          <p className="mt-3 text-sm text-gri">Eksik kavram yok.</p>
+          <p className="mt-3 text-sm text-muted">Eksik kavram yok.</p>
         ) : (
           <ul className="mt-4 flex flex-wrap gap-2">
             {result.missingKeywords.map((k) => (
               <li
                 key={k}
-                className="inline-flex items-center gap-1.5 rounded-full border border-cizgi bg-zemin px-3 py-1 text-sm"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-sm"
               >
-                <span aria-hidden className="size-1.5 rounded-full bg-mercan" />
+                <span aria-hidden className="size-1.5 rounded-full bg-brand-coral" />
                 {k}
               </li>
             ))}
@@ -219,15 +220,15 @@ export function ScoreResult({
         )}
       </motion.div>
 
-      <details className="group rounded-kart border border-cizgi bg-kart px-5 py-4">
-        <summary className="flex cursor-pointer list-none items-center justify-between text-sm text-gri">
+      <details className="group rounded-card border border-border bg-card px-5 py-4">
+        <summary className="flex cursor-pointer list-none items-center justify-between text-sm text-muted">
           Teknik ayrıntı
           <ChevronDown className="size-4 transition group-open:rotate-180" aria-hidden />
         </summary>
-        <p className="mt-3 text-sm text-gri">
+        <p className="mt-3 text-sm text-muted">
           {durationMs} ms · {tokenUsage} token · {modelId}
         </p>
-        <pre className="mt-2 max-h-[32rem] overflow-x-auto rounded-buton border border-cizgi bg-zemin p-4 text-xs">
+        <pre className="mt-2 max-h-[32rem] overflow-x-auto rounded-button border border-border bg-background p-4 text-xs">
           {JSON.stringify(result, null, 2)}
         </pre>
       </details>
@@ -253,8 +254,8 @@ function RequirementRow({ item }: { item: RequirementResult }) {
           className={cn(
             "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full",
             done
-              ? "bg-yesil/15 text-yesil dark:text-[#4ade80]"
-              : "bg-kirmizi/10 text-kirmizi dark:text-[#f87171]",
+              ? "bg-brand-green/15 text-brand-green dark:text-[#4ade80]"
+              : "bg-brand-red/10 text-brand-red dark:text-[#f87171]",
           )}
         >
           {done ? <Check className="size-3" strokeWidth={3} aria-hidden /> : <X className="size-3" strokeWidth={3} aria-hidden />}
@@ -262,20 +263,20 @@ function RequirementRow({ item }: { item: RequirementResult }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="font-medium">{item.requirement.text}</span>
-          <span className="ml-2 inline-block rounded-full bg-zemin px-2 py-0.5 align-middle text-[11px] font-semibold text-gri">
+          <span className="ml-2 inline-block rounded-full bg-background px-2 py-0.5 align-middle text-[11px] font-semibold text-muted">
             {importanceLabel}
           </span>
         </span>
         {item.evidence && (
           <ChevronDown
-            className={cn("mt-1 size-4 shrink-0 text-gri transition", open && "rotate-180")}
+            className={cn("mt-1 size-4 shrink-0 text-muted transition", open && "rotate-180")}
             aria-hidden
           />
         )}
       </button>
       {item.evidence && open && (
-        <p className="mt-2 ml-8 rounded-buton border-l-2 border-yesil/60 bg-zemin px-3 py-2 text-sm text-gri">
-          <span className="font-semibold text-metin">CV&apos;nde bunu karşılayan:</span> {item.evidence.text}
+        <p className="mt-2 ml-8 rounded-button border-l-2 border-brand-green/60 bg-background px-3 py-2 text-sm text-muted">
+          <span className="font-semibold text-foreground">CV&apos;nde bunu karşılayan:</span> {item.evidence.text}
         </p>
       )}
     </li>

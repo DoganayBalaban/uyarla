@@ -6,7 +6,7 @@
  * aynı eşikleri kullanıyor.
  */
 export function scoreStatus(score: number): { label: string; textClass: string; strokeClass: string; bgClass: string } {
-  if (score >= 70) return { label: "Yüksek uyum", textClass: "text-yesil", strokeClass: "stroke-yesil", bgClass: "bg-yesil/10" }
-  if (score >= 40) return { label: "Orta uyum", textClass: "text-kehribar", strokeClass: "stroke-kehribar", bgClass: "bg-kehribar/10" }
-  return { label: "Düşük uyum", textClass: "text-kirmizi", strokeClass: "stroke-kirmizi", bgClass: "bg-kirmizi/10" }
+  if (score >= 70) return { label: "Yüksek uyum", textClass: "text-brand-green", strokeClass: "stroke-brand-green", bgClass: "bg-brand-green/10" }
+  if (score >= 40) return { label: "Orta uyum", textClass: "text-brand-amber", strokeClass: "stroke-brand-amber", bgClass: "bg-brand-amber/10" }
+  return { label: "Düşük uyum", textClass: "text-brand-red", strokeClass: "stroke-brand-red", bgClass: "bg-brand-red/10" }
 }

@@ -18,9 +18,10 @@ import {
 import { diffWords } from "@/features/adaptation/diff"
 import { cn } from "@/lib/cn"
 import { deriveStageStates } from "@/features/analysis/stageStates"
-import { CoverLetterSection as CoverLetterSection, type CoverLetterView } from "@/features/adaptation/components/CoverLetterSection"
-import { StageTimeline as StageTimeline } from "@/features/analysis/components/StageTimeline"
-import { ScoreRing as ScoreRing, skorDurumu as scoreStatus } from "@/features/analysis/components/ScoreRing"
+import { CoverLetterSection, type CoverLetterView } from "@/features/adaptation/components/CoverLetterSection"
+import { StageTimeline } from "@/features/analysis/components/StageTimeline"
+import { ScoreRing } from "@/features/analysis/components/ScoreRing"
+import { scoreStatus } from "@/lib/scoreStatus"
 
 /** Marka rehberi §10.2 tonunda yükleme metinleri. */
 const STAGES = [
@@ -85,8 +86,8 @@ function DiffText({ original, rewritten }: { original: string; rewritten: string
             key={i}
             className={
               part.kind === "added"
-                ? "rounded bg-yesil/15 px-0.5 text-metin decoration-yesil/60 underline-offset-2"
-                : "text-gri line-through decoration-gri/60"
+                ? "rounded bg-brand-green/15 px-0.5 text-foreground decoration-brand-green/60 underline-offset-2"
+                : "text-muted line-through decoration-muted/60"
             }
           >
             {part.text}{" "}
@@ -117,7 +118,7 @@ function DecisionToggle({
     { d: "rejected" as const, label: "Eski hâli" },
   ]
   return (
-    <div role="radiogroup" aria-label="Hangi hâli kullanılsın?" className="inline-flex rounded-buton bg-zemin p-1 text-sm">
+    <div role="radiogroup" aria-label="Hangi hâli kullanılsın?" className="inline-flex rounded-button bg-background p-1 text-sm">
       {options.map((s) => {
         const selected = val === s.d
         return (
@@ -130,7 +131,7 @@ function DecisionToggle({
             onClick={() => onSelect(s.d)}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 font-semibold transition disabled:cursor-default",
-              selected ? "bg-kart text-mavi shadow-sm" : "text-gri hover:text-metin",
+              selected ? "bg-card text-brand-blue shadow-sm" : "text-muted hover:text-foreground",
             )}
           >
             {selected && <Check className="size-3.5" strokeWidth={3} aria-hidden />}
@@ -145,12 +146,12 @@ function DecisionToggle({
 function VerificationWarning({ v }: { v: Verification }) {
   if (v.status !== "flagged") return null
   return (
-    <div className="mb-3 flex gap-2.5 rounded-buton bg-kehribar/10 p-3 text-sm">
-      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-kehribar" aria-hidden />
+    <div className="mb-3 flex gap-2.5 rounded-button bg-brand-amber/10 p-3 text-sm">
+      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-brand-amber" aria-hidden />
       <div>
-        <p className="m-0 font-semibold text-kehribar">Kontrol et</p>
+        <p className="m-0 font-semibold text-brand-amber">Kontrol et</p>
         {v.issues.map((problemCount, i) => (
-          <p className="m-0 mt-0.5 text-metin/80" key={i}>
+          <p className="m-0 mt-0.5 text-foreground/80" key={i}>
             {problemCount.detail}
           </p>
         ))}
@@ -238,15 +239,15 @@ export function AdaptationView({ id }: { id: string }) {
 
   if (state.status === "failed" || !state.draft) {
     return (
-      <div className="mx-auto max-w-md rounded-kart border border-cizgi bg-kart p-8 text-center shadow-sm">
-        <span className="mx-auto grid size-12 place-items-center rounded-full bg-kirmizi/10 text-kirmizi dark:text-[#f87171]">
+      <div className="mx-auto max-w-md rounded-card border border-border bg-card p-8 text-center shadow-sm">
+        <span className="mx-auto grid size-12 place-items-center rounded-full bg-brand-red/10 text-brand-red dark:text-[#f87171]">
           <CircleAlert className="size-6" aria-hidden />
         </span>
         <h1 className="mt-4 text-2xl">Uyarlama tamamlanamadı</h1>
-        <p className="mt-2 text-sm text-gri">Birazdan tekrar dener misin? CV&apos;n ve ilanın kayıtlı.</p>
+        <p className="mt-2 text-sm text-muted">Birazdan tekrar dener misin? CV&apos;n ve ilanın kayıtlı.</p>
         <Link
           href="/analyze"
-          className="mt-6 inline-flex items-center gap-2 rounded-buton bg-mavi px-5 py-3 font-semibold text-white no-underline"
+          className="mt-6 inline-flex items-center gap-2 rounded-button bg-brand-blue px-5 py-3 font-semibold text-white no-underline"
         >
           Yeni analiz
           <ArrowRight className="size-4" aria-hidden />
@@ -284,14 +285,14 @@ export function AdaptationView({ id }: { id: string }) {
       {/* Skor kartı: önce → sonra. Skor ekranın en büyük öğesi (§9.5). */}
       <motion.div
         {...entrance(0)}
-        className="relative overflow-hidden rounded-kart border border-cizgi bg-kart p-6 shadow-sm sm:p-8"
+        className="relative overflow-hidden rounded-card border border-border bg-card p-6 shadow-sm sm:p-8"
       >
-        <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-mavi/10 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-brand-blue/10 blur-3xl" />
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="max-w-md">
-            <p className="text-xs font-semibold tracking-wider text-gri uppercase">Uyarlama</p>
+            <p className="text-xs font-semibold tracking-wider text-muted uppercase">Uyarlama</p>
             <h1 className="mt-1 text-3xl">CV&apos;n hazır</h1>
-            <p className="mt-2 text-sm text-gri">
+            <p className="mt-2 text-sm text-muted">
               {diff > 0
                 ? `Deneyimini ilanın terimleriyle anlattık; skorun ${diff} puan arttı. Her değişikliği aşağıda görebilir, istemediğini eski hâline döndürebilirsin.`
                 : pendingAlignment > 0
@@ -305,15 +306,15 @@ export function AdaptationView({ id }: { id: string }) {
           <div className="flex items-center gap-4 self-center md:self-auto">
             <div className="text-center">
               <ScoreRing score={before} size={92} className="opacity-60 grayscale" />
-              <p className="mt-1 text-xs font-semibold text-gri">Önce</p>
+              <p className="mt-1 text-xs font-semibold text-muted">Önce</p>
             </div>
             <div className="flex flex-col items-center gap-1">
-              <ArrowRight className="size-5 text-gri" aria-hidden />
+              <ArrowRight className="size-5 text-muted" aria-hidden />
               {diff !== 0 && (
                 <span
                   className={cn(
                     "rounded-full px-2 py-0.5 text-xs font-bold",
-                    diff > 0 ? "bg-yesil/15 text-yesil dark:text-[#4ade80]" : "bg-kirmizi/10 text-kirmizi dark:text-[#f87171]",
+                    diff > 0 ? "bg-brand-green/15 text-brand-green dark:text-[#4ade80]" : "bg-brand-red/10 text-brand-red dark:text-[#f87171]",
                   )}
                 >
                   {diff > 0 ? `+${diff}` : diff}
@@ -331,7 +332,7 @@ export function AdaptationView({ id }: { id: string }) {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
         <div className="space-y-6">
           {draft.summary.original && (
-            <motion.section {...entrance(0.06)} className="rounded-kart border border-cizgi bg-kart p-5 sm:p-6">
+            <motion.section {...entrance(0.06)} className="rounded-card border border-border bg-card p-5 sm:p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <h2 className="m-0 text-lg">Özet</h2>
                 <DecisionToggle
@@ -345,24 +346,24 @@ export function AdaptationView({ id }: { id: string }) {
             </motion.section>
           )}
 
-          <motion.section {...entrance(0.1)} className="rounded-kart border border-cizgi bg-kart p-5 sm:p-6">
+          <motion.section {...entrance(0.1)} className="rounded-card border border-border bg-card p-5 sm:p-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="m-0 text-lg">Deneyim maddeleri</h2>
               {changedBullets.length > 0 && (
-                <p className="m-0 text-sm text-gri">
+                <p className="m-0 text-sm text-muted">
                   {decided}/{changedBullets.length} karar verildi
                 </p>
               )}
             </div>
             {changedBullets.length > 0 ? (
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zemin">
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-background">
                 <div
-                  className="h-full rounded-full bg-mavi transition-[width] duration-500"
+                  className="h-full rounded-full bg-brand-blue transition-[width] duration-500"
                   style={{ width: `${(decided / changedBullets.length) * 100}%` }}
                 />
               </div>
             ) : (
-              <p className="mt-2 text-sm text-gri">
+              <p className="mt-2 text-sm text-muted">
                 Maddelerinde ilanın terimleriyle anlatılabilecek bir şey bulamadık, o yüzden olduğu gibi bıraktık.
               </p>
             )}
@@ -373,14 +374,14 @@ export function AdaptationView({ id }: { id: string }) {
                   <li
                     key={bullet.id}
                     className={cn(
-                      "rounded-buton border p-4 transition",
-                      bullet.decision === "pending" ? "border-mavi/30 bg-mavi/[0.03]" : "border-cizgi",
+                      "rounded-button border p-4 transition",
+                      bullet.decision === "pending" ? "border-brand-blue/30 bg-brand-blue/[0.03]" : "border-border",
                     )}
                   >
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-gri">
+                      <span className="text-xs font-semibold text-muted">
                         Madde {order}
-                        {bullet.decision === "pending" && <span className="ml-2 text-mavi">· Karar bekliyor</span>}
+                        {bullet.decision === "pending" && <span className="ml-2 text-brand-blue">· Karar bekliyor</span>}
                       </span>
                       <DecisionToggle val={bullet.decision} busy={busy} onSelect={(d) => void decisionValue(bullet.id, d)} />
                     </div>
@@ -389,11 +390,11 @@ export function AdaptationView({ id }: { id: string }) {
                     {(bullet.alignments?.length ?? 0) > 0 && (
                       <ul className="mt-3 space-y-1.5">
                         {bullet.alignments!.map((a) => (
-                          <li key={a.term} className="flex gap-2 text-sm text-gri">
-                            <Link2 className="mt-0.5 size-3.5 shrink-0 text-mavi" aria-hidden />
+                          <li key={a.term} className="flex gap-2 text-sm text-muted">
+                            <Link2 className="mt-0.5 size-3.5 shrink-0 text-brand-blue" aria-hidden />
                             <span>
-                              <span className="font-semibold text-metin">{a.term}</span>, senin{" "}
-                              <span className="text-metin">&ldquo;{a.basis}&rdquo;</span> ifadene dayanıyor.
+                              <span className="font-semibold text-foreground">{a.term}</span>, senin{" "}
+                              <span className="text-foreground">&ldquo;{a.basis}&rdquo;</span> ifadene dayanıyor.
                             </span>
                           </li>
                         ))}
@@ -402,7 +403,7 @@ export function AdaptationView({ id }: { id: string }) {
                     {bullet.decision === "pending" &&
                       bullet.verification.status === "ok" &&
                       (bullet.alignments?.length ?? 0) > 0 && (
-                        <p className="mt-3 text-sm font-medium text-metin">
+                        <p className="mt-3 text-sm font-medium text-foreground">
                           Bu terim deneyimini doğru anlatıyorsa yeni hâlini seç; anlatmıyorsa eski hâli kalsın.
                         </p>
                       )}
@@ -413,13 +414,13 @@ export function AdaptationView({ id }: { id: string }) {
 
             {unchangedBullets.length > 0 && (
               <details className="group mt-4">
-                <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-gri">
+                <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-muted">
                   Olduğu gibi kalan maddeler ({unchangedBullets.length})
                   <ChevronDown className="size-4 transition group-open:rotate-180" aria-hidden />
                 </summary>
                 <ul className="mt-3 space-y-2">
                   {unchangedBullets.map(({ bullet }) => (
-                    <li key={bullet.id} className="rounded-buton bg-zemin px-3 py-2 text-sm">
+                    <li key={bullet.id} className="rounded-button bg-background px-3 py-2 text-sm">
                       {bullet.original}
                     </li>
                   ))}
@@ -428,9 +429,9 @@ export function AdaptationView({ id }: { id: string }) {
             )}
           </motion.section>
 
-          <motion.section {...entrance(0.14)} className="rounded-kart border border-cizgi bg-kart p-5 sm:p-6">
+          <motion.section {...entrance(0.14)} className="rounded-card border border-border bg-card p-5 sm:p-6">
             <h2 className="m-0 text-lg">Beceriler</h2>
-            <p className="mt-1 text-sm text-gri">
+            <p className="mt-1 text-sm text-muted">
               {added.size > 0
                 ? "İlanın aradığı ve deneyim maddelerinde geçen beceriler listeye eklendi; ilana en çok uyanlar başa alındı. Hiçbir beceri silinmedi."
                 : "İlana en çok uyanlar başa alındı. Hiçbir beceri eklenmedi veya silinmedi."}
@@ -441,13 +442,13 @@ export function AdaptationView({ id }: { id: string }) {
                   key={b}
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm",
-                    added.has(b) ? "border-mavi/40 bg-mavi/10" : "border-cizgi bg-zemin",
+                    added.has(b) ? "border-brand-blue/40 bg-brand-blue/10" : "border-border bg-background",
                   )}
                 >
-                  <span className="text-xs font-semibold text-gri tabular-nums">{i + 1}</span>
+                  <span className="text-xs font-semibold text-muted tabular-nums">{i + 1}</span>
                   {b}
                   {added.has(b) && (
-                    <span className="text-[11px] font-semibold text-mavi dark:text-[#8ea2ff]">CV&apos;nden</span>
+                    <span className="text-[11px] font-semibold text-brand-blue dark:text-[#8ea2ff]">CV&apos;nden</span>
                   )}
                 </li>
               ))}
@@ -459,28 +460,28 @@ export function AdaptationView({ id }: { id: string }) {
 
         {/* İndirme paneli: masaüstünde yapışkan. */}
         <motion.aside {...entrance(0.08)} className="space-y-4 lg:sticky lg:top-24">
-          <div className="rounded-kart border border-cizgi bg-kart p-5">
+          <div className="rounded-card border border-border bg-card p-5">
             <h2 className="m-0 flex items-center gap-2 text-base">
-              <Download className="size-4 text-mavi" aria-hidden />
+              <Download className="size-4 text-brand-blue" aria-hidden />
               İndir
             </h2>
             {pendingCount > 0 ? (
-              <p className="mt-2 text-sm text-gri">
-                <span className="font-semibold text-metin">{pendingCount} madde</span> için karar bekliyoruz. Karar
+              <p className="mt-2 text-sm text-muted">
+                <span className="font-semibold text-foreground">{pendingCount} madde</span> için karar bekliyoruz. Karar
                 verince indirme açılır.
               </p>
             ) : (
-              <p className="mt-2 text-sm text-gri">Seçtiğin hâllerle CV&apos;ni indirebilirsin.</p>
+              <p className="mt-2 text-sm text-muted">Seçtiğin hâllerle CV&apos;ni indirebilirsin.</p>
             )}
             {errorMessage && (
-              <p role="alert" className="mt-2 text-sm text-kirmizi dark:text-[#f87171]">
+              <p role="alert" className="mt-2 text-sm text-brand-red dark:text-[#f87171]">
                 {errorMessage}
               </p>
             )}
             <div className="mt-4 grid gap-2">
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-buton bg-mavi px-5 py-3 font-semibold text-white shadow-sm shadow-mavi/30 transition hover:bg-mavi/90 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-button bg-brand-blue px-5 py-3 font-semibold text-white shadow-sm shadow-brand-blue/30 transition hover:bg-brand-blue/90 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={busy || pendingCount > 0}
                 onClick={() => void downloadFile("pdf")}
               >
@@ -489,7 +490,7 @@ export function AdaptationView({ id }: { id: string }) {
               </button>
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-buton border border-cizgi px-5 py-2.5 font-semibold transition hover:border-mavi/40 hover:text-mavi disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-button border border-border px-5 py-2.5 font-semibold transition hover:border-brand-blue/40 hover:text-brand-blue disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={busy || pendingCount > 0}
                 onClick={() => void downloadFile("docx")}
               >
@@ -500,21 +501,21 @@ export function AdaptationView({ id }: { id: string }) {
 
           <Link
             href="/applications"
-            className="flex items-center gap-3 rounded-kart border border-cizgi bg-kart p-4 text-sm no-underline transition hover:border-mavi/40"
+            className="flex items-center gap-3 rounded-card border border-border bg-card p-4 text-sm no-underline transition hover:border-brand-blue/40"
           >
-            <span className="grid size-9 shrink-0 place-items-center rounded-buton bg-mavi/10 text-mavi">
+            <span className="grid size-9 shrink-0 place-items-center rounded-button bg-brand-blue/10 text-brand-blue">
               <LayoutGrid className="size-4" aria-hidden />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block font-semibold text-metin">Başvuru panosu</span>
-              <span className="block text-gri">Bu başvuruyu takip et</span>
+              <span className="block font-semibold text-foreground">Başvuru panosu</span>
+              <span className="block text-muted">Bu başvuruyu takip et</span>
             </span>
-            <ArrowRight className="size-4 text-gri" aria-hidden />
+            <ArrowRight className="size-4 text-muted" aria-hidden />
           </Link>
 
           {/* Marka rehberi §11: yapay zekâ şeffaflığı ve uydurmama ilkesi. */}
-          <p className="flex gap-2 px-1 text-xs text-gri">
-            <ShieldCheck className="size-4 shrink-0 text-yesil dark:text-[#4ade80]" aria-hidden />
+          <p className="flex gap-2 px-1 text-xs text-muted">
+            <ShieldCheck className="size-4 shrink-0 text-brand-green dark:text-[#4ade80]" aria-hidden />
             Metinler yapay zekâ ile yeniden yazıldı. Hiçbir deneyim, beceri veya sertifika eklenmedi; eğitim ve
             sertifikalarına hiç dokunulmadı.
           </p>

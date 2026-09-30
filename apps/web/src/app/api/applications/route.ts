@@ -13,13 +13,13 @@ export async function GET() {
   try {
     const { user } = ensureRegistered(await getSession())
 
-    const satirlar = await prisma.analysis.findMany({
+    const rows = await prisma.analysis.findMany({
       where: { userId: user.id, status: "done" },
       orderBy: { createdAt: "desc" },
       select: BOARD_SELECT,
     })
 
-    return NextResponse.json({ cards: satirlar.map(toBoardCard) })
+    return NextResponse.json({ cards: rows.map(toBoardCard) })
   } catch (error) {
     const reply = authErrorResponse(error)
     if (reply) return reply

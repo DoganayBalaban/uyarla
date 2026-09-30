@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { conceptTexts, isProperNoun as isProperNoun, score } from "./score.js"
+import { conceptTexts, isProperNoun, score } from "./score.js"
 import { DEFAULT_SCORING_CONFIG } from "./config.js"
 import type { Evidence } from "./evidence.js"
 import type { ResumeProfile } from "../schemas/resume.js"

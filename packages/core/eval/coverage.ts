@@ -11,7 +11,7 @@ import type { Evidence } from "../src/score/evidence.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { type ScoreInput, conceptTexts, score } from "../src/score/score.js"
 import { compareToExpectations } from "./compare.js"
-import { cacheDir as cacheDir, type EvalPair } from "./types.js"
+import { cacheDir, type EvalPair } from "./types.js"
 
 /**
  * Kapsam taraması: anlamsal katmanın ve kanıt türlerinin daraltılmasını ölçer.

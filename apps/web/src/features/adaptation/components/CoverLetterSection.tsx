@@ -87,15 +87,15 @@ export function CoverLetterSection({
   }
 
   return (
-    <section className="rounded-kart border border-cizgi bg-kart p-5 sm:p-6">
+    <section className="rounded-card border border-border bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <span className="grid size-9 shrink-0 place-items-center rounded-buton bg-mavi/10 text-mavi">
+          <span className="grid size-9 shrink-0 place-items-center rounded-button bg-brand-blue/10 text-brand-blue">
             <Mail className="size-5" aria-hidden />
           </span>
           <div>
             <h2 className="m-0 text-lg">Ön yazı</h2>
-            <p className="m-0 mt-0.5 text-sm text-gri">
+            <p className="m-0 mt-0.5 text-sm text-muted">
               Bu ilana ve CV&apos;ndeki gerçek deneyimine özel, üç paragraflık bir ön yazı.
             </p>
           </div>
@@ -105,10 +105,10 @@ export function CoverLetterSection({
             type="button"
             onClick={() => void create()}
             className={cn(
-              "inline-flex items-center gap-2 rounded-buton px-4 py-2.5 text-sm font-semibold transition",
+              "inline-flex items-center gap-2 rounded-button px-4 py-2.5 text-sm font-semibold transition",
               record?.status === "done"
-                ? "border border-cizgi hover:border-mavi/40 hover:text-mavi"
-                : "bg-mavi text-white shadow-sm shadow-mavi/30 hover:bg-mavi/90",
+                ? "border border-border hover:border-brand-blue/40 hover:text-brand-blue"
+                : "bg-brand-blue text-white shadow-sm shadow-brand-blue/30 hover:bg-brand-blue/90",
             )}
           >
             {record?.status === "done" ? (
@@ -122,15 +122,15 @@ export function CoverLetterSection({
       </div>
 
       {errorMessage && (
-        <p role="alert" className="mt-3 text-sm text-kirmizi dark:text-[#f87171]">
+        <p role="alert" className="mt-3 text-sm text-brand-red dark:text-[#f87171]">
           {errorMessage}
         </p>
       )}
 
       {running && (
         <div className="mt-5 space-y-2.5" role="status">
-          <p className="m-0 flex items-center gap-2 text-sm text-gri">
-            <LoaderCircle className="size-4 text-mavi motion-safe:animate-spin" aria-hidden />
+          <p className="m-0 flex items-center gap-2 text-sm text-muted">
+            <LoaderCircle className="size-4 text-brand-blue motion-safe:animate-spin" aria-hidden />
             Ön yazını yazıyoruz, sonra hiçbir şeyin uydurulmadığını kontrol ediyoruz…
           </p>
           {/* İskelet: metnin geleceği yerin kabaca şekli. */}
@@ -138,7 +138,7 @@ export function CoverLetterSection({
             <div
               key={w}
               aria-hidden
-              className="h-3 rounded-full bg-zemin motion-safe:animate-pulse"
+              className="h-3 rounded-full bg-background motion-safe:animate-pulse"
               style={{ width: `${w}%` }}
             />
           ))}
@@ -146,7 +146,7 @@ export function CoverLetterSection({
       )}
 
       {record?.status === "failed" && (
-        <p className="mt-4 text-sm text-kirmizi dark:text-[#f87171]">
+        <p className="mt-4 text-sm text-brand-red dark:text-[#f87171]">
           Ön yazıyı yazamadık. “Ön yazı oluştur” ile tekrar dener misin?
         </p>
       )}
@@ -154,30 +154,30 @@ export function CoverLetterSection({
       {record?.status === "done" && (
         <>
           {flaggedCount > 0 && (
-            <p className="mt-4 flex gap-2 rounded-buton bg-kehribar/10 p-3 text-sm">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-kehribar" aria-hidden />
+            <p className="mt-4 flex gap-2 rounded-button bg-brand-amber/10 p-3 text-sm">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-brand-amber" aria-hidden />
               <span>
                 {flaggedCount} paragrafta CV&apos;nde olmayan bir bilgi olabilir. Kullanmadan önce işaretli
                 yerleri düzelt ya da çıkar.
               </span>
             </p>
           )}
-          <div className="mt-4 space-y-2 rounded-buton border border-cizgi bg-zemin/60 p-2 sm:p-3">
+          <div className="mt-4 space-y-2 rounded-button border border-border bg-background/60 p-2 sm:p-3">
             {record.paragraphs.map((p, i) => (
               <div
                 key={i}
                 className={cn(
                   "rounded-[8px] p-3",
-                  p.verification.status === "flagged" && "border border-kehribar/40 bg-kehribar/5",
+                  p.verification.status === "flagged" && "border border-brand-amber/40 bg-brand-amber/5",
                 )}
               >
                 {p.verification.status === "flagged" && (
                   <>
-                    <span className="mb-1.5 inline-block rounded-full bg-kehribar/20 px-2 py-0.5 text-xs font-bold text-kehribar">
+                    <span className="mb-1.5 inline-block rounded-full bg-brand-amber/20 px-2 py-0.5 text-xs font-bold text-brand-amber">
                       Kontrol et
                     </span>
                     {p.verification.issues.map((s, j) => (
-                      <p key={j} className="m-0 mb-1.5 text-sm text-kehribar">
+                      <p key={j} className="m-0 mb-1.5 text-sm text-brand-amber">
                         {s.detail}
                       </p>
                     ))}
@@ -191,7 +191,7 @@ export function CoverLetterSection({
             <button
               type="button"
               onClick={() => void copy()}
-              className="inline-flex items-center gap-2 rounded-buton bg-mavi px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-mavi/30 transition hover:bg-mavi/90"
+              className="inline-flex items-center gap-2 rounded-button bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-brand-blue/30 transition hover:bg-brand-blue/90"
             >
               {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
               {copied ? "Kopyalandı" : "Metni kopyala"}
@@ -199,13 +199,13 @@ export function CoverLetterSection({
             <button
               type="button"
               onClick={downloadFile}
-              className="inline-flex items-center gap-2 rounded-buton border border-cizgi px-4 py-2.5 text-sm font-semibold transition hover:border-mavi/40 hover:text-mavi"
+              className="inline-flex items-center gap-2 rounded-button border border-border px-4 py-2.5 text-sm font-semibold transition hover:border-brand-blue/40 hover:text-brand-blue"
             >
               <Download className="size-4" aria-hidden />
               Metin olarak indir
             </button>
           </div>
-          <p className="mt-4 text-xs text-gri">
+          <p className="mt-4 text-xs text-muted">
             Yapay zekâ ile yazıldı ve CV&apos;ndeki bilgilerle karşılaştırıldı. Göndermeden önce
             okuyup kendi sesine göre düzenle.
           </p>

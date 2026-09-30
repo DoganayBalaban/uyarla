@@ -1,6 +1,6 @@
 import { safeReturnPath } from "@/lib/returnPath"
 import { enabledProviders } from "@/features/auth/providers"
-import { LoginForm as LoginForm } from "@/features/auth/components/LoginForm"
+import { LoginForm } from "@/features/auth/components/LoginForm"
 
 // Hangi sosyal girişin açık olduğu ortam değişkenlerinden okunuyor; sayfa
 // derleme anında sabitlenirse sonradan eklenen kimlik bilgisi görünmez.

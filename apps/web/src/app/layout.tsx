@@ -1,8 +1,8 @@
 import "@/app/globals.css"
 import type { Metadata } from "next"
-import { AnalysisNotice as AnalysisNotice } from "@/features/analysis/components/AnalysisNotice"
+import { AnalysisNotice } from "@/features/analysis/components/AnalysisNotice"
 import { Navbar } from "@/components/layout/Navbar"
-import { siteUrl as siteUrl } from "@/lib/site"
+import { siteUrl } from "@/lib/site"
 
 const TITLE = "uyarla · Her ilana, doğru CV."
 const DESCRIPTION =

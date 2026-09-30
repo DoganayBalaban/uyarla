@@ -10,7 +10,7 @@ import { DEFAULT_SCORING_CONFIG } from "../src/score/config.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { conceptTexts, score, type ScoreInput } from "../src/score/score.js"
 import { compareToExpectations } from "./compare.js"
-import { cacheDir as cacheDir, type EvalPair } from "./types.js"
+import { cacheDir, type EvalPair } from "./types.js"
 
 /**
  * Eşik taraması.

@@ -23,10 +23,10 @@ export type { Stage as Asama, StageState as AsamaDurumu }
 
 
 const STATE_STYLE: Record<StageState, { label: string; textClass: string; bgClass: string }> = {
-  pending: { label: "Sırada", textClass: "text-gri", bgClass: "bg-kart border-cizgi" },
-  active: { label: "Çalışıyor", textClass: "text-mavi dark:text-[#8ea2ff]", bgClass: "bg-mavi/10 border-mavi/50" },
-  done: { label: "Tamam", textClass: "text-yesil dark:text-[#4ade80]", bgClass: "bg-yesil/10 border-yesil/50" },
-  error: { label: "Olmadı", textClass: "text-kirmizi dark:text-[#f87171]", bgClass: "bg-kirmizi/10 border-kirmizi/50" },
+  pending: { label: "Sırada", textClass: "text-muted", bgClass: "bg-card border-border" },
+  active: { label: "Çalışıyor", textClass: "text-brand-blue dark:text-[#8ea2ff]", bgClass: "bg-brand-blue/10 border-brand-blue/50" },
+  done: { label: "Tamam", textClass: "text-brand-green dark:text-[#4ade80]", bgClass: "bg-brand-green/10 border-brand-green/50" },
+  error: { label: "Olmadı", textClass: "text-brand-red dark:text-[#f87171]", bgClass: "bg-brand-red/10 border-brand-red/50" },
 }
 
 function StateIcon({ state, className }: { state: StageState; className?: string }) {
@@ -72,15 +72,15 @@ export function StageTimeline({
 
   return (
     <section
-      className={cn("rounded-kart border border-cizgi bg-kart p-5 shadow-sm sm:p-6", className)}
+      className={cn("rounded-card border border-border bg-card p-5 shadow-sm sm:p-6", className)}
       aria-label={heading}
     >
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <h2 className="m-0 text-lg">{heading}</h2>
-          {subtitle && <p className="m-0 mt-1 text-sm text-gri">{subtitle}</p>}
+          {subtitle && <p className="m-0 mt-1 text-sm text-muted">{subtitle}</p>}
         </div>
-        <span className="shrink-0 rounded-full bg-zemin px-2.5 py-1 text-xs font-semibold tabular-nums text-gri">
+        <span className="shrink-0 rounded-full bg-background px-2.5 py-1 text-xs font-semibold tabular-nums text-muted">
           {doneCount}/{stages.length}
         </span>
       </header>
@@ -106,7 +106,7 @@ export function StageTimeline({
                       aria-hidden
                       className={cn(
                         "my-1 w-0.5 flex-1 rounded-full transition-colors duration-500",
-                        a.status === "done" ? "bg-yesil/50" : "bg-cizgi",
+                        a.status === "done" ? "bg-brand-green/50" : "bg-border",
                       )}
                     />
                   )}
@@ -116,7 +116,7 @@ export function StageTimeline({
                     <span
                       className={cn(
                         "font-semibold",
-                        a.status === "pending" ? "text-gri" : "text-metin",
+                        a.status === "pending" ? "text-muted" : "text-foreground",
                       )}
                     >
                       {a.title}
@@ -132,7 +132,7 @@ export function StageTimeline({
                       {d.label}
                     </span>
                   </div>
-                  {a.description && <p className="m-0 mt-0.5 text-sm text-gri">{a.description}</p>}
+                  {a.description && <p className="m-0 mt-0.5 text-sm text-muted">{a.description}</p>}
                 </div>
               </motion.li>
             )

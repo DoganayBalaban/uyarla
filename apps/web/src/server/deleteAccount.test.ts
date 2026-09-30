@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest"
-import { DELETION_ORDER as DELETION_ORDER, isInsideStorage as isInsideStorage, deletionOperations as deletionOperations } from "@/server/deleteAccount"
+import { DELETION_ORDER, isInsideStorage, deletionOperations } from "@/server/deleteAccount"
 
 /** Hangi tabloya hangi `where` ile gidildiğini sırasıyla yakalayan sahte Prisma. */
 function fakePrisma() {

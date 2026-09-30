@@ -3,9 +3,9 @@ import { prismaAdapter } from "better-auth/adapters/prisma"
 import { nextCookies } from "better-auth/next-js"
 import { anonymous, magicLink } from "better-auth/plugins"
 import { prisma } from "@uyarla/db"
-import { claimOperations as claimOperations } from "@/server/claimAnonymousData"
+import { claimOperations } from "@/server/claimAnonymousData"
 import { sendMagicLinkEmail } from "@/server/mail"
-import { providerSettings as providerSettings } from "@/features/auth/providers"
+import { providerSettings } from "@/features/auth/providers"
 
 /**
  * Kimlik katmanı. `packages/core` bunu bilmiyor ve bilmemeli: kimlik HTTP

@@ -38,7 +38,7 @@ export function LoginVisual() {
   return (
     <div
       aria-hidden="true"
-      className="relative isolate h-full w-full overflow-hidden rounded-[28px] bg-gece"
+      className="relative isolate h-full w-full overflow-hidden rounded-[28px] bg-brand-night"
     >
       {/* Zemin: mavinin iki tonu, köşede hafif mercan. */}
       <div className="absolute inset-0 -z-20 bg-[radial-gradient(80%_60%_at_80%_10%,rgb(43_78_255/0.55),transparent_60%),radial-gradient(60%_50%_at_0%_100%,rgb(43_78_255/0.45),transparent_65%),radial-gradient(40%_30%_at_100%_100%,rgb(255_107_74/0.22),transparent_70%)]" />
@@ -46,16 +46,16 @@ export function LoginVisual() {
       {/* Kurdeleler. Her biri dikeyde açık kenar → doygun orta → koyu alt
           geçişiyle ipek hacmi veriyor; uçlar maskeyle eriyor. */}
       <div className="absolute inset-[-30%] -z-10 [mask-image:linear-gradient(to_right,transparent,#000_20%,#000_80%,transparent)]">
-        <div className="absolute left-[-10%] top-[14%] h-28 w-[130%] -rotate-30 rounded-full bg-[#8ea2ff]/50 blur-3xl motion-safe:animate-kurdele" />
-        <div className="absolute left-[-10%] top-[30%] h-44 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(199_208_255/0.9),rgb(43_78_255)_30%,rgb(27_42_143)_75%,rgb(15_23_42/0.6))] blur-[2px] motion-safe:animate-kurdele motion-safe:[animation-duration:18s]" />
-        <div className="absolute left-[-10%] top-[44%] h-1.5 w-[130%] -rotate-30 rounded-full bg-white/70 blur-[1px] motion-safe:animate-kurdele motion-safe:[animation-duration:11s]" />
-        <div className="absolute left-[-10%] top-[50%] h-36 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(230_234_255/0.85),rgb(91_115_255)_28%,rgb(43_78_255)_55%,rgb(255_107_74/0.55)_85%,transparent)] blur-[2px] motion-safe:animate-kurdele motion-safe:[animation-duration:22s]" />
-        <div className="absolute left-[-10%] top-[66%] h-24 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(199_208_255/0.6),rgb(43_78_255/0.8)_40%,rgb(15_23_42/0.4))] blur-[3px] motion-safe:animate-kurdele motion-safe:[animation-duration:16s]" />
-        <div className="absolute left-[-10%] top-[80%] h-32 w-[130%] -rotate-30 rounded-full bg-mercan/25 blur-3xl motion-safe:animate-kurdele motion-safe:[animation-duration:20s]" />
+        <div className="absolute left-[-10%] top-[14%] h-28 w-[130%] -rotate-30 rounded-full bg-[#8ea2ff]/50 blur-3xl motion-safe:animate-ribbon" />
+        <div className="absolute left-[-10%] top-[30%] h-44 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(199_208_255/0.9),rgb(43_78_255)_30%,rgb(27_42_143)_75%,rgb(15_23_42/0.6))] blur-[2px] motion-safe:animate-ribbon motion-safe:[animation-duration:18s]" />
+        <div className="absolute left-[-10%] top-[44%] h-1.5 w-[130%] -rotate-30 rounded-full bg-white/70 blur-[1px] motion-safe:animate-ribbon motion-safe:[animation-duration:11s]" />
+        <div className="absolute left-[-10%] top-[50%] h-36 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(230_234_255/0.85),rgb(91_115_255)_28%,rgb(43_78_255)_55%,rgb(255_107_74/0.55)_85%,transparent)] blur-[2px] motion-safe:animate-ribbon motion-safe:[animation-duration:22s]" />
+        <div className="absolute left-[-10%] top-[66%] h-24 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(199_208_255/0.6),rgb(43_78_255/0.8)_40%,rgb(15_23_42/0.4))] blur-[3px] motion-safe:animate-ribbon motion-safe:[animation-duration:16s]" />
+        <div className="absolute left-[-10%] top-[80%] h-32 w-[130%] -rotate-30 rounded-full bg-brand-coral/25 blur-3xl motion-safe:animate-ribbon motion-safe:[animation-duration:20s]" />
       </div>
 
       {/* Kurdeleleri koyulaştıran perde: önde duran içerik okunaklı kalsın. */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-gece/20 via-gece/45 to-gece/75" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-night/20 via-brand-night/45 to-brand-night/75" />
 
       {/* Yörünge. */}
       <div className="absolute left-1/2 top-[42%] aspect-square w-[92%] max-w-[560px] -translate-x-1/2 -translate-y-1/2">
@@ -67,7 +67,7 @@ export function LoginVisual() {
           />
         ))}
 
-        <div className="absolute inset-0 motion-safe:animate-yorunge">
+        <div className="absolute inset-0 motion-safe:animate-orbit">
           {CONCEPTS.map((k) => {
             const radians = (k.angle * Math.PI) / 180
             return (
@@ -77,14 +77,14 @@ export function LoginVisual() {
                 style={{ left: `${50 + k.r * Math.cos(radians)}%`, top: `${50 + k.r * Math.sin(radians)}%` }}
               >
                 <span
-                  className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold backdrop-blur-md motion-safe:animate-yorunge-ters ${
+                  className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold backdrop-blur-md motion-safe:animate-orbit-reverse ${
                     k.missing
                       ? "border-white/15 bg-white/5 text-white/60"
                       : "border-white/25 bg-white/15 text-white"
                   }`}
                 >
                   <span
-                    className={`size-1.5 rounded-full ${k.missing ? "bg-mercan" : "bg-[#4ade80]"}`}
+                    className={`size-1.5 rounded-full ${k.missing ? "bg-brand-coral" : "bg-[#4ade80]"}`}
                   />
                   {k.text}
                 </span>
@@ -109,7 +109,7 @@ export function LoginVisual() {
             />
           </svg>
           <div className="text-center leading-none">
-            <div className="font-baslik text-3xl font-extrabold tracking-tight text-white">72</div>
+            <div className="font-heading text-3xl font-extrabold tracking-tight text-white">72</div>
             <div className="mt-1 text-[10px] font-bold uppercase tracking-wider text-[#4ade80]">
               Yüksek
             </div>
@@ -118,14 +118,14 @@ export function LoginVisual() {
       </div>
 
       {/* Üst: slogan. */}
-      <p className="absolute left-8 top-8 font-baslik text-sm font-extrabold tracking-tight text-white/80">
+      <p className="absolute left-8 top-8 font-heading text-sm font-extrabold tracking-tight text-white/80">
         Aynı deneyim, doğru anlatım.
       </p>
 
       {/* Alt kart: ürünün sözleri. */}
-      <div className="absolute inset-x-6 bottom-6 sm:inset-x-10 sm:bottom-10 motion-safe:animate-yuzme">
-        <div className="max-w-sm rounded-kart border border-white/20 bg-white/10 p-5 text-white shadow-2xl backdrop-blur-xl">
-          <p className="font-baslik text-sm font-extrabold tracking-tight">Uyarla'nın sözü</p>
+      <div className="absolute inset-x-6 bottom-6 sm:inset-x-10 sm:bottom-10 motion-safe:animate-float">
+        <div className="max-w-sm rounded-card border border-white/20 bg-white/10 p-5 text-white shadow-2xl backdrop-blur-xl">
+          <p className="font-heading text-sm font-extrabold tracking-tight">Uyarla'nın sözü</p>
           <ul className="mt-3 space-y-2 text-sm leading-relaxed text-white/85">
             {QUOTES.map((quote) => (
               <li key={quote} className="flex gap-2.5">

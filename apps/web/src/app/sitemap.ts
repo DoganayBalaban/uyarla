@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { siteUrl as siteUrl } from "@/lib/site"
+import { siteUrl } from "@/lib/site"
 
 /** Yalnızca herkese açık sayfalar. */
 export default function sitemap(): MetadataRoute.Sitemap {

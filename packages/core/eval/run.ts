@@ -11,7 +11,7 @@ import { DEFAULT_SCORING_CONFIG } from "../src/score/config.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { conceptTexts, score } from "../src/score/score.js"
 import { compareToExpectations } from "./compare.js"
-import { cacheDir as cacheDir, type EvalPair, type EvalTotals, type PairMetrics } from "./types.js"
+import { cacheDir, type EvalPair, type EvalTotals, type PairMetrics } from "./types.js"
 
 /**
  * Değerlendirme koşusu: eşleştirme isabetini ölçer.

@@ -1,13 +1,13 @@
 import Link from "next/link"
-import { Photo as Photo } from "@/features/landing/components/Photo"
-import { Icon as Icon, type IconName as IconName } from "@/features/landing/components/Icon"
+import { Photo } from "@/features/landing/components/Photo"
+import { Icon, type IconName } from "@/features/landing/components/Icon"
 import {
-  FileChips as FileChips,
-  RequirementList as RequirementList,
-  HeroCheck as HeroCheck,
-  HeroApp as HeroApp,
-  BeforeAfter as BeforeAfter,
-  WarningCard as WarningCard,
+  FileChips,
+  RequirementList,
+  HeroCheck,
+  HeroApp,
+  BeforeAfter,
+  WarningCard,
 } from "@/features/landing/components/Mockups"
 import s from "@/features/landing/landing.module.css"
 
@@ -125,28 +125,28 @@ const BENTO_ITEMS: { icon: IconName; title: string; text: string; comingSoon?: b
 
 const PERSONAS = [
   {
-    id: "foto-persona-1",
+    id: "photo-persona-1",
     alt: "Kampüs kafesinde dizüstüyle çalışan yeni mezun",
     who: "Yeni mezun",
     quote: "Deneyimin az değil, doğru anlatılmamış.",
     photo: "Kampüste ya da kafede dizüstüyle çalışan yeni mezun, doğal ışık",
   },
   {
-    id: "foto-persona-2",
+    id: "photo-persona-2",
     alt: "Evde mutfak masasında dizüstünün yanında not alan bir kadın",
     who: "Kariyer değiştiren",
     quote: "Eski işindeki becerileri yeni alanın diliyle anlat.",
     photo: "Evden çalışan, not alan 30'lu yaşlarda biri, sıcak tonlar",
   },
   {
-    id: "foto-persona-3",
+    id: "photo-persona-3",
     alt: "Ortak çalışma alanında dizüstünde belge inceleyen deneyimli bir profesyonel",
     who: "Deneyimli profesyonel",
     quote: "Az ama isabetli başvuru. Her biri ilana özel.",
     photo: "Ofiste ya da ortak çalışma alanında deneyimli profesyonel, takım elbisesiz",
   },
   {
-    id: "foto-persona-4",
+    id: "photo-persona-4",
     alt: "Pencere önünde dizüstünden görüntülü görüşme yapan genç bir profesyonel",
     who: "Yurt dışına başvuran",
     quote: "Türkçe CV'nden ilana özel İngilizce CV.",
@@ -188,25 +188,25 @@ const FAQ = [
 
 export function LandingPage() {
   return (
-    <div className={s.sayfa}>
+    <div className={s.page}>
       <main>
         {/* ——— Hero ——— */}
         <section className={s.hero}>
-          <div className={`${s.kap} ${s.heroMetin}`}>
-            <h1 className={s.heroBaslik}>Her ilana, doğru CV.</h1>
-            <p className={s.heroAlt}>
+          <div className={`${s.container} ${s.heroText}`}>
+            <h1 className={s.heroTitle}>Her ilana, doğru CV.</h1>
+            <p className={s.heroLead}>
               İlanı yapıştır, CV'nin ne kadar uyduğunu gör ve tek tıkla ilana özel hâle getir.
               Deneyimini uydurmadan.
             </p>
-            <div className={s.heroEylem}>
-              <Link href="/analyze" className={`${s.btnBirincil} ${s.btnBuyuk}`}>
+            <div className={s.heroActions}>
+              <Link href="/analyze" className={`${s.buttonPrimary} ${s.buttonLarge}`}>
                 Ücretsiz skorumu gör
               </Link>
-              <a href="#nasil" className={`${s.btnIkincil} ${s.btnBuyuk}`}>
+              <a href="#nasil" className={`${s.buttonSecondary} ${s.buttonLarge}`}>
                 Nasıl çalışır?
               </a>
             </div>
-            <ul className={s.guven}>
+            <ul className={s.trust}>
               <li>
                 <Icon name="check" size={16} /> Kayıt gerekmez
               </li>
@@ -220,19 +220,19 @@ export function LandingPage() {
           </div>
 
           {/* Ürünün kendisi: analiz ekranı ve kenarından taşan uydurma kontrolü. */}
-          <div className={`${s.kap} ${s.heroSahne}`} aria-hidden="true">
-            <div className={s.heroSahneZemin} />
+          <div className={`${s.container} ${s.heroStage}`} aria-hidden="true">
+            <div className={s.heroStageBackdrop} />
             <HeroApp />
-            <div className={s.heroKontrolYer}>
+            <div className={s.heroCheckSlot}>
               <HeroCheck />
             </div>
           </div>
         </section>
 
         {/* ——— Sorun ——— */}
-        <section className={s.sorun}>
-          <div className={s.kap}>
-            <p className={s.sorunMetin}>
+        <section className={s.problem}>
+          <div className={s.container}>
+            <p className={s.problemText}>
               Aynı CV ile onlarca ilana başvurup dönüş alamıyorsan sorun çoğu zaman deneyiminde
               değil, <strong>anlatımında.</strong> Her ilan farklı bir CV ister.
             </p>
@@ -240,25 +240,25 @@ export function LandingPage() {
         </section>
 
         {/* ——— Nasıl çalışır ——— */}
-        <section id="nasil" className={s.bolum}>
-          <div className={s.kap}>
-            <div className={s.bolumBaslik}>
-              <span className={s.bolumEtiket}>Nasıl çalışır</span>
+        <section id="nasil" className={s.section}>
+          <div className={s.container}>
+            <div className={s.sectionHeader}>
+              <span className={s.sectionLabel}>Nasıl çalışır</span>
               <h2 className={s.h2}>Üç adım. Kayıt yok, kurulum yok.</h2>
-              <p className={s.bolumAlt}>Skorunu görmek tamamen ücretsiz.</p>
+              <p className={s.sectionLead}>Skorunu görmek tamamen ücretsiz.</p>
             </div>
-            <ol className={s.adimlar}>
+            <ol className={s.steps}>
               {STEPS.map((a, i) => (
-                <li key={a.number} className={s.adim}>
-                  <div className={s.adimUst}>
-                    <span className={s.adimIkon}>
+                <li key={a.number} className={s.step}>
+                  <div className={s.stepTop}>
+                    <span className={s.stepIcon}>
                       <Icon name={a.icon} size={22} />
                     </span>
-                    <span className={s.adimNo}>{a.number}</span>
+                    <span className={s.stepNumber}>{a.number}</span>
                   </div>
                   <h3 className={s.h3}>{a.title}</h3>
-                  <p className={s.adimMetin}>{a.text}</p>
-                  {i < STEPS.length - 1 && <span className={s.adimCizgi} aria-hidden="true" />}
+                  <p className={s.stepText}>{a.text}</p>
+                  {i < STEPS.length - 1 && <span className={s.stepLine} aria-hidden="true" />}
                 </li>
               ))}
             </ol>
@@ -266,18 +266,18 @@ export function LandingPage() {
         </section>
 
         {/* ——— Özellik blokları ——— */}
-        <section id="ozellikler" className={`${s.bolum} ${s.bolumZemin}`}>
-          <div className={s.kap}>
+        <section id="ozellikler" className={`${s.section} ${s.sectionTinted}`}>
+          <div className={s.container}>
             {FEATURES.map((o, i) => (
-              <div key={o.label} className={`${s.ozellik} ${i % 2 === 1 ? s.ozellikTers : ""}`}>
-                <div className={s.ozellikMetin}>
-                  <span className={s.bolumEtiket}>{o.label}</span>
+              <div key={o.label} className={`${s.feature} ${i % 2 === 1 ? s.featureReversed : ""}`}>
+                <div className={s.featureText}>
+                  <span className={s.sectionLabel}>{o.label}</span>
                   <h2 className={s.h2}>{o.title}</h2>
-                  <p className={s.bolumAlt}>{o.text}</p>
-                  <ul className={s.tikListe}>
+                  <p className={s.sectionLead}>{o.text}</p>
+                  <ul className={s.tickList}>
                     {o.bullets.map((m) => (
                       <li key={m}>
-                        <span className={s.tik}>
+                        <span className={s.tick}>
                           <Icon name="check" size={14} />
                         </span>
                         {m}
@@ -285,29 +285,29 @@ export function LandingPage() {
                     ))}
                   </ul>
                 </div>
-                <div className={s.ozellikGorsel}>{o.visual}</div>
+                <div className={s.featureVisual}>{o.visual}</div>
               </div>
             ))}
 
-            <div className={`${s.ozellik} ${s.ozellikTers}`}>
-              <div className={s.ozellikMetin}>
-                <span className={s.bolumEtiket}>Çıktı</span>
+            <div className={`${s.feature} ${s.featureReversed}`}>
+              <div className={s.featureText}>
+                <span className={s.sectionLabel}>Çıktı</span>
                 <h2 className={s.h2}>Başvurmaya hazır, ATS'nin okuyabildiği CV.</h2>
-                <p className={s.bolumAlt}>
+                <p className={s.sectionLead}>
                   Uyarlanmış CV'ni sade, tek sütunlu bir şablonla PDF veya DOCX olarak indir. Süs yok,
                   tablo yok; hem insan hem yazılım rahat okur.
                 </p>
                 <FileChips />
               </div>
-              <div className={s.ozellikGorsel}>
+              <div className={s.featureVisual}>
                 <Photo
-                  id="foto-cikti"
-                  file="cikti.png"
+                  id="photo-output"
+                  file="output.png"
                   ratio="5 / 4"
                   description="Masada basılı CV ya da ekranda açık PDF; elde kahve, sade kompozisyon"
                   alt="Kafe masasında basılı bir CV, açık dizüstü ve bir fincan Türk kahvesi"
                   sizes="(max-width: 900px) 92vw, 560px"
-                  className={s.ciktiFoto}
+                  className={s.outputPhoto}
                 />
               </div>
             </div>
@@ -315,24 +315,24 @@ export function LandingPage() {
         </section>
 
         {/* ——— Bento ——— */}
-        <section className={s.bolum}>
-          <div className={s.kap}>
-            <div className={s.bolumBaslik}>
-              <span className={s.bolumEtiket}>Hepsi tek yerde</span>
+        <section className={s.section}>
+          <div className={s.container}>
+            <div className={s.sectionHeader}>
+              <span className={s.sectionLabel}>Hepsi tek yerde</span>
               <h2 className={s.h2}>Başvur, uyarla, takip et.</h2>
-              <p className={s.bolumAlt}>Bugün skor ve uyarlama hazır. Sıradakiler yolda.</p>
+              <p className={s.sectionLead}>Bugün skor ve uyarlama hazır. Sıradakiler yolda.</p>
             </div>
             <div className={s.bento}>
               {BENTO_ITEMS.map((b) => (
-                <div key={b.title} className={`${s.bentoKart} ${b.wide ? s.bentoGenis : ""}`}>
-                  <div className={s.bentoUst}>
-                    <span className={s.bentoIkon}>
+                <div key={b.title} className={`${s.bentoCard} ${b.wide ? s.bentoWide : ""}`}>
+                  <div className={s.bentoTop}>
+                    <span className={s.bentoIcon}>
                       <Icon name={b.icon} size={22} />
                     </span>
-                    {b.comingSoon && <span className={s.yakinda}>Yakında</span>}
+                    {b.comingSoon && <span className={s.comingSoon}>Yakında</span>}
                   </div>
                   <h3 className={s.h3}>{b.title}</h3>
-                  <p className={s.bentoMetin}>{b.text}</p>
+                  <p className={s.bentoText}>{b.text}</p>
                 </div>
               ))}
             </div>
@@ -340,24 +340,24 @@ export function LandingPage() {
         </section>
 
         {/* ——— Dürüstlük ——— */}
-        <section id="durustluk" className={s.durustluk}>
-          <div className={s.durustlukZemin} aria-hidden="true" />
-          <div className={s.kap}>
-            <div className={s.durustlukIc}>
+        <section id="durustluk" className={s.honesty}>
+          <div className={s.honestyBackdrop} aria-hidden="true" />
+          <div className={s.container}>
+            <div className={s.honestyInner}>
               <div>
-                <span className={`${s.bolumEtiket} ${s.bolumEtiketKoyu}`}>Uydurmama ilkesi</span>
-                <h2 className={`${s.h2} ${s.durustlukBaslik}`}>
+                <span className={`${s.sectionLabel} ${s.sectionLabelDark}`}>Uydurmama ilkesi</span>
+                <h2 className={`${s.h2} ${s.honestyTitle}`}>
                   Aynı deneyim,
                   <br />
                   doğru anlatım.
                 </h2>
-                <p className={s.durustlukAlt}>
+                <p className={s.honestyLead}>
                   Genel sohbet botları her şeyi yazar. Şablon siteleri güzel görünen CV vaat eder.
                   Uyarla ikisinin arasında durur: yalnızca senin gerçekten yaptığını, işverenin
                   diliyle anlatır.
                 </p>
               </div>
-              <div className={s.ilkeler}>
+              <div className={s.principles}>
                 {[
                   {
                     icon: "shield" as const,
@@ -375,13 +375,13 @@ export function LandingPage() {
                     m: "Metinler yapay zekâyla yeniden yazılır; hiçbiri onayın olmadan CV'ne girmez.",
                   },
                 ].map((i) => (
-                  <div key={i.b} className={s.ilke}>
-                    <span className={s.ilkeIkon}>
+                  <div key={i.b} className={s.principle}>
+                    <span className={s.principleIcon}>
                       <Icon name={i.icon} size={20} />
                     </span>
                     <div>
-                      <h3 className={s.ilkeBaslik}>{i.b}</h3>
-                      <p className={s.ilkeMetin}>{i.m}</p>
+                      <h3 className={s.principleTitle}>{i.b}</h3>
+                      <p className={s.principleText}>{i.m}</p>
                     </div>
                   </div>
                 ))}
@@ -391,28 +391,28 @@ export function LandingPage() {
         </section>
 
         {/* ——— Personalar ——— */}
-        <section className={s.bolum}>
-          <div className={s.kap}>
-            <div className={s.bolumBaslik}>
-              <span className={s.bolumEtiket}>Kimler için</span>
+        <section className={s.section}>
+          <div className={s.container}>
+            <div className={s.sectionHeader}>
+              <span className={s.sectionLabel}>Kimler için</span>
               <h2 className={s.h2}>İlk işine de, bir sonraki adımına da.</h2>
             </div>
-            <div className={s.personalar}>
+            <div className={s.personas}>
               {PERSONAS.map((p) => (
                 <figure key={p.id} className={s.persona}>
-                  {p.comingSoon && <span className={`${s.yakinda} ${s.personaRozet}`}>Yakında</span>}
+                  {p.comingSoon && <span className={`${s.comingSoon} ${s.personaBadge}`}>Yakında</span>}
                   <Photo
                     id={p.id}
-                    file={`${p.id.replace("foto-", "")}.png`}
+                    file={`${p.id.replace("photo-", "")}.png`}
                     ratio="3 / 4"
                     description={p.photo}
                     alt={p.alt}
                     sizes="(max-width: 640px) 92vw, (max-width: 1100px) 45vw, 280px"
-                    className={s.personaFoto}
+                    className={s.personaPhoto}
                   />
-                  <figcaption className={s.personaAlt}>
-                    <span className={s.personaKim}>{p.who}</span>
-                    <span className={s.personaSoz}>“{p.quote}”</span>
+                  <figcaption className={s.personaCaption}>
+                    <span className={s.personaWho}>{p.who}</span>
+                    <span className={s.personaQuote}>“{p.quote}”</span>
                   </figcaption>
                 </figure>
               ))}
@@ -421,21 +421,21 @@ export function LandingPage() {
         </section>
 
         {/* ——— SSS ——— */}
-        <section id="sss" className={`${s.bolum} ${s.bolumZemin}`}>
-          <div className={`${s.kap} ${s.sssIc}`}>
-            <div className={s.sssBaslik}>
-              <span className={s.bolumEtiket}>SSS</span>
+        <section id="sss" className={`${s.section} ${s.sectionTinted}`}>
+          <div className={`${s.container} ${s.faqInner}`}>
+            <div className={s.faqHeader}>
+              <span className={s.sectionLabel}>SSS</span>
               <h2 className={s.h2}>Aklına takılanlar</h2>
-              <p className={s.bolumAlt}>
+              <p className={s.sectionLead}>
                 Skor, uyarlama ve CV'nin güvenliği hakkında kısa ve net cevaplar.
               </p>
             </div>
-            <div className={s.sss}>
+            <div className={s.faq}>
               {FAQ.map((q) => (
-                <details key={q.s} className={s.sssMadde}>
+                <details key={q.s} className={s.faqItem}>
                   <summary>
                     {q.s}
-                    <span className={s.sssArti} aria-hidden="true">
+                    <span className={s.faqPlus} aria-hidden="true">
                       <Icon name="plus" size={18} />
                     </span>
                   </summary>
@@ -447,64 +447,64 @@ export function LandingPage() {
         </section>
 
         {/* ——— Son çağrı ——— */}
-        <section className={s.sonCagri}>
-          <div className={s.kap}>
-            <div className={s.sonCagriKart}>
-              <div className={s.sonCagriDesen} aria-hidden="true" />
-              <div className={s.sonCagriMetin}>
-                <h2 className={s.sonCagriBaslik}>Tek CV ile yetinme.</h2>
+        <section className={s.finalCta}>
+          <div className={s.container}>
+            <div className={s.finalCtaCard}>
+              <div className={s.finalCtaPattern} aria-hidden="true" />
+              <div className={s.finalCtaText}>
+                <h2 className={s.finalCtaTitle}>Tek CV ile yetinme.</h2>
                 <p>İlanı yapıştır, CV'nin ne kadar uyduğunu hemen gör. Kayıt gerekmez.</p>
-                <Link href="/analyze" className={`${s.btnBeyaz} ${s.btnBuyuk}`}>
+                <Link href="/analyze" className={`${s.buttonWhite} ${s.buttonLarge}`}>
                   Ücretsiz skorumu gör
                   <Icon name="ok" size={18} />
                 </Link>
               </div>
               <Photo
-                id="foto-son-cagri"
-                file="son-cagri.png"
+                id="photo-final-cta"
+                file="final-cta.png"
                 ratio="1 / 1"
                 description="Telefonda mülakat daveti e-postasını okuyup gülümseyen biri"
                 alt="Telefonunda güzel bir haber okuyup gülümseyen genç biri"
                 sizes="(max-width: 900px) 80vw, 360px"
-                className={s.sonCagriFoto}
+                className={s.finalCtaPhoto}
               />
             </div>
           </div>
         </section>
       </main>
 
-      <footer className={s.altbilgi}>
-        <div className={`${s.kap} ${s.altbilgiIc}`}>
+      <footer className={s.footer}>
+        <div className={`${s.container} ${s.footerInner}`}>
           <div>
             <Link href="/" className={s.logo}>
-              <span className={s.logoSembol} aria-hidden="true">
+              <span className={s.logoMark} aria-hidden="true">
                 <span />
                 <span />
               </span>
               uyarla
             </Link>
-            <p className={s.altbilgiSlogan}>Her ilana, doğru CV.</p>
+            <p className={s.footerSlogan}>Her ilana, doğru CV.</p>
           </div>
-          <nav className={s.altbilgiLinkler} aria-label="Alt menü">
+          <nav className={s.footerLinks} aria-label="Alt menü">
             <div>
-              <p className={s.altbilgiBaslik}>Ürün</p>
+              <p className={s.footerHeading}>Ürün</p>
               <a href="#nasil">Nasıl çalışır</a>
               <a href="#ozellikler">Özellikler</a>
               <Link href="/analyze">Ücretsiz skor</Link>
             </div>
             <div>
-              <p className={s.altbilgiBaslik}>Hesap</p>
+              <p className={s.footerHeading}>Hesap</p>
               <Link href="/login">Giriş yap</Link>
               <a href="#sss">SSS</a>
             </div>
             <div>
-              <p className={s.altbilgiBaslik}>Yasal</p>
+              <p className={s.footerHeading}>Yasal</p>
               <Link href="/privacy">KVKK aydınlatma metni</Link>
               <Link href="/terms">Kullanım koşulları</Link>
             </div>
           </nav>
         </div>
-        <div className={`${s.kap} ${s.altbilgiAlt}`}>
+        <div className={`${s.container} ${s.footerBottom}`}>
           <span>© 2026 uyarla</span>
           <span>Türkiye'de, iş arayanlar için yapıldı.</span>
         </div>

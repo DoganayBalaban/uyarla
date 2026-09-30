@@ -17,7 +17,7 @@ import type { JobPostingData } from "../src/schemas/job.js"
 import type { ResumeProfile } from "../src/schemas/resume.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { conceptTexts, score } from "../src/score/score.js"
-import { cacheDir as cacheDir } from "./types.js"
+import { cacheDir } from "./types.js"
 
 /**
  * Değerlendirme çiftlerini hazırlar ve incelenebilir bir rapor üretir.

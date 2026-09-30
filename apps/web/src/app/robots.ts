@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { siteUrl as siteUrl } from "@/lib/site"
+import { siteUrl } from "@/lib/site"
 
 /** Kullanıcıya özel ekranlar ve API taranmıyor; zaten oturum istiyorlar. */
 export default function robots(): MetadataRoute.Robots {

@@ -2,7 +2,7 @@ import { cosineSimilarity } from "../llm/embedding.js"
 import { containsKeyword, normalizeTokens } from "../normalize/turkish.js"
 import type { Concept, JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { isProperNoun as isProperNoun, type ScoreResult } from "../score/score.js"
+import { isProperNoun, type ScoreResult } from "../score/score.js"
 
 /**
  * Terim uyumu (K-38).

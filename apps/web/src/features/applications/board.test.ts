@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isStage as isStage, toBoardCard as toBoardCard, positionName as positionName, groupByStage as groupByStage, type BoardRow as BoardRow } from "@/features/applications/board"
+import { isStage, toBoardCard, positionName, groupByStage, type BoardRow } from "@/features/applications/board"
 
 function row(suffix: Partial<BoardRow> = {}): BoardRow {
   return {

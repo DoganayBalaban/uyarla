@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { LlmProvider } from "../llm/types.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { resumeFacts as resumeFacts, generateCoverLetter, verifyCoverLetter } from "./letter.js"
+import { resumeFacts, generateCoverLetter, verifyCoverLetter } from "./letter.js"
 
 const TEST_PROFILE: ResumeProfile = {
   fullName: "Elif Yılmaz",

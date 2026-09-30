@@ -1,11 +1,11 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import Image from "next/image"
-import { PhotoPlaceholder as PhotoPlaceholder } from "@/features/landing/components/PhotoPlaceholder"
+import { PhotoPlaceholder } from "@/features/landing/components/PhotoPlaceholder"
 import s from "@/features/landing/landing.module.css"
 
 /**
- * Tanıtım sayfasının fotoğrafı: `public/foto/<dosya>` varsa onu, yoksa yer
+ * Tanıtım sayfasının fotoğrafı: `public/photos/<file>` varsa onu, yoksa yer
  * tutucuyu çiziyor. Kontrol derleme anında yapılıyor (sayfa statik); dosya
  * eklenince yeniden derlemek yetiyor. Fotoğraflar Higgsfield'da (Soul 2.0,
  * Seedream 5.0 Lite) üretildi ve `scripts/download-photos.mjs` ile indiriliyor.
@@ -32,12 +32,12 @@ export function Photo({
   sizes: string
   className?: string
 }) {
-  if (!existsSync(join(process.cwd(), "public", "foto", file))) {
+  if (!existsSync(join(process.cwd(), "public", "photos", file))) {
     return <PhotoPlaceholder id={id} ratio={ratio} description={description} className={className} />
   }
   return (
-    <div id={id} className={`${s.fotoKap} ${className ?? ""}`} style={{ aspectRatio: ratio }}>
-      <Image src={`/foto/${file}`} alt={alt} fill sizes={sizes} className={s.fotoKapIc} />
+    <div id={id} className={`${s.photoWrap} ${className ?? ""}`} style={{ aspectRatio: ratio }}>
+      <Image src={`/photos/${file}`} alt={alt} fill sizes={sizes} className={s.photoWrapInner} />
     </div>
   )
 }

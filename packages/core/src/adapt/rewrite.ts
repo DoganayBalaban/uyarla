@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { ExtractResult, LlmProvider } from "../llm/types.js"
-import type { Language as Language } from "../normalize/language.js"
+import type { Language } from "../normalize/language.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { TermAlignment } from "../schemas/adaptation.js"
 import { toJsonSchema } from "../schemas/toJsonSchema.js"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { suggestEmail as suggestEmail, mailAppFor as mailAppFor } from "@/features/auth/emailHints"
+import { suggestEmail, mailAppFor } from "@/features/auth/emailHints"
 
 describe("suggestEmail", () => {
   it.each([

@@ -67,20 +67,20 @@ export function ResumeUpload({ name = "cv" }: { name?: string }) {
           select(e.dataTransfer.files[0] ?? null)
         }}
         className={cn(
-          "group relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-kart border-2 border-dashed px-6 py-8 text-center transition-colors",
+          "group relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed px-6 py-8 text-center transition-colors",
           dragging
-            ? "border-mavi bg-mavi/5"
-            : "border-cizgi bg-zemin/60 hover:border-mavi/60 hover:bg-mavi/[0.03]",
+            ? "border-brand-blue bg-brand-blue/5"
+            : "border-border bg-background/60 hover:border-brand-blue/60 hover:bg-brand-blue/[0.03]",
           file && "sr-only",
         )}
       >
-        <span className="grid size-11 place-items-center rounded-full bg-kart text-mavi shadow-sm ring-1 ring-cizgi transition-transform group-hover:-translate-y-0.5 dark:text-[#8ea2ff]">
+        <span className="grid size-11 place-items-center rounded-full bg-card text-brand-blue shadow-sm ring-1 ring-border transition-transform group-hover:-translate-y-0.5 dark:text-[#8ea2ff]">
           <UploadCloud className="size-5" aria-hidden />
         </span>
         <span className="font-semibold">
-          CV&apos;ni buraya bırak ya da <span className="text-mavi dark:text-[#8ea2ff]">seç</span>
+          CV&apos;ni buraya bırak ya da <span className="text-brand-blue dark:text-[#8ea2ff]">seç</span>
         </span>
-        <span className="text-sm text-gri">PDF veya Word (DOCX) · en fazla 10 MB</span>
+        <span className="text-sm text-muted">PDF veya Word (DOCX) · en fazla 10 MB</span>
         <input
           ref={inputValue}
           id="cv"
@@ -99,19 +99,19 @@ export function ResumeUpload({ name = "cv" }: { name?: string }) {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            className="flex items-center gap-3 rounded-kart border border-cizgi bg-kart p-3.5 shadow-sm"
+            className="flex items-center gap-3 rounded-card border border-border bg-card p-3.5 shadow-sm"
           >
-            <span className="grid size-10 shrink-0 place-items-center rounded-buton bg-mavi/10 text-mavi dark:text-[#8ea2ff]">
+            <span className="grid size-10 shrink-0 place-items-center rounded-button bg-brand-blue/10 text-brand-blue dark:text-[#8ea2ff]">
               <FileText className="size-5" aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
               <p className="m-0 truncate font-semibold">{file.name}</p>
-              <p className="m-0 text-xs text-gri">{sizePx(file.size)} · hazır</p>
+              <p className="m-0 text-xs text-muted">{sizePx(file.size)} · hazır</p>
             </div>
             <button
               type="button"
               onClick={remove}
-              className="grid size-8 place-items-center rounded-full text-gri transition-colors hover:bg-zemin hover:text-metin"
+              className="grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-background hover:text-foreground"
               aria-label="Dosyayı kaldır"
             >
               <X className="size-4" aria-hidden />
@@ -120,7 +120,7 @@ export function ResumeUpload({ name = "cv" }: { name?: string }) {
         )}
       </AnimatePresence>
 
-      {error && <p className="mt-2 text-sm text-kehribar">{error}</p>}
+      {error && <p className="mt-2 text-sm text-brand-amber">{error}</p>}
     </div>
   )
 }
