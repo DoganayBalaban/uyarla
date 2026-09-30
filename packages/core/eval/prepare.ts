@@ -7,11 +7,17 @@ import {
   embeddingConfigFromEnv,
 } from "../src/llm/embedding.js"
 import { LmStudioProvider } from "../src/llm/lmstudio.js"
-import { llmConfigFromEnv } from "../src/llm/types.js"
+import {
+  type ExtractOptions,
+  type ExtractResult,
+  type LlmProvider,
+  llmConfigFromEnv,
+} from "../src/llm/types.js"
 import type { JobPostingData } from "../src/schemas/job.js"
 import type { ResumeProfile } from "../src/schemas/resume.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { conceptTexts, score } from "../src/score/score.js"
+import { onbellekDizini } from "./types.js"
 
 /**
  * Değerlendirme çiftlerini hazırlar ve incelenebilir bir rapor üretir.
@@ -26,7 +32,7 @@ import { conceptTexts, score } from "../src/score/score.js"
  */
 const KOK = import.meta.dirname
 const SOURCES = join(KOK, "sources")
-const CACHE = join(KOK, "cache")
+const CACHE = onbellekDizini(KOK)
 const RAPOR = join(KOK, "inceleme.md")
 
 interface PairConfig {
@@ -37,7 +43,7 @@ interface PairConfig {
 
 async function main() {
   const yenile = process.argv.includes("--refresh")
-  const llm = new LmStudioProvider(llmConfigFromEnv())
+  const llm = new SayanLlm(new LmStudioProvider(llmConfigFromEnv()))
   const embedding = new OpenAiCompatibleEmbeddingProvider(embeddingConfigFromEnv())
   mkdirSync(CACHE, { recursive: true })
 
@@ -55,7 +61,7 @@ async function main() {
       await onbellekli(`cv-${id}`, yenile, async () => {
         const metin = readFileSync(join(SOURCES, "cv", `${id}.txt`), "utf8")
         return (await extractResumeProfile(llm, metin)).data
-      }),
+      }, llm),
     )
   }
 
@@ -66,7 +72,7 @@ async function main() {
       await onbellekli(`ilan-${id}`, yenile, async () => {
         const metin = readFileSync(join(SOURCES, "ilan", `${id}.txt`), "utf8")
         return (await extractJobPosting(llm, metin)).data
-      }),
+      }, llm),
     )
   }
 
@@ -116,21 +122,49 @@ async function main() {
     console.log(`${cift.cv} × ${cift.ilan}: skor ${sonuc.score} (${ilan.requirements.length} gereksinim)`)
   }
 
+  // Yeni çıkarım yapıldıysa süre ve token kaydı; modelleri karşılaştırırken
+  // hız ve maliyet buradan okunuyor.
+  if (Object.keys(sureler).length > 0) {
+    writeFileSync(join(CACHE, "sureler.json"), JSON.stringify(sureler, null, 2))
+  }
+
   writeFileSync(RAPOR, satirlar.join("\n"))
   console.log(`\nİnceleme raporu: ${RAPOR}`)
 }
 
+/** Sağlayıcının harcadığı token'ları sayar. */
+class SayanLlm implements LlmProvider {
+  tokens = 0
+  constructor(private readonly ic: LlmProvider) {}
+  async extract<T>(opts: ExtractOptions): Promise<ExtractResult<T>> {
+    const sonuc = await this.ic.extract<T>(opts)
+    this.tokens += sonuc.tokens
+    return sonuc
+  }
+}
+
+/** Çıkarım başına süre (sn) ve token; yalnızca bu koşuda yapılanlar. */
+const sureler: Record<string, { saniye: number; tokens: number }> = {}
+
 /** Sonucu diske yazar; varsa LLM'i hiç çağırmaz. */
-async function onbellekli<T>(ad: string, yenile: boolean, uret: () => Promise<T>): Promise<T> {
+async function onbellekli<T>(
+  ad: string,
+  yenile: boolean,
+  uret: () => Promise<T>,
+  llm?: SayanLlm,
+): Promise<T> {
   const yol = join(CACHE, `${ad}.json`)
   if (!yenile && existsSync(yol)) {
     console.log(`  [önbellek] ${ad}`)
     return JSON.parse(readFileSync(yol, "utf8")) as T
   }
   const basladi = Date.now()
+  const oncekiToken = llm?.tokens ?? 0
   const sonuc = await uret()
   writeFileSync(yol, JSON.stringify(sonuc, null, 2))
-  console.log(`  [çıkarım] ${ad} (${Math.round((Date.now() - basladi) / 1000)}s)`)
+  const saniye = Math.round((Date.now() - basladi) / 100) / 10
+  sureler[ad] = { saniye, tokens: (llm?.tokens ?? 0) - oncekiToken }
+  console.log(`  [çıkarım] ${ad} (${saniye}s)`)
   return sonuc
 }
 

@@ -20,7 +20,7 @@ import type { JobPostingData } from "../src/schemas/job.js"
 import type { ResumeProfile } from "../src/schemas/resume.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { conceptTexts, score } from "../src/score/score.js"
-import type { AdaptMetrics, EvalPair } from "./types.js"
+import { onbellekDizini, type AdaptMetrics, type EvalPair } from "./types.js"
 
 /**
  * Uyarlama değerlendirme koşusu (spec §12).
@@ -47,7 +47,7 @@ import type { AdaptMetrics, EvalPair } from "./types.js"
  *   pnpm eval:adapt --ayrinti    atılan her yazımı gerekçesiyle göster
  */
 const KOK = import.meta.dirname
-const CACHE = join(KOK, "cache")
+const CACHE = onbellekDizini(KOK)
 const PAIRS = join(KOK, "pairs")
 const RUNS = join(KOK, "runs")
 

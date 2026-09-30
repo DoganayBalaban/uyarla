@@ -1,3 +1,15 @@
+import { join, resolve } from "node:path"
+
+/**
+ * Çıkarım önbelleğinin dizini. Öntanımlı `eval/cache/`; modelleri
+ * karşılaştırırken her model kendi dizininde çalışsın diye `EVAL_CACHE` ile
+ * değiştirilebiliyor (ör. `eval/cache/modeller/qwen3.5-9b`). Aksi hâlde
+ * `--refresh` bir modelin taban çizgisini ötekinin çıktısıyla ezer.
+ */
+export function onbellekDizini(kok: string): string {
+  return process.env.EVAL_CACHE ? resolve(process.env.EVAL_CACHE) : join(kok, "cache")
+}
+
 export interface ExpectedRequirement {
   /** Gereksinimi tanımak için ilandaki metinden ayırt edici bir parça. */
   match: string

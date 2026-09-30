@@ -11,7 +11,7 @@ import type { Evidence } from "../src/score/evidence.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { type ScoreInput, conceptTexts, score } from "../src/score/score.js"
 import { compareToExpectations } from "./compare.js"
-import type { EvalPair } from "./types.js"
+import { onbellekDizini, type EvalPair } from "./types.js"
 
 /**
  * Kapsam taraması: anlamsal katmanın ve kanıt türlerinin daraltılmasını ölçer.
@@ -26,7 +26,7 @@ import type { EvalPair } from "./types.js"
  * fonksiyon olduğu için her varyant saniyeler sürüyor.
  */
 const KOK = import.meta.dirname
-const CACHE = join(KOK, "cache")
+const CACHE = onbellekDizini(KOK)
 const PAIRS = join(KOK, "pairs")
 
 const HEPSI: readonly Evidence["kind"][] = ["role", "bullet", "skill", "education"]

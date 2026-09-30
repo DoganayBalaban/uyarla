@@ -10,7 +10,7 @@ import { DEFAULT_SCORING_CONFIG } from "../src/score/config.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { conceptTexts, score, type ScoreInput } from "../src/score/score.js"
 import { compareToExpectations } from "./compare.js"
-import type { EvalPair } from "./types.js"
+import { onbellekDizini, type EvalPair } from "./types.js"
 
 /**
  * Eşik taraması.
@@ -21,7 +21,7 @@ import type { EvalPair } from "./types.js"
  * yapmak dakikalarca sürerdi.
  */
 const KOK = import.meta.dirname
-const CACHE = join(KOK, "cache")
+const CACHE = onbellekDizini(KOK)
 const SOURCES = join(KOK, "sources")
 const PAIRS = join(KOK, "pairs")
 const ESIKLER = [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7]

@@ -11,7 +11,7 @@ import { DEFAULT_SCORING_CONFIG } from "../src/score/config.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { conceptTexts, score } from "../src/score/score.js"
 import { compareToExpectations } from "./compare.js"
-import type { EvalPair, EvalTotals, PairMetrics } from "./types.js"
+import { onbellekDizini, type EvalPair, type EvalTotals, type PairMetrics } from "./types.js"
 
 /**
  * Değerlendirme koşusu: eşleştirme isabetini ölçer.
@@ -24,7 +24,7 @@ import type { EvalPair, EvalTotals, PairMetrics } from "./types.js"
  * sinyali eşleştirmenin kendisinde (spec §10).
  */
 const KOK = import.meta.dirname
-const CACHE = join(KOK, "cache")
+const CACHE = onbellekDizini(KOK)
 const PAIRS = join(KOK, "pairs")
 const RUNS = join(KOK, "runs")
 
