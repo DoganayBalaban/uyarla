@@ -5,5 +5,5 @@ import { defineConfig } from "vitest/config"
  * ister ve normal `pnpm test` çalışırken ayakta olmayabilir.
  */
 export default defineConfig({
-  test: { include: ["lib/**/*.integration.test.ts"], testTimeout: 30000 },
+  test: { include: ["src/**/*.integration.test.ts"], testTimeout: 30000 },
 })

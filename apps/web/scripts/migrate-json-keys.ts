@@ -8,7 +8,7 @@
  * İkinci kez çalıştırmak güvenli; taşınmış kayıtlar atlanır.
  */
 import { prisma } from "@uyarla/db"
-import { upgradeCoverLetter, upgradeFormatReport } from "../lib/legacyJsonKeys"
+import { upgradeCoverLetter, upgradeFormatReport } from "../src/lib/legacyJsonKeys"
 
 const apply = process.argv.includes("--apply")
 

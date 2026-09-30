@@ -1,5 +1,5 @@
 import { prisma } from "@uyarla/db"
-import { TEMIZLIK_GUN, temizlikYap } from "../lib/temizlik"
+import { TEMIZLIK_GUN, temizlikYap } from "../src/lib/temizlik"
 
 /**
  * Anonim kullanıcı temizlik betiği.
