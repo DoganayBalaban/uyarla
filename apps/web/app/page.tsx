@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Foto } from "./components/landing/Foto"
 import { Ikon, type IkonAdi } from "./components/landing/Ikon"
 import {
@@ -206,9 +207,9 @@ export default async function Home() {
               Deneyimini uydurmadan.
             </p>
             <div className={s.heroEylem}>
-              <a href="/analyze" className={`${s.btnBirincil} ${s.btnBuyuk}`}>
+              <Link href="/analyze" className={`${s.btnBirincil} ${s.btnBuyuk}`}>
                 Ücretsiz skorumu gör
-              </a>
+              </Link>
               <a href="#nasil" className={`${s.btnIkincil} ${s.btnBuyuk}`}>
                 Nasıl çalışır?
               </a>
@@ -461,10 +462,10 @@ export default async function Home() {
               <div className={s.sonCagriMetin}>
                 <h2 className={s.sonCagriBaslik}>Tek CV ile yetinme.</h2>
                 <p>İlanı yapıştır, CV'nin ne kadar uyduğunu hemen gör. Kayıt gerekmez.</p>
-                <a href="/analyze" className={`${s.btnBeyaz} ${s.btnBuyuk}`}>
+                <Link href="/analyze" className={`${s.btnBeyaz} ${s.btnBuyuk}`}>
                   Ücretsiz skorumu gör
                   <Ikon ad="ok" boyut={18} />
-                </a>
+                </Link>
               </div>
               <Foto
                 id="foto-son-cagri"
@@ -483,13 +484,13 @@ export default async function Home() {
       <footer className={s.altbilgi}>
         <div className={`${s.kap} ${s.altbilgiIc}`}>
           <div>
-            <a href="/" className={s.logo}>
+            <Link href="/" className={s.logo}>
               <span className={s.logoSembol} aria-hidden="true">
                 <span />
                 <span />
               </span>
               uyarla
-            </a>
+            </Link>
             <p className={s.altbilgiSlogan}>Her ilana, doğru CV.</p>
           </div>
           <nav className={s.altbilgiLinkler} aria-label="Alt menü">
@@ -497,17 +498,17 @@ export default async function Home() {
               <p className={s.altbilgiBaslik}>Ürün</p>
               <a href="#nasil">Nasıl çalışır</a>
               <a href="#ozellikler">Özellikler</a>
-              <a href="/analyze">Ücretsiz skor</a>
+              <Link href="/analyze">Ücretsiz skor</Link>
             </div>
             <div>
               <p className={s.altbilgiBaslik}>Hesap</p>
-              <a href="/login">Giriş yap</a>
+              <Link href="/login">Giriş yap</Link>
               <a href="#sss">SSS</a>
             </div>
             <div>
               <p className={s.altbilgiBaslik}>Yasal</p>
-              <a href="/privacy">KVKK aydınlatma metni</a>
-              <a href="/terms">Kullanım koşulları</a>
+              <Link href="/privacy">KVKK aydınlatma metni</Link>
+              <Link href="/terms">Kullanım koşulları</Link>
             </div>
           </nav>
         </div>

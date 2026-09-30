@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { prisma } from "@uyarla/db"
 import { ArrowRight, CircleCheck, FilePen, Inbox, ListChecks, Plus } from "lucide-react"
 import { redirect } from "next/navigation"
@@ -40,13 +41,13 @@ export default async function DashboardPage() {
   const selam = ad && !ad.includes("@") ? `Merhaba, ${ad.split(" ")[0]}.` : "Merhaba."
 
   const yeniAnaliz = (
-    <a
+    <Link
       href="/analyze"
       className="inline-flex items-center gap-2 rounded-buton bg-mavi px-5 py-2.5 font-semibold text-white no-underline shadow-sm shadow-mavi/30 transition hover:bg-mavi/90"
     >
       <Plus className="size-4" aria-hidden />
       Yeni analiz
-    </a>
+    </Link>
   )
 
   if (ozet.toplam === 0) {
@@ -59,12 +60,12 @@ export default async function DashboardPage() {
           </span>
           <p className="m-0 mt-4 font-baslik text-xl font-extrabold">Henüz analiz yok.</p>
           <p className="mt-2 text-gri">İlk ilanını yapıştır, birlikte başlayalım.</p>
-          <a
+          <Link
             href="/analyze"
             className="mt-6 inline-flex items-center gap-2 rounded-buton bg-mavi px-6 py-3 font-semibold text-white no-underline shadow-sm shadow-mavi/30"
           >
             İlk analizini yap
-          </a>
+          </Link>
         </div>
       </SayfaKabi>
     )
@@ -108,7 +109,7 @@ function Bekleyenler({ liste }: { liste: Bekleyen[] }) {
           const { metin, eylem, Ikon } = BEKLEYEN_METNI[b.tur]
           return (
             <li key={b.analysisId}>
-              <a
+              <Link
                 href={b.adres}
                 className="group flex items-center gap-4 px-5 py-3.5 text-metin no-underline transition-colors hover:bg-zemin"
               >
@@ -128,7 +129,7 @@ function Bekleyenler({ liste }: { liste: Bekleyen[] }) {
                   {eylem}
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
                 </span>
-              </a>
+              </Link>
             </li>
           )
         })}
@@ -147,9 +148,9 @@ function SonAnalizler({ kartlar, toplam }: { kartlar: ReturnType<typeof ozetle>[
           Son analizler
         </h2>
         {toplam > kartlar.length && (
-          <a href="/applications" className="text-sm font-semibold text-mavi no-underline hover:underline">
+          <Link href="/applications" className="text-sm font-semibold text-mavi no-underline hover:underline">
             Tümü ({toplam})
-          </a>
+          </Link>
         )}
       </div>
       <ul className="m-0 list-none divide-y divide-cizgi border-t border-cizgi p-0">
@@ -157,7 +158,7 @@ function SonAnalizler({ kartlar, toplam }: { kartlar: ReturnType<typeof ozetle>[
           const durum = k.skor === null ? null : skorDurumu(k.skor)
           return (
             <li key={k.analysisId}>
-              <a
+              <Link
                 href={sonucAdresi(k.analysisId)}
                 className="flex items-center gap-4 px-5 py-3.5 text-metin no-underline transition-colors hover:bg-zemin"
               >
@@ -178,7 +179,7 @@ function SonAnalizler({ kartlar, toplam }: { kartlar: ReturnType<typeof ozetle>[
                     <span className={cn("block text-[0.6875rem] font-semibold", durum.renk)}>{durum.etiket}</span>
                   </span>
                 )}
-              </a>
+              </Link>
             </li>
           )
         })}
@@ -213,13 +214,13 @@ function Basvurular({ sayilar, toplam }: { sayilar: Record<Asama, number>; topla
         ))}
       </dl>
 
-      <a
+      <Link
         href="/applications"
         className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-mavi no-underline hover:underline"
       >
         Panoya git
         <ArrowRight className="size-4" aria-hidden />
-      </a>
+      </Link>
     </section>
   )
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect } from "react"
 import { SayfaKabi } from "./components/Sayfa"
 
@@ -31,12 +32,12 @@ export default function Hata({ error, reset }: { error: Error & { digest?: strin
           >
             Tekrar dene
           </button>
-          <a
+          <Link
             href="/"
             className="rounded-buton border border-cizgi px-5 py-2.5 text-sm font-semibold text-metin hover:bg-kart"
           >
             Ana sayfaya dön
-          </a>
+          </Link>
         </div>
       </div>
     </SayfaKabi>

@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { YasalSayfa } from "../components/YasalSayfa"
 import { YASAL } from "@/lib/yasal"
 
@@ -68,7 +69,7 @@ export default function TermsPage() {
         <p>
           Yüklediğin CV ve uyarlanmış hâli senindir. Bunları yalnızca sana hizmeti sunmak için
           işleriz; ayrıntılar{" "}
-          <a href="/privacy">KVKK aydınlatma metninde</a>.
+          <Link href="/privacy">KVKK aydınlatma metninde</Link>.
         </p>
       </section>
 

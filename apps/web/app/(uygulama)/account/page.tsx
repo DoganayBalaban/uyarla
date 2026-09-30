@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 import {
   CircleCheck,
@@ -49,12 +50,12 @@ export default function HesapPage() {
           CV&apos;n, ilanların ve analizlerin kalıcı olarak silindi. Bir gün
           yine iş arıyorsan buradayız.
         </p>
-        <a
+        <Link
           href="/"
           className="mt-6 inline-flex items-center gap-2 rounded-buton bg-mavi px-6 py-3 font-semibold text-white no-underline shadow-sm shadow-mavi/30"
         >
           Ana sayfaya dön
-        </a>
+        </Link>
       </div>
     )
   }
@@ -67,12 +68,12 @@ export default function HesapPage() {
         </span>
         <h1 className="mt-4 text-2xl">Hesabım</h1>
         <p className="mt-2 text-sm text-gri">Devam etmek için giriş yapman gerekiyor.</p>
-        <a
+        <Link
           href={girisAdresi("/account")}
           className="mt-6 inline-flex items-center gap-2 rounded-buton bg-mavi px-6 py-3 font-semibold text-white no-underline shadow-sm shadow-mavi/30"
         >
           Giriş yap
-        </a>
+        </Link>
       </div>
     )
   }
@@ -105,7 +106,7 @@ export default function HesapPage() {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <a
+          <Link
             href="/applications"
             className="flex items-center gap-3 rounded-kart border border-cizgi bg-kart p-4 text-sm no-underline transition hover:border-mavi/40"
           >
@@ -116,8 +117,8 @@ export default function HesapPage() {
               <span className="block font-semibold text-metin">Başvuru panosu</span>
               <span className="block text-gri">Analizlerin ve başvuruların</span>
             </span>
-          </a>
-          <a
+          </Link>
+          <Link
             href="/privacy"
             className="flex items-center gap-3 rounded-kart border border-cizgi bg-kart p-4 text-sm no-underline transition hover:border-mavi/40"
           >
@@ -128,7 +129,7 @@ export default function HesapPage() {
               <span className="block font-semibold text-metin">Verilerin</span>
               <span className="block text-gri">KVKK aydınlatma metni</span>
             </span>
-          </a>
+          </Link>
         </div>
 
         <section className="rounded-kart border border-kirmizi/30 bg-kart p-6">

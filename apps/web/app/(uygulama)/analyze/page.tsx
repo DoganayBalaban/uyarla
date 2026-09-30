@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import {
   ArrowRight,
@@ -437,9 +438,9 @@ export default function AnalyzePage() {
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-yesil dark:text-[#4ade80]" aria-hidden />
             <p className="m-0">
               CV&apos;n izinsiz kimseyle paylaşılmaz.{" "}
-              <a href="/privacy" className="font-medium text-metin underline underline-offset-2">
+              <Link href="/privacy" className="font-medium text-metin underline underline-offset-2">
                 KVKK metni
-              </a>
+              </Link>
             </p>
           </div>
           {state?.status === "failed" && (

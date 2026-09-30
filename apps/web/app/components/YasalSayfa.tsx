@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { YASAL } from "@/lib/yasal"
 import { KAP, SayfaKabi } from "./Sayfa"
 
@@ -36,8 +37,8 @@ export function YasalSayfa({
         <div className={`${KAP} flex max-w-[75rem] flex-wrap justify-between gap-3 py-6 text-sm text-gri`}>
           <span>© 2026 uyarla</span>
           <span className="flex gap-5">
-            <a href="/privacy" className="hover:text-metin">KVKK aydınlatma metni</a>
-            <a href="/terms" className="hover:text-metin">Kullanım koşulları</a>
+            <Link href="/privacy" className="hover:text-metin">KVKK aydınlatma metni</Link>
+            <Link href="/terms" className="hover:text-metin">Kullanım koşulları</Link>
           </span>
         </div>
       </footer>

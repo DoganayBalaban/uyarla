@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import {
   ChevronDown,
   FileSearch,
@@ -60,7 +61,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-cizgi bg-kart/85 backdrop-blur-md">
       <div className={cn(KAP, "flex h-16 max-w-[75rem] items-center gap-2")}>
-        <a
+        <Link
           href={kayitli ? "/dashboard" : "/"}
           aria-label="uyarla ana sayfa"
           className="mr-4 inline-flex items-center gap-2.5 font-baslik text-xl font-extrabold tracking-tight text-metin no-underline"
@@ -71,14 +72,14 @@ export function Navbar() {
             <span className="absolute inset-0 rounded-[5px] bg-mavi" />
           </span>
           uyarla
-        </a>
+        </Link>
 
         <nav className="flex min-w-0 items-center gap-1" aria-label="Ana menü">
           {kayitli
             ? UYGULAMA_BAGLANTILARI.map(({ href, etiket, Ikon }) => {
                 const aktif = yol === href || yol.startsWith(`${href}/`)
                 return (
-                  <a
+                  <Link
                     key={href}
                     href={href}
                     aria-current={aktif ? "page" : undefined}
@@ -90,18 +91,18 @@ export function Navbar() {
                     <Ikon className="size-4" aria-hidden />
                     {/* Dar ekranda yalnızca ikon; etiket ekran okuyucuya açık. */}
                     <span className="sr-only md:not-sr-only">{etiket}</span>
-                  </a>
+                  </Link>
                 )
               })
             : tanitimda
               ? TANITIM_BAGLANTILARI.map(({ href, etiket }) => (
-                  <a
+                  <Link
                     key={href}
                     href={href}
                     className="hidden rounded-buton px-3 py-2 text-sm font-medium text-gri no-underline transition-colors hover:text-metin md:inline-flex"
                   >
                     {etiket}
-                  </a>
+                  </Link>
                 ))
               : null}
         </nav>
@@ -115,20 +116,20 @@ export function Navbar() {
             <HesapMenusu eposta={kullanici.email} aktif={yol === "/account"} />
           ) : (
             <>
-              <a
+              <Link
                 href={girisAdresi(yol)}
                 className="inline-flex items-center gap-2 rounded-buton px-3 py-2 text-sm font-semibold text-metin no-underline transition-colors hover:bg-zemin"
               >
                 <LogIn className="size-4" aria-hidden />
                 Giriş yap
-              </a>
+              </Link>
               {tanitimda && (
-                <a
+                <Link
                   href="/analyze"
                   className="hidden rounded-buton bg-mavi px-4 py-2 text-sm font-semibold text-white no-underline shadow-sm shadow-mavi/30 transition hover:bg-mavi/90 sm:inline-flex"
                 >
                   Ücretsiz skorumu gör
-                </a>
+                </Link>
               )}
             </>
           )}
@@ -219,19 +220,19 @@ function HesapMenusu({ eposta, aktif }: { eposta: string; aktif: boolean }) {
             </p>
           </div>
           <div className="my-1 h-px bg-cizgi" role="separator" />
-          <a role="menuitem" tabIndex={-1} href="/account" className={oge}>
+          <Link role="menuitem" tabIndex={-1} onClick={() => setAcik(false)} href="/account" className={oge}>
             <Settings className="size-4 text-gri" aria-hidden />
             Hesap ayarları
-          </a>
+          </Link>
           <div className="my-1 h-px bg-cizgi" role="separator" />
-          <a role="menuitem" tabIndex={-1} href="/privacy" className={oge}>
+          <Link role="menuitem" tabIndex={-1} onClick={() => setAcik(false)} href="/privacy" className={oge}>
             <ShieldCheck className="size-4 text-gri" aria-hidden />
             KVKK aydınlatma metni
-          </a>
-          <a role="menuitem" tabIndex={-1} href="/terms" className={oge}>
+          </Link>
+          <Link role="menuitem" tabIndex={-1} onClick={() => setAcik(false)} href="/terms" className={oge}>
             <FileText className="size-4 text-gri" aria-hidden />
             Kullanım koşulları
-          </a>
+          </Link>
           <div className="my-1 h-px bg-cizgi" role="separator" />
           <button
             role="menuitem"

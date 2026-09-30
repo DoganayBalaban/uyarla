@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { SayfaKabi } from "./components/Sayfa"
 
 export const metadata = { title: "Sayfa bulunamadı · uyarla" }
@@ -14,18 +15,18 @@ export default function NotFound() {
         Bağlantı eskimiş ya da adres yanlış yazılmış olabilir. Analizlerin ve başvuruların yerinde duruyor.
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
-        <a
+        <Link
           href="/analyze"
           className="rounded-buton bg-mavi px-5 py-2.5 text-sm font-semibold text-white hover:bg-mavi/90"
         >
           CV'ni analiz et
-        </a>
-        <a
+        </Link>
+        <Link
           href="/"
           className="rounded-buton border border-cizgi px-5 py-2.5 text-sm font-semibold text-metin hover:bg-kart"
         >
           Ana sayfaya dön
-        </a>
+        </Link>
       </div>
     </SayfaKabi>
   )
