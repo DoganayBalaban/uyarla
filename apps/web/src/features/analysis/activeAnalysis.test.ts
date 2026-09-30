@@ -6,7 +6,7 @@ import {
   clearActiveAnalysis as clearActiveAnalysis,
   resultPath as resultPath,
   handleResponse as handleResponse,
-} from "./activeAnalysis"
+} from "@/features/analysis/activeAnalysis"
 
 /** Testler node ortamında; tarayıcının iki yüzeyi elle sağlanıyor. */
 function fakeBrowser() {

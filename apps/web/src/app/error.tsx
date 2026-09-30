@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect } from "react"
-import { SayfaKabi } from "./components/Sayfa"
+import { SayfaKabi } from "@/components/layout/PageShell"
 
 /**
  * Bir sayfa çizilirken beklenmeyen bir hata olursa. Yığın izi kullanıcıya

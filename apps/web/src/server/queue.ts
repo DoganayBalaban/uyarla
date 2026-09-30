@@ -1,6 +1,6 @@
 import { ANALYZE_QUEUE, type AnalyzeJobData } from "@uyarla/worker/queue"
 import { Queue } from "bullmq"
-import { redis } from "./redis"
+import { redis } from "@/server/redis"
 
 const globalForQueue = globalThis as unknown as {
   analyzeQueue?: Queue<AnalyzeJobData, string>

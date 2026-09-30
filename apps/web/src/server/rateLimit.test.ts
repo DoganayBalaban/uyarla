@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest"
-import { AuthError } from "./authz"
-import { RATE_LIMITS, enforceRateLimit, type RateLimitStore } from "./rateLimit"
+import { AuthError } from "@/server/authz"
+import { RATE_LIMITS, enforceRateLimit, type RateLimitStore } from "@/server/rateLimit"
 
 /** Sayaç değerlerini sırayla döndüren sahte depo. */
 function fakeStorage(vals: number[]): RateLimitStore & { callList: string[] } {

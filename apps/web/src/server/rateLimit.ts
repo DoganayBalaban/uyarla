@@ -1,5 +1,5 @@
-import { AuthError } from "./authz"
-import { redis } from "./redis"
+import { AuthError } from "@/server/authz"
+import { redis } from "@/server/redis"
 
 export interface RateLimitRule {
   limit: number

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest"
 import { prisma } from "@uyarla/db"
-import { claimOperations as claimOperations } from "./claimAnonymousData"
+import { claimOperations as claimOperations } from "@/server/claimAnonymousData"
 
 const toClean: string[] = []
 

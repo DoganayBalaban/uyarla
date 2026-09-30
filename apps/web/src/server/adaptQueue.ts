@@ -1,6 +1,6 @@
 import { ADAPT_QUEUE, type AdaptJobData } from "@uyarla/worker/adapt-queue"
 import { Queue } from "bullmq"
-import { redis } from "./redis"
+import { redis } from "@/server/redis"
 
 const globalForQueue = globalThis as unknown as { adaptQueue?: Queue<AdaptJobData, void> }
 

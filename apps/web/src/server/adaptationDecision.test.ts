@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import type { AdaptationDraft } from "@uyarla/core"
-import { applyDecision, nextStatus } from "./adaptationDecision"
+import { applyDecision, nextStatus } from "@/server/adaptationDecision"
 
 const draftData: AdaptationDraft = {
   summary: {

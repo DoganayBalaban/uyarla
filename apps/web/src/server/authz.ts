@@ -1,6 +1,6 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
-import { auth } from "./auth"
+import { auth } from "@/server/auth"
 
 export interface AppSession {
   user: { id: string; isAnonymous: boolean }

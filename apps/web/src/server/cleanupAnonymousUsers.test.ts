@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { RETENTION_DAYS as RETENTION_DAYS, staleAnonymousWhere as staleAnonymousWhere, cutoffDate as cutoffDate } from "./cleanupAnonymousUsers"
+import { RETENTION_DAYS as RETENTION_DAYS, staleAnonymousWhere as staleAnonymousWhere, cutoffDate as cutoffDate } from "@/server/cleanupAnonymousUsers"
 
 const NOW = new Date("2026-09-27T12:00:00.000Z")
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { AuthError, ensureOwner, ensureRegistered, ensureSession } from "./authz"
+import { AuthError, ensureOwner, ensureRegistered, ensureSession } from "@/server/authz"
 
 const registered = { user: { id: "u1", isAnonymous: false } }
 const anonUser = { user: { id: "a1", isAnonymous: true } }

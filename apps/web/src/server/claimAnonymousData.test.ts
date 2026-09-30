@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest"
-import { claimOperations as claimOperations } from "./claimAnonymousData"
+import { claimOperations as claimOperations } from "@/server/claimAnonymousData"
 
 /** Hangi tabloya hangi where/data ile gidildiğini yakalayan sahte Prisma. */
 function fakePrisma() {

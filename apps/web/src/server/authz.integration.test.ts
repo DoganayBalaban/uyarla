@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from "vitest"
 import { prisma } from "@uyarla/db"
-import { loadAdaptation } from "./adaptationDecision"
-import { AuthError, ensureOwner } from "./authz"
+import { loadAdaptation } from "@/server/adaptationDecision"
+import { AuthError, ensureOwner } from "@/server/authz"
 
 const toClean: string[] = []
 

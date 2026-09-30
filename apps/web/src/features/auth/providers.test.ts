@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { enabledProviders as enabledProviders, providerSettings as providerSettings } from "./providers"
+import { enabledProviders as enabledProviders, providerSettings as providerSettings } from "@/features/auth/providers"
 
 describe("social login providers", () => {
   it("none is enabled without credentials", () => {

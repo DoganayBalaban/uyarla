@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { htmlToText as htmlToText, extractPostingText as extractPostingText, isAllowedPath as isAllowedPath } from "./jobPostingFromUrl"
+import { htmlToText as htmlToText, extractPostingText as extractPostingText, isAllowedPath as isAllowedPath } from "@/server/jobPostingFromUrl"
 
 describe("isAllowedPath", () => {
   it.each([

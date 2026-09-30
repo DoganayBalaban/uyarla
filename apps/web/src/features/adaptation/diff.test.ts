@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { diffWords } from "./diff"
+import { diffWords } from "@/features/adaptation/diff"
 
 describe("diffWords", () => {
   it("everything is same for identical text", () => {

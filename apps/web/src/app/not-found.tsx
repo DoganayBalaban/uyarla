@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { SayfaKabi } from "./components/Sayfa"
+import { SayfaKabi } from "@/components/layout/PageShell"
 
 export const metadata = { title: "Sayfa bulunamadı · uyarla" }
 

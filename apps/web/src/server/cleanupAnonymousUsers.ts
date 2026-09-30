@@ -1,5 +1,5 @@
 import type { prisma } from "@uyarla/db"
-import { deleteUsers as deleteUsers, type DeletionResult as DeletionResult } from "./deleteAccount"
+import { deleteUsers as deleteUsers, type DeletionResult as DeletionResult } from "@/server/deleteAccount"
 
 /** Prisma istemci tipi; devral.ts ve silme.ts ile aynı gerekçe. */
 type Db = typeof prisma

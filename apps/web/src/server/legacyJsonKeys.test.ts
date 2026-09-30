@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { upgradeCoverLetter, upgradeFormatReport } from "./legacyJsonKeys"
+import { upgradeCoverLetter, upgradeFormatReport } from "@/server/legacyJsonKeys"
 
 describe("upgradeFormatReport", () => {
   it("renames legacy keys, severity values and finding codes", () => {

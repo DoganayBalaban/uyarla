@@ -1,7 +1,7 @@
-import "./globals.css"
+import "@/app/globals.css"
 import type { Metadata } from "next"
-import { AnalizBildirimi } from "./components/AnalizBildirimi"
-import { Navbar } from "./components/Navbar"
+import { AnalizBildirimi } from "@/features/analysis/components/AnalysisNotice"
+import { Navbar } from "@/components/layout/Navbar"
 import { siteAdresi } from "@/lib/site"
 
 const BASLIK = "uyarla · Her ilana, doğru CV."

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { DEFAULT_RETURN_PATH as DEFAULT_RETURN_PATH, loginPath as loginPath, safeReturnPath as safeReturnPath } from "./returnPath"
+import { DEFAULT_RETURN_PATH as DEFAULT_RETURN_PATH, loginPath as loginPath, safeReturnPath as safeReturnPath } from "@/lib/returnPath"
 
 describe("safeReturnPath", () => {
   it.each([

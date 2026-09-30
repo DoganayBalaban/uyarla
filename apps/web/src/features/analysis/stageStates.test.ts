@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { deriveStageStates as deriveStageStates } from "./stageStates"
+import { deriveStageStates as deriveStageStates } from "@/features/analysis/stageStates"
 
 const T = [{ id: "a", title: "A" }, { id: "b", title: "B" }, { id: "c", title: "C" }]
 const statuses = (x: { status: string }[]) => x.map((a) => a.status)
