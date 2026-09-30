@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* `dark:` sınıfları yalnızca `.dark` altında çalışsın. Bu sınıf hiçbir yerde
+   verilmiyor, yani koyu tema kapalı; bileşenlerdeki `dark:` yazımları
+   ileride tema geri açılırsa diye duruyor. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /**
  * Marka rehberi §9.2 ve §9.5'teki token'lar.
  *
@@ -38,8 +43,8 @@
   --radius-buton: 10px;
   --radius-kart: 16px;
 
-  --font-baslik: Manrope, Inter, system-ui, sans-serif;
-  --font-govde: Inter, system-ui, -apple-system, sans-serif;
+  --font-baslik: Geist, system-ui, -apple-system, sans-serif;
+  --font-govde: Geist, system-ui, -apple-system, sans-serif;
 
   /* Giriş ekranının görsel paneli. Kullanan yerde `motion-safe:` ile
      açılıyor; hareket azaltmayı seçen kullanıcı durağan görüyor. */
@@ -86,8 +91,8 @@
   --kehribar: var(--color-kehribar);
   --kirmizi: var(--color-kirmizi);
 
-  --zemin: #f5f7ff;
-  --metin: #0f172a;
+  --zemin: #ffffff;
+  --metin: #000000;
   --kart: #ffffff;
   --cizgi: #e2e8f0;
   --gri: #64748b;
@@ -96,15 +101,10 @@
   --yaricap-kart: var(--radius-kart);
 }
 
-/* Koyu temada zemin Gece rengidir (rehber §9.5). */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --zemin: #0f172a;
-    --metin: #f1f5f9;
-    --kart: #1e293b;
-    --cizgi: #334155;
-    --gri: #94a3b8;
-  }
+/* Site her zaman açık temada: beyaz zemin, siyah metin. Sistem koyu modda
+   olsa da değişmiyor; tarayıcının form öğeleri de açık kalsın diye. */
+:root {
+  color-scheme: light;
 }
 
 body {

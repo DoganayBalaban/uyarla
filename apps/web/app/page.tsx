@@ -1,13 +1,12 @@
-import Image from "next/image"
 import { Foto } from "./components/landing/Foto"
 import { Gezinme } from "./components/landing/Gezinme"
 import { Ikon, type IkonAdi } from "./components/landing/Ikon"
 import {
-  AnahtarKelimeKarti,
   DosyaCipleri,
   GereksinimListesi,
+  HeroKontrol,
+  HeroUygulama,
   OnceSonra,
-  SkorKarti,
   UyariKarti,
 } from "./components/landing/Mockuplar"
 import s from "./components/landing/landing.module.css"
@@ -195,59 +194,39 @@ export default function Home() {
       <main>
         {/* ——— Hero ——— */}
         <section className={s.hero}>
-          <div className={s.heroZemin} aria-hidden="true" />
-          <div className={`${s.kap} ${s.heroIc}`}>
-            <div className={s.heroMetin}>
-              <span className={s.ustEtiket}>
-                <span className={s.ustEtiketNokta} />
-                Türkçe öncelikli ATS uyum skoru
-              </span>
-              <h1 className={s.heroBaslik}>
-                Her ilana, <span className={s.vurgu}>doğru CV.</span>
-              </h1>
-              <p className={s.heroAlt}>
-                İlanı yapıştır, CV'nin ne kadar uyduğunu gör ve tek tıkla ilana özel hâle getir.
-                Deneyimini uydurmadan.
-              </p>
-              <div className={s.heroEylem}>
-                <a href="/analyze" className={`${s.btnBirincil} ${s.btnBuyuk}`}>
-                  Ücretsiz skorumu gör
-                  <Ikon ad="ok" boyut={18} />
-                </a>
-                <a href="#nasil" className={`${s.btnIkincil} ${s.btnBuyuk}`}>
-                  Nasıl çalışır?
-                </a>
-              </div>
-              <ul className={s.guven}>
-                <li>
-                  <Ikon ad="check" boyut={16} /> Kayıt gerekmez
-                </li>
-                <li>
-                  <Ikon ad="check" boyut={16} /> CV'n izinsiz paylaşılmaz
-                </li>
-                <li>
-                  <Ikon ad="check" boyut={16} /> Her değişikliği sen onaylarsın
-                </li>
-              </ul>
+          <div className={`${s.kap} ${s.heroMetin}`}>
+            <h1 className={s.heroBaslik}>Her ilana, doğru CV.</h1>
+            <p className={s.heroAlt}>
+              İlanı yapıştır, CV'nin ne kadar uyduğunu gör ve tek tıkla ilana özel hâle getir.
+              Deneyimini uydurmadan.
+            </p>
+            <div className={s.heroEylem}>
+              <a href="/analyze" className={`${s.btnBirincil} ${s.btnBuyuk}`}>
+                Ücretsiz skorumu gör
+              </a>
+              <a href="#nasil" className={`${s.btnIkincil} ${s.btnBuyuk}`}>
+                Nasıl çalışır?
+              </a>
             </div>
+            <ul className={s.guven}>
+              <li>
+                <Ikon ad="check" boyut={16} /> Kayıt gerekmez
+              </li>
+              <li>
+                <Ikon ad="check" boyut={16} /> CV'n izinsiz paylaşılmaz
+              </li>
+              <li>
+                <Ikon ad="check" boyut={16} /> Her değişikliği sen onaylarsın
+              </li>
+            </ul>
+          </div>
 
-            <div className={s.heroGorsel}>
-              <Image
-                id="foto-hero"
-                src="/foto/hero.jpg"
-                alt="Galata Kulesi'ne bakan bir kafede dizüstünde CV'sini inceleyen genç bir yazılımcı"
-                width={1086}
-                height={1358}
-                sizes="(max-width: 900px) 92vw, 520px"
-                priority
-                className={`${s.heroFoto} ${s.foto}`}
-              />
-              <div className={s.heroKartUst}>
-                <SkorKarti />
-              </div>
-              <div className={s.heroKartAlt}>
-                <AnahtarKelimeKarti />
-              </div>
+          {/* Ürünün kendisi: analiz ekranı ve kenarından taşan uydurma kontrolü. */}
+          <div className={`${s.kap} ${s.heroSahne}`} aria-hidden="true">
+            <div className={s.heroSahneZemin} />
+            <HeroUygulama />
+            <div className={s.heroKontrolYer}>
+              <HeroKontrol />
             </div>
           </div>
         </section>

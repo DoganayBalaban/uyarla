@@ -23,19 +23,6 @@
   -webkit-font-smoothing: antialiased;
 }
 
-@media (prefers-color-scheme: dark) {
-  .sayfa {
-    --golge-kart: 0 1px 2px rgb(0 0 0 / 0.3), 0 16px 40px -16px rgb(0 0 0 / 0.6);
-    --golge-yuzen: 0 2px 4px rgb(0 0 0 / 0.3), 0 28px 64px -16px rgb(0 0 0 / 0.7);
-    --mavi-yumusak: color-mix(in srgb, var(--mavi) 18%, transparent);
-    --zemin-alt: #0b1222;
-    --metin-ikincil: #a3b1c6;
-    --mavi-metin: #8ea2ff;
-    --kirmizi-metin: #f87171;
-    --yesil-metin: #4ade80;
-  }
-}
-
 .sayfa a {
   color: inherit;
   text-decoration: none;
@@ -56,16 +43,17 @@
 /* ——— Tipografi (rehber §9.3: 48 / 32 / 24 / 18 / 16 / 14) ——— */
 
 .h2 {
-  font-family: Manrope, Inter, system-ui, sans-serif;
+  font-family: Geist, system-ui, sans-serif;
   font-weight: 800;
   font-size: clamp(1.9rem, 3.4vw, 2.75rem);
   line-height: 1.1;
   letter-spacing: -0.03em;
   margin: 0.75rem 0 0;
+  text-wrap: balance;
 }
 
 .h3 {
-  font-family: Manrope, Inter, system-ui, sans-serif;
+  font-family: Geist, system-ui, sans-serif;
   font-weight: 800;
   font-size: 1.125rem;
   letter-spacing: -0.01em;
@@ -186,7 +174,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  font-family: Manrope, sans-serif;
+  font-family: Geist, system-ui, sans-serif;
   font-weight: 800;
   font-size: 1.375rem;
   letter-spacing: -0.03em;
@@ -285,99 +273,48 @@
   transform: rotate(-45deg);
 }
 
-/* ——— Hero ——— */
+/* ——— Hero ———
+   Ortalanmış başlık, altında ürünün kendisi. Pencere buzdan maviye koyulaşan
+   bir zeminin üstünde duruyor ve alt kenarı zemine eriyor; uydurma kontrolü
+   kartı pencerenin sağ kenarından taşıyor. Sayfadaki tek kendiliğinden
+   hareket bu kartın gelişi. */
 
 .hero {
   position: relative;
-  padding: 4.5rem 0 6rem;
   margin-top: -68px;
-  padding-top: calc(68px + 4.5rem);
+  padding-top: calc(68px + 5.5rem);
   isolation: isolate;
-}
-.heroZemin {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(60rem 36rem at 85% 10%, color-mix(in srgb, var(--mavi) 14%, transparent), transparent 60%),
-    radial-gradient(40rem 28rem at 0% 0%, color-mix(in srgb, var(--mavi) 7%, transparent), transparent 70%),
-    var(--zemin);
-}
-.heroZemin::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--metin) 6%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--metin) 6%, transparent) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 20%, transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 20%, transparent 75%);
+  overflow-x: clip;
 }
 
-.heroIc {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: 4rem;
-  align-items: center;
-}
-
-.ustEtiket {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: 0.4rem 0.85rem 0.4rem 0.65rem;
-  border-radius: 999px;
-  background: var(--kart);
-  border: 1px solid var(--cizgi);
-  box-shadow: var(--golge-kart);
-}
-.ustEtiketNokta {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--mercan);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--mercan) 20%, transparent);
+.heroMetin {
+  text-align: center;
+  max-width: 60rem;
 }
 
 .heroBaslik {
-  font-family: Manrope, Inter, system-ui, sans-serif;
+  font-family: Geist, system-ui, sans-serif;
   font-weight: 800;
-  font-size: clamp(2.75rem, 6.2vw, 5rem);
-  line-height: 1;
-  letter-spacing: -0.045em;
-  margin: 1.5rem 0 0;
-}
-.vurgu {
-  color: var(--mavi-metin);
-  position: relative;
-  white-space: nowrap;
-}
-.vurgu::after {
-  content: "";
-  position: absolute;
-  left: 0.04em;
-  right: 0.1em;
-  bottom: 0.02em;
-  height: 0.12em;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--mavi) 22%, transparent);
-  z-index: -1;
+  font-size: clamp(2.9rem, 8vw, 6.25rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  margin: 0;
+  text-wrap: balance;
 }
 
 .heroAlt {
-  font-size: clamp(1.0625rem, 1.5vw, 1.25rem);
-  line-height: 1.6;
+  font-size: clamp(1.0625rem, 1.6vw, 1.3125rem);
+  line-height: 1.55;
   color: var(--metin-ikincil);
-  margin: 1.5rem 0 0;
-  max-width: 32rem;
+  margin: 1.5rem auto 0;
+  max-width: 34rem;
+  text-wrap: pretty;
 }
 
 .heroEylem {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.75rem;
   margin-top: 2.25rem;
 }
@@ -385,9 +322,10 @@
 .guven {
   list-style: none;
   padding: 0;
-  margin: 2rem 0 0;
+  margin: 1.75rem 0 0;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.5rem 1.5rem;
   font-size: 0.875rem;
   color: var(--metin-ikincil);
@@ -401,40 +339,160 @@
   color: var(--yesil);
 }
 
-.heroGorsel {
+.heroSahne {
   position: relative;
-  padding: 2.5rem 0 3rem 3rem;
+  margin-top: 4.5rem;
+  padding-inline: clamp(var(--yan), 5vw, 4rem);
 }
-.heroFoto {
-  border-radius: 28px;
+/* Pencerenin üst üçte birinden başlayıp aşağı doğru koyulaşan mavi zemin. */
+.heroSahneZemin {
+  position: absolute;
+  inset: 22% var(--yan) 0;
+  z-index: -1;
+  border-radius: 36px 36px 0 0;
+  background:
+    radial-gradient(70% 60% at 50% 100%, color-mix(in srgb, var(--mavi) 55%, transparent), transparent),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--mavi) 4%, var(--zemin-alt)),
+      color-mix(in srgb, var(--mavi) 30%, var(--zemin-alt)) 55%,
+      var(--mavi)
+    );
+}
+
+.pencere {
+  max-height: 37rem;
+  overflow: hidden;
+  background: var(--zemin);
+  border: 1px solid var(--cizgi);
+  border-bottom: 0;
+  border-radius: 20px 20px 0 0;
   box-shadow: var(--golge-yuzen);
+  font-size: 0.875rem;
+  text-align: left;
+  mask-image: linear-gradient(to bottom, #000 78%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
 }
-.heroKartUst {
+
+.pencereUst {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 52px;
+  padding: 0 1.25rem;
+  background: var(--kart);
+  border-bottom: 1px solid var(--cizgi);
+}
+.pencereLogo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 1rem;
+  font-family: Geist, system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: -0.03em;
+}
+.pencereLogo .logoSembol {
+  transform: scale(0.75);
+}
+.pencereLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--gri);
+}
+.pencereLinkAktif {
+  color: var(--mavi-metin);
+  background: var(--mavi-yumusak);
+}
+
+.pencereGovde {
+  padding: 1.75rem;
+}
+.pencereBaslikMetin {
+  font-family: Geist, system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.375rem;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.pencereIzgara {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+.pencereKart {
+  background: var(--kart);
+  border: 1px solid var(--cizgi);
+  border-radius: 14px;
+  padding: 1.1rem 1.2rem;
+}
+.pencereGenis {
+  grid-column: 1 / -1;
+}
+.pencereKartBaslik {
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+.pencereSkor {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+.pencereListe {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.pencereListe li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.pencereListe .durumEslesti,
+.pencereListe .durumEksik {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+
+.pencereOnceSonra {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.heroKontrolYer {
   position: absolute;
-  top: 0;
-  left: -1.5rem;
-  width: min(360px, 82%);
-  animation: yuzme 7s ease-in-out infinite;
+  top: -1.75rem;
+  right: clamp(0px, 2vw, 1.5rem);
+  width: min(340px, 42%);
+  animation: kontrolGelis 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.9s both;
 }
-.heroKartAlt {
-  position: absolute;
-  right: -1.25rem;
-  bottom: 0;
-  width: min(320px, 74%);
-  animation: yuzme 7s ease-in-out -3.5s infinite;
+.heroKontrol {
+  font-size: 0.875rem;
+  text-align: left;
+  border-color: color-mix(in srgb, var(--mavi) 25%, var(--cizgi));
 }
-@keyframes yuzme {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
+@keyframes kontrolGelis {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .heroKartUst,
-  .heroKartAlt {
+  .heroKontrolYer {
     animation: none;
   }
 }
@@ -446,7 +504,7 @@
   border-bottom: 1px solid var(--cizgi);
 }
 .sorunMetin {
-  font-family: Manrope, Inter, system-ui, sans-serif;
+  font-family: Geist, system-ui, sans-serif;
   font-weight: 700;
   font-size: clamp(1.4rem, 2.6vw, 2.1rem);
   line-height: 1.3;
@@ -513,7 +571,7 @@
   color: var(--mavi-metin);
 }
 .adimNo {
-  font-family: Manrope, sans-serif;
+  font-family: Geist, system-ui, sans-serif;
   font-weight: 800;
   font-size: 2.5rem;
   line-height: 1;
@@ -735,7 +793,7 @@
   color: #fff;
 }
 .ilkeBaslik {
-  font-family: Manrope, sans-serif;
+  font-family: Geist, system-ui, sans-serif;
   font-weight: 800;
   font-size: 1.125rem;
   margin: 0;
@@ -785,7 +843,7 @@
   color: var(--mavi-metin);
 }
 .personaSoz {
-  font-family: Manrope, sans-serif;
+  font-family: Geist, system-ui, sans-serif;
   font-weight: 700;
   font-size: 1.125rem;
   line-height: 1.35;
@@ -894,7 +952,7 @@
   -webkit-mask-image: linear-gradient(to right, #000, transparent 70%);
 }
 .sonCagriBaslik {
-  font-family: Manrope, sans-serif;
+  font-family: Geist, system-ui, sans-serif;
   font-weight: 800;
   font-size: clamp(2.25rem, 4.6vw, 3.75rem);
   line-height: 1.02;
@@ -1084,7 +1142,7 @@
   border-bottom: 1px solid var(--cizgi);
 }
 .mockBaslikMetin {
-  font-family: Manrope, sans-serif;
+  font-family: Geist, system-ui, sans-serif;
   font-weight: 800;
   font-size: 1.125rem;
   margin: 0;
@@ -1102,7 +1160,7 @@
   text-align: center;
 }
 .halkaRakam {
-  font-family: Manrope, sans-serif;
+  font-family: Geist, system-ui, sans-serif;
   font-weight: 800;
   font-size: 2.1em;
   line-height: 1;
@@ -1115,13 +1173,8 @@
   text-transform: uppercase;
 }
 
-.skorKartiGovde {
-  display: flex;
-  align-items: center;
-  gap: 1.1rem;
-}
 .skorKartiCumle {
-  font-family: Manrope, sans-serif;
+  font-family: Geist, system-ui, sans-serif;
   font-weight: 800;
   font-size: 1.125rem;
   letter-spacing: -0.015em;
@@ -1316,11 +1369,6 @@
 .dosyaDocx {
   background: var(--mavi);
 }
-@media (prefers-color-scheme: dark) {
-  .dosyaPdf {
-    background: #334155;
-  }
-}
 .dosyaAd {
   margin: 0;
   font-weight: 600;
@@ -1383,27 +1431,22 @@
     font-weight: 600;
   }
 
-  .heroIc,
   .ozellik,
   .durustlukIc,
   .sssIc,
   .sonCagriKart {
     grid-template-columns: minmax(0, 1fr);
   }
-  .heroIc {
-    gap: 3rem;
+  .pencereIzgara {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
-  .heroGorsel {
-    max-width: 520px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 2rem 0 2.5rem 1.5rem;
+  .pencereIzgara > :nth-child(2) {
+    grid-row: span 2;
   }
-  .heroKartUst {
-    left: -0.5rem;
-  }
-  .heroKartAlt {
-    right: -0.5rem;
+  .heroKontrolYer {
+    top: -1.5rem;
+    right: var(--yan);
+    width: min(300px, 46%);
   }
   .ozellik {
     gap: 2.5rem;
@@ -1446,25 +1489,43 @@
     --yan: 16px;
   }
   .hero {
-    padding-top: calc(68px + 2.5rem);
-    padding-bottom: 4rem;
+    padding-top: calc(68px + 3rem);
   }
   .heroEylem > a {
     flex: 1 1 100%;
   }
-  .heroGorsel {
-    padding: 0;
-    display: grid;
-    gap: 0.75rem;
+  .heroSahne {
+    margin-top: 3rem;
+    padding-inline: var(--yan);
   }
-  .heroKartUst,
-  .heroKartAlt {
-    position: static;
-    width: 100%;
-    animation: none;
+  .heroSahneZemin {
+    inset: 12% 0 0;
+    border-radius: 24px 24px 0 0;
   }
-  .heroKartUst {
-    order: -1;
+  .pencere {
+    max-height: 30rem;
+  }
+  .pencereUst .pencereLink:not(.pencereLinkAktif) {
+    display: none;
+  }
+  .pencereGovde {
+    padding: 1.1rem;
+  }
+  .pencereIzgara,
+  .pencereOnceSonra {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pencereIzgara > :nth-child(2) {
+    grid-row: auto;
+  }
+  /* Dar ekranda kart pencerenin eriyen alt kenarına biniyor. */
+  .heroKontrolYer {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: auto;
+    margin: -7rem 0.5rem 0;
+    padding-bottom: 2rem;
   }
   .bento,
   .personalar {
