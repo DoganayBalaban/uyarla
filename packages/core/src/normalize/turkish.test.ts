@@ -2,39 +2,39 @@ import { describe, it, expect } from "vitest"
 import { containsKeyword, normalizeText, normalizeToken, normalizeTokens } from "./turkish.js"
 
 describe("normalizeText", () => {
-  it("Türkçe büyük İ harfini doğru küçültür", () => {
+  it("lowercases the Turkish capital İ correctly", () => {
     expect(normalizeText("İSTANBUL")).toBe("istanbul")
   })
 
-  it("büyük harfli İngilizce terimi küçük hâliyle aynı köke indirir", () => {
+  it("reduces an uppercase English term to the same stem as its lowercase form", () => {
     // CV'lerde başlıklar ve terimler büyük harfle yazılır, ilanlarda küçük.
     // Türkçe küçültme "I"yı "ı" yaptığı için bunlar eşleşmiyordu (K-21).
-    for (const terim of ["API VALIDATION", "MANUAL TESTING", "MICROSERVICES", "JIRA", "CI/CD"]) {
-      expect(normalizeText(terim)).toBe(normalizeText(terim.toLowerCase()))
+    for (const termText of ["API VALIDATION", "MANUAL TESTING", "MICROSERVICES", "JIRA", "CI/CD"]) {
+      expect(normalizeText(termText)).toBe(normalizeText(termText.toLowerCase()))
     }
   })
 
-  it("Türkçe terimlerde de büyük-küçük tutarlılığı korunur", () => {
+  it("keeps case consistency for Turkish terms too", () => {
     expect(normalizeText("BİLGİSAYAR MÜHENDİSLİĞİ")).toBe(
       normalizeText("Bilgisayar Mühendisliği"),
     )
     expect(normalizeText("YAZILIM GELİŞTİRİCİ")).toBe(normalizeText("yazılım geliştirici"))
   })
 
-  it("noktalama işaretlerini boşluğa çevirir", () => {
+  it("turns punctuation into spaces", () => {
     expect(normalizeText("React, TypeScript; Next.js")).toBe("react typescript next js")
   })
 
-  it("fazla boşlukları tekler", () => {
+  it("collapses extra whitespace", () => {
     expect(normalizeText("  React   Native ")).toBe("react native")
   })
 
-  it("düzeltme işaretini katlar", () => {
+  it("folds circumflex accents", () => {
     expect(normalizeText("Yapay zekâ")).toBe(normalizeText("yapay zeka"))
     expect(containsKeyword("Yapay zeka temelleri üzerine eğitim verdim", "Yapay zekâ")).toBe(true)
   })
 
-  it("boş metinde boş döner", () => {
+  it("returns empty for empty text", () => {
     expect(normalizeText("   ")).toBe("")
   })
 })
@@ -43,83 +43,83 @@ describe("normalizeToken", () => {
   // Not: Testler belirli kök DEĞERLERİNİ değil, iki biçimin AYNI köke
   // indiğini ölçer. Kökün "yazılım" mı "yazıl" mı olduğu ürün açısından
   // önemsiz; önemli olan ilan ve CV tarafının buluşması.
-  it("çekimli ve yalın biçimi aynı köke indirir", () => {
+  it("reduces inflected and bare forms to the same stem", () => {
     expect(normalizeToken("yazılımcıyım")).toBe(normalizeToken("yazılım"))
     expect(normalizeToken("deneyimim")).toBe(normalizeToken("deneyim"))
     expect(normalizeToken("projelerde")).toBe(normalizeToken("proje"))
   })
 
-  it("iyelik ve hâl eki birleşimlerini çözer", () => {
+  it("resolves combined possessive and case suffixes", () => {
     expect(normalizeToken("çalışmasına")).toBe(normalizeToken("çalışması"))
     expect(normalizeToken("takımlarında")).toBe(normalizeToken("takım"))
   })
 
-  it("kısa kelimeleri bozmaz", () => {
+  it("leaves short words intact", () => {
     expect(normalizeToken("git")).toBe("git")
     expect(normalizeToken("sql")).toBe("sql")
     expect(normalizeToken("api")).toBe("api")
   })
 
-  it("aynı kavramın iki biçimini aynı köke indirir", () => {
+  it("reduces two forms of the same concept to the same stem", () => {
     // Asıl iddia bu: soyma simetrik olduğu için ilan ve CV tarafı buluşur.
     expect(normalizeToken("geliştiricisiniz")).toBe(normalizeToken("geliştirici"))
     expect(normalizeToken("mühendisliği")).toBe(normalizeToken("mühendislik"))
   })
 
-  it("unvan ve teknoloji eş anlamlılarını tek biçime çevirir", () => {
+  it("maps title and technology synonyms to a single form", () => {
     expect(normalizeToken("önyüz")).toBe(normalizeToken("frontend"))
     expect(normalizeToken("reactjs")).toBe(normalizeToken("react"))
   })
 })
 
 describe("normalizeTokens", () => {
-  it("metni normalleştirilmiş köklere ayırır", () => {
+  it("splits text into normalized stems", () => {
     expect(normalizeTokens("React ile projelerde çalıştım")).toContain("proje")
   })
 
-  it("boş metinde boş dizi döner", () => {
+  it("returns an empty array for empty text", () => {
     expect(normalizeTokens("")).toEqual([])
   })
 })
 
 describe("containsKeyword", () => {
-  it("çekimli biçimi yakalar", () => {
+  it("catches an inflected form", () => {
     expect(containsKeyword("5 yıldır yazılımcıyım", "yazılım")).toBe(true)
   })
 
-  it("çok kelimeli anahtar kelimeyi yakalar", () => {
+  it("catches a multi-word keyword", () => {
     expect(containsKeyword("Takım çalışmasına yatkınım", "takım çalışması")).toBe(true)
   })
 
-  it("eş anlamlı üzerinden yakalar", () => {
+  it("catches via a synonym", () => {
     expect(containsKeyword("Önyüz geliştirme yaptım", "frontend")).toBe(true)
   })
 
-  it("geçmeyen kelimeye false döner", () => {
+  it("returns false for an absent word", () => {
     expect(containsKeyword("React ve TypeScript biliyorum", "kubernetes")).toBe(false)
   })
 
-  it("kelime parçasını yanlışlıkla eşleştirmez", () => {
+  it("does not accidentally match part of a word", () => {
     // "go" kelimesi "django"nun içinde geçiyor ama eşleşme tam kelime
     // düzeyinde: uydurma eşleşme, kaçırmadan zararlıdır.
     expect(containsKeyword("Go dili biliyorum", "django")).toBe(false)
     expect(containsKeyword("Django ile API yazdım", "go")).toBe(false)
   })
 
-  it("boş anahtar kelimeye false döner", () => {
+  it("returns false for an empty keyword", () => {
     expect(containsKeyword("herhangi bir metin", "")).toBe(false)
     expect(containsKeyword("herhangi bir metin", "   ")).toBe(false)
   })
 
-  it("çok kelimeli anahtar kelimede sıra önemlidir", () => {
+  it("order matters for a multi-word keyword", () => {
     expect(containsKeyword("çalışma takımı kurdum", "takım çalışması")).toBe(false)
   })
 })
 
-describe("aşırı soyma yanlış pozitif üretmiyor mu", () => {
+describe("over-stripping does not produce false positives", () => {
   // Kökler sonuna kadar soyuluyor; farklı kavramların aynı köke inmemesi
   // gerekir. Uydurma eşleşme, kaçırmadan zararlıdır (spec §7).
-  const farkliOlmali: Array<[string, string]> = [
+  const mustDiffer: Array<[string, string]> = [
     ["java", "javascript"],
     ["git", "github"],
     ["react", "redux"],
@@ -129,22 +129,22 @@ describe("aşırı soyma yanlış pozitif üretmiyor mu", () => {
     ["muhasebe", "muhabir"],
   ]
 
-  for (const [a, b] of farkliOlmali) {
-    it(`"${a}" ile "${b}" aynı köke inmemeli`, () => {
+  for (const [a, b] of mustDiffer) {
+    it(`"${a}" and "${b}" must not share a stem`, () => {
       expect(normalizeToken(a)).not.toBe(normalizeToken(b))
     })
   }
 
-  it("gerçek bir gereksinim cümlesinde alakasız CV ile eşleşmiyor", () => {
-    const cv = "Muhasebe ve bordro süreçlerini yönettim"
-    expect(containsKeyword(cv, "react")).toBe(false)
-    expect(containsKeyword(cv, "yazılım geliştirme")).toBe(false)
+  it("a real requirement sentence does not match an unrelated resume", () => {
+    const resume = "Muhasebe ve bordro süreçlerini yönettim"
+    expect(containsKeyword(resume, "react")).toBe(false)
+    expect(containsKeyword(resume, "yazılım geliştirme")).toBe(false)
   })
 })
 
-describe("çapraz dilli bölüm ve alan adları", () => {
+describe("cross-language section and field names", () => {
   // Değerlendirme setindeki dört kaçırmanın üçü buradan geliyordu (K-25).
-  const ciftler: Array<[string, string]> = [
+  const pairs: Array<[string, string]> = [
     ["Yazılım Mühendisliği", "Software Engineering"],
     ["Bilgisayar Mühendisliği", "Computer Engineering"],
     ["Bilgisayar Bilimleri", "Computer Science"],
@@ -153,49 +153,49 @@ describe("çapraz dilli bölüm ve alan adları", () => {
     ["agent mimarileri", "agent architectures"],
   ]
 
-  for (const [tr, en] of ciftler) {
-    it(`"${tr}" ile "${en}" eşleşir`, () => {
+  for (const [tr, en] of pairs) {
+    it(`"${tr}" matches "${en}"`, () => {
       expect(containsKeyword(`Mezuniyet: ${en}`, tr)).toBe(true)
       expect(containsKeyword(`Bölüm: ${tr}`, en)).toBe(true)
     })
   }
 
-  it("alakasız bölümü eşleştirmez", () => {
+  it("does not match an unrelated section", () => {
     expect(containsKeyword("Endüstri Mühendisliği mezunu", "Bilgisayar Mühendisliği")).toBe(false)
     expect(containsKeyword("Graphic Design", "Software Engineering")).toBe(false)
   })
 })
 
-describe("İngilizce çoğul eki", () => {
-  it("çoğul ve tekil aynı köke iner", () => {
+describe("English plural suffix", () => {
+  it("plural and singular reduce to the same stem", () => {
     // Ölçümle bulundu: CV'de "Developed REST APIs" yazarken ilan "REST API"
     // istiyordu ve iki taraf buluşamıyordu.
-    for (const [cogul, tekil] of [
+    for (const [plural, singular] of [
       ["APIs", "API"],
       ["services", "service"],
       ["workflows", "workflow"],
       ["pipelines", "pipeline"],
       ["integrations", "integration"],
     ]) {
-      expect(normalizeToken(cogul!)).toBe(normalizeToken(tekil!))
+      expect(normalizeToken(plural!)).toBe(normalizeToken(singular!))
     }
   })
 
-  it("kaynakta çoğul geçen terimi anahtar kelimeyle bulur", () => {
+  it("finds a term that appears in plural in the source by keyword", () => {
     expect(
       containsKeyword("Developed REST APIs and backend services with FastAPI.", "REST API"),
     ).toBe(true)
   })
 
-  it("sonu s ile biten kısa terimleri bozmaz", () => {
+  it("leaves short terms ending in s intact", () => {
     // Bunlar çoğul değil, teknoloji adı. Soyulurlarsa kendi adlarıyla
     // eşleşemezler.
-    for (const terim of ["css", "aws", "ios"]) {
-      expect(normalizeToken(terim)).toBe(terim)
+    for (const termText of ["css", "aws", "ios"]) {
+      expect(normalizeToken(termText)).toBe(termText)
     }
   })
 
-  it("sonu s ile biten Türkçe kelimelerde simetriyi korur", () => {
+  it("keeps symmetry for Turkish words ending in s", () => {
     // Kural iki tarafa da uygulandığı için aşırı soyma sorun değil: önemli
     // olan kökün doğru olması değil, iki tarafın AYNI köke inmesi.
     expect(normalizeToken("servis")).toBe(normalizeToken("servis"))

@@ -7,13 +7,13 @@ export interface ResumeHeader {
 }
 
 /** "ÖZGEÇMİŞ", "CV", "RESUME" — belge başlığı, kişi adı değil. */
-const BELGE_BASLIGI = /^(ozgecmis|cv|curriculum vitae|resume|resume\/cv|özgeçmiş)$/
+const DOCUMENT_TITLE = /^(ozgecmis|cv|curriculum vitae|resume|resume\/cv|özgeçmiş)$/
 
 /** Bir ad bu uzunluğu aşmaz; aşıyorsa cümledir. */
-const MAX_AD_UZUNLUGU = 50
+const MAX_NAME_LENGTH = 50
 
 /** Başlık satırına en çok bu kadar parça giriyor. */
-const MAX_BASLIK_PARCASI = 3
+const MAX_HEADING_PARTS = 3
 
 /**
  * Bir satırın kişi adı olamayacağını söyleyen işaretler.
@@ -21,13 +21,13 @@ const MAX_BASLIK_PARCASI = 3
  * Yanlış ad, CV'nin en görünür yerinde yanlış bilgi demek. Şüphedeyken ad
  * yazmamak, yanlış ad yazmaktan iyi — bu yüzden kural dışlayıcı.
  */
-function adOlamaz(satir: string): boolean {
+function cannotBeName(lineItem: string): boolean {
   return (
-    satir.length > MAX_AD_UZUNLUGU ||
-    satir.includes("@") ||
-    /https?:|www\.|\.com|\.dev|\.io|github|linkedin/i.test(satir) ||
+    lineItem.length > MAX_NAME_LENGTH ||
+    lineItem.includes("@") ||
+    /https?:|www\.|\.com|\.dev|\.io|github|linkedin/i.test(lineItem) ||
     // Telefon, posta kodu, tarih: adlar rakam taşımaz.
-    /\d/.test(satir)
+    /\d/.test(lineItem)
   )
 }
 
@@ -44,23 +44,23 @@ function adOlamaz(satir: string): boolean {
  * kullanmıyordu; Sprint 2'de indirilen belgenin başlığı oluyorlar.
  */
 export function parseHeader(headerBlock: string): ResumeHeader {
-  const satirlar = headerBlock
+  const lineItems = headerBlock
     .split("\n")
     .map((s) => s.trim())
     .filter(Boolean)
-    .filter((s) => !BELGE_BASLIGI.test(normalizeText(s)))
+    .filter((s) => !DOCUMENT_TITLE.test(normalizeText(s)))
 
-  if (satirlar.length === 0) return { fullName: null, headline: null }
+  if (lineItems.length === 0) return { fullName: null, headline: null }
 
-  const adAdayi = satirlar[0]!
-  const ad = adOlamaz(adAdayi) ? null : adAdayi
+  const nameCandidate = lineItems[0]!
+  const name = cannotBeName(nameCandidate) ? null : nameCandidate
 
   // Ad kabul edilmediyse o satır da başlık satırına giriyor: bilgi atmak
   // yerine doğru yere koyuyoruz.
-  const kalanlar = ad ? satirlar.slice(1) : satirlar
+  const remaining = name ? lineItems.slice(1) : lineItems
 
   return {
-    fullName: ad,
-    headline: kalanlar.length > 0 ? kalanlar.slice(0, MAX_BASLIK_PARCASI).join(" · ") : null,
+    fullName: name,
+    headline: remaining.length > 0 ? remaining.slice(0, MAX_HEADING_PARTS).join(" · ") : null,
   }
 }

@@ -1,33 +1,33 @@
 import { describe, it, expect } from "vitest"
 import { checkSemanticDrift } from "./drift.js"
 
-const ESIK = 0.75
+const THRESHOLD = 0.75
 
 describe("checkSemanticDrift", () => {
-  it("aynı vektörde uyarı üretmez", () => {
-    expect(checkSemanticDrift([1, 0], [1, 0], ESIK)).toEqual([])
+  it("produces no warning for identical vectors", () => {
+    expect(checkSemanticDrift([1, 0], [1, 0], THRESHOLD)).toEqual([])
   })
 
-  it("eşiğin altındaki benzerlikte uyarı üretir", () => {
-    const uyarilar = checkSemanticDrift([1, 0], [0, 1], ESIK)
-    expect(uyarilar).toHaveLength(1)
-    expect(uyarilar[0]!.kind).toBe("semantic_drift")
+  it("warns for similarity below the threshold", () => {
+    const warnings = checkSemanticDrift([1, 0], [0, 1], THRESHOLD)
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]!.kind).toBe("semantic_drift")
   })
 
-  it("eşiğin tam üstünde uyarı üretmez", () => {
+  it("does not warn just above the threshold", () => {
     // 0.8 > 0.75: sınır davranışı kapsayıcı olmalı, yoksa eşik ayarı
     // beklenmedik yerde kayar.
-    const uyarilar = checkSemanticDrift([0.8, 0.6], [1, 0], 0.75)
-    expect(uyarilar).toEqual([])
+    const warnings = checkSemanticDrift([0.8, 0.6], [1, 0], 0.75)
+    expect(warnings).toEqual([])
   })
 
-  it("eşiğe tam eşitken uyarı üretmez", () => {
+  it("does not warn exactly at the threshold", () => {
     expect(checkSemanticDrift([1, 0], [1, 0], 1)).toEqual([])
   })
 
-  it("gerekçe kullanıcıya gösterilebilir Türkçe olur", () => {
-    const uyari = checkSemanticDrift([1, 0], [0, 1], ESIK)[0]!
-    expect(uyari.detail).toMatch(/[çğıöşüÇĞİÖŞÜ]/)
-    expect(uyari.detail).not.toMatch(/drift|cosine|threshold/i)
+  it("the reason is user-facing Turkish", () => {
+    const warning = checkSemanticDrift([1, 0], [0, 1], THRESHOLD)[0]!
+    expect(warning.detail).toMatch(/[çğıöşüÇĞİÖŞÜ]/)
+    expect(warning.detail).not.toMatch(/drift|cosine|threshold/i)
   })
 })

@@ -15,12 +15,12 @@ import type { ResumeSegments } from "../schemas/resume.js"
  * ~10 saniye kazandırıyor ve üretimde bir çağrılık token maliyeti düşüyor.
  */
 
-export type Bolum = "header" | "summary" | "experience" | "education" | "skills" | "yoksay"
+export type ResumeSection = "header" | "summary" | "experience" | "education" | "skills" | "ignore"
 
 /** Başlık satırı bu uzunluğu aşmaz; aşıyorsa içerik satırıdır. */
-const MAX_BASLIK_UZUNLUGU = 60
+const MAX_HEADING_LENGTH = 60
 
-const KALIPLAR: Array<[Bolum, RegExp]> = [
+const PATTERNS: Array<[ResumeSection, RegExp]> = [
   [
     "summary",
     /^(profile|profil|hakkimda|özet|ozet|summary|about( me)?|profesyonel özet|kariyer özeti)$/,
@@ -54,58 +54,58 @@ const KALIPLAR: Array<[Bolum, RegExp]> = [
 ]
 
 /** Tanınan ama dört bloğun hiçbirine ait olmayan bölümler. */
-const YOKSAYILAN =
+const IGNORED =
   /^(additional|references|referanslar|hobbies|ilgi alanları|awards|honors|ödüller|volunteer|gönüllü çalışmalar|publications|yayınlar|interests)$/
 
 export function segmentResume(rawText: string): ResumeSegments {
-  const satirlar = rawText.split("\n")
-  const bloklar: Record<Bolum, string[]> = {
+  const lineItems = rawText.split("\n")
+  const blockList: Record<ResumeSection, string[]> = {
     header: [],
     summary: [],
     experience: [],
     education: [],
     skills: [],
-    yoksay: [],
+    ignore: [],
   }
 
   // İlk başlıktan önceki satırlar ad, unvan ve iletişim bilgisidir ve kendi
   // bloğuna gidiyor. Sprint 1'de özete karışıyorlardı; skor özeti
   // kullanmadığı için sorun görünmüyordu, indirilen belgede görünür oldu.
-  let aktif: Bolum = "header"
-  let baslikBulundu = false
+  let active: ResumeSection = "header"
+  let headingFound = false
 
-  for (const satir of satirlar) {
-    const bolum = baslikTuru(satir)
-    if (bolum) {
-      aktif = bolum
-      baslikBulundu = true
+  for (const lineItem of lineItems) {
+    const section = headingKind(lineItem)
+    if (section) {
+      active = section
+      headingFound = true
     }
     // Başlığın kendisi de bloğa giriyor: K-10'daki kayıp tam da başlıkların
     // atılmasıydı ve çıkarıcılar bağlamdan yararlanıyor.
-    bloklar[aktif].push(satir)
+    blockList[active].push(lineItem)
   }
 
   // Hiç başlık yoksa (tasarım ağırlıklı bazı CV'ler) bölemeyiz; her
   // çıkarıcıya ham metnin tamamı verilir. Bugünkü davranıştan kötü değil.
-  if (!baslikBulundu) {
-    const tam = rawText.trim()
+  if (!headingFound) {
+    const full = rawText.trim()
     return {
       // Başlık bloğu yine de ilk satırlardan okunuyor: ad çoğu CV'de en
       // üstte ve bölümleme başarısız diye belgeyi adsız bırakmanın anlamı yok.
-      headerBlock: tam.split("\n").slice(0, 4).join("\n"),
-      summaryBlock: tam,
-      experienceBlock: tam,
-      educationBlock: tam,
-      skillsBlock: tam,
+      headerBlock: full.split("\n").slice(0, 4).join("\n"),
+      summaryBlock: full,
+      experienceBlock: full,
+      educationBlock: full,
+      skillsBlock: full,
     }
   }
 
   return {
-    headerBlock: bloklar.header.join("\n").trim(),
-    summaryBlock: bloklar.summary.join("\n").trim(),
-    experienceBlock: bloklar.experience.join("\n").trim(),
-    educationBlock: bloklar.education.join("\n").trim(),
-    skillsBlock: bloklar.skills.join("\n").trim(),
+    headerBlock: blockList.header.join("\n").trim(),
+    summaryBlock: blockList.summary.join("\n").trim(),
+    experienceBlock: blockList.experience.join("\n").trim(),
+    educationBlock: blockList.education.join("\n").trim(),
+    skillsBlock: blockList.skills.join("\n").trim(),
   }
 }
 
@@ -117,11 +117,11 @@ export function segmentResume(rawText: string): ResumeSegments {
  * "PROFILE" satırı bir başlık değil, özetin ilk kelimesi gibi görünüyor.
  */
 export function stripLeadingHeading(block: string): string {
-  const satirlar = block.split("\n")
-  const ilkDolu = satirlar.findIndex((s) => s.trim())
-  if (ilkDolu === -1) return ""
-  if (!baslikTuru(satirlar[ilkDolu]!)) return block.trim()
-  return satirlar.slice(ilkDolu + 1).join("\n").trim()
+  const lineItems = block.split("\n")
+  const firstNonEmpty = lineItems.findIndex((s) => s.trim())
+  if (firstNonEmpty === -1) return ""
+  if (!headingKind(lineItems[firstNonEmpty]!)) return block.trim()
+  return lineItems.slice(firstNonEmpty + 1).join("\n").trim()
 }
 
 /**
@@ -129,20 +129,20 @@ export function stripLeadingHeading(block: string): string {
  * (format/check.ts) aynı tanımayı kullanıyor: "ATS başlığını tanır mı"
  * sorusunun cevabı, bizim bölümlememizin tanıyıp tanımadığıyla aynı.
  */
-export function bolumBasligi(satir: string): Bolum | null {
-  return baslikTuru(satir)
+export function sectionHeading(lineItem: string): ResumeSection | null {
+  return headingKind(lineItem)
 }
 
-function baslikTuru(satir: string): Bolum | null {
-  const temiz = satir.trim()
-  if (!temiz || temiz.length > MAX_BASLIK_UZUNLUGU) return null
+function headingKind(lineItem: string): ResumeSection | null {
+  const clean = lineItem.trim()
+  if (!clean || clean.length > MAX_HEADING_LENGTH) return null
 
-  const n = normalizeText(temiz)
+  const n = normalizeText(clean)
   if (!n) return null
-  if (YOKSAYILAN.test(n)) return "yoksay"
+  if (IGNORED.test(n)) return "ignore"
 
-  for (const [bolum, kalip] of KALIPLAR) {
-    if (kalip.test(n)) return bolum
+  for (const [section, pattern] of PATTERNS) {
+    if (pattern.test(n)) return section
   }
   return null
 }

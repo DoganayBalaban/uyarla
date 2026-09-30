@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest"
 import type { LlmProvider } from "../llm/types.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { cvOlgulari, generateCoverLetter, verifyCoverLetter } from "./letter.js"
+import { resumeFacts as resumeFacts, generateCoverLetter, verifyCoverLetter } from "./letter.js"
 
-const PROFIL: ResumeProfile = {
+const TEST_PROFILE: ResumeProfile = {
   fullName: "Elif Yılmaz",
   headline: "Frontend Geliştirici",
   summary: null,
@@ -25,7 +25,7 @@ const PROFIL: ResumeProfile = {
   certifications: [],
 }
 
-const ILAN: JobPostingData = {
+const POSTING: JobPostingData = {
   position: "Kıdemli Frontend Geliştirici",
   company: "Beta",
   seniority: "senior",
@@ -36,9 +36,9 @@ const ILAN: JobPostingData = {
   ],
 } as JobPostingData
 
-describe("cvOlgulari", () => {
-  it("modele ve kontrole giden metin CV'deki olguları içeriyor", () => {
-    const m = cvOlgulari(PROFIL)
+describe("resumeFacts", () => {
+  it("the text given to the model and verification contains the resume facts", () => {
+    const m = resumeFacts(TEST_PROFILE)
     expect(m).toContain("Frontend Geliştirici — Acme (2022 – halen)")
     // Madde metninin CV'deki birebir karşılığı kullanılıyor.
     expect(m).toContain("React ile müşteri paneli geliştirdim")
@@ -47,18 +47,18 @@ describe("cvOlgulari", () => {
 })
 
 describe("verifyCoverLetter", () => {
-  const kaynak = cvOlgulari(PROFIL)
+  const sourceText = resumeFacts(TEST_PROFILE)
 
-  it("CV'ye dayanan paragraf temiz", () => {
-    const [p] = verifyCoverLetter(["2022'den beri Acme'de React ile müşteri paneli geliştiriyorum."], kaynak, ILAN)
-    expect(p!.kontrol.status).toBe("ok")
+  it("a paragraph grounded in the resume is clean", () => {
+    const [p] = verifyCoverLetter(["2022'den beri Acme'de React ile müşteri paneli geliştiriyorum."], sourceText, POSTING)
+    expect(p!.verification.status).toBe("ok")
   })
 
-  it("CV'de olmayan ilan kavramını ve sayıyı işaretliyor", () => {
-    const [p] = verifyCoverLetter(["5 yıldır Kubernetes ile çalışıyorum."], kaynak, ILAN)
-    expect(p!.kontrol.status).toBe("flagged")
-    const detaylar = p!.kontrol.issues.map((i) => i.detail)
-    expect(detaylar).toEqual(
+  it("flags a posting concept and a number not in the resume", () => {
+    const [p] = verifyCoverLetter(["5 yıldır Kubernetes ile çalışıyorum."], sourceText, POSTING)
+    expect(p!.verification.status).toBe("flagged")
+    const details = p!.verification.issues.map((i) => i.detail)
+    expect(details).toEqual(
       expect.arrayContaining([
         'Bu paragrafta "5" sayısı geçiyor ama CV\'nde yok.',
         'Bu paragrafta "kubernetes" geçiyor ama CV\'nde yok.',
@@ -68,24 +68,24 @@ describe("verifyCoverLetter", () => {
 })
 
 describe("generateCoverLetter", () => {
-  it("modelin paragraflarını temizleyip kontrol ediyor", async () => {
-    let gorulen = ""
+  it("cleans and verifies the model's paragraphs", async () => {
+    let seen = ""
     const llm: LlmProvider = {
       async extract<T>(opts: { input: string; schemaName: string }) {
-        gorulen = opts.input
+        seen = opts.input
         return {
           data: { paragraflar: ["  Başvuruyorum.  ", "", "Kubernetes deneyimim var."] } as T,
           tokens: 42,
         }
       },
     }
-    const { data, tokens } = await generateCoverLetter(llm, { profile: PROFIL, posting: ILAN })
+    const { data, tokens } = await generateCoverLetter(llm, { profile: TEST_PROFILE, posting: POSTING })
 
     expect(tokens).toBe(42)
-    expect(data.paragraflar.map((p) => p.metin)).toEqual(["Başvuruyorum.", "Kubernetes deneyimim var."])
-    expect(data.paragraflar[1]!.kontrol.status).toBe("flagged")
+    expect(data.paragraphs.map((p) => p.text)).toEqual(["Başvuruyorum.", "Kubernetes deneyimim var."])
+    expect(data.paragraphs[1]!.verification.status).toBe("flagged")
     // Model hem CV'yi hem ilanın gereksinimlerini görüyor.
-    expect(gorulen).toContain("CV BİLGİLERİ")
-    expect(gorulen).toContain("Zorunlu gereksinimler:\n- React deneyimi")
+    expect(seen).toContain("CV BİLGİLERİ")
+    expect(seen).toContain("Zorunlu gereksinimler:\n- React deneyimi")
   })
 })

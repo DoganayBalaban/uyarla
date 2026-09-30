@@ -56,11 +56,11 @@ describe("runCoverLetter", () => {
     expect(saveCoverLetter).toHaveBeenCalledOnce()
     const [id, record] = saveCoverLetter.mock.calls[0] as unknown as [string, any]
     expect(id).toBe("ad-1")
-    expect(record.durum).toBe("done")
+    expect(record.status).toBe("done")
     expect(record.tokenUsage).toBe(30)
-    expect(record.olusturulma).toBe("2026-09-27T10:00:00.000Z")
-    expect(record.paragraflar[0].kontrol.status).toBe("ok")
+    expect(record.createdAt).toBe("2026-09-27T10:00:00.000Z")
+    expect(record.paragraphs[0].verification.status).toBe("ok")
     // CV'de olmayan ilan kavramı işaretleniyor.
-    expect(record.paragraflar[1].kontrol.status).toBe("flagged")
+    expect(record.paragraphs[1].verification.status).toBe("flagged")
   })
 })

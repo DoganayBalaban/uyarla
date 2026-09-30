@@ -1,4 +1,4 @@
-import type { OnYaziKaydi } from "@uyarla/core"
+import type { CoverLetterRecord } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { ADAPT_JOB_OPTIONS, COVER_LETTER_JOB } from "@uyarla/worker/adapt-queue"
 import { NextResponse } from "next/server"
@@ -36,15 +36,15 @@ export async function POST(
       )
     }
 
-    const mevcut = yuk.adaptation.coverLetter as OnYaziKaydi | null
-    if (mevcut?.durum === "running") {
+    const mevcut = yuk.adaptation.coverLetter as CoverLetterRecord | null
+    if (mevcut?.status === "running") {
       return NextResponse.json({ coverLetter: mevcut }, { status: 202 })
     }
 
     // Pahalı uç: her çağrı bir LLM üretimi (spec §9).
     await enforceRateLimit(redisStore, `onyazi:${oturum.user.id}`, RATE_LIMITS.kayitli)
 
-    const kayit: OnYaziKaydi = { durum: "running" }
+    const kayit: CoverLetterRecord = { status: "running" }
     await prisma.adaptation.update({ where: { id }, data: { coverLetter: kayit } })
     await adaptQueue.add(COVER_LETTER_JOB, { adaptationId: id }, ADAPT_JOB_OPTIONS)
 

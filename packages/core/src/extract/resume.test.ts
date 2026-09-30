@@ -51,8 +51,8 @@ const RESPONSES: Record<string, unknown> = {
   },
 }
 
-describe("extractResumeProfile · LLM bölümlemesiyle", () => {
-  it("beceri satırlarını düzleştirip profile koyar", async () => {
+describe("extractResumeProfile · with LLM segmentation", () => {
+  it("flattens skill lines into the profile", async () => {
     // Model satırları kopyalıyor, "hangisi beceri" kararı kodda veriliyor (K-19).
     const llm = fakeLlm({
       ...RESPONSES,
@@ -72,7 +72,7 @@ describe("extractResumeProfile · LLM bölümlemesiyle", () => {
     expect(data.languages).toEqual(["İngilizce"])
   })
 
-  it("bölümleme ve blok çıkarımlarını tek profilde birleştirir", async () => {
+  it("merges segmentation and block extractions into one profile", async () => {
     const llm = fakeLlm(RESPONSES)
     const { data } = await extractResumeProfile(llm, "ham cv metni", { segmenter: "llm" })
 
@@ -83,7 +83,7 @@ describe("extractResumeProfile · LLM bölümlemesiyle", () => {
     expect(data.summary).toBe("3 yıl React deneyimi")
   })
 
-  it("dört ayrı çağrı yapar: bölümleme + üç blok", async () => {
+  it("makes four separate calls: segmentation + three blocks", async () => {
     const llm = fakeLlm(RESPONSES)
     await extractResumeProfile(llm, "ham cv metni", { segmenter: "llm" })
 
@@ -95,22 +95,22 @@ describe("extractResumeProfile · LLM bölümlemesiyle", () => {
     ])
   })
 
-  it("blok çağrılarına ham CV'yi değil, yalnızca ilgili bloğu gönderir", async () => {
+  it("sends block calls only the relevant block, not the raw resume", async () => {
     const llm = fakeLlm(RESPONSES)
     await extractResumeProfile(llm, "ham cv metni", { segmenter: "llm" })
 
-    const deneyim = llm.calls.find((c) => c.schemaName === "resume_experience")!
-    expect(deneyim.input).toBe((RESPONSES.resume_segments as { experienceBlock: string }).experienceBlock)
-    expect(deneyim.input).not.toContain("ham cv metni")
+    const experienceEntry = llm.calls.find((c) => c.schemaName === "resume_experience")!
+    expect(experienceEntry.input).toBe((RESPONSES.resume_segments as { experienceBlock: string }).experienceBlock)
+    expect(experienceEntry.input).not.toContain("ham cv metni")
   })
 
-  it("token sayılarını toplar", async () => {
+  it("sums token counts", async () => {
     const llm = fakeLlm(RESPONSES)
     const { tokens } = await extractResumeProfile(llm, "ham cv metni", { segmenter: "llm" })
     expect(tokens).toBe(40)
   })
 
-  it("boş blok için LLM'i çağırmaz", async () => {
+  it("does not call the LLM for an empty block", async () => {
     const llm = fakeLlm({
       ...RESPONSES,
       resume_segments: {
@@ -124,7 +124,7 @@ describe("extractResumeProfile · LLM bölümlemesiyle", () => {
     expect(data.education).toEqual([])
   })
 
-  it("hiç blok yoksa tek çağrıyla boş profil döner", async () => {
+  it("returns an empty profile with a single call when there are no blocks", async () => {
     const llm = fakeLlm({
       resume_segments: {
         headerBlock: "", summaryBlock: "", experienceBlock: "", educationBlock: "", skillsBlock: "",
@@ -138,7 +138,7 @@ describe("extractResumeProfile · LLM bölümlemesiyle", () => {
     expect(tokens).toBe(10)
   })
 
-  it("şemaya uymayan çıktıyı reddeder", async () => {
+  it("rejects output that does not match the schema", async () => {
     const llm = fakeLlm({
       ...RESPONSES,
       resume_experience: { experience: [{ company: "Acme" }] },
@@ -147,7 +147,7 @@ describe("extractResumeProfile · LLM bölümlemesiyle", () => {
   })
 })
 
-describe("extractResumeProfile · kod bölümlemesiyle (varsayılan)", () => {
+describe("extractResumeProfile · with code segmentation (default)", () => {
   const CV = `PROFILE
 3 yıldır React ile arayüz geliştiriyorum.
 
@@ -164,7 +164,7 @@ Frontend: React, TypeScript
 ADDITIONAL
 References available on request`
 
-  it("bölümleme için LLM çağrısı yapmaz", async () => {
+  it("makes no LLM call for segmentation", async () => {
     const llm = fakeLlm(RESPONSES)
     await extractResumeProfile(llm, CV)
 
@@ -172,20 +172,20 @@ References available on request`
     expect(llm.calls).toHaveLength(3)
   })
 
-  it("her blok çağrısına yalnızca kendi bölümünü gönderir", async () => {
+  it("sends each block call only its own section", async () => {
     const llm = fakeLlm(RESPONSES)
     await extractResumeProfile(llm, CV)
 
-    const beceri = llm.calls.find((c) => c.schemaName === "resume_skills")!
-    expect(beceri.input).toContain("TECHNICAL SKILLS")
-    expect(beceri.input).toContain("React, TypeScript")
+    const skill = llm.calls.find((c) => c.schemaName === "resume_skills")!
+    expect(skill.input).toContain("TECHNICAL SKILLS")
+    expect(skill.input).toContain("React, TypeScript")
     // ADDITIONAL yoksayılan bir bölüm; beceri bloğuna girmemeli.
-    expect(beceri.input).not.toContain("References available")
+    expect(skill.input).not.toContain("References available")
     // Deneyim bloğu da beceri bloğuna sızmamalı.
-    expect(beceri.input).not.toContain("Acme")
+    expect(skill.input).not.toContain("Acme")
   })
 
-  it("özeti kod bölümlemesinden alır", async () => {
+  it("takes the summary from code segmentation", async () => {
     const llm = fakeLlm(RESPONSES)
     const { data } = await extractResumeProfile(llm, CV)
     expect(data.summary).toContain("React ile arayüz geliştiriyorum")

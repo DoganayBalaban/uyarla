@@ -27,19 +27,19 @@ const PROFILE: ResumeProfile = {
 }
 
 describe("collectEvidence", () => {
-  it("her deneyim maddesini ayrı kanıt yapar", () => {
+  it("makes each experience bullet separate evidence", () => {
     const bullets = collectEvidence(PROFILE).filter((e) => e.kind === "bullet")
     expect(bullets).toHaveLength(2)
     expect(bullets[0]!.text).toContain("React ile panel")
   })
 
-  it("her iş için unvanı ayrı bir kanıt olarak ekler", () => {
-    const roller = collectEvidence(PROFILE).filter((e) => e.kind === "role")
-    expect(roller).toHaveLength(1)
-    expect(roller[0]!.text).toBe("Frontend Geliştirici · Acme")
+  it("adds the title of each job as separate evidence", () => {
+    const roles = collectEvidence(PROFILE).filter((e) => e.kind === "role")
+    expect(roles).toHaveLength(1)
+    expect(roles[0]!.text).toBe("Frontend Geliştirici · Acme")
   })
 
-  it("madde kanıtında eşleşme metni bağlam ön eki taşımaz", () => {
+  it("the match text of bullet evidence has no context prefix", () => {
     // Unvan ön eki her maddenin başında tekrarlanıyor. Kelime eşleşmesi buna
     // baksaydı, unvana denk gelen bir anahtar kelime tüm maddelerle eşleşir
     // ve kanıt olarak rastgele biri gösterilirdi.
@@ -49,12 +49,12 @@ describe("collectEvidence", () => {
     expect(bullet.matchText).not.toContain("Frontend Geliştirici")
   })
 
-  it("bağlamsız kanıtlarda text ve matchText aynıdır", () => {
-    const digerleri = collectEvidence(PROFILE).filter((e) => e.kind !== "bullet")
-    for (const e of digerleri) expect(e.matchText).toBe(e.text)
+  it("text and matchText are equal for context-free evidence", () => {
+    const others = collectEvidence(PROFILE).filter((e) => e.kind !== "bullet")
+    for (const e of others) expect(e.matchText).toBe(e.text)
   })
 
-  it("deneyim maddesine unvan ve kurum bağlamını ekler", () => {
+  it("adds title and company context to an experience bullet", () => {
     // "panel geliştirdi" tek başına hangi rolde yapıldığını anlatmaz;
     // anlamsal eşleşme bağlamsız maddede zayıflar.
     const first = collectEvidence(PROFILE).find((e) => e.kind === "bullet")!
@@ -62,26 +62,26 @@ describe("collectEvidence", () => {
     expect(first.text).toContain("Acme")
   })
 
-  it("her beceriyi ayrı kanıt yapar", () => {
+  it("makes each skill separate evidence", () => {
     const skills = collectEvidence(PROFILE).filter((e) => e.kind === "skill")
     expect(skills.map((e) => e.text)).toEqual(["React", "TypeScript"])
   })
 
-  it("eğitimi kanıt olarak ekler", () => {
+  it("adds education as evidence", () => {
     const edu = collectEvidence(PROFILE).filter((e) => e.kind === "education")
     expect(edu).toHaveLength(1)
     expect(edu[0]!.text).toContain("İTÜ")
     expect(edu[0]!.text).toContain("Bilgisayar")
   })
 
-  it("sourceRef'i deneyim maddelerinde korur, diğerlerinde null bırakır", () => {
+  it("keeps sourceRef on experience bullets and leaves it null elsewhere", () => {
     const all = collectEvidence(PROFILE)
     expect(all.find((e) => e.kind === "bullet")!.sourceRef).toBe("React ile panel geliştirdi")
     expect(all.find((e) => e.kind === "skill")!.sourceRef).toBeNull()
   })
 
-  it("boş profilde boş dizi döner", () => {
-    const bos: ResumeProfile = {
+  it("returns an empty array for an empty profile", () => {
+    const empty: ResumeProfile = {
       ...PROFILE,
       experience: [],
       education: [],
@@ -89,31 +89,31 @@ describe("collectEvidence", () => {
       languages: [],
       certifications: [],
     }
-    expect(collectEvidence(bos)).toEqual([])
+    expect(collectEvidence(empty)).toEqual([])
   })
 
-  it("dilleri kanıt olarak ekler", () => {
-    const diller = collectEvidence(PROFILE).filter((e) => e.kind === "language")
-    expect(diller.map((e) => e.text)).toEqual(["İngilizce"])
+  it("adds languages as evidence", () => {
+    const langs = collectEvidence(PROFILE).filter((e) => e.kind === "language")
+    expect(langs.map((e) => e.text)).toEqual(["İngilizce"])
   })
 
-  it("özeti cümle cümle, listenin sonunda kanıt yapar", () => {
-    const kanitlar = collectEvidence({
+  it("adds the summary sentence by sentence at the end of the list", () => {
+    const evidenceList = collectEvidence({
       ...PROFILE,
       summary: "Performans pazarlamasında 3 yıllık deneyim. Veriye dayalı\nkampanya yönetimi yapıyorum.",
     })
-    const ozet = kanitlar.filter((e) => e.kind === "summary")
-    expect(ozet.map((e) => e.text)).toEqual([
+    const summaryText = evidenceList.filter((e) => e.kind === "summary")
+    expect(summaryText.map((e) => e.text)).toEqual([
       "Performans pazarlamasında 3 yıllık deneyim.",
       "Veriye dayalı kampanya yönetimi yapıyorum.",
     ])
-    expect(kanitlar.slice(-2)).toEqual(ozet)
+    expect(evidenceList.slice(-2)).toEqual(summaryText)
   })
 
-  it("deneyimi olmayan ama becerisi olan profilde beceri kanıtları kalır", () => {
-    const yeniMezun: ResumeProfile = { ...PROFILE, experience: [] }
-    const kanitlar = collectEvidence(yeniMezun)
-    expect(kanitlar.filter((e) => e.kind === "skill")).toHaveLength(2)
-    expect(kanitlar.filter((e) => e.kind === "bullet")).toHaveLength(0)
+  it("keeps skill evidence for a profile with skills but no experience", () => {
+    const newGraduate: ResumeProfile = { ...PROFILE, experience: [] }
+    const evidenceList = collectEvidence(newGraduate)
+    expect(evidenceList.filter((e) => e.kind === "skill")).toHaveLength(2)
+    expect(evidenceList.filter((e) => e.kind === "bullet")).toHaveLength(0)
   })
 })

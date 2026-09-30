@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises"
 import { ImageResponse } from "next/og"
-import { fontYollari } from "@uyarla/fonts"
+import { fontPaths } from "@uyarla/fonts"
 
 export const alt = "uyarla · Her ilana, doğru CV."
 export const size = { width: 1200, height: 630 }
@@ -11,7 +11,7 @@ export const contentType = "image/png"
  * gömülü fontunda ş/ğ/ı yok, CV çıktısıyla aynı dosya kullanılıyor.
  */
 export default async function OgGorseli() {
-  const kalin = await readFile(fontYollari().bold)
+  const kalin = await readFile(fontPaths().bold)
 
   return new ImageResponse(
     (

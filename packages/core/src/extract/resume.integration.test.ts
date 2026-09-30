@@ -25,16 +25,16 @@ Bir Teknik Üniversite, Bilgisayar Mühendisliği, 2021
 BECERİLER
 React, TypeScript, Next.js, Vue.js, Git, Jest, Tailwind CSS`
 
-describe("extractResumeProfile · gerçek model", () => {
-  it("Türkçe CV'den deneyim, eğitim ve becerileri çıkarır", async () => {
+describe("extractResumeProfile · real model", () => {
+  it("extracts experience, education and skills from a Turkish resume", async () => {
     const llm = new LmStudioProvider(llmConfigFromEnv())
-    const basladi = Date.now()
+    const startedAt = Date.now()
     const { data, tokens } = await extractResumeProfile(llm, CV)
-    const sure = Date.now() - basladi
+    const duration = Date.now() - startedAt
 
     // K-09: süre bilinen bir risk; ölçüp raporluyoruz, test bunun üzerine
     // kurulmuyor. Karar Görev 13'te eval verisiyle verilecek.
-    console.log(`[ölçüm] CV çıkarımı ${sure} ms, ${tokens} token`)
+    console.log(`[ölçüm] CV çıkarımı ${duration} ms, ${tokens} token`)
 
     expect(data.experience.length).toBeGreaterThanOrEqual(2)
     expect(data.experience[0]!.company).toMatch(/Acme/i)
@@ -43,15 +43,15 @@ describe("extractResumeProfile · gerçek model", () => {
     expect(data.skills.join(" ").toLowerCase()).toContain("react")
   })
 
-  it("sourceRef alanını ham metinden birebir kopyalar", async () => {
+  it("copies sourceRef verbatim from the raw text", async () => {
     const llm = new LmStudioProvider(llmConfigFromEnv())
     const { data } = await extractResumeProfile(llm, CV)
 
     // Sprint 2'deki uydurma kontrolünün tüm ağırlığı bu güvencede.
-    const hamMetin = CV.replace(/\s+/g, " ")
+    const rawInput = CV.replace(/\s+/g, " ")
     for (const is of data.experience) {
-      for (const madde of is.bullets) {
-        expect(hamMetin).toContain(madde.sourceRef.replace(/\s+/g, " ").trim())
+      for (const bulletItem of is.bullets) {
+        expect(rawInput).toContain(bulletItem.sourceRef.replace(/\s+/g, " ").trim())
       }
     }
   })

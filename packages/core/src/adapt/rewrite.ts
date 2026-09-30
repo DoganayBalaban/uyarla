@@ -1,6 +1,6 @@
 import { z } from "zod"
 import type { ExtractResult, LlmProvider } from "../llm/types.js"
-import type { Dil } from "../normalize/language.js"
+import type { Language as Language } from "../normalize/language.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { TermAlignment } from "../schemas/adaptation.js"
 import { toJsonSchema } from "../schemas/toJsonSchema.js"
@@ -44,10 +44,10 @@ export interface BulletTask {
   /** Modele gösterilecek ilan terimleri (adapt/targets.ts). */
   targets: string[]
   /** CV'nin dili; yazım bu dilde kalır (K-39). Verilmezse Türkçe. */
-  language?: Dil
+  language?: Language
 }
 
-const DIL_ADI: Record<Dil, string> = { tr: "Türkçe", en: "İngilizce" }
+const LANGUAGE_NAME: Record<Language, string> = { tr: "Türkçe", en: "İngilizce" }
 
 export interface BulletRewrite {
   text: string
@@ -77,15 +77,15 @@ export async function rewriteBullet(
     input: [
       `Madde: ${task.bullet}`,
       `İlanın terimleri: ${task.targets.join(", ")}`,
-      `Dil: ${DIL_ADI[task.language ?? "tr"]}`,
+      `Dil: ${LANGUAGE_NAME[task.language ?? "tr"]}`,
     ].join("\n"),
   })
-  const sonuc = BulletParseSchema.parse(data)
+  const outcome = BulletParseSchema.parse(data)
   // Boş dönüş maddeyi silmek anlamına gelirdi; orijinal korunur.
-  const metin = sonuc.rewritten.trim()
+  const content = outcome.rewritten.trim()
   return {
-    data: metin
-      ? { text: metin, alignments: sonuc.alignments }
+    data: content
+      ? { text: content, alignments: outcome.alignments }
       : { text: task.bullet, alignments: [] },
     tokens,
   }
@@ -99,21 +99,21 @@ export async function rewriteSummary(
     /** CV'de kelimesi geçen ilan kavramları (supportedConceptTerms). */
     supportedTerms: string[]
     /** CV'nin dili; özet bu dilde kalır (K-39). Verilmezse Türkçe. */
-    language?: Dil
+    language?: Language
   },
 ): Promise<ExtractResult<string>> {
-  const metin = [
+  const content = [
     `Özet: ${input.summary}`,
     `Pozisyon: ${input.posting.position}`,
     `CV'de geçen ve ilanın aradığı kavramlar: ${input.supportedTerms.join(", ") || "—"}`,
-    `Dil: ${DIL_ADI[input.language ?? "tr"]}`,
+    `Dil: ${LANGUAGE_NAME[input.language ?? "tr"]}`,
   ].join("\n")
 
   const { data, tokens } = await llm.extract({
     prompt: SUMMARY_PROMPT,
     schemaName: "rewritten_summary",
     schema: summaryJsonSchema,
-    input: metin,
+    input: content,
   })
   const { rewritten } = SummarySchema.parse(data)
   return { data: rewritten.trim() || input.summary, tokens }
@@ -138,23 +138,23 @@ export async function rewriteBullets(
   tasks: BulletTask[],
   concurrency: number = DEFAULT_REWRITE_CONCURRENCY,
 ): Promise<Array<ExtractResult<BulletRewrite> | null>> {
-  const sonuclar: Array<ExtractResult<BulletRewrite> | null> = new Array(tasks.length).fill(null)
-  let sira = 0
+  const outcomes: Array<ExtractResult<BulletRewrite> | null> = new Array(tasks.length).fill(null)
+  let orderIndex = 0
 
   // Her işçi sıradaki maddeyi alır; sonuç kendi indeksine yazılır, böylece
   // çıktı sırası girdi sırasıyla aynı kalır.
-  const isci = async (): Promise<void> => {
-    while (sira < tasks.length) {
-      const i = sira++
+  const worker = async (): Promise<void> => {
+    while (orderIndex < tasks.length) {
+      const i = orderIndex++
       try {
-        sonuclar[i] = await rewriteBullet(llm, tasks[i]!)
+        outcomes[i] = await rewriteBullet(llm, tasks[i]!)
       } catch {
-        sonuclar[i] = null
+        outcomes[i] = null
       }
     }
   }
 
-  const isciSayisi = Math.max(1, Math.min(concurrency, tasks.length))
-  await Promise.all(Array.from({ length: isciSayisi }, isci))
-  return sonuclar
+  const workerCount = Math.max(1, Math.min(concurrency, tasks.length))
+  await Promise.all(Array.from({ length: workerCount }, worker))
+  return outcomes
 }

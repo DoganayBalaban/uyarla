@@ -3,15 +3,15 @@ import { ResumeProfileSchema, resumeProfileJsonSchema, experienceListJsonSchema 
 import { JobPostingSchema, jobPostingJsonSchema } from "./job.js"
 
 /** LM Studio'nun strict kısıtı: her alan required, ek alan yok, $schema yok. */
-function assertStrictUyumlu(schema: Record<string, unknown>) {
+function assertStrictCompatible(schema: Record<string, unknown>) {
   const props = Object.keys(schema.properties as Record<string, unknown>)
   expect((schema.required as string[]).sort()).toEqual(props.sort())
   expect(schema.additionalProperties).toBe(false)
   expect(schema).not.toHaveProperty("$schema")
 }
 
-describe("CV profili şeması", () => {
-  const gecerli = {
+describe("resume profile schema", () => {
+  const valid = {
     fullName: "Elif Yılmaz",
     headline: "Frontend Geliştirici",
     summary: "3 yıl React deneyimi",
@@ -34,45 +34,45 @@ describe("CV profili şeması", () => {
     certifications: [],
   }
 
-  it("geçerli bir profili kabul eder", () => {
-    expect(ResumeProfileSchema.parse(gecerli)).toEqual(gecerli)
+  it("accepts a valid profile", () => {
+    expect(ResumeProfileSchema.parse(valid)).toEqual(valid)
   })
 
-  it("bilgi yoksa null kabul eder", () => {
-    const eksik = { ...gecerli, fullName: null, headline: null, summary: null }
-    expect(ResumeProfileSchema.parse(eksik).fullName).toBeNull()
+  it("accepts null when information is missing", () => {
+    const missing = { ...valid, fullName: null, headline: null, summary: null }
+    expect(ResumeProfileSchema.parse(missing).fullName).toBeNull()
   })
 
-  it("deneyim maddesinde sourceRef zorunludur", () => {
+  it("sourceRef is required on an experience bullet", () => {
     expect(() =>
       ResumeProfileSchema.parse({
-        ...gecerli,
-        experience: [{ ...gecerli.experience[0], bullets: [{ text: "bir şey yaptı" }] }],
+        ...valid,
+        experience: [{ ...valid.experience[0], bullets: [{ text: "bir şey yaptı" }] }],
       }),
     ).toThrow()
   })
 
-  it("JSON Schema strict uyumlu", () => {
-    assertStrictUyumlu(resumeProfileJsonSchema)
-    assertStrictUyumlu(experienceListJsonSchema)
+  it("JSON Schema is strict-compatible", () => {
+    assertStrictCompatible(resumeProfileJsonSchema)
+    assertStrictCompatible(experienceListJsonSchema)
   })
 
-  it("iç içe nesnelerde de ek alan yasak", () => {
+  it("extra fields are forbidden in nested objects too", () => {
     // JSON Schema ağacında gezinmek için asgari yapı tanımı; `any` yerine.
-    interface Dugum {
+    interface DocxNode {
       additionalProperties?: boolean
-      properties?: Record<string, Dugum>
-      items?: Dugum
+      properties?: Record<string, DocxNode>
+      items?: DocxNode
     }
-    const kok = experienceListJsonSchema as unknown as Dugum
-    const deneyim = kok.properties?.experience?.items
-    expect(deneyim?.additionalProperties).toBe(false)
-    expect(deneyim?.properties?.bullets?.items?.additionalProperties).toBe(false)
+    const stem = experienceListJsonSchema as unknown as DocxNode
+    const experienceEntry = stem.properties?.experience?.items
+    expect(experienceEntry?.additionalProperties).toBe(false)
+    expect(experienceEntry?.properties?.bullets?.items?.additionalProperties).toBe(false)
   })
 })
 
-describe("İlan şeması", () => {
-  const gecerli = {
+describe("posting schema", () => {
+  const valid = {
     position: "Frontend Geliştirici",
     company: "Acme",
     seniority: "mid" as const,
@@ -83,24 +83,24 @@ describe("İlan şeması", () => {
     ],
   }
 
-  it("gereksinimleri tür ve önem bilgisiyle ayrıştırır", () => {
-    expect(JobPostingSchema.parse(gecerli)).toEqual(gecerli)
+  it("parses requirements with type and importance", () => {
+    expect(JobPostingSchema.parse(valid)).toEqual(valid)
   })
 
-  it("şirket ve kıdem bilinmiyorsa null olabilir", () => {
-    expect(JobPostingSchema.parse({ ...gecerli, company: null, seniority: null }).company).toBeNull()
+  it("company and seniority may be null when unknown", () => {
+    expect(JobPostingSchema.parse({ ...valid, company: null, seniority: null }).company).toBeNull()
   })
 
-  it("tanımsız önem değerini reddeder", () => {
+  it("rejects an undefined importance value", () => {
     expect(() =>
       JobPostingSchema.parse({
-        ...gecerli,
+        ...valid,
         requirements: [{ text: "a", type: "skill", importance: "belki", concepts: [] }],
       }),
     ).toThrow()
   })
 
-  it("JSON Schema strict uyumlu", () => {
-    assertStrictUyumlu(jobPostingJsonSchema)
+  it("JSON Schema is strict-compatible", () => {
+    assertStrictCompatible(jobPostingJsonSchema)
   })
 })

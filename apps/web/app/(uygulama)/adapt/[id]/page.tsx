@@ -18,7 +18,7 @@ import {
 import { diffWords } from "@/lib/diff"
 import { cn } from "@/lib/cn"
 import { asamalariTuret } from "@/lib/asamalar"
-import { OnYaziBolumu, type OnYaziKaydiView } from "../../../components/OnYaziBolumu"
+import { OnYaziBolumu, type CoverLetterView } from "../../../components/OnYaziBolumu"
 import { AsamaCizelgesi } from "../../../components/ui/AsamaCizelgesi"
 import { SkorHalkasi, skorDurumu } from "../../../components/ui/SkorHalkasi"
 
@@ -71,7 +71,7 @@ interface Durum {
   draft: Draft | null
   scoreBefore: number | null
   scoreAfter: number | null
-  coverLetter: OnYaziKaydiView | null
+  coverLetter: CoverLetterView | null
 }
 
 function Fark({ original, rewritten }: { original: string; rewritten: string }) {

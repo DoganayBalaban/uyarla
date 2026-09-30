@@ -1,6 +1,6 @@
 import { containsKeyword, normalizeText } from "../normalize/turkish.js"
 import type { Concept } from "../schemas/job.js"
-import { ozelAdMi } from "../score/score.js"
+import { isProperNoun } from "../score/score.js"
 import type { TermAlignment } from "../schemas/adaptation.js"
 
 export interface AlignmentConfig {
@@ -42,7 +42,7 @@ export function verifyAlignments(
   },
   cfg: AlignmentConfig = DEFAULT_ALIGNMENT_CONFIG,
 ): Array<TermAlignment & { concept: Concept }> {
-  const dogrulanan: Array<TermAlignment & { concept: Concept }> = []
+  const verified: Array<TermAlignment & { concept: Concept }> = []
 
   input.alignments.forEach((a, i) => {
     const concept = input.targets.find((c) =>
@@ -53,21 +53,21 @@ export function verifyAlignments(
     if (!concept) return
     // Özel ad hiçbir dayanakla hizalanamaz; hedef seçimi de onları
     // vermiyor, bu ikinci emniyet (bkz. adapt/targets.ts).
-    if (ozelAdMi(concept)) return
-    if (!dayanakGecerli(a.basis, input.source)) return
+    if (isProperNoun(concept)) return
+    if (!basisValid(a.basis, input.source)) return
     if ((input.similarities[i] ?? 0) < cfg.minSimilarity) return
-    dogrulanan.push({ ...a, concept })
+    verified.push({ ...a, concept })
   })
 
-  return dogrulanan
+  return verified
 }
 
 /**
  * Dayanak kaynakta geçmeli ve tek başına anlam taşımalı: "ve", "ile" gibi
  * bir bağlaç her maddede geçer ve dayanak olamaz.
  */
-function dayanakGecerli(dayanak: string, kaynak: string): boolean {
-  const n = normalizeText(dayanak)
+function basisValid(basisText: string, sourceText: string): boolean {
+  const n = normalizeText(basisText)
   if (n.length < 3 || !/\p{L}{3,}/u.test(n)) return false
-  return containsKeyword(kaynak, dayanak)
+  return containsKeyword(sourceText, basisText)
 }

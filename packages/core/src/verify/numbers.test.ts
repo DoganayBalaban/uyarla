@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import { checkNumbers } from "./numbers.js"
 
 describe("checkNumbers", () => {
-  it("kaynaktaki sayı korunduğunda uyarı üretmez", () => {
+  it("produces no warning when a source number is kept", () => {
     expect(
       checkNumbers(
         "Sayfa yüklenme süresini %40 düşürdüm",
@@ -11,53 +11,53 @@ describe("checkNumbers", () => {
     ).toEqual([])
   })
 
-  it("sayı değiştirildiğinde uyarı üretir", () => {
-    const uyarilar = checkNumbers(
+  it("warns when a number is changed", () => {
+    const warnings = checkNumbers(
       "Sayfa yüklenme süresini %60 düşürdüm",
       "Sayfa yüklenme süresini %40 düşürdüm",
     )
-    expect(uyarilar).toHaveLength(1)
-    expect(uyarilar[0]!.kind).toBe("number_mismatch")
-    expect(uyarilar[0]!.detail).toContain("60")
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]!.kind).toBe("number_mismatch")
+    expect(warnings[0]!.detail).toContain("60")
   })
 
-  it("yeni sayı eklendiğinde uyarı üretir", () => {
-    const uyarilar = checkNumbers(
+  it("warns when a new number is added", () => {
+    const warnings = checkNumbers(
       "4 kişilik ekipte React ile panel geliştirdim",
       "React ile panel geliştirdim",
     )
-    expect(uyarilar).toHaveLength(1)
-    expect(uyarilar[0]!.detail).toContain("4")
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]!.detail).toContain("4")
   })
 
-  it("kaynaktaki sayının düşürülmesi uyarı üretmez", () => {
+  it("dropping a source number produces no warning", () => {
     // Bilgi eksiltmek uydurma değil; kullanıcı zaten farkı görüyor.
     expect(
       checkNumbers("React ile panel geliştirdim", "4 kişilik ekipte React ile panel geliştirdim"),
     ).toEqual([])
   })
 
-  it("ondalık sayıları tanır", () => {
-    const uyarilar = checkNumbers("Skoru 9,4'e çıkardım", "Skoru 8,2'ye çıkardım")
-    expect(uyarilar).toHaveLength(1)
+  it("recognizes decimal numbers", () => {
+    const warnings = checkNumbers("Skoru 9,4'e çıkardım", "Skoru 8,2'ye çıkardım")
+    expect(warnings).toHaveLength(1)
   })
 
-  it("ondalık ayıracının değişmesini uydurma saymaz", () => {
+  it("does not treat a changed decimal separator as fabrication", () => {
     expect(checkNumbers("Skoru 9.4'e çıkardım", "Skoru 9,4'e çıkardım")).toEqual([])
   })
 
-  it("aynı sayı birden çok kez geçse tek uyarı üretir", () => {
-    const uyarilar = checkNumbers("%60 ve yine %60", "%40 düşürdüm")
-    expect(uyarilar).toHaveLength(1)
+  it("produces one warning even if the same number appears several times", () => {
+    const warnings = checkNumbers("%60 ve yine %60", "%40 düşürdüm")
+    expect(warnings).toHaveLength(1)
   })
 
-  it("yıl ve tarih gibi sayıları da kontrol eder", () => {
+  it("also checks numbers such as years and dates", () => {
     expect(checkNumbers("2021 yılında mezun oldum", "2020 yılında mezun oldum")).toHaveLength(1)
   })
 
-  it("gerekçe kullanıcıya gösterilebilir Türkçe olur", () => {
-    const uyari = checkNumbers("%60 düşürdüm", "%40 düşürdüm")[0]!
-    expect(uyari.detail).toMatch(/[çğıöşüÇĞİÖŞÜ]/)
-    expect(uyari.detail).not.toMatch(/error|mismatch|invalid/i)
+  it("the reason is user-facing Turkish", () => {
+    const warning = checkNumbers("%60 düşürdüm", "%40 düşürdüm")[0]!
+    expect(warning.detail).toMatch(/[çğıöşüÇĞİÖŞÜ]/)
+    expect(warning.detail).not.toMatch(/error|mismatch|invalid/i)
   })
 })

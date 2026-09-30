@@ -15,14 +15,14 @@ const FONT = "Calibri"
  * üreteç ucuz (K-29).
  */
 export async function renderDocx(model: DocumentModel): Promise<Buffer> {
-  const paragraflar: Paragraph[] = [
+  const paragraphs: Paragraph[] = [
     new Paragraph({
       children: [new TextRun({ text: model.name, bold: true, size: 40, font: FONT })],
     }),
   ]
 
   if (model.contact) {
-    paragraflar.push(
+    paragraphs.push(
       new Paragraph({
         children: [new TextRun({ text: model.contact, size: 20, font: FONT, color: "444444" })],
       }),
@@ -30,7 +30,7 @@ export async function renderDocx(model: DocumentModel): Promise<Buffer> {
   }
 
   if (model.summary) {
-    paragraflar.push(
+    paragraphs.push(
       new Paragraph({
         spacing: { before: 160 },
         children: [new TextRun({ text: model.summary, size: 20, font: FONT })],
@@ -39,7 +39,7 @@ export async function renderDocx(model: DocumentModel): Promise<Buffer> {
   }
 
   for (const section of model.sections) {
-    paragraflar.push(
+    paragraphs.push(
       new Paragraph({
         spacing: { before: 280, after: 80 },
         // Alt kenarlık, tablo değil: bölüm ayracı ATS'in metin katmanını
@@ -51,14 +51,14 @@ export async function renderDocx(model: DocumentModel): Promise<Buffer> {
 
     for (const entry of section.entries) {
       if (entry.heading) {
-        paragraflar.push(
+        paragraphs.push(
           new Paragraph({
             children: [new TextRun({ text: entry.heading, bold: true, size: 20, font: FONT })],
           }),
         )
       }
       if (entry.subheading) {
-        paragraflar.push(
+        paragraphs.push(
           new Paragraph({
             children: [
               new TextRun({ text: entry.subheading, size: 18, font: FONT, color: "555555" }),
@@ -67,7 +67,7 @@ export async function renderDocx(model: DocumentModel): Promise<Buffer> {
         )
       }
       for (const line of entry.lines) {
-        paragraflar.push(
+        paragraphs.push(
           new Paragraph({
             bullet: { level: 0 },
             children: [new TextRun({ text: line, size: 20, font: FONT })],
@@ -77,6 +77,6 @@ export async function renderDocx(model: DocumentModel): Promise<Buffer> {
     }
   }
 
-  const doc = new Document({ sections: [{ children: paragraflar }] })
+  const doc = new Document({ sections: [{ children: paragraphs }] })
   return Packer.toBuffer(doc)
 }

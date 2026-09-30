@@ -2,12 +2,12 @@ import { describe, it, expect } from "vitest"
 import type { JobPostingData } from "../schemas/job.js"
 import { checkPostingTermInjection } from "./injection.js"
 
-const ilan = (terimler: string[]): JobPostingData => ({
+const posting = (termList: string[]): JobPostingData => ({
   position: "Geliştirici",
   company: null,
   seniority: null,
   language: "tr",
-  requirements: terimler.map((t) => ({
+  requirements: termList.map((t) => ({
     text: t,
     type: "skill",
     importance: "must",
@@ -16,45 +16,45 @@ const ilan = (terimler: string[]): JobPostingData => ({
 })
 
 describe("checkPostingTermInjection", () => {
-  it("kaynakta olan terim uyarı üretmez", () => {
+  it("a term present in the source produces no warning", () => {
     expect(
       checkPostingTermInjection(
         "React kullanarak müşteri panelini geliştirdim",
         "React ile müşteri panelini geliştirdim",
-        ilan(["React", "Kubernetes"]),
+        posting(["React", "Kubernetes"]),
       ),
     ).toEqual([])
   })
 
-  it("kaynakta olmayan ilan terimi eklenirse uyarı üretir", () => {
-    const uyarilar = checkPostingTermInjection(
+  it("warns when a posting term absent from the source is added", () => {
+    const warnings = checkPostingTermInjection(
       "React ve Kubernetes ile müşteri panelini geliştirdim",
       "React ile müşteri panelini geliştirdim",
-      ilan(["React", "Kubernetes"]),
+      posting(["React", "Kubernetes"]),
     )
-    expect(uyarilar).toHaveLength(1)
-    expect(uyarilar[0]!.kind).toBe("posting_term_injected")
-    expect(uyarilar[0]!.detail).toContain("Kubernetes")
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]!.kind).toBe("posting_term_injected")
+    expect(warnings[0]!.detail).toContain("Kubernetes")
   })
 
-  it("ilanda geçmeyen yeni kelime uyarı üretmez", () => {
+  it("a new word absent from the posting produces no warning", () => {
     // Yalnızca ilan kavramları kontrol edilir; sıradan kelime değişikliği
     // yeniden ifadenin kendisidir.
     expect(
       checkPostingTermInjection(
         "React kullanarak kurumsal müşteri panelini hayata geçirdim",
         "React ile müşteri panelini geliştirdim",
-        ilan(["React"]),
+        posting(["React"]),
       ),
     ).toEqual([])
   })
 
-  it("eş anlamlı biçimle eklenen terimi de yakalar", () => {
-    const uyarilar = checkPostingTermInjection(
+  it("also catches a term added in synonym form", () => {
+    const warnings = checkPostingTermInjection(
       "React ve k8s ile panel geliştirdim",
       "React ile panel geliştirdim",
       {
-        ...ilan([]),
+        ...posting([]),
         requirements: [
           {
             text: "Kubernetes deneyimi",
@@ -65,37 +65,37 @@ describe("checkPostingTermInjection", () => {
         ],
       },
     )
-    expect(uyarilar).toHaveLength(1)
-    expect(uyarilar[0]!.detail).toContain("kubernetes")
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]!.detail).toContain("kubernetes")
   })
 
-  it("çapraz dilli eşleşmede kaynakta varsa uyarı üretmez", () => {
+  it("produces no warning for a cross-language match present in the source", () => {
     // Türkçe normalleştirme ve çapraz dilli sözlük devrede (K-21, K-25).
     expect(
       checkPostingTermInjection(
         "Software Engineering alanında çalıştım",
         "Yazılım Mühendisliği alanında çalıştım",
-        ilan(["Yazılım Mühendisliği"]),
+        posting(["Yazılım Mühendisliği"]),
       ),
     ).toEqual([])
   })
 
-  it("birden çok terim eklenirse her biri için uyarı üretir", () => {
-    const uyarilar = checkPostingTermInjection(
+  it("warns for each term when several are added", () => {
+    const warnings = checkPostingTermInjection(
       "React, Kubernetes ve Docker ile geliştirdim",
       "React ile geliştirdim",
-      ilan(["React", "Kubernetes", "Docker"]),
+      posting(["React", "Kubernetes", "Docker"]),
     )
-    expect(uyarilar).toHaveLength(2)
+    expect(warnings).toHaveLength(2)
   })
 
-  it("gerekçe kullanıcıya gösterilebilir Türkçe olur", () => {
-    const uyari = checkPostingTermInjection(
+  it("the reason is user-facing Turkish", () => {
+    const warning = checkPostingTermInjection(
       "Kubernetes ile geliştirdim",
       "React ile geliştirdim",
-      ilan(["Kubernetes"]),
+      posting(["Kubernetes"]),
     )[0]!
-    expect(uyari.detail).toMatch(/[çğıöşüÇĞİÖŞÜ]/)
-    expect(uyari.detail).not.toMatch(/error|injected|invalid/i)
+    expect(warning.detail).toMatch(/[çğıöşüÇĞİÖŞÜ]/)
+    expect(warning.detail).not.toMatch(/error|injected|invalid/i)
   })
 })

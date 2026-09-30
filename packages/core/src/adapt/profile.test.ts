@@ -3,7 +3,7 @@ import type { AdaptationDraft } from "../schemas/adaptation.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { applyAdaptation, bulletId } from "./profile.js"
 
-const profil: ResumeProfile = {
+const resumeProfile: ResumeProfile = {
   fullName: "Test Aday",
   headline: null,
   summary: "Frontend geliştirici",
@@ -25,7 +25,7 @@ const profil: ResumeProfile = {
   certifications: ["AWS"],
 }
 
-const taslak: AdaptationDraft = {
+const draftData: AdaptationDraft = {
   summary: {
     original: "Frontend geliştirici",
     rewritten: "React odaklı frontend geliştirici",
@@ -56,90 +56,90 @@ const taslak: AdaptationDraft = {
 }
 
 describe("bulletId", () => {
-  it("deneyim ve madde sırasından kararlı bir kimlik üretir", () => {
+  it("produces a stable id from experience and bullet order", () => {
     expect(bulletId(0, 0)).toBe("0-0")
     expect(bulletId(2, 5)).toBe("2-5")
   })
 })
 
 describe("applyAdaptation", () => {
-  it("kabul edilen maddeyi yeniden yazımla değiştirir", () => {
-    const sonuc = applyAdaptation(profil, taslak)
-    expect(sonuc.experience[0]!.bullets[0]!.text).toBe("React ile müşteri panelini geliştirdim")
+  it("replaces an accepted bullet with its rewrite", () => {
+    const outcome = applyAdaptation(resumeProfile, draftData)
+    expect(outcome.experience[0]!.bullets[0]!.text).toBe("React ile müşteri panelini geliştirdim")
   })
 
-  it("reddedilen maddede orijinali korur", () => {
-    const sonuc = applyAdaptation(profil, taslak)
-    expect(sonuc.experience[0]!.bullets[1]!.text).toBe("Test yazdım")
+  it("keeps the original for a rejected bullet", () => {
+    const outcome = applyAdaptation(resumeProfile, draftData)
+    expect(outcome.experience[0]!.bullets[1]!.text).toBe("Test yazdım")
   })
 
-  it("karara bağlanmamış maddede orijinali korur", () => {
+  it("keeps the original for an undecided bullet", () => {
     // pending, henüz onaylanmamış demek; kabul edilmiş gibi davranmak
     // kullanıcının görmediği metni CV'sine koyardı.
-    const bekleyen: AdaptationDraft = {
-      ...taslak,
-      bullets: [{ ...taslak.bullets[0]!, decision: "pending" }],
+    const pending: AdaptationDraft = {
+      ...draftData,
+      bullets: [{ ...draftData.bullets[0]!, decision: "pending" }],
     }
-    expect(applyAdaptation(profil, bekleyen).experience[0]!.bullets[0]!.text).toBe(
+    expect(applyAdaptation(resumeProfile, pending).experience[0]!.bullets[0]!.text).toBe(
       "React ile panel yaptım",
     )
   })
 
-  it("sourceRef'i her zaman korur", () => {
+  it("always keeps sourceRef", () => {
     // Doğrulamanın kaynağı bu; yeniden yazımla değişmemeli.
-    const sonuc = applyAdaptation(profil, taslak)
-    expect(sonuc.experience[0]!.bullets[0]!.sourceRef).toBe("React ile panel yaptım")
+    const outcome = applyAdaptation(resumeProfile, draftData)
+    expect(outcome.experience[0]!.bullets[0]!.sourceRef).toBe("React ile panel yaptım")
   })
 
-  it("kabul edilen özeti kullanır", () => {
-    expect(applyAdaptation(profil, taslak).summary).toBe("React odaklı frontend geliştirici")
+  it("uses an accepted summary", () => {
+    expect(applyAdaptation(resumeProfile, draftData).summary).toBe("React odaklı frontend geliştirici")
   })
 
-  it("reddedilen özette orijinali korur", () => {
+  it("keeps the original for a rejected summary", () => {
     const red: AdaptationDraft = {
-      ...taslak,
-      summary: { ...taslak.summary, decision: "rejected" },
+      ...draftData,
+      summary: { ...draftData.summary, decision: "rejected" },
     }
-    expect(applyAdaptation(profil, red).summary).toBe("Frontend geliştirici")
+    expect(applyAdaptation(resumeProfile, red).summary).toBe("Frontend geliştirici")
   })
 
-  it("özetsiz CV'de özeti null bırakır", () => {
+  it("leaves summary null for a resume without one", () => {
     // Hat özetsiz CV için boş bir yeniden yazımı "accepted" olarak yazıyor;
     // bu, null özeti "" yapmamalı.
-    const ozetsiz: AdaptationDraft = {
-      ...taslak,
-      summary: { ...taslak.summary, original: null, rewritten: "" },
+    const withoutSummary: AdaptationDraft = {
+      ...draftData,
+      summary: { ...draftData.summary, original: null, rewritten: "" },
     }
-    expect(applyAdaptation({ ...profil, summary: null }, ozetsiz).summary).toBeNull()
+    expect(applyAdaptation({ ...resumeProfile, summary: null }, withoutSummary).summary).toBeNull()
   })
 
-  it("becerileri taslaktaki sıraya göre dizer", () => {
-    expect(applyAdaptation(profil, taslak).skills).toEqual(["React", "Excel"])
+  it("orders skills as in the draft", () => {
+    expect(applyAdaptation(resumeProfile, draftData).skills).toEqual(["React", "Excel"])
   })
 
-  it("skillOrder'da olmayan beceriyi düşürmez", () => {
+  it("does not drop a skill missing from skillOrder", () => {
     // Küme değişmezliği (K-27) burada da korunmalı: eksik bir sıralama
     // sessizce beceri silemez.
-    const eksik: AdaptationDraft = { ...taslak, skillOrder: ["React"] }
-    expect(applyAdaptation(profil, eksik).skills.sort()).toEqual(["Excel", "React"])
+    const missing: AdaptationDraft = { ...draftData, skillOrder: ["React"] }
+    expect(applyAdaptation(resumeProfile, missing).skills.sort()).toEqual(["Excel", "React"])
   })
 
-  it("eğitim, dil ve sertifikaları değiştirmez", () => {
+  it("does not change education, languages or certifications", () => {
     // Bunlar olgudur; ilana göre değişecek ifade payı yok (spec §6.4).
-    const sonuc = applyAdaptation(profil, taslak)
-    expect(sonuc.education).toEqual(profil.education)
-    expect(sonuc.languages).toEqual(profil.languages)
-    expect(sonuc.certifications).toEqual(profil.certifications)
+    const outcome = applyAdaptation(resumeProfile, draftData)
+    expect(outcome.education).toEqual(resumeProfile.education)
+    expect(outcome.languages).toEqual(resumeProfile.languages)
+    expect(outcome.certifications).toEqual(resumeProfile.certifications)
   })
 
-  it("girdi profilini değiştirmez", () => {
-    applyAdaptation(profil, taslak)
-    expect(profil.experience[0]!.bullets[0]!.text).toBe("React ile panel yaptım")
+  it("does not mutate the input profile", () => {
+    applyAdaptation(resumeProfile, draftData)
+    expect(resumeProfile.experience[0]!.bullets[0]!.text).toBe("React ile panel yaptım")
   })
 
-  it("taslakta karşılığı olmayan maddeyi orijinal bırakır", () => {
-    const bos: AdaptationDraft = { ...taslak, bullets: [] }
-    expect(applyAdaptation(profil, bos).experience[0]!.bullets[0]!.text).toBe(
+  it("leaves a bullet with no draft counterpart unchanged", () => {
+    const empty: AdaptationDraft = { ...draftData, bullets: [] }
+    expect(applyAdaptation(resumeProfile, empty).experience[0]!.bullets[0]!.text).toBe(
       "React ile panel yaptım",
     )
   })

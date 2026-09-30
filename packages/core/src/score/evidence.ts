@@ -39,15 +39,15 @@ export function collectEvidence(profile: ResumeProfile): Evidence[] {
   const evidence: Evidence[] = []
 
   for (const job of profile.experience) {
-    const rol = `${job.title} · ${job.company}`
+    const roleEntry = `${job.title} · ${job.company}`
 
     // Unvan kendi başına kanıttır: ilan "React geliştirici" arıyorsa ve
     // adayın unvanı buysa, bu maddelerden bağımsız bir kanıttır.
-    evidence.push({ text: rol, matchText: rol, kind: "role", sourceRef: null })
+    evidence.push({ text: roleEntry, matchText: roleEntry, kind: "role", sourceRef: null })
 
     for (const bullet of job.bullets) {
       evidence.push({
-        text: `${rol}: ${bullet.text}`,
+        text: `${roleEntry}: ${bullet.text}`,
         matchText: bullet.text,
         kind: "bullet",
         sourceRef: bullet.sourceRef,
@@ -60,27 +60,27 @@ export function collectEvidence(profile: ResumeProfile): Evidence[] {
   }
 
   for (const edu of profile.education) {
-    const metin = [edu.school, edu.degree, edu.field].filter(Boolean).join(", ")
-    evidence.push({ text: metin, matchText: metin, kind: "education", sourceRef: null })
+    const content = [edu.school, edu.degree, edu.field].filter(Boolean).join(", ")
+    evidence.push({ text: content, matchText: content, kind: "education", sourceRef: null })
   }
 
-  for (const dil of profile.languages) {
-    evidence.push({ text: dil, matchText: dil, kind: "language", sourceRef: null })
+  for (const lang of profile.languages) {
+    evidence.push({ text: lang, matchText: lang, kind: "language", sourceRef: null })
   }
 
   // Özet en sonda: kelime eşleşmesi ilk uygun kanıtı aldığı için aynı terim
   // bir maddede de geçiyorsa kullanıcıya madde gösterilir. Cümle cümle
   // bölünüyor ki kanıt olarak koca paragraf değil ilgili cümle görünsün.
-  for (const cumle of ozetCumleleri(profile.summary)) {
-    evidence.push({ text: cumle, matchText: cumle, kind: "summary", sourceRef: null })
+  for (const sentence of summarySentences(profile.summary)) {
+    evidence.push({ text: sentence, matchText: sentence, kind: "summary", sourceRef: null })
   }
 
   return evidence
 }
 
-function ozetCumleleri(ozet: string | null): string[] {
-  if (!ozet) return []
-  return ozet
+function summarySentences(summaryText: string | null): string[] {
+  if (!summaryText) return []
+  return summaryText
     .replace(/\s+/g, " ")
     .split(/(?<=[.!?])\s+(?=\p{Lu})/u)
     .map((c) => c.trim())

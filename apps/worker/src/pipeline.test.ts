@@ -101,7 +101,7 @@ describe("runAnalysis · happy path", () => {
     await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), INPUT)
     const format = completeAnalysis.mock.calls[0]![0].format
     // "ham cv" metninde e-posta yok: kontrol çalışmış ve bunu bulmuş olmalı.
-    expect(format.bulgular.map((b: { kod: string }) => b.kod)).toContain("eposta_yok")
+    expect(format.findings.map((b: { code: string }) => b.code)).toContain("email_missing")
   })
 
   it("completes the analysis even if the format check throws", async () => {

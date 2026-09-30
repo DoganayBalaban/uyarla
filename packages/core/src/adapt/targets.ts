@@ -2,7 +2,7 @@ import { cosineSimilarity } from "../llm/embedding.js"
 import { containsKeyword, normalizeTokens } from "../normalize/turkish.js"
 import type { Concept, JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { ozelAdMi, type ScoreResult } from "../score/score.js"
+import { isProperNoun as isProperNoun, type ScoreResult } from "../score/score.js"
 
 /**
  * Terim uyumu (K-38).
@@ -50,10 +50,10 @@ export function openConcepts(
   posting: JobPostingData,
   result: ScoreResult,
 ): Array<{ concept: Concept; index: number }> {
-  const acik: Array<{ concept: Concept; index: number }> = []
+  const openItems: Array<{ concept: Concept; index: number }> = []
   let index = 0
   posting.requirements.forEach((req, r) => {
-    const sonuc = result.requirements[r]
+    const outcome = result.requirements[r]
     // Eğitim şartı bir deneyim maddesine yazılarak karşılanamaz: model
     // "öğrencilerin bilgisayar mühendisliği proje süreçlerine destek
     // sağladım" gibi bir bölüm uyduruyordu (eval:adapt, cv-c).
@@ -62,13 +62,13 @@ export function openConcepts(
       return
     }
     for (const concept of req.concepts) {
-      const eksik = sonuc?.missingConcepts.includes(concept.term) ?? true
-      const yalnizAnlamsal = sonuc?.method === "semantic"
-      if (eksik || yalnizAnlamsal) acik.push({ concept, index })
+      const missing = outcome?.missingConcepts.includes(concept.term) ?? true
+      const semanticOnly = outcome?.method === "semantic"
+      if (missing || semanticOnly) openItems.push({ concept, index })
       index++
     }
   })
-  return acik
+  return openItems
 }
 
 /**
@@ -87,66 +87,66 @@ export function alignmentTargets(
   },
   opts: TargetOptions = DEFAULT_TARGET_OPTIONS,
 ): AlignmentTarget[][] {
-  const acik = openConcepts(input.posting, input.result)
+  const openItems = openConcepts(input.posting, input.result)
     // Özel adlar (GraphQL, Docker, Storybook) hedef olamaz: bir teknolojiyi
     // kullanıp kullanmadığın yeniden ifadeyle değişmez. Gömme benzerliği
     // bunu ayırt edemiyor; ölçümde "GraphQL" ile "REST API'lerle
     // entegrasyon" 0,64 çıktı, "SSR" ile "sunucu tarafı render" 0,54 (K-38).
-    .filter(({ concept }) => !ozelAdMi(concept))
+    .filter(({ concept }) => !isProperNoun(concept))
 
   // Her kavram yalnızca ona en yakın maddeye veriliyor. Aynı terimi birden
   // çok maddeye yazdırmak skora bir şey katmıyor, zorlama cümle üretiyordu
   // ("…ürün sayfalarını geliştirerek web performansı sağladım").
-  const adaylar: Array<{ madde: number; concept: Concept; benzerlik: number }> = []
-  for (const { concept, index } of acik) {
+  const candidates: Array<{ bulletItem: number; concept: Concept; similarityScore: number }> = []
+  for (const { concept, index } of openItems) {
     const v = input.conceptVectors[index]
     if (!v) continue
-    let enIyi: { madde: number; benzerlik: number } | null = null
-    input.bullets.forEach((madde, i) => {
+    let best: { bulletItem: number; similarityScore: number } | null = null
+    input.bullets.forEach((bulletItem, i) => {
       const mv = input.bulletVectors[i]
-      if (!mv || kavramGeciyor(madde, concept)) return
+      if (!mv || mentionsConcept(bulletItem, concept)) return
       // Tüm madde ile kısa bir kavramı karşılaştırınca gömme sinyali
       // sulanıyor: "Bütçe yönetimi" ile "aylık 150.000 TL bütçeyi optimize
       // ettim" yalnızca 0,42 çıktı. Kavramın bir içerik kelimesi maddede
       // (kök düzeyinde) geçiyorsa aday güçlenir; bu sinyal gömme modelinden
       // bağımsız (K-38).
-      const benzerlik = cosineSimilarity(mv, v) + (kelimeOrtakMi(madde, concept.term) ? KELIME_BONUSU : 0)
-      if (!enIyi || benzerlik > enIyi.benzerlik) enIyi = { madde: i, benzerlik }
+      const similarityScore = cosineSimilarity(mv, v) + (sharesWord(bulletItem, concept.term) ? KEYWORD_BONUS : 0)
+      if (!best || similarityScore > best.similarityScore) best = { bulletItem: i, similarityScore }
     })
-    const secilen = enIyi as { madde: number; benzerlik: number } | null
-    if (secilen && secilen.benzerlik >= opts.minSimilarity) adaylar.push({ concept, ...secilen })
+    const selected = best as { bulletItem: number; similarityScore: number } | null
+    if (selected && selected.similarityScore >= opts.minSimilarity) candidates.push({ concept, ...selected })
   }
 
   return input.bullets.map((_, i) =>
-    adaylar
-      .filter((a) => a.madde === i)
-      .sort((a, b) => b.benzerlik - a.benzerlik)
+    candidates
+      .filter((a) => a.bulletItem === i)
+      .sort((a, b) => b.similarityScore - a.similarityScore)
       .slice(0, opts.maxPerBullet)
-      .map(({ concept }) => ({ label: etiket(concept), concept })),
+      .map(({ concept }) => ({ label: headingLabel(concept), concept })),
   )
 }
 
-const KELIME_BONUSU = 0.1
+const KEYWORD_BONUS = 0.1
 
 /**
  * Kavramın en az dört harfli bir kökü maddede geçiyor mu. Önek eşleşmesi:
  * kaynaştırma harfi kökte kalabiliyor ("bütçeyi" → "bütçey", "bütçe" →
  * "bütçe").
  */
-function kelimeOrtakMi(madde: string, terim: string): boolean {
-  const maddeKokleri = normalizeTokens(madde)
-  return normalizeTokens(terim).some(
-    (k) => k.length >= 4 && maddeKokleri.some((m) => m.startsWith(k) || (m.length >= 4 && k.startsWith(m))),
+function sharesWord(bulletItem: string, termText: string): boolean {
+  const bulletStems = normalizeTokens(bulletItem)
+  return normalizeTokens(termText).some(
+    (k) => k.length >= 4 && bulletStems.some((m) => m.startsWith(k) || (m.length >= 4 && k.startsWith(m))),
   )
 }
 
 /** Kavramın terimi ya da eş anlamlılarından biri metinde geçiyor mu. */
-export function kavramGeciyor(metin: string, concept: Concept): boolean {
-  return [concept.term, ...concept.synonyms].some((t) => containsKeyword(metin, t))
+export function mentionsConcept(content: string, concept: Concept): boolean {
+  return [concept.term, ...concept.synonyms].some((t) => containsKeyword(content, t))
 }
 
-function etiket(concept: Concept): string {
-  const term = dogalYazim(concept.term)
+function headingLabel(concept: Concept): string {
+  const term = naturalSpelling(concept.term)
   // Seçenek grubunun terimi zaten üyelerini sayıyor: "Jest / Cypress".
   if (concept.term.includes(" / ") || concept.synonyms.length === 0) return term
   return `${term} (${concept.synonyms.join(", ")})`
@@ -157,10 +157,10 @@ function etiket(concept: Concept): string {
  * büyük harfi ("Bütçe yönetimi") modele olduğu gibi gidince yazım cümle
  * ortasında büyük harf taşıyordu (K-38). Özel adlara dokunulmuyor.
  */
-export function dogalYazim(term: string): string {
-  if (ozelAdMi({ term, synonyms: [] })) return term
-  const [ilk, ...geri] = [...term]
-  return ilk ? ilk.toLocaleLowerCase("tr") + geri.join("") : term
+export function naturalSpelling(term: string): string {
+  if (isProperNoun({ term, synonyms: [] })) return term
+  const [first, ...rest] = [...term]
+  return first ? first.toLocaleLowerCase("tr") + rest.join("") : term
 }
 
 /**
@@ -187,16 +187,16 @@ export function resumeText(profile: ResumeProfile): string {
 
 /** İlanın aradığı ve CV'de kelimesi geçen kavramlar; özet yazımına verilir. */
 export function supportedConceptTerms(posting: JobPostingData, cvText: string): string[] {
-  const terimler: string[] = []
+  const termList: string[] = []
   for (const req of posting.requirements) {
     for (const concept of req.concepts) {
       // CV'de gerçekten geçen biçim veriliyor, kavramın kanonik adı değil:
       // model yalnızca adayın kendi kelimesini öne çıkarabilsin.
-      const uye = [concept.term, ...concept.synonyms].find((t) => containsKeyword(cvText, t))
-      if (uye) terimler.push(dogalYazim(uye))
+      const member = [concept.term, ...concept.synonyms].find((t) => containsKeyword(cvText, t))
+      if (member) termList.push(naturalSpelling(member))
     }
   }
-  return [...new Set(terimler)]
+  return [...new Set(termList)]
 }
 
 /**
@@ -207,21 +207,21 @@ export function supportedConceptTerms(posting: JobPostingData, cvText: string): 
  * ATS'lerin en çok taradığı bölüm (K-38).
  */
 export function skillsFromBullets(profile: ResumeProfile, posting: JobPostingData): string[] {
-  const maddeler = profile.experience.flatMap((j) => j.bullets.map((b) => b.sourceRef || b.text))
-  const beceriMetni = profile.skills.join(", ")
-  const eklenecek: string[] = []
+  const bulletList = profile.experience.flatMap((j) => j.bullets.map((b) => b.sourceRef || b.text))
+  const skillText = profile.skills.join(", ")
+  const toAdd: string[] = []
 
   for (const req of posting.requirements) {
     if (req.type !== "skill") continue
     for (const concept of req.concepts) {
-      const adaylar = concept.term.includes(" / ")
+      const candidates = concept.term.includes(" / ")
         ? concept.synonyms
         : [concept.term, ...concept.synonyms]
-      const bulunan = adaylar.find((t) => maddeler.some((m) => containsKeyword(m, t)))
-      if (!bulunan) continue
-      if (adaylar.some((t) => containsKeyword(beceriMetni, t))) continue
-      eklenecek.push(bulunan)
+      const found = candidates.find((t) => bulletList.some((m) => containsKeyword(m, t)))
+      if (!found) continue
+      if (candidates.some((t) => containsKeyword(skillText, t))) continue
+      toAdd.push(found)
     }
   }
-  return [...new Set(eklenecek)]
+  return [...new Set(toAdd)]
 }

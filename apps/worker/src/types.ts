@@ -1,6 +1,6 @@
 import type {
   EmbeddingProvider,
-  FormatRaporu,
+  FormatReport,
   JobPostingData,
   LlmProvider,
   ResumeProfile,
@@ -32,7 +32,7 @@ export interface AnalysisStore {
     score: number
     result: ScoreResult
     /** CV'nin ATS okunabilirliği; kontrol patlarsa null (analizi durdurmuyor). */
-    format: FormatRaporu | null
+    format: FormatReport | null
     durationMs: number
     tokenUsage: number
   }): Promise<void>

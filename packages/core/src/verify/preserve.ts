@@ -24,23 +24,23 @@ export function preservesSource(input: {
   /** Terim uyumlarının dayanakları. */
   bases?: readonly string[]
 }): { ok: true } | { ok: false; reason: string } {
-  for (const dayanak of input.bases ?? []) {
-    if (!dayanakDuruyor(input.rewritten, dayanak)) {
-      return { ok: false, reason: `dayanak kayboldu: ${dayanak}` }
+  for (const basisText of input.bases ?? []) {
+    if (!basisPreserved(input.rewritten, basisText)) {
+      return { ok: false, reason: `dayanak kayboldu: ${basisText}` }
     }
   }
 
-  for (const kavram of input.posting.requirements.flatMap((r) => r.concepts)) {
-    const uyeler = [kavram.term, ...kavram.synonyms]
-    const kaynakta = uyeler.some((t) => containsKeyword(input.source, t))
-    if (kaynakta && !uyeler.some((t) => containsKeyword(input.rewritten, t))) {
-      return { ok: false, reason: `ilan kavramı kayboldu: ${kavram.term}` }
+  for (const conceptItem of input.posting.requirements.flatMap((r) => r.concepts)) {
+    const members = [conceptItem.term, ...conceptItem.synonyms]
+    const inSource = members.some((t) => containsKeyword(input.source, t))
+    if (inSource && !members.some((t) => containsKeyword(input.rewritten, t))) {
+      return { ok: false, reason: `ilan kavramı kayboldu: ${conceptItem.term}` }
     }
   }
 
-  const yazimSayilari = new Set(sayilar(input.rewritten))
-  for (const sayi of sayilar(input.source)) {
-    if (!yazimSayilari.has(sayi)) return { ok: false, reason: `sayı kayboldu: ${sayi}` }
+  const rewriteNumbers = new Set(nums(input.rewritten))
+  for (const num of nums(input.source)) {
+    if (!rewriteNumbers.has(num)) return { ok: false, reason: `sayı kayboldu: ${num}` }
   }
 
   return { ok: true }
@@ -56,28 +56,28 @@ export function preservesSource(input: {
  * Kök değişirse ("yönettim" → "sağladım") ya da fiil olumsuzlanırsa
  * ("sağlamadım") dayanak kaybolmuş sayılıyor.
  */
-function dayanakDuruyor(yazim: string, dayanak: string): boolean {
-  if (containsKeyword(yazim, dayanak)) return true
+function basisPreserved(rewriteText: string, basisText: string): boolean {
+  if (containsKeyword(rewriteText, basisText)) return true
 
-  const onceki = normalizeText(dayanak).split(" ")
-  const kok = fiilKoku(onceki.pop() ?? "")
-  if (!kok) return false
+  const previous = normalizeText(basisText).split(" ")
+  const stem = verbStem(previous.pop() ?? "")
+  if (!stem) return false
 
-  const kelimeler = normalizeText(yazim).split(" ")
-  for (let i = onceki.length; i < kelimeler.length; i++) {
-    const kelime = kelimeler[i]!
-    if (!kelime.startsWith(kok) || /^m[ae]/.test(kelime.slice(kok.length))) continue
-    if (kelimeler.slice(i - onceki.length, i).join(" ") === onceki.join(" ")) return true
+  const words = normalizeText(rewriteText).split(" ")
+  for (let i = previous.length; i < words.length; i++) {
+    const word = words[i]!
+    if (!word.startsWith(stem) || /^m[ae]/.test(word.slice(stem.length))) continue
+    if (words.slice(i - previous.length, i).join(" ") === previous.join(" ")) return true
   }
   return false
 }
 
 /** Birinci şahıs geçmiş zaman fiilinin kökü: "sağladım" → "sağla". */
-function fiilKoku(kelime: string): string | null {
-  const eslesme = /^(.{3,}?)[dt][iuü][mk]$/.exec(kelime)
-  return eslesme ? eslesme[1]! : null
+function verbStem(word: string): string | null {
+  const termMatch = /^(.{3,}?)[dt][iuü][mk]$/.exec(word)
+  return termMatch ? termMatch[1]! : null
 }
 
-function sayilar(metin: string): string[] {
-  return metin.match(/\d+(?:[.,]\d+)*/g) ?? []
+function nums(text: string): string[] {
+  return text.match(/\d+(?:[.,]\d+)*/g) ?? []
 }

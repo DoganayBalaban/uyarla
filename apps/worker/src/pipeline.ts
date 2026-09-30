@@ -8,7 +8,7 @@ import {
   extractResumeProfile,
   score,
 } from "@uyarla/core"
-import type { FormatRaporu } from "@uyarla/core"
+import type { FormatReport } from "@uyarla/core"
 import type { AnalysisStore, PipelineDeps, PipelineInput } from "./types.js"
 
 /**
@@ -95,7 +95,7 @@ async function formatReport(
   store: AnalysisStore,
   resumeId: string,
   text: string,
-): Promise<FormatRaporu | null> {
+): Promise<FormatReport | null> {
   try {
     const { buffer, filename } = await store.getResumeFile(resumeId)
     return await checkFormat({ buffer, filename, text })

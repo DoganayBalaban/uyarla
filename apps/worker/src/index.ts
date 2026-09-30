@@ -74,7 +74,7 @@ const adaptWorker = new Worker<AdaptJobData, void>(
         if (error instanceof PermanentError || lastAttempt) {
           // Arayüz "hazırlanıyor"da takılı kalmasın.
           await prismaAdaptationStore
-            .saveCoverLetter(job.data.adaptationId, { durum: "failed" })
+            .saveCoverLetter(job.data.adaptationId, { status: "failed" })
             .catch(() => {})
         }
         if (error instanceof PermanentError) throw new UnrecoverableError(error.message)

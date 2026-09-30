@@ -23,9 +23,9 @@ export async function runCoverLetter(
   const { data, tokens } = await generateCoverLetter(deps.llm, { profile, posting })
 
   await deps.store.saveCoverLetter(input.adaptationId, {
-    durum: "done",
-    paragraflar: data.paragraflar,
+    status: "done",
+    paragraphs: data.paragraphs,
     tokenUsage: tokens,
-    olusturulma: (deps.now?.() ?? new Date()).toISOString(),
+    createdAt: (deps.now?.() ?? new Date()).toISOString(),
   })
 }

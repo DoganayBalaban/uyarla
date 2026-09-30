@@ -11,17 +11,12 @@ import {
   Sparkles,
   TriangleAlert,
 } from "lucide-react"
+import type { CoverLetterRecord } from "@uyarla/core"
 import { cn } from "@/lib/cn"
 
-interface Kontrol {
-  status: "ok" | "flagged"
-  issues: Array<{ kind: string; detail: string }>
-}
-
-export type OnYaziKaydiView =
-  | { durum: "running" }
-  | { durum: "failed" }
-  | { durum: "done"; paragraflar: Array<{ metin: string; kontrol: Kontrol }>; olusturulma: string }
+// Tip core'dan: web kendi kopyasını tutarsa bir anahtar değiştiğinde
+// TypeScript uyarmıyor ve ekran sessizce boş kalıyor (DOG-39).
+export type CoverLetterView = CoverLetterRecord
 
 /**
  * Uyarlama ekranındaki ön yazı bölümü.
@@ -34,13 +29,13 @@ export function OnYaziBolumu({
   baslangic,
 }: {
   adaptationId: string
-  baslangic: OnYaziKaydiView | null
+  baslangic: CoverLetterView | null
 }) {
-  const [kayit, setKayit] = useState<OnYaziKaydiView | null>(baslangic)
+  const [kayit, setKayit] = useState<CoverLetterView | null>(baslangic)
   const [hata, setHata] = useState<string | null>(null)
   const [kopyalandi, setKopyalandi] = useState(false)
 
-  const calisiyor = kayit?.durum === "running"
+  const calisiyor = kayit?.status === "running"
 
   useEffect(() => {
     if (!calisiyor) return
@@ -51,9 +46,9 @@ export function OnYaziBolumu({
         if (durduruldu) return
         const cevap = await fetch(`/api/adapt/${adaptationId}`)
         if (!cevap.ok) return
-        const { coverLetter } = (await cevap.json()) as { coverLetter: OnYaziKaydiView | null }
+        const { coverLetter } = (await cevap.json()) as { coverLetter: CoverLetterView | null }
         setKayit(coverLetter)
-        if (coverLetter?.durum !== "running") return
+        if (coverLetter?.status !== "running") return
       }
     })()
     return () => {
@@ -65,7 +60,7 @@ export function OnYaziBolumu({
     setHata(null)
     setKopyalandi(false)
     const cevap = await fetch(`/api/adapt/${adaptationId}/cover-letter`, { method: "POST" })
-    const govde = (await cevap.json()) as { coverLetter?: OnYaziKaydiView; error?: string }
+    const govde = (await cevap.json()) as { coverLetter?: CoverLetterView; error?: string }
     if (!cevap.ok || !govde.coverLetter) {
       setHata(govde.error ?? "Ön yazıyı başlatamadık. Birazdan tekrar dener misin?")
       return
@@ -74,8 +69,8 @@ export function OnYaziBolumu({
   }
 
   const metin =
-    kayit?.durum === "done" ? kayit.paragraflar.map((p) => p.metin).join("\n\n") : ""
-  const isaretli = kayit?.durum === "done" ? kayit.paragraflar.filter((p) => p.kontrol.status === "flagged").length : 0
+    kayit?.status === "done" ? kayit.paragraphs.map((p) => p.text).join("\n\n") : ""
+  const isaretli = kayit?.status === "done" ? kayit.paragraphs.filter((p) => p.verification.status === "flagged").length : 0
 
   async function kopyala() {
     await navigator.clipboard.writeText(metin)
@@ -105,23 +100,23 @@ export function OnYaziBolumu({
             </p>
           </div>
         </div>
-        {kayit?.durum !== "running" && (
+        {kayit?.status !== "running" && (
           <button
             type="button"
             onClick={() => void olustur()}
             className={cn(
               "inline-flex items-center gap-2 rounded-buton px-4 py-2.5 text-sm font-semibold transition",
-              kayit?.durum === "done"
+              kayit?.status === "done"
                 ? "border border-cizgi hover:border-mavi/40 hover:text-mavi"
                 : "bg-mavi text-white shadow-sm shadow-mavi/30 hover:bg-mavi/90",
             )}
           >
-            {kayit?.durum === "done" ? (
+            {kayit?.status === "done" ? (
               <RefreshCw className="size-4" aria-hidden />
             ) : (
               <Sparkles className="size-4" aria-hidden />
             )}
-            {kayit?.durum === "done" ? "Yeniden yaz" : "Ön yazı oluştur"}
+            {kayit?.status === "done" ? "Yeniden yaz" : "Ön yazı oluştur"}
           </button>
         )}
       </div>
@@ -150,13 +145,13 @@ export function OnYaziBolumu({
         </div>
       )}
 
-      {kayit?.durum === "failed" && (
+      {kayit?.status === "failed" && (
         <p className="mt-4 text-sm text-kirmizi dark:text-[#f87171]">
           Ön yazıyı yazamadık. “Ön yazı oluştur” ile tekrar dener misin?
         </p>
       )}
 
-      {kayit?.durum === "done" && (
+      {kayit?.status === "done" && (
         <>
           {isaretli > 0 && (
             <p className="mt-4 flex gap-2 rounded-buton bg-kehribar/10 p-3 text-sm">
@@ -168,27 +163,27 @@ export function OnYaziBolumu({
             </p>
           )}
           <div className="mt-4 space-y-2 rounded-buton border border-cizgi bg-zemin/60 p-2 sm:p-3">
-            {kayit.paragraflar.map((p, i) => (
+            {kayit.paragraphs.map((p, i) => (
               <div
                 key={i}
                 className={cn(
                   "rounded-[8px] p-3",
-                  p.kontrol.status === "flagged" && "border border-kehribar/40 bg-kehribar/5",
+                  p.verification.status === "flagged" && "border border-kehribar/40 bg-kehribar/5",
                 )}
               >
-                {p.kontrol.status === "flagged" && (
+                {p.verification.status === "flagged" && (
                   <>
                     <span className="mb-1.5 inline-block rounded-full bg-kehribar/20 px-2 py-0.5 text-xs font-bold text-kehribar">
                       Kontrol et
                     </span>
-                    {p.kontrol.issues.map((s, j) => (
+                    {p.verification.issues.map((s, j) => (
                       <p key={j} className="m-0 mb-1.5 text-sm text-kehribar">
                         {s.detail}
                       </p>
                     ))}
                   </>
                 )}
-                <p className="m-0 leading-relaxed">{p.metin}</p>
+                <p className="m-0 leading-relaxed">{p.text}</p>
               </div>
             ))}
           </div>

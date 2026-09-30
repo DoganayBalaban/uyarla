@@ -5,7 +5,7 @@ import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { rescore } from "./rescore.js"
 
-const profil: ResumeProfile = {
+const resumeProfile: ResumeProfile = {
   fullName: "Test", headline: null, summary: null,
   experience: [
     {
@@ -16,7 +16,7 @@ const profil: ResumeProfile = {
   education: [], skills: [], languages: [], certifications: [],
 }
 
-const ilan: JobPostingData = {
+const testPosting: JobPostingData = {
   position: "Geliştirici", company: null, seniority: null, language: "tr",
   requirements: [
     {
@@ -26,7 +26,7 @@ const ilan: JobPostingData = {
   ],
 }
 
-const taslak: AdaptationDraft = {
+const draftData: AdaptationDraft = {
   summary: {
     original: null, rewritten: "", verification: { status: "ok", issues: [] },
     decision: "accepted",
@@ -46,7 +46,7 @@ const taslak: AdaptationDraft = {
  * Anlamsal katman böylece devre dışı kalır ve skoru yalnızca kelime
  * eşleşmesi belirler.
  */
-function dikEmbedding(): EmbeddingProvider {
+function orthogonalEmbedding(): EmbeddingProvider {
   return {
     embed: vi.fn(async (t: string[]) =>
       t.map((_, i) => t.map((__, j) => (i === j ? 1 : 0))),
@@ -56,27 +56,27 @@ function dikEmbedding(): EmbeddingProvider {
 
 let embedding: EmbeddingProvider
 beforeEach(() => {
-  embedding = dikEmbedding()
+  embedding = orthogonalEmbedding()
 })
 
 describe("rescore", () => {
-  it("kabul edilen yeniden yazımla kazanılan eşleşmeyi skora yansıtır", async () => {
-    const yeni = await rescore({ profile: profil, posting: ilan, draft: taslak }, embedding)
-    expect(yeni).toBeGreaterThan(0)
+  it("reflects a match gained by an accepted rewrite in the score", async () => {
+    const fresh = await rescore({ profile: resumeProfile, posting: testPosting, draft: draftData }, embedding)
+    expect(fresh).toBeGreaterThan(0)
   })
 
-  it("kabul edilmemiş yeniden yazım skora girmez", async () => {
+  it("an unaccepted rewrite does not count toward the score", async () => {
     const red: AdaptationDraft = {
-      ...taslak,
-      bullets: [{ ...taslak.bullets[0]!, decision: "rejected" }],
+      ...draftData,
+      bullets: [{ ...draftData.bullets[0]!, decision: "rejected" }],
     }
-    expect(await rescore({ profile: profil, posting: ilan, draft: red }, embedding)).toBe(0)
+    expect(await rescore({ profile: resumeProfile, posting: testPosting, draft: red }, embedding)).toBe(0)
   })
 
-  it("yeni LLM çağrısı yapmaz", async () => {
+  it("makes no new LLM call", async () => {
     // spec §10: çıkarım zaten yapılmış, yalnızca kanıt kümesi değişiyor.
     // rescore bir LlmProvider bile almıyor; bu test o sözleşmeyi sabitliyor.
-    await rescore({ profile: profil, posting: ilan, draft: taslak }, embedding)
+    await rescore({ profile: resumeProfile, posting: testPosting, draft: draftData }, embedding)
     expect(embedding.embed).toHaveBeenCalledTimes(1)
   })
 })

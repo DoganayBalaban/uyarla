@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { toDocumentModel } from "./model.js"
 
-const profil: ResumeProfile = {
+const resumeProfile: ResumeProfile = {
   fullName: "Elif Yılmaz",
   headline: "Frontend Geliştirici",
   summary: "React odaklı geliştirici",
@@ -25,28 +25,28 @@ const profil: ResumeProfile = {
 }
 
 describe("toDocumentModel", () => {
-  it("adı ve özeti taşır", () => {
-    const m = toDocumentModel(profil)
+  it("carries the name and summary", () => {
+    const m = toDocumentModel(resumeProfile)
     expect(m.name).toBe("Elif Yılmaz")
     expect(m.summary).toBe("React odaklı geliştirici")
   })
 
-  it("adı yoksa boş bırakmaz", () => {
+  it("does not leave the name blank when missing", () => {
     // Adsız bir CV üretmek kullanıcıyı utandırır; başlıksız bir belge
     // ATS'te de kimliksiz kalır.
-    expect(toDocumentModel({ ...profil, fullName: null }).name).toBe("İsimsiz")
+    expect(toDocumentModel({ ...resumeProfile, fullName: null }).name).toBe("İsimsiz")
   })
 
-  it("deneyimi unvan · kurum ve tarih aralığıyla verir", () => {
-    const deneyim = toDocumentModel(profil).sections.find((s) => s.title === "DENEYİM")!
-    expect(deneyim.entries[0]!.heading).toBe("Geliştirici · Acme")
-    expect(deneyim.entries[0]!.subheading).toBe("2022-01 – halen")
-    expect(deneyim.entries[0]!.lines).toEqual(["React ile panel geliştirdim", "Test yazdım"])
+  it("renders experience with title · company and date range", () => {
+    const experienceEntry = toDocumentModel(resumeProfile).sections.find((s) => s.title === "DENEYİM")!
+    expect(experienceEntry.entries[0]!.heading).toBe("Geliştirici · Acme")
+    expect(experienceEntry.entries[0]!.subheading).toBe("2022-01 – halen")
+    expect(experienceEntry.entries[0]!.lines).toEqual(["React ile panel geliştirdim", "Test yazdım"])
   })
 
-  it("standart bölüm başlıkları kullanır", () => {
+  it("uses standard section headings", () => {
     // ATS kuralı (spec §9): tarayıcılar bölümleri başlıktan tanıyor.
-    expect(toDocumentModel(profil).sections.map((s) => s.title)).toEqual([
+    expect(toDocumentModel(resumeProfile).sections.map((s) => s.title)).toEqual([
       "DENEYİM",
       "EĞİTİM",
       "BECERİLER",
@@ -55,58 +55,58 @@ describe("toDocumentModel", () => {
     ])
   })
 
-  it("beceri sırasını korur", () => {
-    const beceri = toDocumentModel(profil).sections.find((s) => s.title === "BECERİLER")!
-    expect(beceri.entries[0]!.lines).toEqual(["React, TypeScript"])
+  it("keeps skill order", () => {
+    const skill = toDocumentModel(resumeProfile).sections.find((s) => s.title === "BECERİLER")!
+    expect(skill.entries[0]!.lines).toEqual(["React, TypeScript"])
   })
 
-  it("boş bölümü hiç yazmaz", () => {
-    const bos = toDocumentModel({ ...profil, languages: [], certifications: [] })
-    expect(bos.sections.map((s) => s.title)).toEqual(["DENEYİM", "EĞİTİM", "BECERİLER"])
+  it("never writes an empty section", () => {
+    const empty = toDocumentModel({ ...resumeProfile, languages: [], certifications: [] })
+    expect(empty.sections.map((s) => s.title)).toEqual(["DENEYİM", "EĞİTİM", "BECERİLER"])
   })
 
-  it("eğitimde eksik alanları atlar", () => {
+  it("skips missing education fields", () => {
     const m = toDocumentModel({
-      ...profil,
+      ...resumeProfile,
       education: [{ school: "İTÜ", degree: null, field: null, startDate: null, endDate: null }],
     })
-    const egitim = m.sections.find((s) => s.title === "EĞİTİM")!
-    expect(egitim.entries[0]!.heading).toBe("İTÜ")
-    expect(egitim.entries[0]!.subheading).toBeNull()
+    const educationEntry = m.sections.find((s) => s.title === "EĞİTİM")!
+    expect(educationEntry.entries[0]!.heading).toBe("İTÜ")
+    expect(educationEntry.entries[0]!.subheading).toBeNull()
   })
 
-  it("özet yoksa null bırakır", () => {
-    expect(toDocumentModel({ ...profil, summary: null }).summary).toBeNull()
+  it("leaves summary null when absent", () => {
+    expect(toDocumentModel({ ...resumeProfile, summary: null }).summary).toBeNull()
   })
 
-  it("boş özeti null sayar", () => {
+  it("treats an empty summary as null", () => {
     // Uyarlama reddedilmiş bir özette boş metin bırakabiliyor; belgede
     // başlıksız bir boşluk çıkmasın.
-    expect(toDocumentModel({ ...profil, summary: "   " }).summary).toBeNull()
+    expect(toDocumentModel({ ...resumeProfile, summary: "   " }).summary).toBeNull()
   })
 
-  it("başlığı iletişim satırı olarak kullanır", () => {
-    expect(toDocumentModel(profil).contact).toBe("Frontend Geliştirici")
+  it("uses the headline as the contact line", () => {
+    expect(toDocumentModel(resumeProfile).contact).toBe("Frontend Geliştirici")
   })
 
-  it("deneyimi olmayan profilde çökmez", () => {
-    const bos = toDocumentModel({
-      ...profil,
+  it("does not crash for a profile without experience", () => {
+    const empty = toDocumentModel({
+      ...resumeProfile,
       experience: [],
       education: [],
       skills: [],
       languages: [],
       certifications: [],
     })
-    expect(bos.sections).toEqual([])
-    expect(bos.name).toBe("Elif Yılmaz")
+    expect(empty.sections).toEqual([])
+    expect(empty.name).toBe("Elif Yılmaz")
   })
 })
 
-describe("toDocumentModel · dil", () => {
-  it("İngilizce CV'de bölüm başlıklarını İngilizce yazar", () => {
+describe("toDocumentModel · language", () => {
+  it("writes section headings in English for an English resume", () => {
     const m = toDocumentModel({
-      ...profil,
+      ...resumeProfile,
       summary: "Frontend developer with 4 years of experience building web applications.",
       experience: [
         {

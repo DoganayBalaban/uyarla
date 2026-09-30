@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react"
 import { cn } from "@/lib/cn"
-import { BicimRaporu, type FormatRaporuView } from "./BicimRaporu"
+import { BicimRaporu, type FormatReportView } from "./BicimRaporu"
 import { SkorHalkasi, skorDurumu } from "./ui/SkorHalkasi"
 
 export interface RequirementResult {
@@ -29,7 +29,7 @@ export interface ScoreResultView {
   requirements: RequirementResult[]
   missingKeywords: string[]
   /** Biçim kontrolü; eski analizlerde ve kontrol patladığında yok. */
-  format?: FormatRaporuView | null
+  format?: FormatReportView | null
 }
 
 type Suzgec = "hepsi" | "eksik" | "karsilanan"

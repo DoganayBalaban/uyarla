@@ -1,4 +1,4 @@
-import { resumeLanguage, type Dil } from "../normalize/language.js"
+import { resumeLanguage, type Language as Language } from "../normalize/language.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 
 export interface DocumentEntry {
@@ -30,18 +30,18 @@ export interface DocumentModel {
  * Bölüm başlıkları CV'nin dilinde. Sabit Türkçe başlıklar İngilizce bir
  * CV'yi "DENEYİM", "BECERİLER" başlıklarıyla indirtiyordu (K-39).
  */
-const BASLIKLAR: Record<Dil, Record<"deneyim" | "egitim" | "beceriler" | "diller" | "sertifikalar", string>> = {
-  tr: { deneyim: "DENEYİM", egitim: "EĞİTİM", beceriler: "BECERİLER", diller: "DİLLER", sertifikalar: "SERTİFİKALAR" },
-  en: { deneyim: "EXPERIENCE", egitim: "EDUCATION", beceriler: "SKILLS", diller: "LANGUAGES", sertifikalar: "CERTIFICATIONS" },
+const HEADINGS: Record<Language, Record<"experience" | "education" | "skills" | "languages" | "certifications", string>> = {
+  tr: { experience: "DENEYİM", education: "EĞİTİM", skills: "BECERİLER", languages: "DİLLER", certifications: "SERTİFİKALAR" },
+  en: { experience: "EXPERIENCE", education: "EDUCATION", skills: "SKILLS", languages: "LANGUAGES", certifications: "CERTIFICATIONS" },
 }
 
 export function toDocumentModel(profile: ResumeProfile): DocumentModel {
   const sections: DocumentSection[] = []
-  const b = BASLIKLAR[resumeLanguage(profile)]
+  const b = HEADINGS[resumeLanguage(profile)]
 
   if (profile.experience.length > 0) {
     sections.push({
-      title: b.deneyim,
+      title: b.experience,
       entries: profile.experience.map((job) => ({
         heading: `${job.title} · ${job.company}`,
         subheading: `${job.startDate} – ${job.endDate}`,
@@ -52,7 +52,7 @@ export function toDocumentModel(profile: ResumeProfile): DocumentModel {
 
   if (profile.education.length > 0) {
     sections.push({
-      title: b.egitim,
+      title: b.education,
       entries: profile.education.map((edu) => ({
         heading: [edu.school, edu.degree, edu.field].filter(Boolean).join(" · "),
         // startDate eski profillerde yok (bkz. EducationSchema).
@@ -66,21 +66,21 @@ export function toDocumentModel(profile: ResumeProfile): DocumentModel {
   // ayrıştırıyor ve madde listesi belgeyi gereksiz uzatıyor.
   if (profile.skills.length > 0) {
     sections.push({
-      title: b.beceriler,
+      title: b.skills,
       entries: [{ heading: null, subheading: null, lines: [profile.skills.join(", ")] }],
     })
   }
 
   if (profile.languages.length > 0) {
     sections.push({
-      title: b.diller,
+      title: b.languages,
       entries: [{ heading: null, subheading: null, lines: [profile.languages.join(", ")] }],
     })
   }
 
   if (profile.certifications.length > 0) {
     sections.push({
-      title: b.sertifikalar,
+      title: b.certifications,
       entries: [{ heading: null, subheading: null, lines: profile.certifications }],
     })
   }

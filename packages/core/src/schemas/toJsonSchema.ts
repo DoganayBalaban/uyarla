@@ -14,6 +14,6 @@ import { z } from "zod"
  * reddedilir; model bilgi yokken alanı atlamak yerine `null` yazmalı.
  */
 export function toJsonSchema(schema: z.ZodType): Record<string, unknown> {
-  const { $schema: _atilan, ...rest } = z.toJSONSchema(schema) as Record<string, unknown>
+  const { $schema: _discarded, ...rest } = z.toJSONSchema(schema) as Record<string, unknown>
   return rest
 }
