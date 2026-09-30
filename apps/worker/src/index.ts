@@ -70,8 +70,8 @@ const adaptWorker = new Worker<AdaptJobData, void>(
       try {
         await runCoverLetter({ llm, store: prismaAdaptationStore }, job.data)
       } catch (error) {
-        const sonDeneme = job.attemptsMade + 1 >= (job.opts.attempts ?? 1)
-        if (error instanceof PermanentError || sonDeneme) {
+        const lastAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1)
+        if (error instanceof PermanentError || lastAttempt) {
           // Arayüz "hazırlanıyor"da takılı kalmasın.
           await prismaAdaptationStore
             .saveCoverLetter(job.data.adaptationId, { durum: "failed" })

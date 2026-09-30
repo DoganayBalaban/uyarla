@@ -26,7 +26,7 @@ export async function runAnalysis(
   input: PipelineInput,
 ): Promise<string> {
   const now = deps.now ?? Date.now
-  const basladi = now()
+  const startedAt = now()
 
   const analysisId = await deps.store.createAnalysis({
     jobPostingId: input.jobPostingId,
@@ -37,7 +37,7 @@ export async function runAnalysis(
   try {
     deps.onProgress?.("cv_okunuyor")
     const resumeText = await deps.store.getResumeText(input.resumeId)
-    const format = await bicimRaporu(deps.store, input.resumeId, resumeText)
+    const format = await formatReport(deps.store, input.resumeId, resumeText)
     const profile = await extractResumeProfile(deps.llm, resumeText)
     const resumeVersionId = await deps.store.saveResumeVersion(input.resumeId, profile.data)
     await deps.store.attachResumeVersion(analysisId, resumeVersionId)
@@ -69,7 +69,7 @@ export async function runAnalysis(
       score: result.score,
       result,
       format,
-      durationMs: now() - basladi,
+      durationMs: now() - startedAt,
       tokenUsage: profile.tokens + posting.tokens,
     })
 
@@ -79,7 +79,7 @@ export async function runAnalysis(
     // Başarısız işler de Analysis kaydı yazıyor (spec §11): hangi çiftte ne
     // patlıyor bilgisi K1 değerlendirmesinin parçası.
     try {
-      await deps.store.failAnalysis(analysisId, siniflandir(error))
+      await deps.store.failAnalysis(analysisId, classify(error))
     } catch {
       // Kayıt da düşerse asıl hata gizlenmemeli; teşhisi imkânsız kılar.
     }
@@ -91,7 +91,7 @@ export async function runAnalysis(
  * CV'nin biçim kontrolü. Yan bilgi: patlarsa analiz durmuyor, skor yine
  * üretiliyor ve arayüz kontrol bölümünü göstermiyor.
  */
-async function bicimRaporu(
+async function formatReport(
   store: AnalysisStore,
   resumeId: string,
   text: string,
@@ -105,7 +105,7 @@ async function bicimRaporu(
   }
 }
 
-function siniflandir(error: unknown): string {
+function classify(error: unknown): string {
   if (error instanceof PermanentError || error instanceof TransientError) {
     return error.code
   }

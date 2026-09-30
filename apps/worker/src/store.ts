@@ -42,13 +42,13 @@ export const prismaStore: AnalysisStore = {
   },
 
   async saveResumeVersion(resumeId, profile) {
-    const mevcut = await prisma.resumeVersion.count({ where: { resumeId } })
+    const existing = await prisma.resumeVersion.count({ where: { resumeId } })
     const version = await prisma.resumeVersion.create({
       data: {
         resumeId,
         profile: profile as unknown as object,
         source: "parsed",
-        versionNo: mevcut + 1,
+        versionNo: existing + 1,
       },
     })
     await prisma.resume.update({ where: { id: resumeId }, data: { status: "parsed" } })

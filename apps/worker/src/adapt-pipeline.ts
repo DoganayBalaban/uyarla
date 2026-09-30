@@ -19,7 +19,7 @@ export async function runAdaptation(
   input: { adaptationId: string },
 ): Promise<void> {
   const now = deps.now ?? Date.now
-  const basladi = now()
+  const startedAt = now()
 
   try {
     const { profile, posting, result } = await deps.store.getAdaptationContext(
@@ -39,7 +39,7 @@ export async function runAdaptation(
       adaptationId: input.adaptationId,
       draft,
       status: hasPendingDecisions(draft) ? "draft" : "ready",
-      durationMs: now() - basladi,
+      durationMs: now() - startedAt,
       tokenUsage: tokens,
     })
 
@@ -48,7 +48,7 @@ export async function runAdaptation(
     // Başarısız uyarlamalar da kayda yazıyor (spec §13): hangi adımda ne
     // patlıyor bilgisi olmadan teşhis imkânsız.
     try {
-      await deps.store.failAdaptation(input.adaptationId, siniflandir(error))
+      await deps.store.failAdaptation(input.adaptationId, classify(error))
     } catch {
       // Kayıt da düşerse asıl hata gizlenmemeli.
     }
@@ -56,7 +56,7 @@ export async function runAdaptation(
   }
 }
 
-function siniflandir(error: unknown): string {
+function classify(error: unknown): string {
   if (error instanceof PermanentError || error instanceof TransientError) return error.code
   return "unknown"
 }
