@@ -23,19 +23,56 @@ function fakeBrowser() {
       return true
     },
   }
-  return { events }
+  return { events, storage }
 }
 
 describe("activeAnalysis", () => {
   let events: string[]
+  let storage: Map<string, string>
   beforeEach(() => {
-    events = fakeBrowser().events
+    ;({ events, storage } = fakeBrowser())
+  })
+
+  it("writes under the new storage key", () => {
+    startActiveAnalysis("42")
+    expect(storage.has("uyarla:active-analysis")).toBe(true)
+    expect(storage.has("uyarla:aktif-analiz")).toBe(false)
+  })
+
+  it("upgrades a record saved under the legacy key", () => {
+    storage.set(
+      "uyarla:aktif-analiz",
+      JSON.stringify({ jobId: "j1", baslangic: 1000, durum: "running", asama: "ilan_okunuyor", goruldu: false }),
+    )
+    expect(readActiveAnalysis()).toEqual({
+      jobId: "j1",
+      startedAt: 1000,
+      status: "running",
+      stage: "reading_posting",
+      seen: false,
+    })
+    expect(storage.has("uyarla:aktif-analiz")).toBe(false)
+    expect(JSON.parse(storage.get("uyarla:active-analysis")!)).toMatchObject({ jobId: "j1", stage: "reading_posting" })
+  })
+
+  it("upgrades a completed legacy record with score and error fields", () => {
+    storage.set(
+      "uyarla:aktif-analiz",
+      JSON.stringify({ jobId: "j2", baslangic: 5, durum: "failed", skor: 12, hata: "Olmadı" }),
+    )
+    expect(readActiveAnalysis()).toEqual({ jobId: "j2", startedAt: 5, status: "failed", score: 12, error: "Olmadı" })
+  })
+
+  it("drops a corrupt legacy record", () => {
+    storage.set("uyarla:aktif-analiz", "{bozuk")
+    expect(readActiveAnalysis()).toBeNull()
+    expect(storage.has("uyarla:aktif-analiz")).toBe(false)
   })
 
   it("reads a started analysis and notifies listeners", () => {
     startActiveAnalysis("42")
     expect(readActiveAnalysis()).toMatchObject({ jobId: "42", status: "running" })
-    expect(events).toContain("uyarla:aktif-analiz")
+    expect(events).toContain("uyarla:active-analysis")
   })
 
   it("records polling responses", () => {

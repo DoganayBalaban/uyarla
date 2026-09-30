@@ -24,12 +24,48 @@ export interface ActiveAnalysis {
   seen?: boolean
 }
 
-const STORAGE_KEY = "uyarla:aktif-analiz"
+const STORAGE_KEY = "uyarla:active-analysis"
 /** Aynı sekmedeki dinleyiciler için; `storage` olayı yalnızca diğer sekmelerde tetiklenir. */
-export const ACTIVE_ANALYSIS_EVENT = "uyarla:aktif-analiz"
+export const ACTIVE_ANALYSIS_EVENT = "uyarla:active-analysis"
+
+/**
+ * Refaktör 1 (DOG-39) öncesi anahtar, alan adları ve aşama değerleri. Süren
+ * bir analiz güncelleme sırasında kaybolmasın diye eski kayıt ilk okumada
+ * yeni anahtara taşınıyor; bozuksa yalnızca siliniyor.
+ */
+const LEGACY_KEY = "uyarla:aktif-analiz"
+const LEGACY_FIELDS: Record<string, keyof ActiveAnalysis> = {
+  baslangic: "startedAt",
+  durum: "status",
+  asama: "stage",
+  skor: "score",
+  hata: "error",
+  goruldu: "seen",
+}
+const LEGACY_STAGES: Record<string, string> = {
+  cv_okunuyor: "reading_resume",
+  ilan_okunuyor: "reading_posting",
+  karsilastiriliyor: "comparing",
+  tamamlandi: "completed",
+}
+
+function upgradeLegacyRecord(): void {
+  const raw = window.localStorage.getItem(LEGACY_KEY)
+  if (raw === null) return
+  window.localStorage.removeItem(LEGACY_KEY)
+  try {
+    const old = JSON.parse(raw) as Record<string, unknown>
+    const record = Object.fromEntries(Object.entries(old).map(([k, v]) => [LEGACY_FIELDS[k] ?? k, v]))
+    if (typeof record.stage === "string") record.stage = LEGACY_STAGES[record.stage] ?? record.stage
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record))
+  } catch {
+    // Bozuk eski kayıt: taşınacak bir şey yok.
+  }
+}
 
 export function readActiveAnalysis(): ActiveAnalysis | null {
   try {
+    upgradeLegacyRecord()
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
     const record = JSON.parse(raw) as ActiveAnalysis
@@ -46,7 +82,7 @@ function write(record: ActiveAnalysis | null): void {
     if (record) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record))
     else window.localStorage.removeItem(STORAGE_KEY)
   } catch {
-    // bkz. aktifAnaliziOku
+    // bkz. readActiveAnalysis
   }
   window.dispatchEvent(new Event(ACTIVE_ANALYSIS_EVENT))
 }
