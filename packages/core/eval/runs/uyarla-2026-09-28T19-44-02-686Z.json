@@ -1,0 +1,166 @@
+{
+  "model": "google/gemma-4-e4b",
+  "metrics": [
+    {
+      "id": "cv-a__ilan-1",
+      "bulletCount": 9,
+      "sameLanguage": false,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "scoreBefore": 34,
+      "scoreBullets": 34,
+      "scoreFull": 34,
+      "durationMs": 38725
+    },
+    {
+      "id": "cv-a__ilan-2",
+      "bulletCount": 9,
+      "sameLanguage": false,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "scoreBefore": 21,
+      "scoreBullets": 21,
+      "scoreFull": 21,
+      "durationMs": 10384
+    },
+    {
+      "id": "cv-a__ilan-3",
+      "bulletCount": 9,
+      "sameLanguage": true,
+      "rewrittenCount": 3,
+      "proposedCount": 1,
+      "discarded": {
+        "uyumsuz": 1,
+        "uyarili": 1
+      },
+      "summaryAccepted": true,
+      "addedSkills": [
+        "grounding"
+      ],
+      "scoreBefore": 11,
+      "scoreBullets": 13,
+      "scoreFull": 13,
+      "durationMs": 20634
+    },
+    {
+      "id": "cv-a__ilan-5",
+      "bulletCount": 9,
+      "sameLanguage": true,
+      "rewrittenCount": 6,
+      "proposedCount": 4,
+      "discarded": {
+        "uyarili": 2
+      },
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "scoreBefore": 20,
+      "scoreBullets": 25,
+      "scoreFull": 25,
+      "durationMs": 18572
+    },
+    {
+      "id": "cv-b__ilan-1",
+      "bulletCount": 8,
+      "sameLanguage": false,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "scoreBefore": 5,
+      "scoreBullets": 5,
+      "scoreFull": 5,
+      "durationMs": 8052
+    },
+    {
+      "id": "cv-b__ilan-3",
+      "bulletCount": 8,
+      "sameLanguage": true,
+      "rewrittenCount": 4,
+      "proposedCount": 3,
+      "discarded": {
+        "uyarili": 1
+      },
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "scoreBefore": 1,
+      "scoreBullets": 4,
+      "scoreFull": 4,
+      "durationMs": 14461
+    },
+    {
+      "id": "cv-b__ilan-4",
+      "bulletCount": 8,
+      "sameLanguage": false,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "scoreBefore": 0,
+      "scoreBullets": 0,
+      "scoreFull": 0,
+      "durationMs": 8849
+    },
+    {
+      "id": "cv-c__ilan-1",
+      "bulletCount": 11,
+      "sameLanguage": true,
+      "rewrittenCount": 1,
+      "proposedCount": 0,
+      "discarded": {
+        "uyarili": 1
+      },
+      "summaryAccepted": false,
+      "addedSkills": [],
+      "scoreBefore": 18,
+      "scoreBullets": 18,
+      "scoreFull": 18,
+      "durationMs": 9152
+    },
+    {
+      "id": "cv-c__ilan-2",
+      "bulletCount": 11,
+      "sameLanguage": true,
+      "rewrittenCount": 4,
+      "proposedCount": 0,
+      "discarded": {
+        "uyarili": 1,
+        "korunmadi": 3
+      },
+      "summaryAccepted": false,
+      "addedSkills": [],
+      "scoreBefore": 6,
+      "scoreBullets": 6,
+      "scoreFull": 6,
+      "durationMs": 13133
+    },
+    {
+      "id": "cv-c__ilan-4",
+      "bulletCount": 11,
+      "sameLanguage": true,
+      "rewrittenCount": 2,
+      "proposedCount": 0,
+      "discarded": {
+        "korunmadi": 2
+      },
+      "summaryAccepted": false,
+      "addedSkills": [],
+      "scoreBefore": 10,
+      "scoreBullets": 10,
+      "scoreFull": 10,
+      "durationMs": 9031
+    }
+  ],
+  "atilan": {
+    "uyumsuz": 1,
+    "uyarili": 6,
+    "korunmadi": 5
+  }
+}

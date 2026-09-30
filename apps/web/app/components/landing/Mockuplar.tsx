@@ -42,47 +42,125 @@ export function SkorHalkasi({ skor = 47, boyut = 112 }: { skor?: number; boyut?:
   )
 }
 
-export function SkorKarti() {
+/**
+ * Hero'daki uygulama penceresi: analiz ekranının sadeleştirilmiş hâli.
+ * Gerçek uygulamanın düzenini izliyor (yan menü değil üst çubuk; zemin buz,
+ * kartlar beyaz) ki tanıtım sayfası ürünün kendisini göstersin.
+ */
+export function HeroUygulama() {
+  const gereksinimler: { metin: string; eslesti: boolean }[] = [
+    { metin: "React ile arayüz geliştirme", eslesti: true },
+    { metin: "TypeScript", eslesti: true },
+    { metin: "Birim testi (Jest)", eslesti: false },
+    { metin: "Web erişilebilirliği", eslesti: false },
+    { metin: "Ekiple kod incelemesi", eslesti: true },
+  ]
+  const eksik = ["Jest", "Erişilebilirlik", "CI/CD", "Figma"]
+  const eslesen = ["React", "TypeScript", "REST API", "Git"]
   return (
-    <div className={`${s.mock} ${s.skorKarti}`}>
-      <div className={s.mockBaslik}>
-        <span className={s.mockNokta} />
-        <span className={s.mockNokta} />
-        <span className={s.mockNokta} />
-        <span className={s.mockAdres}>ATS uyum skoru</span>
+    <div className={s.pencere}>
+      <div className={s.pencereUst}>
+        <span className={s.pencereLogo}>
+          <span className={s.logoSembol} aria-hidden="true">
+            <span />
+            <span />
+          </span>
+          uyarla
+        </span>
+        <span className={`${s.pencereLink} ${s.pencereLinkAktif}`}>
+          <Ikon ad="skor" boyut={15} /> Yeni analiz
+        </span>
+        <span className={s.pencereLink}>
+          <Ikon ad="kolonlar" boyut={15} /> Başvuru panosu
+        </span>
       </div>
-      <div className={s.skorKartiGovde}>
-        <SkorHalkasi />
-        <div>
-          <p className={s.mockKucuk}>Kıdemli Frontend Geliştirici</p>
-          <p className={s.skorKartiCumle}>Bu ilana uyumun %47.</p>
-          <p className={s.mockKucuk}>4 eksik anahtar kelime var. Çoğu anlatımla ilgili.</p>
+
+      <div className={s.pencereGovde}>
+        <p className={s.pencereBaslikMetin}>Kıdemli Frontend Geliştirici</p>
+        <p className={s.mockKucuk}>Acme Yazılım</p>
+
+        <div className={s.pencereIzgara}>
+          <div className={`${s.pencereKart} ${s.pencereSkor}`}>
+            <SkorHalkasi boyut={96} />
+            <div>
+              <p className={s.skorKartiCumle}>Bu ilana uyumun %47.</p>
+              <p className={s.mockKucuk}>4 eksik anahtar kelime var. Çoğu anlatımla ilgili.</p>
+            </div>
+            <span className={s.sahteBirincil}>Bu ilana uyarla</span>
+          </div>
+
+          <div className={s.pencereKart}>
+            <p className={s.pencereKartBaslik}>5 gereksinimden 3'ü karşılanıyor</p>
+            <ul className={s.pencereListe}>
+              {gereksinimler.map((g) => (
+                <li key={g.metin}>
+                  <span className={g.eslesti ? s.durumEslesti : s.durumEksik}>
+                    <Ikon ad={g.eslesti ? "check" : "x"} boyut={12} />
+                  </span>
+                  {g.metin}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className={s.pencereKart}>
+            <p className={s.pencereKartBaslik}>Eksik anahtar kelimeler</p>
+            <div className={s.cipler}>
+              {eksik.map((k) => (
+                <span key={k} className={`${s.cip} ${s.cipEksik}`}>
+                  <Ikon ad="x" boyut={12} /> {k}
+                </span>
+              ))}
+            </div>
+            <p className={s.pencereKartBaslik}>Eşleşenler</p>
+            <div className={s.cipler}>
+              {eslesen.map((k) => (
+                <span key={k} className={`${s.cip} ${s.cipEslesen}`}>
+                  <Ikon ad="check" boyut={12} /> {k}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className={`${s.pencereKart} ${s.pencereGenis}`}>
+            <p className={s.pencereKartBaslik}>Deneyim, Acme Yazılım, 2. madde</p>
+            <div className={s.pencereOnceSonra}>
+              <div className={s.onceSonraBlok}>
+                <span className={s.onceSonraRozet}>Önce</span>
+                <p>Müşteri paneli projesinde görev aldım, React kullandım.</p>
+              </div>
+              <div className={`${s.onceSonraBlok} ${s.onceSonraYeni}`}>
+                <span className={`${s.onceSonraRozet} ${s.onceSonraRozetYeni}`}>Sonra</span>
+                <p>
+                  <span className="rounded bg-yesil/20 px-0.5">React ve TypeScript ile</span> müşteri{" "}
+                  <span className="rounded bg-yesil/20 px-0.5">panelini geliştirdim.</span>
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-export function AnahtarKelimeKarti() {
-  const eslesen = ["React", "TypeScript", "REST API", "Git"]
-  const eksik = ["Jest", "Erişilebilirlik", "CI/CD", "Figma"]
+/** Hero'da pencerenin kenarından taşan kart: uydurma kontrolünün yakaladığı madde. */
+export function HeroKontrol() {
   return (
-    <div className={`${s.mock} ${s.kelimeKarti}`}>
-      <p className={s.mockEtiket}>Eksik anahtar kelimeler</p>
-      <div className={s.cipler}>
-        {eksik.map((k) => (
-          <span key={k} className={`${s.cip} ${s.cipEksik}`}>
-            <Ikon ad="x" boyut={12} /> {k}
-          </span>
-        ))}
-      </div>
-      <p className={s.mockEtiket}>Eşleşenler</p>
-      <div className={s.cipler}>
-        {eslesen.map((k) => (
-          <span key={k} className={`${s.cip} ${s.cipEslesen}`}>
-            <Ikon ad="check" boyut={12} /> {k}
-          </span>
-        ))}
+    <div className={`${s.mock} ${s.heroKontrol}`}>
+      <span className="inline-block rounded-full bg-kehribar/20 px-2 py-0.5 text-xs font-bold text-kehribar">
+        Kontrol et
+      </span>
+      <p className={s.uyariMetin}>
+        <span className="text-gri line-through">Stajyerlerin uyumuna destek oldum.</span>{" "}
+        <span className="rounded bg-yesil/20 px-0.5">4 kişilik ekibe liderlik ettim.</span>
+      </p>
+      <p className="mt-1.5 text-sm text-kehribar">
+        Orijinal maddede “liderlik” ve “4 kişi” geçmiyor. Bu ifade deneyimini abartıyor olabilir.
+      </p>
+      <div className={s.uyariButonlar}>
+        <span className={s.sahteIkincil}>Eski hâli kalsın</span>
+        <span className={s.sahteBirincil}>Yeni hâlini kullan</span>
       </div>
     </div>
   )
