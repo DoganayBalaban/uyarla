@@ -145,30 +145,7 @@
   font-size: 1rem;
 }
 
-/* ——— Gezinme ——— */
-
-.gezinme {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  border-bottom: 1px solid transparent;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    backdrop-filter 0.2s ease;
-}
-.gezinmeKaydi {
-  background: color-mix(in srgb, var(--zemin-alt) 82%, transparent);
-  backdrop-filter: saturate(1.6) blur(14px);
-  -webkit-backdrop-filter: saturate(1.6) blur(14px);
-  border-bottom-color: var(--cizgi);
-}
-.gezinmeIc {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  height: 68px;
-}
+/* ——— Logo (altbilgi ve ürün penceresi) ——— */
 
 .logo {
   display: inline-flex;
@@ -199,80 +176,6 @@
   background: var(--mavi);
 }
 
-.gezinmeLinkler {
-  display: flex;
-  gap: 0.25rem;
-  margin-right: auto;
-}
-.gezinmeLinkler > a {
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--metin-ikincil);
-  padding: 0.45rem 0.75rem;
-  border-radius: 8px;
-  transition:
-    color 0.15s ease,
-    background-color 0.15s ease;
-}
-.gezinmeLinkler > a:hover {
-  color: var(--metin);
-  background: var(--mavi-yumusak);
-}
-.gezinmeMobilEylem {
-  display: none;
-}
-.gezinmeEylem {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.gezinmeGiris {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  padding: 0.55rem 0.9rem;
-  border-radius: var(--yaricap-buton);
-}
-.gezinmeGiris:hover {
-  background: var(--mavi-yumusak);
-}
-
-.sayfa .menuDugme {
-  display: none;
-  background: transparent;
-  border: 1px solid var(--cizgi);
-  width: 42px;
-  height: 42px;
-  padding: 0;
-  border-radius: var(--yaricap-buton);
-  position: relative;
-  margin-left: auto;
-}
-.menuDugme span {
-  position: absolute;
-  left: 11px;
-  right: 11px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--metin);
-  transition:
-    transform 0.2s ease,
-    top 0.2s ease;
-}
-.menuDugme span:first-child {
-  top: 15px;
-}
-.menuDugme span:last-child {
-  top: 23px;
-}
-.menuDugme[aria-expanded="true"] span:first-child {
-  top: 19px;
-  transform: rotate(45deg);
-}
-.menuDugme[aria-expanded="true"] span:last-child {
-  top: 19px;
-  transform: rotate(-45deg);
-}
-
 /* ——— Hero ———
    Ortalanmış başlık, altında ürünün kendisi. Pencere buzdan maviye koyulaşan
    bir zeminin üstünde duruyor ve alt kenarı zemine eriyor; uydurma kontrolü
@@ -281,8 +184,7 @@
 
 .hero {
   position: relative;
-  margin-top: -68px;
-  padding-top: calc(68px + 5.5rem);
+  padding-top: 5.5rem;
   isolation: isolate;
   overflow-x: clip;
 }
@@ -1378,9 +1280,6 @@
 /* ——— Duyarlı yerleşim ——— */
 
 @media (max-width: 1080px) {
-  .gezinmeLinkler > a {
-    padding: 0.45rem 0.55rem;
-  }
   .bento {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1393,44 +1292,6 @@
   .sayfa {
     --yan: 20px;
   }
-  .gezinmeEylem {
-    display: none;
-  }
-  .sayfa .menuDugme {
-    display: block;
-  }
-  .gezinmeLinkler {
-    display: none;
-    position: absolute;
-    top: 68px;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0.75rem var(--yan) 1.25rem;
-    background: var(--zemin-alt);
-    border-bottom: 1px solid var(--cizgi);
-    box-shadow: var(--golge-kart);
-  }
-  .gezinmeAcik {
-    display: flex;
-  }
-  .gezinmeLinkler > a {
-    padding: 0.8rem 0.5rem;
-    font-size: 1rem;
-  }
-  .gezinmeMobilEylem {
-    display: grid;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--cizgi);
-  }
-  .gezinmeMobilEylem > a:not(.btnBirincil) {
-    padding: 0.7rem 0.5rem;
-    font-weight: 600;
-  }
-
   .ozellik,
   .durustlukIc,
   .sssIc,
@@ -1489,7 +1350,7 @@
     --yan: 16px;
   }
   .hero {
-    padding-top: calc(68px + 3rem);
+    padding-top: 3rem;
   }
   .heroEylem > a {
     flex: 1 1 100%;

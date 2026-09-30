@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import {
@@ -15,9 +16,11 @@ import {
 import { cn } from "@/lib/cn"
 import { girisAdresi } from "@/lib/donus"
 import { sonucAdresi } from "@/lib/aktifAnaliz"
+import { SayfaBasligi } from "../components/Sayfa"
 import {
   ASAMALAR,
   ASAMA_ETIKETI,
+  ASAMA_RENGI,
   NOT_UZUNLUGU,
   sutunlaraDagit,
   type Asama,
@@ -38,14 +41,6 @@ function skorEtiketi(skor: number): { metin: string; sinif: string } {
   return { metin: "Düşük", sinif: "bg-kirmizi/10 text-kirmizi dark:bg-kirmizi/20 dark:text-[#f87171]" }
 }
 
-/** Aşama durum bildirdiği için durum renkleri burada yerinde (rehber §9.2). */
-const SUTUN_RENGI: Record<Asama, string> = {
-  saved: "bg-gri",
-  applied: "bg-mavi",
-  interview: "bg-kehribar",
-  offer: "bg-yesil",
-  rejected: "bg-kirmizi",
-}
 
 /** Sürükle-bırak verisinin türü; başka sürüklemelerle karışmasın. */
 const SURUKLE_TURU = "application/x-uyarla-kart"
@@ -120,13 +115,13 @@ export function Pano() {
           Hangi ilana hangi CV ile başvurduğunu görmek için giriş yap. Kayıtsız yaptığın
           analizler hesabına taşınır.
         </p>
-        <a
+        <Link
           href={girisAdresi("/applications")}
           className="mt-6 inline-flex items-center gap-2 rounded-buton bg-mavi px-6 py-3 font-semibold text-white no-underline shadow-sm shadow-mavi/30"
         >
           Giriş yap
           <ArrowRight className="size-4" aria-hidden />
-        </a>
+        </Link>
       </div>
     )
   }
@@ -138,23 +133,24 @@ export function Pano() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="m-0 text-3xl">Başvuru panon</h1>
-          <p className="mt-1.5 text-sm text-gri">
-            {kartlar.length === 0
-              ? "Her analiz buraya bir kart olarak düşer."
-              : "Kartları sürükleyerek ya da aşama menüsünden taşıyabilirsin."}
-          </p>
-        </div>
-        <a
-          href="/analyze"
-          className="inline-flex items-center gap-2 rounded-buton bg-mavi px-5 py-2.5 font-semibold text-white no-underline shadow-sm shadow-mavi/30 transition hover:bg-mavi/90"
-        >
-          <Plus className="size-4" aria-hidden />
-          Yeni analiz
-        </a>
-      </div>
+      <SayfaBasligi
+        baslik="Başvuru panon"
+        aciklama={
+          kartlar.length === 0
+            ? "Her analiz buraya bir kart olarak düşer."
+            : "Kartları sürükleyerek ya da aşama menüsünden taşıyabilirsin."
+        }
+        eylem={
+          <Link
+            href="/analyze"
+            className="inline-flex items-center gap-2 rounded-buton bg-mavi px-5 py-2.5 font-semibold text-white no-underline shadow-sm shadow-mavi/30 transition hover:bg-mavi/90"
+          >
+            <Plus className="size-4" aria-hidden />
+            Yeni analiz
+          </Link>
+        }
+        className="mb-0"
+      />
 
       {kartlar.length > 0 && (
         <dl className="mt-6 grid grid-cols-3 gap-3 sm:max-w-lg">
@@ -181,13 +177,13 @@ export function Pano() {
           {/* Rehber §10.2: boş pano metni, birebir. */}
           <p className="m-0 mt-4 font-baslik text-xl font-extrabold">Henüz başvuru yok.</p>
           <p className="mt-2 text-gri">İlk ilanını yapıştır, birlikte başlayalım.</p>
-          <a
+          <Link
             href="/analyze"
             className="mt-6 inline-flex items-center gap-2 rounded-buton bg-mavi px-6 py-3 font-semibold text-white no-underline shadow-sm shadow-mavi/30"
           >
             İlk analizini yap
             <ArrowRight className="size-4" aria-hidden />
-          </a>
+          </Link>
         </div>
       ) : (
         <div className="mt-6 grid gap-4 md:grid-flow-col md:auto-cols-[minmax(15rem,1fr)] md:overflow-x-auto md:pb-2 xl:grid-flow-row xl:grid-cols-5 xl:overflow-visible">
@@ -216,7 +212,7 @@ export function Pano() {
             >
               <header className="px-1.5 pt-1 pb-3">
                 <h2 className="m-0 flex items-center gap-2 text-sm">
-                  <span aria-hidden className={cn("size-2 rounded-full", SUTUN_RENGI[asama])} />
+                  <span aria-hidden className={cn("size-2 rounded-full", ASAMA_RENGI[asama])} />
                   {ASAMA_ETIKETI[asama]}
                   <span className="ml-auto rounded-full bg-kart px-2 py-0.5 text-xs font-semibold text-gri tabular-nums">
                     {sutunlar[asama].length}
@@ -318,13 +314,13 @@ function Kart({
       <div className="flex items-start gap-1.5">
         <h3 className="m-0 flex-1 text-[15px] leading-snug">
           {/* Analiz sonucuna kalıcı adres; önceden sonuca geri dönmenin yolu yoktu (K3). */}
-          <a
+          <Link
             href={sonucAdresi(kart.analysisId)}
             draggable={false}
             className="text-metin no-underline hover:text-mavi hover:underline"
           >
             {kart.pozisyon}
-          </a>
+          </Link>
         </h3>
         <GripVertical
           className="mt-0.5 size-4 shrink-0 cursor-grab text-gri opacity-0 transition group-hover:opacity-100"
@@ -384,9 +380,9 @@ function Kart({
         </select>
 
         {kart.uyarlama ? (
-          <a href={`/adapt/${kart.uyarlama.id}`} className="text-sm font-semibold text-mavi dark:text-[#8ea2ff]">
+          <Link href={`/adapt/${kart.uyarlama.id}`} className="text-sm font-semibold text-mavi dark:text-[#8ea2ff]">
             Uyarlamayı aç
-          </a>
+          </Link>
         ) : (
           <button
             onClick={() => void uyarla()}

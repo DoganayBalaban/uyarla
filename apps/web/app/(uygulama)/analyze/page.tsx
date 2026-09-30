@@ -1,7 +1,7 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
-import { motion } from "motion/react"
 import {
   ArrowRight,
   FileCheck2,
@@ -23,6 +23,7 @@ import {
   sonucAdresi,
   yanitiIsle,
 } from "@/lib/aktifAnaliz"
+import { SayfaBasligi } from "../../components/Sayfa"
 import { AsamaCizelgesi } from "../../components/ui/AsamaCizelgesi"
 import { CvYukleme } from "../../components/ui/CvYukleme"
 import { SkorSonucu, type ScoreResultView } from "../../components/SkorSonucu"
@@ -316,21 +317,10 @@ export default function AnalyzePage() {
 
   return (
     <div>
-      <motion.header
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="mb-8 max-w-2xl"
-      >
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-cizgi bg-kart px-3 py-1 text-xs font-semibold text-gri">
-          <span className="size-1.5 rounded-full bg-mercan" aria-hidden />
-          Ücretsiz · Kayıt gerekmez
-        </span>
-        <h1 className="mt-4 mb-0 text-3xl tracking-tight sm:text-4xl">CV&apos;ni ilanla karşılaştır</h1>
-        <p className="mt-2 text-gri">
-          CV&apos;ni yükle, ilanı yapıştır. Uyumunu ve eksik anahtar kelimeleri hemen gör.
-        </p>
-      </motion.header>
+      <SayfaBasligi
+        baslik="CV'ni ilanla karşılaştır"
+        aciklama="CV'ni yükle, ilanı yapıştır. Uyumunu ve eksik anahtar kelimeleri hemen gör. Ücretsiz, kayıt gerekmez."
+      />
 
       {(error || state?.status === "failed") && (
         <div
@@ -448,9 +438,9 @@ export default function AnalyzePage() {
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-yesil dark:text-[#4ade80]" aria-hidden />
             <p className="m-0">
               CV&apos;n izinsiz kimseyle paylaşılmaz.{" "}
-              <a href="/privacy" className="font-medium text-metin underline underline-offset-2">
+              <Link href="/privacy" className="font-medium text-metin underline underline-offset-2">
                 KVKK metni
-              </a>
+              </Link>
             </p>
           </div>
           {state?.status === "failed" && (

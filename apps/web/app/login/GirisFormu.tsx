@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import { signIn } from "@/lib/authClient"
 import { epostaOnerisi, postaUygulamasi } from "@/lib/eposta"
@@ -23,7 +24,7 @@ function hataMesaji(kod: string | null): string | null {
 
 function Logo() {
   return (
-    <a
+    <Link
       href="/"
       className="inline-flex items-center gap-2.5 font-baslik text-xl font-extrabold tracking-tight text-metin"
     >
@@ -33,7 +34,7 @@ function Logo() {
         <span className="absolute inset-0 rounded-[5px] bg-mavi" />
       </span>
       uyarla
-    </a>
+    </Link>
   )
 }
 
@@ -114,9 +115,9 @@ export function GirisFormu({
       <div className="flex w-full flex-col px-6 py-6 sm:px-10 lg:w-1/2 lg:px-16 xl:px-24">
         <header className="flex items-center justify-between">
           <Logo />
-          <a href="/" className="text-sm font-medium text-gri transition-colors hover:text-metin">
+          <Link href="/" className="text-sm font-medium text-gri transition-colors hover:text-metin">
             ← Ana sayfa
-          </a>
+          </Link>
         </header>
 
         <main className="mx-auto flex w-full max-w-[26rem] flex-1 flex-col justify-center py-12">
@@ -302,13 +303,13 @@ export function GirisFormu({
 
         <footer className="text-xs text-gri">
           Devam ederek{" "}
-          <a href="/terms" className="underline underline-offset-2 hover:text-metin">
+          <Link href="/terms" className="underline underline-offset-2 hover:text-metin">
             kullanım koşullarını
-          </a>{" "}
+          </Link>{" "}
           kabul etmiş olursun. Verilerinin nasıl işlendiği{" "}
-          <a href="/privacy" className="underline underline-offset-2 hover:text-metin">
+          <Link href="/privacy" className="underline underline-offset-2 hover:text-metin">
             KVKK aydınlatma metninde
-          </a>
+          </Link>
           .
         </footer>
       </div>

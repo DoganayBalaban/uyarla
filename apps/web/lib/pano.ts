@@ -16,6 +16,18 @@ export const ASAMA_ETIKETI: Record<Asama, string> = {
   rejected: "Olmadı",
 }
 
+/**
+ * Aşamanın rengi; pano sütunlarında ve dashboard'da aynı. Aşama bir durum
+ * bildirdiği için durum renkleri burada yerinde (rehber §9.2).
+ */
+export const ASAMA_RENGI: Record<Asama, string> = {
+  saved: "bg-gri",
+  applied: "bg-mavi",
+  interview: "bg-kehribar",
+  offer: "bg-yesil",
+  rejected: "bg-kirmizi",
+}
+
 export function gecerliAsama(deger: unknown): deger is Asama {
   return typeof deger === "string" && (ASAMALAR as readonly string[]).includes(deger)
 }

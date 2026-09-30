@@ -1,10 +1,12 @@
+import Link from "next/link"
+
 /**
  * Marka imi ve adı: arkada hafif dönmüş, önde düz iki kart. Tanıtım sayfası
  * kendi CSS modülüyle aynı imi çiziyor.
  */
 export function Logo({ className = "" }: { className?: string }) {
   return (
-    <a
+    <Link
       href="/"
       aria-label="uyarla ana sayfa"
       className={`inline-flex items-center gap-2.5 font-baslik text-xl font-extrabold tracking-tight text-metin ${className}`}
@@ -14,6 +16,6 @@ export function Logo({ className = "" }: { className?: string }) {
         <span className="absolute inset-0 rounded-[5px] bg-mavi" />
       </span>
       uyarla
-    </a>
+    </Link>
   )
 }
