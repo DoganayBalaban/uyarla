@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest"
 import { flattenSkillLines } from "./skills.js"
 
 describe("flattenSkillLines", () => {
-  it("kategori satırında öğeleri alır, kategoriyi almaz", () => {
+  it("takes items from a category line, not the category", () => {
     expect(
       flattenSkillLines({
         lines: [{ label: "Programming Languages", items: ["Java", "SQL"] }],
@@ -11,7 +11,7 @@ describe("flattenSkillLines", () => {
     ).toEqual(["Java", "SQL"])
   })
 
-  it("açıklama satırında etiketi alır, açıklamayı almaz", () => {
+  it("takes the label from a description line, not the description", () => {
     expect(
       flattenSkillLines({
         lines: [
@@ -25,7 +25,7 @@ describe("flattenSkillLines", () => {
     ).toEqual(["Manual Testing"])
   })
 
-  it("öğesiz satırda etiketi beceri sayar", () => {
+  it("treats the label of an itemless line as a skill", () => {
     expect(
       flattenSkillLines({
         lines: [{ label: "React", items: [] }],
@@ -34,7 +34,7 @@ describe("flattenSkillLines", () => {
     ).toEqual(["React"])
   })
 
-  it("bölüm başlıklarını beceri saymaz", () => {
+  it("does not treat section headings as skills", () => {
     expect(
       flattenSkillLines({
         lines: [
@@ -49,7 +49,7 @@ describe("flattenSkillLines", () => {
     ).toEqual(["React"])
   })
 
-  it("aynı beceriyi iki kez listelemez", () => {
+  it("does not list the same skill twice", () => {
     expect(
       flattenSkillLines({
         lines: [
@@ -61,9 +61,9 @@ describe("flattenSkillLines", () => {
     ).toEqual(["Python", "Java", "FastAPI"])
   })
 
-  it("gerçek bir CV'nin iki bölümlü beceri listesini eksiksiz çıkarır", () => {
+  it("fully extracts the two-part skill list of a real resume", () => {
     // K-19: bu CV biçiminde model, iki bölümden yalnızca birini döndürüyordu.
-    const sonuc = flattenSkillLines({
+    const outcome = flattenSkillLines({
       lines: [
         { label: "Core Skills", items: [] },
         {
@@ -78,13 +78,13 @@ describe("flattenSkillLines", () => {
       languages: [], certifications: [],
     })
 
-    expect(sonuc).toEqual([
+    expect(outcome).toEqual([
       "Test Case Design & Execution", "Manual Testing",
       "Java", "SQL Queries", "JIRA", "Postman",
     ])
   })
 
-  it("uzun ama noktasız bir öğeyi açıklama sayar", () => {
+  it("treats a long item without a period as a description", () => {
     // Sınır davranışı: 40 karakterin üstü terim değil cümle kabul edilir.
     expect(
       flattenSkillLines({
@@ -99,13 +99,13 @@ describe("flattenSkillLines", () => {
     ).toEqual(["Agile Collaboration"])
   })
 
-  it("boş girdide boş dizi döner", () => {
+  it("returns an empty array for empty input", () => {
     expect(flattenSkillLines({ lines: [], languages: [], certifications: [] })).toEqual([])
   })
 })
 
-describe("flattenSkillLines · gerçek CV'lerden çıkan kirlilikler", () => {
-  it("bölüm başlığı öğe olarak geldiğinde de eler", () => {
+describe("flattenSkillLines · noise from real resumes", () => {
+  it("also filters a section heading that arrives as an item", () => {
     // Gerçek vaka: "TECHNICAL SKILLS" label değil item olarak gelmişti ve
     // beceri listesine sızmıştı.
     expect(
@@ -116,7 +116,7 @@ describe("flattenSkillLines · gerçek CV'lerden çıkan kirlilikler", () => {
     ).toEqual(["LLMs", "RAG"])
   })
 
-  it("dil ve sertifika başlıklarını beceri saymaz", () => {
+  it("does not treat language and certification headings as skills", () => {
     // Beceri bölümü olmayan CV'lerde bölümleme bunları skillsBlock'a koyuyor.
     expect(
       flattenSkillLines({
@@ -131,7 +131,7 @@ describe("flattenSkillLines · gerçek CV'lerden çıkan kirlilikler", () => {
     ).toEqual(["Python"])
   })
 
-  it("dil ve sertifika değerlerini beceri listesinden çıkarır", () => {
+  it("removes language and certification values from the skill list", () => {
     // Bir katılım belgesinin "Bilgisayar Mühendisliği mezunu" gereksinimiyle
     // eşleşmesi uydurma eşleşmedir (K-20).
     expect(
@@ -148,8 +148,8 @@ describe("flattenSkillLines · gerçek CV'lerden çıkan kirlilikler", () => {
   })
 })
 
-describe("flattenSkillLines · noktalı teknoloji adları", () => {
-  it("Next.js, Vue.js ve ASP.NET'i cümle sanıp atmaz", () => {
+describe("flattenSkillLines · technology names with dots", () => {
+  it("does not drop Next.js, Vue.js and ASP.NET as sentences", () => {
     // K-38: uçtan uca testte bu iki beceri indirilen CV'den kaybolmuştu.
     expect(
       flattenSkillLines({
@@ -161,7 +161,7 @@ describe("flattenSkillLines · noktalı teknoloji adları", () => {
     ).toEqual(["React", "Next.js", "Vue.js", "Node.js", "ASP.NET Core"])
   })
 
-  it("sonu noktalı kısa öğeyi yine cümle sayar", () => {
+  it("still treats a short item ending in a period as a sentence", () => {
     expect(
       flattenSkillLines({
         lines: [{ label: "Takım çalışması", items: ["Uyumlu çalışırım."] }],
@@ -171,8 +171,8 @@ describe("flattenSkillLines · noktalı teknoloji adları", () => {
   })
 })
 
-describe("flattenSkillLines · cümle sızıntısı", () => {
-  it("etiket bir cümleyse beceri saymaz", () => {
+describe("flattenSkillLines · sentence leakage", () => {
+  it("does not treat a sentence label as a skill", () => {
     // Bölümlemenin karıştığı CV'lerde deneyim maddeleri beceri bloğuna
     // sızıyor ve etiket olarak geliyor.
     expect(
@@ -187,7 +187,7 @@ describe("flattenSkillLines · cümle sızıntısı", () => {
     ).toEqual(["Python"])
   })
 
-  it("noktasız ama uzun bir etiketi de cümle sayar", () => {
+  it("also treats a long label without a period as a sentence", () => {
     expect(
       flattenSkillLines({
         lines: [

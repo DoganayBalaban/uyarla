@@ -23,21 +23,21 @@ export function orderSkillsForPosting(
 
   for (const r of result.requirements) {
     if (r.status !== "matched" || r.evidence?.kind !== "skill") continue
-    const anahtar = normalizeText(r.evidence.text)
-    if (r.requirement.importance === "must") must.add(anahtar)
-    else nice.add(anahtar)
+    const key = normalizeText(r.evidence.text)
+    if (r.requirement.importance === "must") must.add(key)
+    else nice.add(key)
   }
 
-  const oncelik = (beceri: string): number => {
-    const anahtar = normalizeText(beceri)
-    if (must.has(anahtar)) return 0
-    if (nice.has(anahtar)) return 1
+  const priority = (skill: string): number => {
+    const key = normalizeText(skill)
+    if (must.has(key)) return 0
+    if (nice.has(key)) return 1
     return 2
   }
 
   // Kararlı sıralama: aynı önceliktekiler özgün sıralarını korur.
   return skills
-    .map((beceri, i) => ({ beceri, i, oncelik: oncelik(beceri) }))
-    .sort((a, b) => a.oncelik - b.oncelik || a.i - b.i)
-    .map((x) => x.beceri)
+    .map((skill, i) => ({ skill, i, priority: priority(skill) }))
+    .sort((a, b) => a.priority - b.priority || a.i - b.i)
+    .map((x) => x.skill)
 }

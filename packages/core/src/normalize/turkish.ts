@@ -53,7 +53,7 @@ const SUFFIXES = [
   // normalizeText "ı"yı "i"ye katladığı için ek listesi de katlanmalı;
   // aksi hâlde "sına" eki "çalişmasina" köküyle eşleşmez. Kaynakta okunabilir
   // Türkçe biçimde duruyor, karşılaştırma biçimine burada çevriliyor.
-  .map((ek) => ek.replace(/ı/g, "i"))
+  .map((suffixItem) => suffixItem.replace(/ı/g, "i"))
   .sort((a, b) => b.length - a.length)
 
 /**
@@ -102,8 +102,8 @@ export function normalizeToken(word: string): string {
   // Sözlük her adımda denenir, yalnızca başta ve sonda değil. Aksi hâlde
   // "geliştirici" sözlükten doğrudan eşleşirken "geliştiricisiniz" soyulmaya
   // devam edip başka bir köke iner — iki biçim buluşamaz.
-  const dogrudan = SYNONYMS.get(stem)
-  if (dogrudan) return dogrudan
+  const direct = SYNONYMS.get(stem)
+  if (direct) return direct
 
   // Kök artık kısalmayana kadar ek soyulur. Tek ek soymak simetriyi bozuyor:
   // "yazılımcıyım" bir ekle "yazılım" olurken, anahtar kelime "yazılım" da
@@ -112,13 +112,13 @@ export function normalizeToken(word: string): string {
   //
   // Aşırı soyma bu yüzden kabul edilebilir: önemli olan kökün "doğru" olması
   // değil, ilan ve CV tarafının AYNI köke inmesi.
-  let degisti = true
-  while (degisti) {
-    degisti = false
+  let changed = true
+  while (changed) {
+    changed = false
     for (const suffix of SUFFIXES) {
       if (stem.endsWith(suffix) && stem.length - suffix.length >= MIN_STEM_LENGTH) {
         stem = stem.slice(0, -suffix.length)
-        degisti = true
+        changed = true
         break
       }
     }
@@ -132,13 +132,13 @@ export function normalizeToken(word: string): string {
     // Türkçe kelimelerde de çalışıyor ("servis" → "servi") ve bu sorun
     // değil: kural iki tarafa da uygulandığı için ikisi aynı köke iniyor.
     // Önemli olan kökün doğru olması değil, iki tarafın AYNI köke inmesi.
-    if (!degisti && stem.endsWith("s") && stem.length - 1 >= MIN_STEM_LENGTH_PLURAL) {
+    if (!changed && stem.endsWith("s") && stem.length - 1 >= MIN_STEM_LENGTH_PLURAL) {
       stem = stem.slice(0, -1)
-      degisti = true
+      changed = true
     }
 
-    const eslesme = SYNONYMS.get(stem)
-    if (eslesme) return eslesme
+    const match = SYNONYMS.get(stem)
+    if (match) return match
   }
 
   return stem
@@ -164,9 +164,9 @@ export function containsKeyword(haystack: string, keyword: string): boolean {
   const needle = normalizeTokens(keyword)
   if (needle.length === 0) return false
 
-  const hay = normalizeTokens(haystack)
-  for (let i = 0; i + needle.length <= hay.length; i++) {
-    if (needle.every((part, j) => hay[i + j] === part)) return true
+  const haystackTokens = normalizeTokens(haystack)
+  for (let i = 0; i + needle.length <= haystackTokens.length; i++) {
+    if (needle.every((part, j) => haystackTokens[i + j] === part)) return true
   }
   return false
 }

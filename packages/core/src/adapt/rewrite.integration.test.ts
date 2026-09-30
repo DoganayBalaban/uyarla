@@ -5,7 +5,7 @@ import type { JobPostingData } from "../schemas/job.js"
 import { verifyRewrite } from "../verify/verify.js"
 import { rewriteBullet } from "./rewrite.js"
 
-const ilan: JobPostingData = {
+const testPosting: JobPostingData = {
   position: "Frontend Geliştirici",
   company: null,
   seniority: null,
@@ -29,30 +29,30 @@ const ilan: JobPostingData = {
   ],
 }
 
-describe("rewriteBullet · gerçek model", () => {
-  it("dayanağı olan terimi kullanır, dayanağı olmayanı kullanmaz", async () => {
+describe("rewriteBullet · real model", () => {
+  it("uses a term with a basis and not one without", async () => {
     const llm = new LmStudioProvider(llmConfigFromEnv())
-    const kaynak = "React ile müşteri panelini geliştirdim ve yüklenme süresini %40 düşürdüm"
+    const sourceText = "React ile müşteri panelini geliştirdim ve yüklenme süresini %40 düşürdüm"
 
     const { data } = await rewriteBullet(llm, {
-      bullet: kaynak,
+      bullet: sourceText,
       targets: ["Web performansı", "Kubernetes"],
     })
-    const dogrulama = verifyRewrite({
+    const verificationResult = verifyRewrite({
       rewritten: data.text,
-      source: kaynak,
-      posting: ilan,
+      source: sourceText,
+      posting: testPosting,
       allowedTerms: data.alignments.map((a) => a.term),
     })
 
-    console.log(`[ölçüm] kaynak: ${kaynak}`)
+    console.log(`[ölçüm] kaynak: ${sourceText}`)
     console.log(`[ölçüm] yazım : ${data.text}`)
     console.log(`[ölçüm] uyum  : ${JSON.stringify(data.alignments)}`)
-    console.log(`[ölçüm] uyarı : ${dogrulama.issues.map((i) => i.kind).join(", ") || "yok"}`)
+    console.log(`[ölçüm] uyarı : ${verificationResult.issues.map((i) => i.kind).join(", ") || "yok"}`)
 
     expect(data.text.length).toBeGreaterThan(0)
     // CV'de karşılığı olmayan Kubernetes eklenmemeli.
     expect(data.text).not.toMatch(/kubernetes/i)
-    expect(dogrulama.issues.filter((i) => i.kind === "number_mismatch")).toEqual([])
+    expect(verificationResult.issues.filter((i) => i.kind === "number_mismatch")).toEqual([])
   })
 })

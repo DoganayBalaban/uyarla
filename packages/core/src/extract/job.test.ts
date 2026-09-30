@@ -20,7 +20,7 @@ const llmReturning = (data: unknown): LlmProvider => ({
 })
 
 describe("extractJobPosting", () => {
-  it("tek çağrı yapar; kavramlar kodda üretilir", async () => {
+  it("makes a single call; concepts are produced in code", async () => {
     // İkinci LLM çağrısı kaldırıldı (K-23): kavramlara bölmek metin işlemedir,
     // yorum gerektirmiyor. Hizalama doğrulaması da gereksizleşti (K-18).
     const extract = vi.fn().mockResolvedValue({ data: DRAFT, tokens: 25 })
@@ -30,7 +30,7 @@ describe("extractJobPosting", () => {
     expect((extract.mock.calls[0]![0] as ExtractOptions).schemaName).toBe("job_posting_draft")
   })
 
-  it("bileşik gereksinimi kavramlara böler", async () => {
+  it("splits a compound requirement into concepts", async () => {
     const { data } = await extractJobPosting(llmReturning(DRAFT), "ilan metni")
 
     expect(data.requirements[0]!.concepts.map((c) => c.term)).toEqual([
@@ -39,12 +39,12 @@ describe("extractJobPosting", () => {
     expect(data.requirements[1]!.concepts.map((c) => c.term)).toEqual(["Next.js"])
   })
 
-  it("zorunlu ve tercihen ayrımını korur", async () => {
+  it("keeps the required/preferred distinction", async () => {
     const { data } = await extractJobPosting(llmReturning(DRAFT), "ilan metni")
     expect(data.requirements.map((r) => r.importance)).toEqual(["must", "nice"])
   })
 
-  it("şirket ve kıdem bilinmiyorsa null taşır", async () => {
+  it("carries null when company and seniority are unknown", async () => {
     const { data } = await extractJobPosting(
       llmReturning({ ...DRAFT, company: null, seniority: null }),
       "ilan metni",
@@ -53,7 +53,7 @@ describe("extractJobPosting", () => {
     expect(data.seniority).toBeNull()
   })
 
-  it("her gereksinim en az bir kavram taşır", async () => {
+  it("every requirement has at least one concept", async () => {
     // Skorlama her gereksinim için en az bir kavrama ihtiyaç duyuyor.
     const { data } = await extractJobPosting(
       llmReturning({
@@ -67,7 +67,7 @@ describe("extractJobPosting", () => {
     expect(data.requirements[0]!.concepts.length).toBeGreaterThanOrEqual(1)
   })
 
-  it("gereksinim yoksa boş liste döner", async () => {
+  it("returns an empty list when there are no requirements", async () => {
     const { data } = await extractJobPosting(
       llmReturning({ ...DRAFT, requirements: [] }),
       "ilan metni",
@@ -75,13 +75,13 @@ describe("extractJobPosting", () => {
     expect(data.requirements).toEqual([])
   })
 
-  it("şemaya uymayan çıktıyı reddeder", async () => {
+  it("rejects output that does not match the schema", async () => {
     await expect(
       extractJobPosting(llmReturning({ position: "X" }), "ilan metni"),
     ).rejects.toThrow()
   })
 
-  it("tanımsız önem değerini reddeder", async () => {
+  it("rejects an undefined importance value", async () => {
     await expect(
       extractJobPosting(
         llmReturning({

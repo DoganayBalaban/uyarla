@@ -1,7 +1,7 @@
 {
   "id": "cv-c__ilan-1",
-  "cv": "cv-c-yeni-mezun",
-  "ilan": "ilan-1",
+  "resumeId": "cv-c-yeni-mezun",
+  "postingId": "ilan-1",
   "note": "Yeni mezun CV'si (Yönetim Bilişim Sistemleri), kıdemli AI ilanı. Yapay zekâ eğitmenliği profesyonel GenAI deneyimi değil.",
   "expectations": [
     {

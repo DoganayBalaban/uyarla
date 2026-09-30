@@ -1,6 +1,6 @@
 import type {
   EmbeddingProvider,
-  FormatRaporu,
+  FormatReport,
   JobPostingData,
   LlmProvider,
   ResumeProfile,
@@ -32,7 +32,7 @@ export interface AnalysisStore {
     score: number
     result: ScoreResult
     /** CV'nin ATS okunabilirliği; kontrol patlarsa null (analizi durdurmuyor). */
-    format: FormatRaporu | null
+    format: FormatReport | null
     durationMs: number
     tokenUsage: number
   }): Promise<void>
@@ -41,10 +41,10 @@ export interface AnalysisStore {
 
 /** Arayüzdeki ilerleme metinleri bu aşamalara karşılık geliyor (spec §8). */
 export type PipelineStage =
-  | "cv_okunuyor"
-  | "ilan_okunuyor"
-  | "karsilastiriliyor"
-  | "tamamlandi"
+  | "reading_resume"
+  | "reading_posting"
+  | "comparing"
+  | "completed"
 
 export interface PipelineDeps {
   llm: LlmProvider

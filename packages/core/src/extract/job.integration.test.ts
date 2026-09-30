@@ -3,7 +3,7 @@ import { LmStudioProvider } from "../llm/lmstudio.js"
 import { llmConfigFromEnv } from "../llm/types.js"
 import { extractJobPosting } from "./job.js"
 
-const ILAN = `Frontend Geliştirici (Acme Teknoloji)
+const POSTING = `Frontend Geliştirici (Acme Teknoloji)
 
 Aradığımız nitelikler:
 - En az 3 yıl React deneyimi
@@ -15,12 +15,12 @@ Tercihen:
 - Next.js deneyimi
 - Takım çalışmasına yatkın olmak`
 
-describe("extractJobPosting · gerçek model", () => {
-  it("zorunlu ve tercihen gereksinimleri ayırır", async () => {
+describe("extractJobPosting · real model", () => {
+  it("separates required and preferred requirements", async () => {
     const llm = new LmStudioProvider(llmConfigFromEnv())
-    const basladi = Date.now()
-    const { data, tokens } = await extractJobPosting(llm, ILAN)
-    console.log(`[ölçüm] ilan çıkarımı ${Date.now() - basladi} ms, ${tokens} token`)
+    const startedAt = Date.now()
+    const { data, tokens } = await extractJobPosting(llm, POSTING)
+    console.log(`[ölçüm] ilan çıkarımı ${Date.now() - startedAt} ms, ${tokens} token`)
 
     expect(data.position).toMatch(/frontend/i)
     expect(data.requirements.length).toBeGreaterThanOrEqual(6)
@@ -30,9 +30,9 @@ describe("extractJobPosting · gerçek model", () => {
     expect(data.requirements.filter((r) => r.importance === "nice").length).toBeGreaterThanOrEqual(2)
   })
 
-  it("keywords alanı CV'de aranabilir kelimeler üretir", async () => {
+  it("the keywords field yields words searchable in a resume", async () => {
     const llm = new LmStudioProvider(llmConfigFromEnv())
-    const { data } = await extractJobPosting(llm, ILAN)
+    const { data } = await extractJobPosting(llm, POSTING)
 
     for (const req of data.requirements) {
       console.log(`  [${req.importance}/${req.type}] ${req.text} -> ${JSON.stringify(req.concepts.flatMap((c) => c.synonyms))}`)
@@ -40,18 +40,18 @@ describe("extractJobPosting · gerçek model", () => {
 
     // Skorun tamamı buna bağlı: keywords, CV metninde geçebilecek kısa
     // terimler olmalı; gereksinim cümlesinin kopyası değil.
-    const tumu = data.requirements.flatMap((r) => r.concepts.flatMap((c) => c.synonyms).map((k) => k.toLowerCase()))
-    expect(tumu).toContain("react")
-    expect(tumu.some((k) => k.includes("typescript"))).toBe(true)
+    const all = data.requirements.flatMap((r) => r.concepts.flatMap((c) => c.synonyms).map((k) => k.toLowerCase()))
+    expect(all).toContain("react")
+    expect(all.some((k) => k.includes("typescript"))).toBe(true)
 
     // Anahtar kelimeler cümle değil terim olmalı.
-    const uzunlar = tumu.filter((k) => k.split(/\s+/).length > 4)
-    expect(uzunlar).toEqual([])
+    const longOnes = all.filter((k) => k.split(/\s+/).length > 4)
+    expect(longOnes).toEqual([])
   })
 
-  it("eğitim gereksinimini education olarak sınıflar", async () => {
+  it("classifies an education requirement as education", async () => {
     const llm = new LmStudioProvider(llmConfigFromEnv())
-    const { data } = await extractJobPosting(llm, ILAN)
+    const { data } = await extractJobPosting(llm, POSTING)
     expect(data.requirements.some((r) => r.type === "education")).toBe(true)
   })
 })

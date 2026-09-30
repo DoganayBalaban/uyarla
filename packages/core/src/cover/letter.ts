@@ -46,59 +46,60 @@ Biçim:
 - Hitap ve imza YAZMA; yalnızca üç paragrafın metni.
 - İlan hangi dildeyse o dilde yaz. Türkçe ise resmi "siz" dili kullan.`
 
+// Anahtar LLM ile yapılan sözleşmenin parçası (prompt gibi); Türkçe kalıyor.
 const CoverLetterSchema = z.object({ paragraflar: z.array(z.string()) })
 const coverLetterJsonSchema = toJsonSchema(CoverLetterSchema)
 
-export interface OnYaziParagrafi {
-  metin: string
-  kontrol: Verification
+export interface CoverLetterParagraph {
+  text: string
+  verification: Verification
 }
 
-export interface OnYazi {
-  paragraflar: OnYaziParagrafi[]
+export interface CoverLetter {
+  paragraphs: CoverLetterParagraph[]
 }
 
 /** Adaptation.coverLetter sütununda saklanan hâl. */
-export type OnYaziKaydi =
-  | { durum: "running" }
-  | { durum: "failed" }
-  | { durum: "done"; paragraflar: OnYaziParagrafi[]; tokenUsage: number; olusturulma: string }
+export type CoverLetterRecord =
+  | { status: "running" }
+  | { status: "failed" }
+  | { status: "done"; paragraphs: CoverLetterParagraph[]; tokenUsage: number; createdAt: string }
 
 /**
  * CV'nin modele ve kontrole verilen metni. Kontrolün kaynağı da bu:
  * modelin gördüğü şeyle kontrolün karşılaştırdığı şey aynı olmalı.
  */
-export function cvOlgulari(profile: ResumeProfile): string {
-  const satirlar: string[] = []
-  if (profile.fullName) satirlar.push(`Ad: ${profile.fullName}`)
-  if (profile.headline) satirlar.push(`Unvan: ${profile.headline}`)
-  if (profile.summary) satirlar.push(`Özet: ${profile.summary}`)
+export function resumeFacts(profile: ResumeProfile): string {
+  const lineItems: string[] = []
+  if (profile.fullName) lineItems.push(`Ad: ${profile.fullName}`)
+  if (profile.headline) lineItems.push(`Unvan: ${profile.headline}`)
+  if (profile.summary) lineItems.push(`Özet: ${profile.summary}`)
 
   for (const d of profile.experience) {
-    satirlar.push(`Deneyim: ${d.title} — ${d.company} (${d.startDate} – ${d.endDate})`)
-    for (const m of d.bullets) satirlar.push(`  • ${m.sourceRef || m.text}`)
+    lineItems.push(`Deneyim: ${d.title} — ${d.company} (${d.startDate} – ${d.endDate})`)
+    for (const m of d.bullets) lineItems.push(`  • ${m.sourceRef || m.text}`)
   }
   for (const e of profile.education) {
-    const parca = [e.school, e.degree, e.field, e.endDate].filter(Boolean).join(", ")
-    satirlar.push(`Eğitim: ${parca}`)
+    const fragment = [e.school, e.degree, e.field, e.endDate].filter(Boolean).join(", ")
+    lineItems.push(`Eğitim: ${fragment}`)
   }
-  if (profile.skills.length) satirlar.push(`Beceriler: ${profile.skills.join(", ")}`)
-  if (profile.languages.length) satirlar.push(`Diller: ${profile.languages.join(", ")}`)
+  if (profile.skills.length) lineItems.push(`Beceriler: ${profile.skills.join(", ")}`)
+  if (profile.languages.length) lineItems.push(`Diller: ${profile.languages.join(", ")}`)
   if (profile.certifications.length) {
-    satirlar.push(`Sertifikalar: ${profile.certifications.join(", ")}`)
+    lineItems.push(`Sertifikalar: ${profile.certifications.join(", ")}`)
   }
-  return satirlar.join("\n")
+  return lineItems.join("\n")
 }
 
-function ilanOzeti(posting: JobPostingData): string {
-  const zorunlu = posting.requirements.filter((r) => r.importance === "must").map((r) => r.text)
-  const tercihen = posting.requirements.filter((r) => r.importance !== "must").map((r) => r.text)
+function postingSummary(posting: JobPostingData): string {
+  const required = posting.requirements.filter((r) => r.importance === "must").map((r) => r.text)
+  const preferred = posting.requirements.filter((r) => r.importance !== "must").map((r) => r.text)
   return [
     `Pozisyon: ${posting.position}`,
     posting.company ? `Şirket: ${posting.company}` : null,
     `Dil: ${posting.language === "en" ? "İngilizce" : "Türkçe"}`,
-    zorunlu.length ? `Zorunlu gereksinimler:\n- ${zorunlu.join("\n- ")}` : null,
-    tercihen.length ? `Tercih edilenler:\n- ${tercihen.join("\n- ")}` : null,
+    required.length ? `Zorunlu gereksinimler:\n- ${required.join("\n- ")}` : null,
+    preferred.length ? `Tercih edilenler:\n- ${preferred.join("\n- ")}` : null,
   ]
     .filter(Boolean)
     .join("\n")
@@ -109,39 +110,39 @@ function ilanOzeti(posting: JobPostingData): string {
  * senin yazdığın hâlinde yok"); ön yazıda kaynak maddenin kendisi değil,
  * CV'nin tamamı.
  */
-function paragrafMesaji(detay: string): string {
-  return detay.replace("Bu maddede", "Bu paragrafta").replace("senin yazdığın hâlinde", "CV'nde")
+function paragraphMessage(detailText: string): string {
+  return detailText.replace("Bu maddede", "Bu paragrafta").replace("senin yazdığın hâlinde", "CV'nde")
 }
 
 export function verifyCoverLetter(
-  paragraflar: string[],
-  kaynak: string,
+  paragraphs: string[],
+  sourceText: string,
   posting: JobPostingData,
-): OnYaziParagrafi[] {
-  return paragraflar.map((metin) => {
+): CoverLetterParagraph[] {
+  return paragraphs.map((paragraph) => {
     const issues = [
-      ...checkNumbers(metin, kaynak),
-      ...checkPostingTermInjection(metin, kaynak, posting),
-    ].map((i) => ({ ...i, detail: paragrafMesaji(i.detail) }))
-    return { metin, kontrol: { status: issues.length ? "flagged" : "ok", issues } }
+      ...checkNumbers(paragraph, sourceText),
+      ...checkPostingTermInjection(paragraph, sourceText, posting),
+    ].map((i) => ({ ...i, detail: paragraphMessage(i.detail) }))
+    return { text: paragraph, verification: { status: issues.length ? "flagged" : "ok", issues } }
   })
 }
 
 export async function generateCoverLetter(
   llm: LlmProvider,
   input: { profile: ResumeProfile; posting: JobPostingData },
-): Promise<ExtractResult<OnYazi>> {
-  const kaynak = cvOlgulari(input.profile)
+): Promise<ExtractResult<CoverLetter>> {
+  const sourceText = resumeFacts(input.profile)
   const { data, tokens } = await llm.extract({
     prompt: COVER_LETTER_PROMPT,
     schemaName: "cover_letter",
     schema: coverLetterJsonSchema,
-    input: `CV BİLGİLERİ\n${kaynak}\n\nİŞ İLANI\n${ilanOzeti(input.posting)}`,
+    input: `CV BİLGİLERİ\n${sourceText}\n\nİŞ İLANI\n${postingSummary(input.posting)}`,
   })
 
-  const paragraflar = CoverLetterSchema.parse(data)
+  const paragraphs = CoverLetterSchema.parse(data)
     .paragraflar.map((p) => p.trim())
     .filter(Boolean)
 
-  return { data: { paragraflar: verifyCoverLetter(paragraflar, kaynak, input.posting) }, tokens }
+  return { data: { paragraphs: verifyCoverLetter(paragraphs, sourceText, input.posting) }, tokens }
 }

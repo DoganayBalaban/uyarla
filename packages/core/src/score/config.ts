@@ -41,7 +41,7 @@ export interface ScoringConfig {
   summaryWeight: number
 }
 
-const BUTUN_KANIT_TURLERI: readonly Evidence["kind"][] = [
+const ALL_EVIDENCE_KINDS: readonly Evidence["kind"][] = [
   "role",
   "bullet",
   "skill",
@@ -63,7 +63,7 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   // %91,1'den %85,7'ye düşürüyor (K-36).
   semanticTypes: ["skill", "experience", "education", "soft"],
   evidenceKindsByType: {
-    skill: BUTUN_KANIT_TURLERI,
+    skill: ALL_EVIDENCE_KINDS,
     // Yalnızca anlatı kanıtı: deneyim gereksinimini beceri listesi ya da
     // diploma satırı karşılamaz. Ölçümde uydurmayı 3'ten 2'ye indirdi ve
     // hiçbir meşru eşleşmeyi düşürmedi (K-36).
@@ -73,8 +73,8 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
     // Eğitim gereksinimini yalnızca eğitim kanıtına daraltmak ölçümde iki
     // meşru eşleşmeyi düşürüyor: ilan "Yazılım Mühendisliği" derken CV'nin
     // beceri satırı "Yazılım Geliştirme" köprüyü kuruyor (K-36).
-    education: BUTUN_KANIT_TURLERI,
-    soft: BUTUN_KANIT_TURLERI,
+    education: ALL_EVIDENCE_KINDS,
+    soft: ALL_EVIDENCE_KINDS,
   },
   summaryWeight: 0.75,
 }

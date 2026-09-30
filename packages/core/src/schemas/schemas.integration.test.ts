@@ -3,7 +3,7 @@ import { LmStudioProvider } from "../llm/lmstudio.js"
 import { llmConfigFromEnv } from "../llm/types.js"
 import { JobPostingSchema, jobPostingJsonSchema } from "./job.js"
 
-const ILAN = `Frontend Geliştirici (Acme Teknoloji)
+const POSTING = `Frontend Geliştirici (Acme Teknoloji)
 
 Aradığımız nitelikler:
 - En az 3 yıl React deneyimi
@@ -20,14 +20,14 @@ importance: "şart", "zorunlu", "aranan" ise must; "tercihen", "artı olur" ise 
 keywords: CV'de ararken kullanılacak kelimeler, eş anlamlılarıyla.
 Şirket adı ilanda yoksa null yaz. Kıdem belirtilmemişse null yaz.`
 
-describe("İlan şeması · gerçek model", () => {
-  it("strict kısıtı altında geçerli ve Zod'dan geçen çıktı üretir", async () => {
+describe("posting schema · real model", () => {
+  it("produces valid output that passes Zod under the strict constraint", async () => {
     const llm = new LmStudioProvider(llmConfigFromEnv())
     const { data, tokens } = await llm.extract({
       prompt: PROMPT,
       schemaName: "job_posting",
       schema: jobPostingJsonSchema,
-      input: ILAN,
+      input: POSTING,
     })
 
     // Asıl iddia: şema kısıtı gerçekten uygulanıyor ve çıktı Zod'dan geçiyor.

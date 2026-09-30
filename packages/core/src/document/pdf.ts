@@ -1,9 +1,9 @@
-import { fontYollari } from "@uyarla/fonts"
+import { fontPaths } from "@uyarla/fonts"
 import PDFDocument from "pdfkit"
 import type { DocumentModel } from "./model.js"
 
 /** ~2 cm kenar boşluğu. */
-const KENAR = 56
+const MARGIN = 56
 
 /**
  * ATS dostu tek sütunlu PDF (spec §9).
@@ -14,14 +14,14 @@ const KENAR = 56
  * da garantiliyor — taranmış PDF'e benzer bir sonuç riski yok.
  */
 export async function renderPdf(model: DocumentModel): Promise<Buffer> {
-  const doc = new PDFDocument({ size: "A4", margin: KENAR })
-  const fontlar = fontYollari()
-  doc.registerFont("govde", fontlar.regular)
-  doc.registerFont("kalin", fontlar.bold)
+  const doc = new PDFDocument({ size: "A4", margin: MARGIN })
+  const fontList = fontPaths()
+  doc.registerFont("govde", fontList.regular)
+  doc.registerFont("kalin", fontList.bold)
 
-  const parcalar: Buffer[] = []
-  doc.on("data", (parca: Buffer) => parcalar.push(parca))
-  const bitti = new Promise<void>((resolve) => doc.on("end", () => resolve()))
+  const fragments: Buffer[] = []
+  doc.on("data", (fragment: Buffer) => fragments.push(fragment))
+  const finished = new Promise<void>((resolve) => doc.on("end", () => resolve()))
 
   doc.font("kalin").fontSize(20).text(model.name)
   if (model.contact) {
@@ -39,8 +39,8 @@ export async function renderPdf(model: DocumentModel): Promise<Buffer> {
     // İnce bir çizgi; grafik değil, bölüm ayracı. Metin katmanını
     // etkilemiyor, ATS tarafında görünmez.
     doc
-      .moveTo(KENAR, doc.y + 2)
-      .lineTo(doc.page.width - KENAR, doc.y + 2)
+      .moveTo(MARGIN, doc.y + 2)
+      .lineTo(doc.page.width - MARGIN, doc.y + 2)
       .strokeColor("#999")
       .lineWidth(0.5)
       .stroke()
@@ -60,6 +60,6 @@ export async function renderPdf(model: DocumentModel): Promise<Buffer> {
   }
 
   doc.end()
-  await bitti
-  return Buffer.concat(parcalar)
+  await finished
+  return Buffer.concat(fragments)
 }

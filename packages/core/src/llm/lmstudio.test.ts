@@ -9,21 +9,21 @@ const fakeClient = (impl: unknown) =>
   ({ chat: { completions: { create: impl } } }) as never
 
 describe("LmStudioProvider", () => {
-  it("şema kısıtını ve modeli isteğe geçirir, JSON'u çözümler", async () => {
+  it("passes the schema constraint and model to the request and parses the JSON", async () => {
     const create = vi.fn().mockResolvedValue({
-      choices: [{ message: { content: '{"ad":"Elif"}' } }],
+      choices: [{ message: { content: '{"name":"Elif"}' } }],
       usage: { total_tokens: 42 },
     })
     const provider = new LmStudioProvider(cfg, fakeClient(create))
 
-    const result = await provider.extract<{ ad: string }>({
+    const result = await provider.extract<{ name: string }>({
       prompt: "Adı çıkar",
       schemaName: "kisi",
-      schema: { type: "object", properties: { ad: { type: "string" } } },
+      schema: { type: "object", properties: { name: { type: "string" } } },
       input: "Adım Elif",
     })
 
-    expect(result.data).toEqual({ ad: "Elif" })
+    expect(result.data).toEqual({ name: "Elif" })
     expect(result.tokens).toBe(42)
 
     const args = create.mock.calls[0]![0] as Record<string, unknown>
@@ -35,7 +35,7 @@ describe("LmStudioProvider", () => {
     })
   })
 
-  it("prompt'u sistem, girdiyi kullanıcı mesajı olarak gönderir", async () => {
+  it("sends the prompt as the system message and the input as the user message", async () => {
     const create = vi.fn().mockResolvedValue({
       choices: [{ message: { content: "{}" } }],
     })
@@ -50,7 +50,7 @@ describe("LmStudioProvider", () => {
     ])
   })
 
-  it("usage yoksa token sayısını 0 sayar", async () => {
+  it("counts tokens as 0 when usage is missing", async () => {
     const provider = new LmStudioProvider(
       cfg,
       fakeClient(vi.fn().mockResolvedValue({ choices: [{ message: { content: "{}" } }] })),
@@ -59,7 +59,7 @@ describe("LmStudioProvider", () => {
     expect(result.tokens).toBe(0)
   })
 
-  it("ağ hatasını geçici hataya çevirir", async () => {
+  it("turns a network error into a transient error", async () => {
     const provider = new LmStudioProvider(
       cfg,
       fakeClient(vi.fn().mockRejectedValue(new Error("ECONNREFUSED"))),
@@ -69,7 +69,7 @@ describe("LmStudioProvider", () => {
     ).rejects.toBeInstanceOf(TransientError)
   })
 
-  it("boş yanıtı geçici hata sayar", async () => {
+  it("treats an empty response as a transient error", async () => {
     const provider = new LmStudioProvider(
       cfg,
       fakeClient(vi.fn().mockResolvedValue({ choices: [{ message: { content: "" } }] })),
@@ -79,7 +79,7 @@ describe("LmStudioProvider", () => {
     ).rejects.toBeInstanceOf(TransientError)
   })
 
-  it("bozuk JSON'u geçici hata sayar, ham çıktıyı mesaja koyar", async () => {
+  it("treats invalid JSON as a transient error and puts the raw output in the message", async () => {
     const provider = new LmStudioProvider(
       cfg,
       fakeClient(vi.fn().mockResolvedValue({ choices: [{ message: { content: "{bozuk" } }] })),
@@ -91,7 +91,7 @@ describe("LmStudioProvider", () => {
 })
 
 describe("llmConfigFromEnv", () => {
-  it("ortamdan okur", () => {
+  it("reads from the environment", () => {
     expect(
       llmConfigFromEnv({
         LLM_BASE_URL: "http://x/v1", LLM_MODEL: "m", LLM_TIMEOUT_MS: "5000",
@@ -99,7 +99,7 @@ describe("llmConfigFromEnv", () => {
     ).toEqual({ baseUrl: "http://x/v1", model: "m", timeoutMs: 5000 })
   })
 
-  it("model tanımsızsa hata verir", () => {
+  it("errors when the model is undefined", () => {
     expect(() =>
       llmConfigFromEnv({ LLM_BASE_URL: "http://x/v1" } as NodeJS.ProcessEnv),
     ).toThrow(/LLM_MODEL/)

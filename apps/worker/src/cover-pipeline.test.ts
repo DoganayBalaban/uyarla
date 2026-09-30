@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import type { JobPostingData, LlmProvider, ResumeProfile } from "@uyarla/core"
 import { runCoverLetter } from "./cover-pipeline.js"
 
-const profil: ResumeProfile = {
+const testProfile: ResumeProfile = {
   fullName: "Elif",
   headline: null,
   summary: null,
@@ -21,7 +21,7 @@ const profil: ResumeProfile = {
   certifications: [],
 }
 
-const ilan = {
+const testPosting = {
   position: "Frontend Geliştirici",
   company: null,
   seniority: "mid",
@@ -32,7 +32,7 @@ const ilan = {
 } as unknown as JobPostingData
 
 describe("runCoverLetter", () => {
-  it("ön yazıyı üretip kontrol sonuçlarıyla kaydediyor", async () => {
+  it("generates the cover letter and saves it with verification results", async () => {
     const saveCoverLetter = vi.fn(async () => {})
     const llm: LlmProvider = {
       extract: vi.fn(async () => ({
@@ -45,7 +45,7 @@ describe("runCoverLetter", () => {
       {
         llm,
         store: {
-          getAdaptationContext: async () => ({ profile: profil, posting: ilan, result: {} as never }),
+          getAdaptationContext: async () => ({ profile: testProfile, posting: testPosting, result: {} as never }),
           saveCoverLetter,
         },
         now: () => new Date("2026-09-27T10:00:00Z"),
@@ -54,13 +54,13 @@ describe("runCoverLetter", () => {
     )
 
     expect(saveCoverLetter).toHaveBeenCalledOnce()
-    const [id, kayit] = saveCoverLetter.mock.calls[0] as unknown as [string, any]
+    const [id, record] = saveCoverLetter.mock.calls[0] as unknown as [string, any]
     expect(id).toBe("ad-1")
-    expect(kayit.durum).toBe("done")
-    expect(kayit.tokenUsage).toBe(30)
-    expect(kayit.olusturulma).toBe("2026-09-27T10:00:00.000Z")
-    expect(kayit.paragraflar[0].kontrol.status).toBe("ok")
+    expect(record.status).toBe("done")
+    expect(record.tokenUsage).toBe(30)
+    expect(record.createdAt).toBe("2026-09-27T10:00:00.000Z")
+    expect(record.paragraphs[0].verification.status).toBe("ok")
     // CV'de olmayan ilan kavramı işaretleniyor.
-    expect(kayit.paragraflar[1].kontrol.status).toBe("flagged")
+    expect(record.paragraphs[1].verification.status).toBe("flagged")
   })
 })

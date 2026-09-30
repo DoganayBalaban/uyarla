@@ -27,27 +27,27 @@ const model: DocumentModel = {
 }
 
 describe("renderDocx", () => {
-  it("geçerli bir DOCX üretir", async () => {
+  it("produces a valid DOCX", async () => {
     // DOCX bir zip; imzası PK.
     const buf = await renderDocx(model)
     expect(buf.subarray(0, 2).toString()).toBe("PK")
   })
 
-  it("metni kendi çıkarıcımızla okunabiliyor", async () => {
-    const metin = await extractText(await renderDocx(model), "cikti.docx")
-    expect(metin).toContain("React ile panel geliştirdim")
+  it("its text is readable by our own extractor", async () => {
+    const text = await extractText(await renderDocx(model), "cikti.docx")
+    expect(text).toContain("React ile panel geliştirdim")
   })
 
-  it("Türkçe karakterleri bozmadan yazar", async () => {
-    const metin = await extractText(await renderDocx(model), "cikti.docx")
-    expect(metin).toContain("Elif Yılmaz")
-    expect(metin).toContain("Geliştirici")
-    expect(metin).toContain("Test altyapısını kurdum")
+  it("writes Turkish characters intact", async () => {
+    const text = await extractText(await renderDocx(model), "cikti.docx")
+    expect(text).toContain("Elif Yılmaz")
+    expect(text).toContain("Geliştirici")
+    expect(text).toContain("Test altyapısını kurdum")
   })
 
-  it("bütün bölümleri ve maddeleri yazar", async () => {
-    const metin = await extractText(await renderDocx(model), "cikti.docx")
-    for (const beklenen of [
+  it("writes all sections and bullets", async () => {
+    const text = await extractText(await renderDocx(model), "cikti.docx")
+    for (const expected of [
       "DENEYİM",
       "BECERİLER",
       "Geliştirici · Acme",
@@ -56,32 +56,32 @@ describe("renderDocx", () => {
       "React, TypeScript",
       "React odaklı geliştirici",
     ]) {
-      expect(metin).toContain(beklenen)
+      expect(text).toContain(expected)
     }
   })
 
-  it("PDF ile aynı metni yazar", async () => {
+  it("writes the same text as the PDF", async () => {
     // İki üreteç tek modelden besleniyor. İçerik ayrışırsa modelin değil
     // üreteçlerin karar verdiği anlamına gelir — ara yapının varlık sebebi
     // tam olarak bunu engellemek (spec §9).
-    const bosluksuz = (s: string) => s.replace(/[\s•]+/g, " ").trim()
-    const pdfMetni = bosluksuz(await extractText(await renderPdf(model), "c.pdf"))
-    const docxMetni = bosluksuz(await extractText(await renderDocx(model), "c.docx"))
+    const withoutSpaces = (s: string) => s.replace(/[\s•]+/g, " ").trim()
+    const pdfText = withoutSpaces(await extractText(await renderPdf(model), "c.pdf"))
+    const docxText = withoutSpaces(await extractText(await renderDocx(model), "c.docx"))
 
     for (const entry of model.sections.flatMap((s) => s.entries)) {
-      for (const satir of entry.lines) {
-        expect(pdfMetni).toContain(bosluksuz(satir))
-        expect(docxMetni).toContain(bosluksuz(satir))
+      for (const lineItem of entry.lines) {
+        expect(pdfText).toContain(withoutSpaces(lineItem))
+        expect(docxText).toContain(withoutSpaces(lineItem))
       }
     }
   })
 
-  it("özet ve iletişim yoksa çökmez", async () => {
+  it("does not crash without summary and contact", async () => {
     const buf = await renderDocx({ ...model, summary: null, contact: null })
     expect(buf.subarray(0, 2).toString()).toBe("PK")
   })
 
-  it("bölümsüz modelde de geçerli DOCX üretir", async () => {
+  it("produces a valid DOCX for a model without sections", async () => {
     const buf = await renderDocx({ ...model, sections: [] })
     expect(buf.subarray(0, 2).toString()).toBe("PK")
   })

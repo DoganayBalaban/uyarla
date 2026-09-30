@@ -9,7 +9,7 @@ import type {
 import { runAdaptation } from "./adapt-pipeline.js"
 import type { AdaptationStore } from "./adapt-types.js"
 
-const profil: ResumeProfile = {
+const testProfile: ResumeProfile = {
   fullName: "Test Aday",
   headline: null,
   summary: "Frontend geliştirici",
@@ -31,7 +31,7 @@ const profil: ResumeProfile = {
   certifications: [],
 }
 
-const ilan: JobPostingData = {
+const testPosting: JobPostingData = {
   position: "Frontend Geliştirici",
   company: null,
   seniority: null,
@@ -60,12 +60,12 @@ const ilan: JobPostingData = {
   ],
 }
 
-const skor: ScoreResult = {
+const testScore: ScoreResult = {
   score: 50,
   missingKeywords: ["konteyner yönetimi"],
   requirements: [
     {
-      requirement: ilan.requirements[0]!,
+      requirement: testPosting.requirements[0]!,
       status: "matched",
       confidence: 1,
       method: "keyword",
@@ -74,7 +74,7 @@ const skor: ScoreResult = {
       missingConcepts: [],
     },
     {
-      requirement: ilan.requirements[1]!,
+      requirement: testPosting.requirements[1]!,
       status: "missing",
       confidence: 0,
       method: null,
@@ -83,7 +83,7 @@ const skor: ScoreResult = {
       missingConcepts: ["konteyner yönetimi"],
     },
     {
-      requirement: ilan.requirements[2]!,
+      requirement: testPosting.requirements[2]!,
       status: "missing",
       confidence: 0,
       method: null,
@@ -95,24 +95,24 @@ const skor: ScoreResult = {
 }
 
 /** Kaydedilen taslağı yakalayan sahte store. */
-function sahteStore() {
-  const kayit: { draft?: AdaptationDraft; status?: string; errorClass?: string } = {}
+function fakeStore() {
+  const record: { draft?: AdaptationDraft; status?: string; errorClass?: string } = {}
   const store: AdaptationStore = {
-    getAdaptationContext: vi.fn(async () => ({ profile: profil, posting: ilan, result: skor })),
+    getAdaptationContext: vi.fn(async () => ({ profile: testProfile, posting: testPosting, result: testScore })),
     saveDraft: vi.fn(async ({ draft, status }) => {
-      kayit.draft = draft
-      kayit.status = status
+      record.draft = draft
+      record.status = status
     }),
     failAdaptation: vi.fn(async (_id, errorClass) => {
-      kayit.errorClass = errorClass
+      record.errorClass = errorClass
     }),
     saveCoverLetter: vi.fn(async () => {}),
   }
-  return { store, kayit }
+  return { store, record }
 }
 
 /** Her çağrıda verilen metni döndüren sahte model. */
-function sahteLlm(map: (girdi: string) => string): LlmProvider {
+function fakeLlm(map: (llmInput: string) => string): LlmProvider {
   return {
     extract: vi.fn(async ({ input }) => ({
       data: { rewritten: map(input) } as never,
@@ -129,7 +129,7 @@ function sahteLlm(map: (girdi: string) => string): LlmProvider {
  * kontrolü haklı olarak uyarı veriyor. Temiz bir yeniden yazımı taklit
  * etmenin yolu, girdideki maddeyi yansıtmak.
  */
-function yansitanLlm(): LlmProvider {
+function echoLlm(): LlmProvider {
   return {
     extract: vi.fn(async ({ input }) => ({
       data: { rewritten: input.split("\n")[0]!.replace(/^(Madde|Özet): /, "") } as never,
@@ -145,87 +145,87 @@ function yansitanLlm(): LlmProvider {
  * verildiği için (K-38) iki maddenin de hedefi olması bunu gerektiriyor.
  * Yazım ile kaynağı aynı kümede kaldığı sürece sapma 1.0 çıkar.
  */
-const sahteEmbedding = {
+const fakeEmbedding = {
   embed: vi.fn(async (t: string[]) => t.map((m) => (/s[üu]re/i.test(m) ? [0, 1] : [1, 0]))),
 }
 
 describe("runAdaptation", () => {
-  it("her madde için bir çağrı yapar ve taslağı kaydeder", async () => {
-    const { store, kayit } = sahteStore()
-    const llm = sahteLlm(() => "yeniden yazıldı")
+  it("makes one call per bullet and saves the draft", async () => {
+    const { store, record } = fakeStore()
+    const llm = fakeLlm(() => "yeniden yazıldı")
 
-    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+    await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
 
     // 2 madde + 1 özet = 3 çağrı
     expect(llm.extract).toHaveBeenCalledTimes(3)
-    expect(kayit.draft!.bullets).toHaveLength(2)
-    expect(kayit.draft!.bullets[0]!.id).toBe("0-0")
+    expect(record.draft!.bullets).toHaveLength(2)
+    expect(record.draft!.bullets[0]!.id).toBe("0-0")
   })
 
-  it("becerileri ilana göre sıralar", async () => {
-    const { store, kayit } = sahteStore()
+  it("orders skills by the posting", async () => {
+    const { store, record } = fakeStore()
     await runAdaptation(
-      { llm: sahteLlm(() => "x"), embedding: sahteEmbedding, store },
+      { llm: fakeLlm(() => "x"), embedding: fakeEmbedding, store },
       { adaptationId: "a1" },
     )
-    expect(kayit.draft!.skillOrder).toEqual(["React", "Excel"])
+    expect(record.draft!.skillOrder).toEqual(["React", "Excel"])
   })
 
-  it("uyarı alan yazımı önermez, madde olduğu gibi kalır", async () => {
+  it("does not suggest a flagged rewrite; the bullet stays as is", async () => {
     // K-38: yalnızca hedefi olan maddeler yazılıyor; uyarılı bir yazım
     // başarısız bir denemedir ve kullanıcının önüne konmuyor (K-26'nın yerini
     // alıyor). Burada ikinci madde kaynağında olmayan bir sayı ekliyor.
-    const { store, kayit } = sahteStore()
-    const llm = sahteLlm((girdi) =>
-      girdi.includes("%40") ? "Süreyi %40 düşürdüm, hızı %90 artırdım" : "React ile paneli geliştirdim",
+    const { store, record } = fakeStore()
+    const llm = fakeLlm((llmInput) =>
+      llmInput.includes("%40") ? "Süreyi %40 düşürdüm, hızı %90 artırdım" : "React ile paneli geliştirdim",
     )
 
-    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+    await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
 
     // Birinci madde temiz ama terim uyumu taşımıyor: o da önerilmiyor,
     // çünkü madde yazımının tek amacı terim uyumu (K-39).
-    expect(kayit.draft!.bullets[0]!.rewritten).toBe("React ile panel yaptım")
-    const ikinci = kayit.draft!.bullets[1]!
-    expect(ikinci.rewritten).toBe(ikinci.original)
-    expect(ikinci.decision).toBe("accepted")
-    expect(kayit.status).toBe("ready")
+    expect(record.draft!.bullets[0]!.rewritten).toBe("React ile panel yaptım")
+    const second = record.draft!.bullets[1]!
+    expect(second.rewritten).toBe(second.original)
+    expect(second.decision).toBe("accepted")
+    expect(record.status).toBe("ready")
   })
 
-  it("hepsi temizse durum ready olur", async () => {
-    const { store, kayit } = sahteStore()
+  it("status is ready when everything is clean", async () => {
+    const { store, record } = fakeStore()
     await runAdaptation(
-      { llm: yansitanLlm(), embedding: sahteEmbedding, store },
+      { llm: echoLlm(), embedding: fakeEmbedding, store },
       { adaptationId: "a1" },
     )
-    expect(kayit.draft!.bullets.every((b) => b.verification.status === "ok")).toBe(true)
-    expect(kayit.status).toBe("ready")
+    expect(record.draft!.bullets.every((b) => b.verification.status === "ok")).toBe(true)
+    expect(record.status).toBe("ready")
   })
 
-  it("bir maddeye ilan terimi sızarsa yazımı önermez", async () => {
+  it("does not suggest a rewrite that injects a posting term", async () => {
     // Uydurmanın en tehlikeli biçimi (spec §7.2): model ilanın istediğini
     // CV'ye yazıveriyor. Burada React, ikinci maddenin kaynağında geçmiyor.
-    const { store, kayit } = sahteStore()
+    const { store, record } = fakeStore()
     await runAdaptation(
       {
-        llm: sahteLlm((girdi) =>
-          girdi.includes("%40") ? "React ile süreyi %40 düşürdüm" : "React ile paneli geliştirdim",
+        llm: fakeLlm((llmInput) =>
+          llmInput.includes("%40") ? "React ile süreyi %40 düşürdüm" : "React ile paneli geliştirdim",
         ),
-        embedding: sahteEmbedding,
+        embedding: fakeEmbedding,
         store,
       },
       { adaptationId: "a1" },
     )
 
-    const ikinci = kayit.draft!.bullets[1]!
-    expect(ikinci.rewritten).toBe(ikinci.original)
-    expect(ikinci.rewritten).not.toContain("React")
+    const second = record.draft!.bullets[1]!
+    expect(second.rewritten).toBe(second.original)
+    expect(second.rewritten).not.toContain("React")
   })
 
-  it("dayanağı maddede geçen terim uyumunu kaydeder ve onaya bırakır", async () => {
+  it("records a term alignment whose basis is in the bullet and leaves it for approval", async () => {
     // K-38: model ilan terimini kullandığında dayanağını maddeden birebir
     // gösteriyor; dayanak kaynakta geçiyorsa uydurma sayılmıyor. Terimin
     // deneyimi doğru anlatıp anlatmadığına ise kullanıcı karar veriyor.
-    const { store, kayit } = sahteStore()
+    const { store, record } = fakeStore()
     const llm: LlmProvider = {
       extract: vi.fn(async ({ input }) => {
         if (!input.startsWith("Madde: React")) {
@@ -241,16 +241,16 @@ describe("runAdaptation", () => {
       }),
     }
 
-    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+    await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
 
-    const ilk = kayit.draft!.bullets[0]!
-    expect(ilk.alignments).toEqual([{ term: "konteyner yönetimi", basis: "panel yaptım" }])
-    expect(ilk.verification.status).toBe("ok")
-    expect(ilk.decision).toBe("pending")
+    const first = record.draft!.bullets[0]!
+    expect(first.alignments).toEqual([{ term: "konteyner yönetimi", basis: "panel yaptım" }])
+    expect(first.verification.status).toBe("ok")
+    expect(first.decision).toBe("pending")
   })
 
-  it("dayanağı maddede geçmeyen terimi uydurma sayar ve yazımı önermez", async () => {
-    const { store, kayit } = sahteStore()
+  it("treats a term whose basis is not in the bullet as fabrication and does not suggest the rewrite", async () => {
+    const { store, record } = fakeStore()
     const llm: LlmProvider = {
       extract: vi.fn(async ({ input }) => ({
         data: (input.startsWith("Madde: React")
@@ -263,33 +263,33 @@ describe("runAdaptation", () => {
       })),
     }
 
-    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+    await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
 
-    const ilk = kayit.draft!.bullets[0]!
-    expect(ilk.rewritten).toBe(ilk.original)
-    expect(ilk.alignments).toEqual([])
-    expect(ilk.decision).toBe("accepted")
+    const first = record.draft!.bullets[0]!
+    expect(first.rewritten).toBe(first.original)
+    expect(first.alignments).toEqual([])
+    expect(first.decision).toBe("accepted")
   })
 
-  it("kaynaktaki bilgiyi kaybeden yazımı önermez, madde olduğu gibi kalır", async () => {
+  it("does not suggest a rewrite that loses source information; the bullet stays as is", async () => {
     // K-38: "sayfa yüklenme süresini %40 azalttım" → "web performansı %40
     // azalttım" gibi anlamı bozan ya da sayıyı düşüren yazımlar gösterilmiyor.
-    const { store, kayit } = sahteStore()
-    const llm = sahteLlm((girdi) => (girdi.includes("%40") ? "Süreyi azalttım" : "Panel yaptım"))
-    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+    const { store, record } = fakeStore()
+    const llm = fakeLlm((llmInput) => (llmInput.includes("%40") ? "Süreyi azalttım" : "Panel yaptım"))
+    await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
 
-    for (const madde of kayit.draft!.bullets) {
-      expect(madde.rewritten).toBe(madde.original)
-      expect(madde.decision).toBe("accepted")
+    for (const bullet of record.draft!.bullets) {
+      expect(bullet.rewritten).toBe(bullet.original)
+      expect(bullet.decision).toBe("accepted")
     }
   })
 
-  it("İngilizce CV'yi Türkçe ilana uyarlarken maddeleri çevirmez, özeti İngilizce yazdırır", async () => {
+  it("does not translate bullets when adapting an English resume to a Turkish posting; writes the summary in English", async () => {
     // K-39: İngilizce CV Türkçeye çevriliyordu. Diller farklıysa terim uyumu
     // kapalı (maddeler modele gitmiyor), özet yazımına dil açıkça veriliyor.
-    const { store, kayit } = sahteStore()
-    const ingilizce: ResumeProfile = {
-      ...profil,
+    const { store, record } = fakeStore()
+    const englishProfile: ResumeProfile = {
+      ...testProfile,
       summary: "Frontend developer with experience in React.",
       experience: [
         {
@@ -304,88 +304,88 @@ describe("runAdaptation", () => {
         },
       ],
     }
-    store.getAdaptationContext = vi.fn(async () => ({ profile: ingilizce, posting: ilan, result: skor }))
-    const llm = yansitanLlm()
+    store.getAdaptationContext = vi.fn(async () => ({ profile: englishProfile, posting: testPosting, result: testScore }))
+    const llm = echoLlm()
 
-    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+    await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
 
-    const cagrilar = vi.mocked(llm.extract).mock.calls.map((c) => c[0].input)
-    expect(cagrilar.filter((g) => g.startsWith("Madde:"))).toHaveLength(0)
-    expect(cagrilar.find((g) => g.startsWith("Özet:"))).toContain("Dil: İngilizce")
-    for (const madde of kayit.draft!.bullets) expect(madde.rewritten).toBe(madde.original)
+    const llmInputs = vi.mocked(llm.extract).mock.calls.map((c) => c[0].input)
+    expect(llmInputs.filter((g) => g.startsWith("Madde:"))).toHaveLength(0)
+    expect(llmInputs.find((g) => g.startsWith("Özet:"))).toContain("Dil: İngilizce")
+    for (const bullet of record.draft!.bullets) expect(bullet.rewritten).toBe(bullet.original)
   })
 
-  it("bir madde patlarsa o madde orijinal kalır, diğerleri etkilenmez", async () => {
+  it("if one bullet fails it stays original; the others are unaffected", async () => {
     // spec §13: madde başına izolasyon.
-    let sayac = 0
+    let counter = 0
     const llm: LlmProvider = {
       extract: vi.fn(async () => {
-        sayac++
-        if (sayac === 2) throw new Error("model düştü")
+        counter++
+        if (counter === 2) throw new Error("model düştü")
         return { data: { rewritten: "yeni" } as never, tokens: 4 }
       }),
     }
-    const { store, kayit } = sahteStore()
-    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+    const { store, record } = fakeStore()
+    await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
 
-    const patlayan = kayit.draft!.bullets.find((b) => b.rewritten === b.original)
-    expect(patlayan).toBeDefined()
-    expect(patlayan!.verification.issues).toEqual([])
-    expect(patlayan!.decision).toBe("accepted")
+    const failedBullet = record.draft!.bullets.find((b) => b.rewritten === b.original)
+    expect(failedBullet).toBeDefined()
+    expect(failedBullet!.verification.issues).toEqual([])
+    expect(failedBullet!.decision).toBe("accepted")
   })
 
-  it("özeti olmayan CV'de özet çağrısı yapmaz", async () => {
-    const { store, kayit } = sahteStore()
+  it("makes no summary call for a resume without a summary", async () => {
+    const { store, record } = fakeStore()
     store.getAdaptationContext = vi.fn(async () => ({
-      profile: { ...profil, summary: null },
-      posting: ilan,
-      result: skor,
+      profile: { ...testProfile, summary: null },
+      posting: testPosting,
+      result: testScore,
     }))
-    const llm = sahteLlm(() => "yeni")
+    const llm = fakeLlm(() => "yeni")
 
-    await runAdaptation({ llm, embedding: sahteEmbedding, store }, { adaptationId: "a1" })
+    await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
 
     expect(llm.extract).toHaveBeenCalledTimes(2)
-    expect(kayit.draft!.summary.original).toBeNull()
-    expect(kayit.draft!.summary.rewritten).toBe("")
+    expect(record.draft!.summary.original).toBeNull()
+    expect(record.draft!.summary.rewritten).toBe("")
   })
 
-  it("token toplamını kaydeder", async () => {
-    const { store } = sahteStore()
+  it("saves the token total", async () => {
+    const { store } = fakeStore()
     await runAdaptation(
-      { llm: sahteLlm(() => "yeni"), embedding: sahteEmbedding, store },
+      { llm: fakeLlm(() => "yeni"), embedding: fakeEmbedding, store },
       { adaptationId: "a1" },
     )
     expect(vi.mocked(store.saveDraft).mock.calls[0]![0].tokenUsage).toBe(30)
   })
 
-  it("bağlam okunamazsa uyarlamayı başarısız işaretler ve hatayı yeniden fırlatır", async () => {
-    const { store, kayit } = sahteStore()
+  it("marks the adaptation failed and rethrows if the context cannot be read", async () => {
+    const { store, record } = fakeStore()
     store.getAdaptationContext = vi.fn(async () => {
       throw new Error("bulunamadı")
     })
 
     await expect(
       runAdaptation(
-        { llm: sahteLlm(() => "yeni"), embedding: sahteEmbedding, store },
+        { llm: fakeLlm(() => "yeni"), embedding: fakeEmbedding, store },
         { adaptationId: "a1" },
       ),
     ).rejects.toThrow("bulunamadı")
-    expect(kayit.errorClass).toBe("unknown")
+    expect(record.errorClass).toBe("unknown")
   })
 
-  it("ilerleme aşamalarını sırayla bildirir", async () => {
-    const asamalar: string[] = []
-    const { store } = sahteStore()
+  it("reports progress stages in order", async () => {
+    const stages: string[] = []
+    const { store } = fakeStore()
     await runAdaptation(
       {
-        llm: sahteLlm(() => "yeni"),
-        embedding: sahteEmbedding,
+        llm: fakeLlm(() => "yeni"),
+        embedding: fakeEmbedding,
         store,
-        onProgress: (s) => asamalar.push(s),
+        onProgress: (s) => stages.push(s),
       },
       { adaptationId: "a1" },
     )
-    expect(asamalar).toEqual(["yeniden_yaziliyor", "kontrol_ediliyor", "tamamlandi"])
+    expect(stages).toEqual(["rewriting", "verifying", "completed"])
   })
 })

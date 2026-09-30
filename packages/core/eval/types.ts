@@ -1,3 +1,15 @@
+import { join, resolve } from "node:path"
+
+/**
+ * Çıkarım önbelleğinin dizini. Öntanımlı `eval/cache/`; modelleri
+ * karşılaştırırken her model kendi dizininde çalışsın diye `EVAL_CACHE` ile
+ * değiştirilebiliyor (ör. `eval/cache/modeller/qwen3.5-9b`). Aksi hâlde
+ * `--refresh` bir modelin taban çizgisini ötekinin çıktısıyla ezer.
+ */
+export function cacheDir(root: string): string {
+  return process.env.EVAL_CACHE ? resolve(process.env.EVAL_CACHE) : join(root, "cache")
+}
+
 export interface ExpectedRequirement {
   /** Gereksinimi tanımak için ilandaki metinden ayırt edici bir parça. */
   match: string
@@ -10,9 +22,9 @@ export interface ExpectedRequirement {
 export interface EvalPair {
   id: string
   /** sources/cv altındaki dosya adı. */
-  cv: string
+  resumeId: string
   /** sources/ilan altındaki dosya adı. */
-  ilan: string
+  postingId: string
   /** Bu çiftin neyi sınadığı ve verinin nereden geldiği. */
   note: string
   expectations: ExpectedRequirement[]

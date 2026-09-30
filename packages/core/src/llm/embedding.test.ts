@@ -10,29 +10,29 @@ const cfg = { baseUrl: "http://localhost:11434/v1", model: "bge-m3", timeoutMs: 
 const fakeClient = (impl: unknown) => ({ embeddings: { create: impl } }) as never
 
 describe("cosineSimilarity", () => {
-  it("aynı vektör için 1 döner", () => {
+  it("returns 1 for identical vectors", () => {
     expect(cosineSimilarity([1, 2, 3], [1, 2, 3])).toBeCloseTo(1)
   })
 
-  it("dik vektörler için 0 döner", () => {
+  it("returns 0 for orthogonal vectors", () => {
     expect(cosineSimilarity([1, 0], [0, 1])).toBeCloseTo(0)
   })
 
-  it("zıt vektörler için -1 döner", () => {
+  it("returns -1 for opposite vectors", () => {
     expect(cosineSimilarity([1, 0], [-1, 0])).toBeCloseTo(-1)
   })
 
-  it("sıfır vektörde 0 döner, NaN değil", () => {
+  it("returns 0 for a zero vector, not NaN", () => {
     expect(cosineSimilarity([0, 0], [1, 2])).toBe(0)
   })
 
-  it("farklı boyutlu vektörlerde hata fırlatır", () => {
+  it("throws for vectors of different dimensions", () => {
     expect(() => cosineSimilarity([1, 2], [1, 2, 3])).toThrow(/boyut/i)
   })
 })
 
 describe("EmbeddingProvider", () => {
-  it("metinleri tek toplu çağrıda gömer ve sırayı korur", async () => {
+  it("embeds texts in a single batch call and keeps order", async () => {
     // Sunucu sırayı garanti etmiyor; index alanına göre yerleştirilmeli.
     const create = vi.fn().mockResolvedValue({
       data: [
@@ -51,7 +51,7 @@ describe("EmbeddingProvider", () => {
     ])
   })
 
-  it("modeli ve girdiyi isteğe geçirir", async () => {
+  it("passes the model and input to the request", async () => {
     const create = vi.fn().mockResolvedValue({ data: [{ index: 0, embedding: [1] }] })
     await new OpenAiCompatibleEmbeddingProvider(cfg, fakeClient(create)).embed(["metin"])
 
@@ -60,14 +60,14 @@ describe("EmbeddingProvider", () => {
     expect(args.input).toEqual(["metin"])
   })
 
-  it("boş liste için çağrı yapmaz", async () => {
+  it("makes no call for an empty list", async () => {
     const create = vi.fn()
     const provider = new OpenAiCompatibleEmbeddingProvider(cfg, fakeClient(create))
     expect(await provider.embed([])).toEqual([])
     expect(create).not.toHaveBeenCalled()
   })
 
-  it("ağ hatasını geçici hataya çevirir", async () => {
+  it("turns a network error into a transient error", async () => {
     const provider = new OpenAiCompatibleEmbeddingProvider(
       cfg,
       fakeClient(vi.fn().mockRejectedValue(new Error("ECONNREFUSED"))),
@@ -75,7 +75,7 @@ describe("EmbeddingProvider", () => {
     await expect(provider.embed(["a"])).rejects.toBeInstanceOf(TransientError)
   })
 
-  it("eksik vektör dönerse hata verir, sessizce boşluk bırakmaz", async () => {
+  it("errors on a missing vector instead of silently leaving a gap", async () => {
     // Hizalama bozulursa skor yanlış gereksinime kanıt gösterir.
     const provider = new OpenAiCompatibleEmbeddingProvider(
       cfg,
@@ -88,7 +88,7 @@ describe("EmbeddingProvider", () => {
 })
 
 describe("embeddingConfigFromEnv", () => {
-  it("embedding sunucusunu üretken modelden ayrı okur", () => {
+  it("reads the embedding server separately from the generative model", () => {
     expect(
       embeddingConfigFromEnv({
         LLM_BASE_URL: "http://localhost:1234/v1",
@@ -102,13 +102,13 @@ describe("embeddingConfigFromEnv", () => {
     })
   })
 
-  it("model tanımsızsa hata verir", () => {
+  it("errors when the model is undefined", () => {
     expect(() =>
       embeddingConfigFromEnv({ EMBEDDING_BASE_URL: "http://x/v1" } as NodeJS.ProcessEnv),
     ).toThrow(/EMBEDDING_MODEL/)
   })
 
-  it("adres tanımsızsa hata verir", () => {
+  it("errors when the URL is undefined", () => {
     expect(() =>
       embeddingConfigFromEnv({ EMBEDDING_MODEL: "bge-m3" } as NodeJS.ProcessEnv),
     ).toThrow(/EMBEDDING_BASE_URL/)

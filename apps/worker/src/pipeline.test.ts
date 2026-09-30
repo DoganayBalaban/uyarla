@@ -71,23 +71,23 @@ function fakeLlm(overrides: Record<string, unknown> = {}) {
 }
 
 function fakeDeps(overrides: Partial<PipelineDeps> = {}): PipelineDeps {
-  let cagri = 0
+  let call = 0
   return {
     modelId: "test-model",
     llm: fakeLlm(),
     embedding: { embed: async (texts) => texts.map(() => [1, 0]) },
     store: fakeStore(),
-    now: () => (cagri++ === 0 ? 1000 : 4500),
+    now: () => (call++ === 0 ? 1000 : 4500),
     ...overrides,
   }
 }
 
-const GIRDI = { resumeId: "r-1", jobPostingId: "j-1", userId: "u-1" }
+const INPUT = { resumeId: "r-1", jobPostingId: "j-1", userId: "u-1" }
 
-describe("runAnalysis · mutlu yol", () => {
-  it("analysisId döner ve analizi tamamlar", async () => {
+describe("runAnalysis · happy path", () => {
+  it("returns analysisId and completes the analysis", async () => {
     const completeAnalysis = vi.fn()
-    const id = await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), GIRDI)
+    const id = await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), INPUT)
 
     expect(id).toBe("an-1")
     expect(completeAnalysis).toHaveBeenCalledOnce()
@@ -96,15 +96,15 @@ describe("runAnalysis · mutlu yol", () => {
     expect(arg.score).toBe(100)
   })
 
-  it("biçim raporunu sonuçla birlikte kaydeder", async () => {
+  it("saves the format report with the result", async () => {
     const completeAnalysis = vi.fn()
-    await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), GIRDI)
+    await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), INPUT)
     const format = completeAnalysis.mock.calls[0]![0].format
     // "ham cv" metninde e-posta yok: kontrol çalışmış ve bunu bulmuş olmalı.
-    expect(format.bulgular.map((b: { kod: string }) => b.kod)).toContain("eposta_yok")
+    expect(format.findings.map((b: { code: string }) => b.code)).toContain("email_missing")
   })
 
-  it("biçim kontrolü patlarsa analiz yine tamamlanır", async () => {
+  it("completes the analysis even if the format check throws", async () => {
     const completeAnalysis = vi.fn()
     const store = fakeStore({
       completeAnalysis,
@@ -112,61 +112,61 @@ describe("runAnalysis · mutlu yol", () => {
         throw new Error("dosya yok")
       },
     })
-    await runAnalysis(fakeDeps({ store }), GIRDI)
+    await runAnalysis(fakeDeps({ store }), INPUT)
     expect(completeAnalysis).toHaveBeenCalledOnce()
     expect(completeAnalysis.mock.calls[0]![0].format).toBeNull()
   })
 
-  it("süreyi ölçüp kaydeder", async () => {
+  it("measures and saves the duration", async () => {
     const completeAnalysis = vi.fn()
-    await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), GIRDI)
+    await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), INPUT)
     expect(completeAnalysis.mock.calls[0]![0].durationMs).toBe(3500)
   })
 
-  it("token sayılarını toplayıp kaydeder", async () => {
+  it("sums and saves token counts", async () => {
     const completeAnalysis = vi.fn()
-    await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), GIRDI)
+    await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), INPUT)
     // 3 CV çağrısı (deneyim, eğitim, beceri) + 1 ilan çağrısı × 10 token.
     // Bölümleme ve kavramlara ayırma artık kodda; ikisi de LLM çağrısı değil.
     expect(completeAnalysis.mock.calls[0]![0].tokenUsage).toBe(40)
   })
 
-  it("aşamaları sırayla bildirir", async () => {
+  it("reports stages in order", async () => {
     const stages: PipelineStage[] = []
-    await runAnalysis(fakeDeps({ onProgress: (s) => stages.push(s) }), GIRDI)
+    await runAnalysis(fakeDeps({ onProgress: (s) => stages.push(s) }), INPUT)
     expect(stages).toEqual([
-      "cv_okunuyor", "ilan_okunuyor", "karsilastiriliyor", "tamamlandi",
+      "reading_resume", "reading_posting", "comparing", "completed",
     ])
   })
 
-  it("CV sürümünü kaydedip analize bağlar", async () => {
+  it("saves the resume version and links it to the analysis", async () => {
     const saveResumeVersion = vi.fn().mockResolvedValue("rv-9")
     const attachResumeVersion = vi.fn()
     await runAnalysis(
       fakeDeps({ store: fakeStore({ saveResumeVersion, attachResumeVersion }) }),
-      GIRDI,
+      INPUT,
     )
     expect(saveResumeVersion).toHaveBeenCalledWith("r-1", expect.objectContaining({ skills: ["React"] }))
     expect(attachResumeVersion).toHaveBeenCalledWith("an-1", "rv-9")
   })
 
-  it("çıkarılmış ilan verisini kaydeder", async () => {
+  it("saves the extracted posting data", async () => {
     const saveJobPostingData = vi.fn()
-    await runAnalysis(fakeDeps({ store: fakeStore({ saveJobPostingData }) }), GIRDI)
+    await runAnalysis(fakeDeps({ store: fakeStore({ saveJobPostingData }) }), INPUT)
     expect(saveJobPostingData).toHaveBeenCalledWith("j-1", expect.objectContaining({
       position: "Frontend Geliştirici",
     }))
   })
 
-  it("kanıtları ve gereksinimleri tek toplu embedding çağrısında gömer", async () => {
+  it("embeds evidence and requirements in a single batch call", async () => {
     const embed = vi.fn().mockImplementation(async (texts: string[]) => texts.map(() => [1, 0]))
-    await runAnalysis(fakeDeps({ embedding: { embed } }), GIRDI)
+    await runAnalysis(fakeDeps({ embedding: { embed } }), INPUT)
     expect(embed).toHaveBeenCalledOnce()
   })
 })
 
-describe("runAnalysis · hata yönetimi", () => {
-  it("kalıcı hatada analizi hata koduyla işaretler ve yeniden fırlatır", async () => {
+describe("runAnalysis · error handling", () => {
+  it("marks the analysis with an error code on a permanent error and rethrows", async () => {
     const failAnalysis = vi.fn()
     const deps = fakeDeps({
       store: fakeStore({ failAnalysis }),
@@ -177,11 +177,11 @@ describe("runAnalysis · hata yönetimi", () => {
       },
     })
 
-    await expect(runAnalysis(deps, GIRDI)).rejects.toBeInstanceOf(PermanentError)
+    await expect(runAnalysis(deps, INPUT)).rejects.toBeInstanceOf(PermanentError)
     expect(failAnalysis).toHaveBeenCalledWith("an-1", "unreadable_file")
   })
 
-  it("geçici hatayı da kaydeder ve yeniden fırlatır (BullMQ tekrar denesin)", async () => {
+  it("also records a transient error and rethrows (so BullMQ retries)", async () => {
     const failAnalysis = vi.fn()
     const deps = fakeDeps({
       store: fakeStore({ failAnalysis }),
@@ -192,11 +192,11 @@ describe("runAnalysis · hata yönetimi", () => {
       },
     })
 
-    await expect(runAnalysis(deps, GIRDI)).rejects.toBeInstanceOf(TransientError)
+    await expect(runAnalysis(deps, INPUT)).rejects.toBeInstanceOf(TransientError)
     expect(failAnalysis).toHaveBeenCalledWith("an-1", "embedding_unreachable")
   })
 
-  it("sınıflandırılmamış hatayı unknown olarak kaydeder", async () => {
+  it("records an unclassified error as unknown", async () => {
     const failAnalysis = vi.fn()
     const deps = fakeDeps({
       store: fakeStore({ failAnalysis }),
@@ -207,11 +207,11 @@ describe("runAnalysis · hata yönetimi", () => {
       },
     })
 
-    await expect(runAnalysis(deps, GIRDI)).rejects.toThrow("beklenmeyen")
+    await expect(runAnalysis(deps, INPUT)).rejects.toThrow("beklenmeyen")
     expect(failAnalysis).toHaveBeenCalledWith("an-1", "unknown")
   })
 
-  it("hata kaydı da başarısız olursa asıl hatayı gizlemez", async () => {
+  it("does not hide the original error if recording it fails", async () => {
     // Asıl hatanın üstünü örten bir hata, teşhisi imkânsız kılar.
     const deps = fakeDeps({
       store: fakeStore({
@@ -226,6 +226,6 @@ describe("runAnalysis · hata yönetimi", () => {
       },
     })
 
-    await expect(runAnalysis(deps, GIRDI)).rejects.toThrow("asıl sebep")
+    await expect(runAnalysis(deps, INPUT)).rejects.toThrow("asıl sebep")
   })
 })

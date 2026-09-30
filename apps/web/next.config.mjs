@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url"
  * `outputFileTracingIncludes` girdilerinin de neye göre çözüldüğünü
  * belirliyor.
  */
-const depoKoku = fileURLToPath(new URL("../../", import.meta.url))
+const repoRoot = fileURLToPath(new URL("../../", import.meta.url))
 
 /** @type {import('next').NextConfig} */
 export default {
@@ -26,7 +26,7 @@ export default {
    */
   output: process.env.UYARLA_STANDALONE ? "standalone" : undefined,
 
-  outputFileTracingRoot: depoKoku,
+  outputFileTracingRoot: repoRoot,
 
   /**
    * Font dosyaları dağıtıma elle dahil ediliyor.

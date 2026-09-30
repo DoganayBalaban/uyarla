@@ -80,8 +80,8 @@ export class OpenAiCompatibleEmbeddingProvider implements EmbeddingProvider {
 
     // Eksik vektör sessizce geçilmemeli: skor servisi kanıtları indekse göre
     // hizalıyor, bir boşluk yanlış gereksinime kanıt gösterilmesi demek.
-    const eksikVar = vectors.some((v) => v === undefined)
-    if (eksikVar) {
+    const hasMissing = vectors.some((v) => v === undefined)
+    if (hasMissing) {
       throw new TransientError(
         `Embedding eksik döndü: ${texts.length} metin gönderildi, ${response.data.length} vektör geldi`,
         "embedding_incomplete",
@@ -109,6 +109,6 @@ export function cosineSimilarity(a: number[], b: number[]): number {
     normB += y * y
   }
 
-  const payda = Math.sqrt(normA) * Math.sqrt(normB)
-  return payda === 0 ? 0 : dot / payda
+  const denominator = Math.sqrt(normA) * Math.sqrt(normB)
+  return denominator === 0 ? 0 : dot / denominator
 }

@@ -3,7 +3,7 @@ import type {
   EmbeddingProvider,
   JobPostingData,
   LlmProvider,
-  OnYaziKaydi,
+  CoverLetterRecord,
   ResumeProfile,
   ScoreResult,
 } from "@uyarla/core"
@@ -31,11 +31,11 @@ export interface AdaptationStore {
     tokenUsage: number
   }): Promise<void>
   failAdaptation(adaptationId: string, errorClass: string): Promise<void>
-  saveCoverLetter(adaptationId: string, value: OnYaziKaydi): Promise<void>
+  saveCoverLetter(adaptationId: string, value: CoverLetterRecord): Promise<void>
 }
 
 /** Arayüzdeki ilerleme metinleri bu aşamalara karşılık geliyor. */
-export type AdaptStage = "yeniden_yaziliyor" | "kontrol_ediliyor" | "tamamlandi"
+export type AdaptStage = "rewriting" | "verifying" | "completed"
 
 export interface AdaptPipelineDeps {
   llm: LlmProvider

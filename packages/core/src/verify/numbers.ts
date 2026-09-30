@@ -1,14 +1,14 @@
 import type { VerificationIssue } from "../schemas/adaptation.js"
 
 /** Tam sayılar ve ondalıklar; ondalık ayıracı virgül veya nokta olabilir. */
-const SAYI = /\d+(?:[.,]\d+)?/g
+const NUMBER = /\d+(?:[.,]\d+)?/g
 
 /**
  * Ondalık ayıracını tek biçime indirir. Model Türkçe "9,4"ü İngilizce
  * "9.4" diye yazabiliyor; bu yeniden ifadedir, uydurma değil.
  */
-function ayiracsiz(sayi: string): string {
-  return sayi.replace(",", ".")
+function withoutSeparators(num: string): string {
+  return num.replace(",", ".")
 }
 
 /**
@@ -20,13 +20,13 @@ function ayiracsiz(sayi: string): string {
  * değişiklik.
  */
 export function checkNumbers(rewritten: string, source: string): VerificationIssue[] {
-  const kaynaktakiler = new Set((source.match(SAYI) ?? []).map(ayiracsiz))
-  const yenidekiler = [...new Set(rewritten.match(SAYI) ?? [])]
+  const sourceItems = new Set((source.match(NUMBER) ?? []).map(withoutSeparators))
+  const newItems = [...new Set(rewritten.match(NUMBER) ?? [])]
 
-  return yenidekiler
-    .filter((sayi) => !kaynaktakiler.has(ayiracsiz(sayi)))
-    .map((sayi) => ({
+  return newItems
+    .filter((num) => !sourceItems.has(withoutSeparators(num)))
+    .map((num) => ({
       kind: "number_mismatch" as const,
-      detail: `Bu maddede "${sayi}" sayısı geçiyor ama senin yazdığın hâlinde yok.`,
+      detail: `Bu maddede "${num}" sayısı geçiyor ama senin yazdığın hâlinde yok.`,
     }))
 }

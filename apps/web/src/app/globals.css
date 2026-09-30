@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/* `dark:` sınıfları yalnızca `.dark` altında çalışsın. Bu sınıf hiçbir yerde
+   verilmiyor, yani koyu tema kapalı; bileşenlerdeki `dark:` yazımları
+   ileride tema geri açılırsa diye duruyor. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/**
+ * Marka rehberi §9.2 ve §9.5'teki token'lar.
+ *
+ * İKİ KATMAN var ve ikisi de gerekli:
+ *
+ *   1. Sabit marka renkleri (brand-blue, brand-green, brand-amber…) — temaya göre değişmiyor.
+ *   2. Semantik roller (background, foreground, card, border, muted) — koyu temada takas oluyor.
+ *
+ * İkisi de `@theme` üzerinden Tailwind'e açılıyor, yani `bg-brand-blue` ve
+ * `bg-background` ikisi de çalışıyor. Semantik olanlar `var()` üzerinden
+ * bağlandığı için `bg-background` koyu temayı KENDİLİĞİNDEN izliyor — her yere
+ * `dark:` yazmak gerekmiyor.
+ *
+ * Bu model tanıtım sayfasının CSS modülüyle de ortak: o da aynı semantik
+ * değişkenleri okuyor. İki ayrı tema mekanizması tutmak, zamanla ikisinin
+ * ayrışması demek olurdu.
+ */
+@theme {
+  /* Sabit marka renkleri. */
+  --color-brand-blue: #2b4eff;
+  --color-brand-night: #0f172a;
+  --color-brand-ice: #f5f7ff;
+  --color-brand-coral: #ff6b4a;
+  --color-brand-green: #16a34a;
+  --color-brand-amber: #f59e0b;
+  --color-brand-red: #dc2626;
+
+  /* Semantik roller; aşağıdaki :root bloğunda tanımlı ve koyu temada takas. */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+
+  /* Marka rehberi §9.5: buton 10px, kart 16px. */
+  --radius-button: 10px;
+  --radius-card: 16px;
+
+  --font-heading: Geist, system-ui, -apple-system, sans-serif;
+  --font-body: Geist, system-ui, -apple-system, sans-serif;
+
+  /* Giriş ekranının görsel paneli. Kullanan yerde `motion-safe:` ile
+     açılıyor; hareket azaltmayı seçen kullanıcı durağan görüyor. */
+  --animate-orbit: orbit 60s linear infinite;
+  --animate-orbit-reverse: orbit 60s linear infinite reverse;
+  --animate-ribbon: ribbon 14s ease-in-out infinite alternate;
+  --animate-float: float 7s ease-in-out infinite;
+
+  @keyframes orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes ribbon {
+    from {
+      transform: translate3d(-4%, 3%, 0);
+    }
+    to {
+      transform: translate3d(4%, -3%, 0);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+}
+
+/**
+ * Semantik roller. Tanıtım sayfasının CSS modülü bu adları bekliyor
+ * (`var(--brand-blue)`, `var(--background)` …), o yüzden sabit renkler de burada
+ * yeniden yayımlanıyor.
+ */
+:root {
+  --brand-blue: var(--color-brand-blue);
+  --brand-night: var(--color-brand-night);
+  --brand-ice: var(--color-brand-ice);
+  --brand-coral: var(--color-brand-coral);
+  --brand-green: var(--color-brand-green);
+  --brand-amber: var(--color-brand-amber);
+  --brand-red: var(--color-brand-red);
+
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --muted: #64748b;
+
+  --button-radius: var(--radius-button);
+  --card-radius: var(--radius-card);
+}
+
+/* Site her zaman açık temada: beyaz zemin, siyah metin. Sistem koyu modda
+   olsa da değişmiyor; tarayıcının form öğeleri de açık kalsın diye. */
+:root {
+  color-scheme: light;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--background);
+  color: var(--foreground);
+  margin: 0;
+  line-height: 1.55;
+}
+
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}

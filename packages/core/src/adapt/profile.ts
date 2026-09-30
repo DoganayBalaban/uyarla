@@ -25,7 +25,7 @@ export function applyAdaptation(
   profile: ResumeProfile,
   draft: AdaptationDraft,
 ): ResumeProfile {
-  const kabulEdilenler = new Map(
+  const accepted = new Map(
     draft.bullets.filter((b) => b.decision === "accepted").map((b) => [b.id, b.rewritten]),
   )
 
@@ -41,12 +41,12 @@ export function applyAdaptation(
       ...job,
       bullets: job.bullets.map((bullet, j) => ({
         ...bullet,
-        text: kabulEdilenler.get(bulletId(i, j)) ?? bullet.text,
+        text: accepted.get(bulletId(i, j)) ?? bullet.text,
         // sourceRef asla değişmez: doğrulamanın tek kaynağı bu.
       })),
     })),
     // Eklenen beceriler adayın kendi maddelerinden geliyor (K-38).
-    skills: sirala([...profile.skills, ...(draft.addedSkills ?? [])], draft.skillOrder),
+    skills: sortItems([...profile.skills, ...(draft.addedSkills ?? [])], draft.skillOrder),
     // Eğitim, diller ve sertifikalar dokunulmadan geçer (spec §6.4).
   }
 }
@@ -55,10 +55,10 @@ export function applyAdaptation(
  * Becerileri verilen sıraya dizer; sırada geçmeyenler sonda, özgün
  * sıralarıyla kalır. Küme değişmez (K-27).
  */
-function sirala(skills: string[], order: string[]): string[] {
-  const sira = new Map(order.map((beceri, i) => [beceri, i]))
+function sortItems(skills: string[], order: string[]): string[] {
+  const orderIndex = new Map(order.map((skill, i) => [skill, i]))
   return skills
-    .map((beceri, i) => ({ beceri, i, sira: sira.get(beceri) ?? Number.MAX_SAFE_INTEGER }))
-    .sort((a, b) => a.sira - b.sira || a.i - b.i)
-    .map((x) => x.beceri)
+    .map((skill, i) => ({ skill, i, orderIndex: orderIndex.get(skill) ?? Number.MAX_SAFE_INTEGER }))
+    .sort((a, b) => a.orderIndex - b.orderIndex || a.i - b.i)
+    .map((x) => x.skill)
 }

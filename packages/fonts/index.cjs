@@ -28,10 +28,10 @@ const { dirname, join } = require("node:path")
  */
 
 /** Font dosyalarının bulunduğu dizinin depo köküne göre yolu. */
-const ARANAN_DIZIN = join("packages", "fonts", "ttf")
+const TARGET_DIR = join("packages", "fonts", "ttf")
 
 /** Varlığı sınanan dosya; dizin adı tek başına yeterli kanıt değil. */
-const ISARET_DOSYASI = "DejaVuSans.ttf"
+const MARKER_FILE = "DejaVuSans.ttf"
 
 /**
  * Font dizinini bulur.
@@ -52,27 +52,27 @@ const ISARET_DOSYASI = "DejaVuSans.ttf"
  *    önemli: Vercel'de işlev kökü (`/var/task`) doğrudan bu dizini taşıyor,
  *    yukarıda hiçbir şey yok.
  */
-function fontDizini() {
-  const yanindaki = join(__dirname, "ttf")
-  if (existsSync(join(yanindaki, ISARET_DOSYASI))) return yanindaki
+function fontDir() {
+  const besidePackage = join(__dirname, "ttf")
+  if (existsSync(join(besidePackage, MARKER_FILE))) return besidePackage
 
-  let dizin = process.cwd()
+  let dir = process.cwd()
   for (let i = 0; i < 10; i++) {
-    const aday = join(dizin, ARANAN_DIZIN)
-    if (existsSync(join(aday, ISARET_DOSYASI))) return aday
-    const ust = dirname(dizin)
-    if (ust === dizin) break
-    dizin = ust
+    const candidate = join(dir, TARGET_DIR)
+    if (existsSync(join(candidate, MARKER_FILE))) return candidate
+    const parent = dirname(dir)
+    if (parent === dir) break
+    dir = parent
   }
 
   throw new Error(
-    `Font dizini bulunamadı: ne ${yanindaki} ne de ${process.cwd()} ve üstündeki ` +
-      `dizinlerde ${ARANAN_DIZIN} var. Dağıtımda bu, next.config.mjs'deki ` +
+    `Font dizini bulunamadı: ne ${besidePackage} ne de ${process.cwd()} ve üstündeki ` +
+      `dizinlerde ${TARGET_DIR} var. Dağıtımda bu, next.config.mjs'deki ` +
       `outputFileTracingIncludes girdisinin font dizinini kopyalamadığı anlamına gelir.`,
   )
 }
 
-let onbellek = null
+let cached = null
 
 /**
  * Font dosyalarının diskteki yolları.
@@ -81,25 +81,25 @@ let onbellek = null
  * paketi import eden ama PDF üretmeyen süreçler beklenmedik bir cwd yüzünden
  * patlamıyor.
  */
-function fontYollari() {
-  if (onbellek) return onbellek
+function fontPaths() {
+  if (cached) return cached
 
-  const dizin = fontDizini()
-  const yollar = {
+  const dir = fontDir()
+  const paths = {
     /**
      * DejaVu Sans. pdfkit'in gömülü Helvetica'sı WinAnsi kodlaması kullanıyor
      * ve ş/ğ/ı/İ orada yok; ölçümde "Geliştirici" → "Geli ÷F— ici" çıkıyordu.
      */
-    regular: join(dizin, "DejaVuSans.ttf"),
-    bold: join(dizin, "DejaVuSans-Bold.ttf"),
+    regular: join(dir, "DejaVuSans.ttf"),
+    bold: join(dir, "DejaVuSans-Bold.ttf"),
   }
 
-  for (const yol of Object.values(yollar)) {
-    if (!existsSync(yol)) throw new Error(`Font dosyası yok: ${yol}`)
+  for (const filePath of Object.values(paths)) {
+    if (!existsSync(filePath)) throw new Error(`Font dosyası yok: ${filePath}`)
   }
 
-  onbellek = yollar
-  return yollar
+  cached = paths
+  return paths
 }
 
-module.exports = { fontYollari }
+module.exports = { fontPaths }

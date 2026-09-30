@@ -1,15 +1,15 @@
 {
-  "note": "Değerlendirme çiftleri. cv ve ilan kimlikleri sources/ altındaki dosya adlarıdır. Karışım bilinçli: iyi eşleşmesi beklenen çiftler kaçırmayı, kötü eşleşmesi beklenenler uydurmayı yakalar.",
+  "note": "Değerlendirme çiftleri. resumeId ve postingId değerleri sources/ altındaki dosya adlarıdır. Karışım bilinçli: iyi eşleşmesi beklenen çiftler kaçırmayı, kötü eşleşmesi beklenenler uydurmayı yakalar.",
   "pairs": [
-    { "cv": "cv-a-ai-engineer", "ilan": "ilan-1", "beklenti": "yüksek" },
-    { "cv": "cv-a-ai-engineer", "ilan": "ilan-2", "beklenti": "yüksek" },
-    { "cv": "cv-a-ai-engineer", "ilan": "ilan-3", "beklenti": "orta" },
-    { "cv": "cv-a-ai-engineer", "ilan": "ilan-5", "beklenti": "orta" },
-    { "cv": "cv-b-test-engineer", "ilan": "ilan-1", "beklenti": "düşük" },
-    { "cv": "cv-b-test-engineer", "ilan": "ilan-3", "beklenti": "düşük" },
-    { "cv": "cv-b-test-engineer", "ilan": "ilan-4", "beklenti": "düşük" },
-    { "cv": "cv-c-yeni-mezun", "ilan": "ilan-1", "beklenti": "düşük" },
-    { "cv": "cv-c-yeni-mezun", "ilan": "ilan-2", "beklenti": "düşük" },
-    { "cv": "cv-c-yeni-mezun", "ilan": "ilan-4", "beklenti": "orta" }
+    { "resumeId": "cv-a-ai-engineer", "postingId": "ilan-1", "expectation": "yüksek" },
+    { "resumeId": "cv-a-ai-engineer", "postingId": "ilan-2", "expectation": "yüksek" },
+    { "resumeId": "cv-a-ai-engineer", "postingId": "ilan-3", "expectation": "orta" },
+    { "resumeId": "cv-a-ai-engineer", "postingId": "ilan-5", "expectation": "orta" },
+    { "resumeId": "cv-b-test-engineer", "postingId": "ilan-1", "expectation": "düşük" },
+    { "resumeId": "cv-b-test-engineer", "postingId": "ilan-3", "expectation": "düşük" },
+    { "resumeId": "cv-b-test-engineer", "postingId": "ilan-4", "expectation": "düşük" },
+    { "resumeId": "cv-c-yeni-mezun", "postingId": "ilan-1", "expectation": "düşük" },
+    { "resumeId": "cv-c-yeni-mezun", "postingId": "ilan-2", "expectation": "düşük" },
+    { "resumeId": "cv-c-yeni-mezun", "postingId": "ilan-4", "expectation": "orta" }
   ]
 }

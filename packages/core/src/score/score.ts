@@ -80,32 +80,32 @@ export function score(
 ): ScoreResult {
   // Kavram vektörleri düzleştirilmiş geliyor; her gereksinim kendi dilimini
   // alıyor.
-  let imlec = 0
+  let cursor = 0
   const results: RequirementResult[] = input.posting.requirements.map((requirement) => {
-    const dilim = input.conceptVectors.slice(imlec, imlec + requirement.concepts.length)
-    imlec += requirement.concepts.length
-    return matchRequirement(requirement, dilim, input, cfg)
+    const vectorSlice = input.conceptVectors.slice(cursor, cursor + requirement.concepts.length)
+    cursor += requirement.concepts.length
+    return matchRequirement(requirement, vectorSlice, input, cfg)
   })
 
-  let agirlikliToplam = 0
-  let toplamAgirlik = 0
+  let weightedSum = 0
+  let totalWeight = 0
   for (const result of results) {
-    const agirlik =
+    const weight =
       result.requirement.importance === "must" ? cfg.mustWeight : cfg.niceWeight
-    toplamAgirlik += agirlik
-    agirlikliToplam += agirlik * result.confidence
+    totalWeight += weight
+    weightedSum += weight * result.confidence
   }
 
   // Eksik kelimeler tekilleştiriliyor: aynı teknoloji birden çok gereksinimde
   // geçebiliyor ve kullanıcıya iki kez göstermenin anlamı yok.
   // Kısmen karşılanan gereksinimlerin eksik kavramları da listeye giriyor:
   // kullanıcı "React'in var ama Docker'ın yok" bilgisini görmeli.
-  const eksikKelimeler = [...new Set(results.flatMap((r) => r.missingConcepts))]
+  const missingWords = [...new Set(results.flatMap((r) => r.missingConcepts))]
 
   return {
-    score: toplamAgirlik === 0 ? 0 : Math.round((agirlikliToplam / toplamAgirlik) * 100),
+    score: totalWeight === 0 ? 0 : Math.round((weightedSum / totalWeight) * 100),
     requirements: results,
-    missingKeywords: eksikKelimeler,
+    missingKeywords: missingWords,
   }
 }
 
@@ -117,28 +117,28 @@ export function score(
  * da hepsi özel ad olmalı: "erişilebilirlik (WCAG)" gibi bir kavram anlamsal
  * eşleşmeye açık kalıyor.
  */
-export function ozelAdMi(concept: { term: string; synonyms: string[] }): boolean {
-  const ad = (metin: string) => {
-    const kelimeler = metin.trim().split(/\s+/).filter(Boolean)
-    if (kelimeler.length === 0 || kelimeler.length > 3) return false
+export function isProperNoun(concept: { term: string; synonyms: string[] }): boolean {
+  const name = (text: string) => {
+    const words = text.trim().split(/\s+/).filter(Boolean)
+    if (words.length === 0 || words.length > 3) return false
     // Güçlü işaret taşıyan tek bir kelime yeter: simge, rakam ya da birden
     // çok büyük harf ("A/B testleri", "SQL sorguları", "TikTok reklamları").
     // Uçtan uca testte "A/B testleri" beceri listesindeki "İçerik
     // Pazarlaması"yla anlamca eşleşmişti (K-38).
-    if (kelimeler.some((k) => /[\p{N}/#+]/u.test(k) || /\p{Lu}.*\p{Lu}/u.test(k))) return true
+    if (words.some((k) => /[\p{N}/#+]/u.test(k) || /\p{Lu}.*\p{Lu}/u.test(k))) return true
     // Yalnızca baş harfi büyük kelimelerden oluşan ifade Türkçe harf
     // taşıyorsa özel ad değil, başlık düzeninde yazılmış bir alan adıdır:
     // "Yazılım Mühendisliği" ↔ "Yazılım Geliştirme" değerlendirme setindeki
     // meşru anlamsal eşleşmelerden biri (K-37) ve açık kalmalı.
-    if (/[çğıöşüÇĞİÖŞÜ]/u.test(metin)) return false
-    return kelimeler.every((k) => /^[\p{Lu}\p{N}]/u.test(k) || /[.]/u.test(k))
+    if (/[çğıöşüÇĞİÖŞÜ]/u.test(text)) return false
+    return words.every((k) => /^[\p{Lu}\p{N}]/u.test(k) || /[.]/u.test(k))
   }
-  return [concept.term, ...concept.synonyms].every(ad)
+  return [concept.term, ...concept.synonyms].every(name)
 }
 
 /** Kanıt türünün katkı çarpanı; yalnızca özet indirimli (bkz. summaryWeight). */
-function kanitCarpani(kanit: Evidence, cfg: ScoringConfig): number {
-  return kanit.kind === "summary" ? cfg.summaryWeight : 1
+function evidenceMultiplier(ev: Evidence, cfg: ScoringConfig): number {
+  return ev.kind === "summary" ? cfg.summaryWeight : 1
 }
 
 function matchRequirement(
@@ -147,11 +147,11 @@ function matchRequirement(
   input: ScoreInput,
   cfg: ScoringConfig,
 ): RequirementResult {
-  const karsilanan: string[] = []
-  const karsilanmayan: string[] = []
-  let ilkKanit: Evidence | null = null
-  let kelimeVar = false
-  let anlamsalVar = false
+  const satisfied: string[] = []
+  const unsatisfied: string[] = []
+  let firstEvidence: Evidence | null = null
+  let hasWord = false
+  let hasSemantic = false
 
   // Gereksinimin türü, onu karşılayabilecek kanıtın türünü sınırlıyor.
   // Filtreleme burada yapılıyor ki hem kelime hem anlamsal aşama aynı kanıt
@@ -160,23 +160,23 @@ function matchRequirement(
   //
   // Vektör kanıtla aynı nesnede taşınıyor; ayrı diziyi index'le eşlemek
   // filtreden sonra kayardı.
-  const izinliTurler = cfg.evidenceKindsByType[requirement.type]
-  const uygunKanitlar: Array<{ evidence: Evidence; vector: number[] | undefined }> = []
-  for (const [j, kanit] of input.evidence.entries()) {
-    if (!izinliTurler.includes(kanit.kind)) continue
-    uygunKanitlar.push({ evidence: kanit, vector: input.evidenceVectors[j] })
+  const allowedKinds = cfg.evidenceKindsByType[requirement.type]
+  const eligibleEvidence: Array<{ evidence: Evidence; vector: number[] | undefined }> = []
+  for (const [j, ev] of input.evidence.entries()) {
+    if (!allowedKinds.includes(ev.kind)) continue
+    eligibleEvidence.push({ evidence: ev, vector: input.evidenceVectors[j] })
   }
 
-  const anlamsalAcik = cfg.semanticTypes.includes(requirement.type)
+  const semanticEnabled = cfg.semanticTypes.includes(requirement.type)
 
   // Karşılanan kavramların ağırlıklı toplamı. Tam kelime eşleşmesi kesindir
   // ve 1.0 katkı verir; anlamsal eşleşme bir tahmindir ve benzerlik değeri
   // kadar katkı verir. İkisine aynı ağırlığı vermek, tahmini kesinlik gibi
   // göstermek olurdu.
-  let agirlik = 0
+  let weight = 0
 
   for (const [i, concept] of requirement.concepts.entries()) {
-    const aranacaklar = [concept.term, ...concept.synonyms]
+    const searchTerms = [concept.term, ...concept.synonyms]
 
     // 1. Tam kelime eşleşmesi.
     //
@@ -186,14 +186,14 @@ function matchRequirement(
     //
     // Kanıtlar tam ağırlıklılar önde olacak şekilde sıralı (özet sonda), yani
     // ilk bulunan aynı zamanda en güçlü olanı.
-    const kelimeKaniti = uygunKanitlar.find((item) =>
-      aranacaklar.some((terim) => containsKeyword(item.evidence.matchText, terim)),
+    const keywordEvidence = eligibleEvidence.find((item) =>
+      searchTerms.some((termText) => containsKeyword(item.evidence.matchText, termText)),
     )?.evidence
-    if (kelimeKaniti) {
-      karsilanan.push(concept.term)
-      agirlik += kanitCarpani(kelimeKaniti, cfg)
-      ilkKanit ??= kelimeKaniti
-      kelimeVar = true
+    if (keywordEvidence) {
+      satisfied.push(concept.term)
+      weight += evidenceMultiplier(keywordEvidence, cfg)
+      firstEvidence ??= keywordEvidence
+      hasWord = true
       continue
     }
 
@@ -208,31 +208,31 @@ function matchRequirement(
     // yakın koyuyor ve uçtan uca testte "GraphQL" beceri listesindeki
     // "Next.js" ile (0,74), "CI/CD" de "Git" ile (0,71) eşleşti; ikisi de
     // CV'de olmayan yetkinlikti (K-38, birikmiş işler #15 seçenek 3).
-    const vektor = conceptVectors[i]
-    if (vektor && anlamsalAcik && !ozelAdMi(concept)) {
-      let enIyi: { similarity: number; katki: number; evidence: Evidence } | null = null
-      for (const { evidence: kanit, vector: kanitVektoru } of uygunKanitlar) {
-        if (!kanitVektoru) continue
-        const benzerlik = cosineSimilarity(vektor, kanitVektoru)
-        if (benzerlik < cfg.semanticThreshold) continue
-        const katki = benzerlik * kanitCarpani(kanit, cfg)
-        if (!enIyi || katki > enIyi.katki) {
-          enIyi = { similarity: benzerlik, katki, evidence: kanit }
+    const vec = conceptVectors[i]
+    if (vec && semanticEnabled && !isProperNoun(concept)) {
+      let best: { similarity: number; contribution: number; evidence: Evidence } | null = null
+      for (const { evidence: ev, vector: evidenceVector } of eligibleEvidence) {
+        if (!evidenceVector) continue
+        const similarityScore = cosineSimilarity(vec, evidenceVector)
+        if (similarityScore < cfg.semanticThreshold) continue
+        const contribution = similarityScore * evidenceMultiplier(ev, cfg)
+        if (!best || contribution > best.contribution) {
+          best = { similarity: similarityScore, contribution, evidence: ev }
         }
       }
-      if (enIyi) {
-        karsilanan.push(concept.term)
-        agirlik += enIyi.katki
-        ilkKanit ??= enIyi.evidence
-        anlamsalVar = true
+      if (best) {
+        satisfied.push(concept.term)
+        weight += best.contribution
+        firstEvidence ??= best.evidence
+        hasSemantic = true
         continue
       }
     }
 
-    karsilanmayan.push(concept.term)
+    unsatisfied.push(concept.term)
   }
 
-  if (karsilanan.length === 0) {
+  if (satisfied.length === 0) {
     // Kanıt gösterilmiyor: eşiği geçmeyen en yakın maddeyi göstermek
     // kullanıcıya yanlış bir bağ kurdurur.
     return {
@@ -242,7 +242,7 @@ function matchRequirement(
       evidence: null,
       method: null,
       matchedConcepts: [],
-      missingConcepts: karsilanmayan,
+      missingConcepts: unsatisfied,
     }
   }
 
@@ -252,10 +252,10 @@ function matchRequirement(
     // Güven, karşılanan kavramların ağırlıklı oranı: dört şey isteyen bir
     // gereksinimde birini bilen aday çeyrek puan alır (K-23). Anlamsal
     // eşleşmeler benzerlik değeri kadar katkı verir.
-    confidence: agirlik / requirement.concepts.length,
-    evidence: ilkKanit,
-    method: kelimeVar ? "keyword" : anlamsalVar ? "semantic" : null,
-    matchedConcepts: karsilanan,
-    missingConcepts: karsilanmayan,
+    confidence: weight / requirement.concepts.length,
+    evidence: firstEvidence,
+    method: hasWord ? "keyword" : hasSemantic ? "semantic" : null,
+    matchedConcepts: satisfied,
+    missingConcepts: unsatisfied,
   }
 }

@@ -26,30 +26,30 @@ const model: DocumentModel = {
 }
 
 describe("renderPdf", () => {
-  it("geçerli bir PDF üretir", async () => {
+  it("produces a valid PDF", async () => {
     const pdf = await renderPdf(model)
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-")
   })
 
-  it("metin katmanı seçilebilir — kendi çıkarıcımızla okunuyor", async () => {
+  it("text layer is selectable — readable by our own extractor", async () => {
     // Tamamlanma tanımı bunu şart koşuyor (spec §14): taranmış görüntüye
     // benzeyen bir PDF ATS'ten geçmez.
-    const metin = await extractText(await renderPdf(model), "cikti.pdf")
-    expect(metin).toContain("React ile panel geliştirdim")
+    const text = await extractText(await renderPdf(model), "cikti.pdf")
+    expect(text).toContain("React ile panel geliştirdim")
   })
 
-  it("Türkçe karakterleri bozmadan yazar", async () => {
+  it("writes Turkish characters intact", async () => {
     // pdfkit'in gömülü Helvetica'sı WinAnsi kullanıyor ve ş/ğ/ı/İ orada yok.
     // Ölçüm: Helvetica ile "Geliştirici" → "Geli ÷F— ici".
-    const metin = await extractText(await renderPdf(model), "cikti.pdf")
-    expect(metin).toContain("Elif Yılmaz")
-    expect(metin).toContain("Geliştirici")
-    expect(metin).toContain("Test altyapısını kurdum")
+    const text = await extractText(await renderPdf(model), "cikti.pdf")
+    expect(text).toContain("Elif Yılmaz")
+    expect(text).toContain("Geliştirici")
+    expect(text).toContain("Test altyapısını kurdum")
   })
 
-  it("bütün bölümleri ve maddeleri yazar", async () => {
-    const metin = await extractText(await renderPdf(model), "cikti.pdf")
-    for (const beklenen of [
+  it("writes all sections and bullets", async () => {
+    const text = await extractText(await renderPdf(model), "cikti.pdf")
+    for (const expected of [
       "DENEYİM",
       "BECERİLER",
       "Geliştirici · Acme",
@@ -57,23 +57,23 @@ describe("renderPdf", () => {
       "Test altyapısını kurdum",
       "React, TypeScript",
     ]) {
-      expect(metin).toContain(beklenen)
+      expect(text).toContain(expected)
     }
   })
 
-  it("özeti yazar", async () => {
+  it("writes the summary", async () => {
     expect(await extractText(await renderPdf(model), "cikti.pdf")).toContain(
       "React odaklı geliştirici",
     )
   })
 
-  it("özet ve iletişim yoksa çökmez", async () => {
+  it("does not crash without summary and contact", async () => {
     const pdf = await renderPdf({ ...model, summary: null, contact: null })
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-")
   })
 
-  it("uzun içerikte ikinci sayfaya taşar", async () => {
-    const uzun: DocumentModel = {
+  it("flows to a second page for long content", async () => {
+    const long: DocumentModel = {
       ...model,
       sections: [
         {
@@ -86,11 +86,11 @@ describe("renderPdf", () => {
         },
       ],
     }
-    const metin = await extractText(await renderPdf(uzun), "cikti.pdf")
-    expect(metin).toContain("Rol 39 · Şirket 39")
+    const text = await extractText(await renderPdf(long), "cikti.pdf")
+    expect(text).toContain("Rol 39 · Şirket 39")
   })
 
-  it("bölümsüz modelde de geçerli PDF üretir", async () => {
+  it("produces a valid PDF for a model without sections", async () => {
     const pdf = await renderPdf({ ...model, sections: [] })
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-")
   })

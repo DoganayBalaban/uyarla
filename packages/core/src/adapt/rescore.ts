@@ -19,19 +19,19 @@ export async function rescore(
   input: { profile: ResumeProfile; posting: JobPostingData; draft: AdaptationDraft },
   embedding: EmbeddingProvider,
 ): Promise<number> {
-  const uyarlanmis = applyAdaptation(input.profile, input.draft)
-  const kanitlar = collectEvidence(uyarlanmis)
-  const kanitMetinleri = kanitlar.map((k) => k.text)
-  const kavramMetinleri = conceptTexts(input.posting)
+  const adapted = applyAdaptation(input.profile, input.draft)
+  const evidenceList = collectEvidence(adapted)
+  const evidenceTexts = evidenceList.map((k) => k.text)
+  const conceptTextList = conceptTexts(input.posting)
 
   // Tek toplu çağrı: kanıtlar önce, kavramlar sonra (Sprint 1'deki sıra).
-  const vektorler = await embedding.embed([...kanitMetinleri, ...kavramMetinleri])
+  const vecs = await embedding.embed([...evidenceTexts, ...conceptTextList])
 
   return score({
-    profile: uyarlanmis,
+    profile: adapted,
     posting: input.posting,
-    evidence: kanitlar,
-    evidenceVectors: vektorler.slice(0, kanitMetinleri.length),
-    conceptVectors: vektorler.slice(kanitMetinleri.length),
+    evidence: evidenceList,
+    evidenceVectors: vecs.slice(0, evidenceTexts.length),
+    conceptVectors: vecs.slice(evidenceTexts.length),
   }).score
 }

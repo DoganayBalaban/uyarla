@@ -6,7 +6,7 @@ import type { SkillLines } from "../schemas/resume.js"
  * "Selenium WebDriver" 18, "Page Object Model (POM)" 23 karakter; bir cümle
  * neredeyse her zaman bunun üstünde.
  */
-const MAX_BECERI_UZUNLUGU = 40
+const MAX_SKILL_LENGTH = 40
 
 /**
  * Kendi başına duran bölüm başlıkları beceri sayılmaz.
@@ -14,7 +14,7 @@ const MAX_BECERI_UZUNLUGU = 40
  * kendi küçültmesi "BECERİLER"i "beceri̇ler" yapıyor (birleşik noktayla) ve
  * eşleşme tutmuyor.
  */
-const BOLUM_BASLIGI =
+const SECTION_HEADING =
   /^(core|technical|teknik|genel|other|diğer)?\s*(skills?|beceriler|yetkinlikler|araçlar|tools|diller|languages|sertifikalar?|belgeler|certifications?|sertifikalar belgeler|eğitim|education|deneyim|experience)$/
 
 /**
@@ -31,23 +31,23 @@ const BOLUM_BASLIGI =
  * deterministik ve test edilebilir oluyor (K-19).
  */
 export function flattenSkillLines(data: SkillLines): string[] {
-  const beceriler: string[] = []
+  const skillList: string[] = []
 
   for (const line of data.lines) {
-    const terimler = line.items.filter(
-      (item) => terimGibiMi(item) && !bolumBasligiMi(item),
+    const termList = line.items.filter(
+      (item) => looksLikeTerm(item) && !isSectionHeading(item),
     )
 
-    if (terimler.length > 0) {
-      beceriler.push(...terimler)
+    if (termList.length > 0) {
+      skillList.push(...termList)
       continue
     }
 
     // Etikete de aynı ölçüt uygulanıyor: bölümlemenin karıştığı CV'lerde
     // deneyim cümleleri beceri bloğuna sızabiliyor ve etiket olarak geliyor.
-    const etiket = line.label.trim()
-    if (etiket && terimGibiMi(etiket) && !bolumBasligiMi(etiket)) {
-      beceriler.push(etiket)
+    const headingLabel = line.label.trim()
+    if (headingLabel && looksLikeTerm(headingLabel) && !isSectionHeading(headingLabel)) {
+      skillList.push(headingLabel)
     }
   }
 
@@ -56,15 +56,15 @@ export function flattenSkillLines(data: SkillLines): string[] {
   // skillsBlock'a koyuyor ve bunlar beceri gibi görünüyor. Bir katılım
   // belgesinin "Bilgisayar Mühendisliği mezunu" gereksinimiyle eşleşmesi
   // uydurma eşleşmedir (K-20).
-  const digerleri = new Set(
+  const others = new Set(
     [...data.languages, ...data.certifications].map((x) => normalizeText(x)),
   )
 
   return [
     ...new Set(
-      beceriler.filter((b) => {
+      skillList.filter((b) => {
         const n = normalizeText(b)
-        return n.length > 0 && !digerleri.has(n)
+        return n.length > 0 && !others.has(n)
       }),
     ),
   ]
@@ -78,11 +78,11 @@ export function flattenSkillLines(data: SkillLines): string[] {
  * listeden düşüyor, indirilen CV'de de kayboluyordu (K-38). Cümle noktası
  * sonda ya da boşluktan önce durur.
  */
-function terimGibiMi(metin: string): boolean {
-  const t = metin.trim()
-  return t.length <= MAX_BECERI_UZUNLUGU && !/\.(\s|$)/.test(t)
+function looksLikeTerm(text: string): boolean {
+  const t = text.trim()
+  return t.length <= MAX_SKILL_LENGTH && !/\.(\s|$)/.test(t)
 }
 
-function bolumBasligiMi(metin: string): boolean {
-  return BOLUM_BASLIGI.test(normalizeText(metin))
+function isSectionHeading(text: string): boolean {
+  return SECTION_HEADING.test(normalizeText(text))
 }

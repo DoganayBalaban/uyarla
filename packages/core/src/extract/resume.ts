@@ -21,13 +21,13 @@ import {
   SKILLS_PROMPT,
 } from "./prompts.js"
 
-const BOS_BECERI = { skills: [], languages: [], certifications: [] }
+const EMPTY_SKILLS = { skills: [], languages: [], certifications: [] }
 
 /**
  * Satır transkripsiyonunu profilin beklediği düz beceri listesine çevirir.
  * "Hangisi beceri" kararı kodda veriliyor, modelde değil (K-19).
  */
-function duzlestir(lines: SkillLines) {
+function flatten(lines: SkillLines) {
   return {
     skills: flattenSkillLines(lines),
     languages: lines.languages,
@@ -117,7 +117,7 @@ export async function extractResumeProfile(
     summary: stripLeadingHeading(blocks.summaryBlock).replace(/\s*\n\s*/g, " ").trim() || null,
     experience: experience ? ExperienceListSchema.parse(experience.data).experience : [],
     education: education ? EducationListSchema.parse(education.data).education : [],
-    ...(skills ? duzlestir(SkillLinesSchema.parse(skills.data)) : BOS_BECERI),
+    ...(skills ? flatten(SkillLinesSchema.parse(skills.data)) : EMPTY_SKILLS),
   })
 
   return { data: profile, tokens }

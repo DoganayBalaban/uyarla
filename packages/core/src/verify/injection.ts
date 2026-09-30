@@ -24,27 +24,27 @@ export function checkPostingTermInjection(
    */
   allowedTerms: readonly string[] = [],
 ): VerificationIssue[] {
-  const kavramlar = posting.requirements.flatMap((r) => r.concepts)
-  const uyarilar: VerificationIssue[] = []
-  const gorulen = new Set<string>()
-  const izinli = new Set(allowedTerms)
+  const conceptList = posting.requirements.flatMap((r) => r.concepts)
+  const warnings: VerificationIssue[] = []
+  const seen = new Set<string>()
+  const allowed = new Set(allowedTerms)
 
-  for (const kavram of kavramlar) {
-    if (gorulen.has(kavram.term)) continue
-    if (izinli.has(kavram.term)) continue
+  for (const conceptItem of conceptList) {
+    if (seen.has(conceptItem.term)) continue
+    if (allowed.has(conceptItem.term)) continue
 
-    const aranacaklar = [kavram.term, ...kavram.synonyms]
-    const yazimdaVar = aranacaklar.some((t) => containsKeyword(rewritten, t))
-    const kaynaktaVar = aranacaklar.some((t) => containsKeyword(source, t))
+    const searchTerms = [conceptItem.term, ...conceptItem.synonyms]
+    const inRewrite = searchTerms.some((t) => containsKeyword(rewritten, t))
+    const presentInSource = searchTerms.some((t) => containsKeyword(source, t))
 
-    if (yazimdaVar && !kaynaktaVar) {
-      gorulen.add(kavram.term)
-      uyarilar.push({
+    if (inRewrite && !presentInSource) {
+      seen.add(conceptItem.term)
+      warnings.push({
         kind: "posting_term_injected",
-        detail: `Bu maddede "${kavram.term}" geçiyor ama senin yazdığın hâlinde yok.`,
+        detail: `Bu maddede "${conceptItem.term}" geçiyor ama senin yazdığın hâlinde yok.`,
       })
     }
   }
 
-  return uyarilar
+  return warnings
 }

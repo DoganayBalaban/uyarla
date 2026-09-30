@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { PACKAGE_NAME } from "./index.js"
 
-describe("core paketi", () => {
-  it("kurulum tamam ve dışa aktarım çalışıyor", () => {
+describe("core package", () => {
+  it("is set up and exports work", () => {
     expect(PACKAGE_NAME).toBe("@uyarla/core")
   })
 })

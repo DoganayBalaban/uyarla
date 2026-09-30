@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest"
 import { compareToExpectations } from "./compare.js"
 import type { ScoreResult } from "../src/score/score.js"
 
-const sonuc = (
-  satirlar: Array<{
+const outcome = (
+  rows: Array<{
     text: string
     status: "matched" | "missing"
     evidence?: string
@@ -12,7 +12,7 @@ const sonuc = (
 ): ScoreResult => ({
   score: 50,
   missingKeywords: [],
-  requirements: satirlar.map((s) => ({
+  requirements: rows.map((s) => ({
     requirement: { text: s.text, type: "skill", importance: "must", concepts: [] },
     status: s.status,
     confidence: s.status === "matched" ? 1 : 0,
@@ -26,10 +26,10 @@ const sonuc = (
 })
 
 describe("compareToExpectations", () => {
-  it("doğru sınıflandırmayı isabet sayar", () => {
+  it("counts a correct classification as a hit", () => {
     const m = compareToExpectations(
       "p1",
-      sonuc([{ text: "React deneyimi", status: "matched", evidence: "React ile panel" }]),
+      outcome([{ text: "React deneyimi", status: "matched", evidence: "React ile panel" }]),
       [{ match: "React", shouldMatch: true, evidenceContains: "React ile panel" }],
       1000,
     )
@@ -38,10 +38,10 @@ describe("compareToExpectations", () => {
     expect(m.fabrications).toBe(0)
   })
 
-  it("doğru şekilde eksik denen gereksinimi de isabet sayar", () => {
+  it("also counts a correctly missing requirement as a hit", () => {
     const m = compareToExpectations(
       "p1",
-      sonuc([{ text: "Kubernetes", status: "missing" }]),
+      outcome([{ text: "Kubernetes", status: "missing" }]),
       [{ match: "Kubernetes", shouldMatch: false }],
       1000,
     )
@@ -49,31 +49,31 @@ describe("compareToExpectations", () => {
     expect(m.fabrications).toBe(0)
   })
 
-  it("kanıtı olan gereksinimin missing denmesini kaçırma sayar", () => {
+  it("counts a requirement with evidence reported as missing as a miss", () => {
     const m = compareToExpectations(
       "p1",
-      sonuc([{ text: "React deneyimi", status: "missing" }]),
+      outcome([{ text: "React deneyimi", status: "missing" }]),
       [{ match: "React", shouldMatch: true }],
       1000,
     )
     expect(m.misses).toBe(1)
   })
 
-  it("kanıtı olmayan gereksinimin matched denmesini uydurma sayar", () => {
+  it("counts a requirement without evidence reported as matched as a fabrication", () => {
     const m = compareToExpectations(
       "p1",
-      sonuc([{ text: "Kubernetes", status: "matched", evidence: "React ile panel" }]),
+      outcome([{ text: "Kubernetes", status: "matched", evidence: "React ile panel" }]),
       [{ match: "Kubernetes", shouldMatch: false }],
       1000,
     )
     expect(m.fabrications).toBe(1)
   })
 
-  it("yanlış kanıt gösterilmesini kaçırma sayar", () => {
+  it("counts showing the wrong evidence as a miss", () => {
     // Doğru sonuç ama yanlış gerekçe; kullanıcıya yanlış bağ kurdurur.
     const m = compareToExpectations(
       "p1",
-      sonuc([{ text: "React deneyimi", status: "matched", evidence: "Muhasebe süreçleri" }]),
+      outcome([{ text: "React deneyimi", status: "matched", evidence: "Muhasebe süreçleri" }]),
       [{ match: "React", shouldMatch: true, evidenceContains: "React ile panel" }],
       1000,
     )
@@ -81,18 +81,18 @@ describe("compareToExpectations", () => {
     expect(m.misses).toBe(1)
   })
 
-  it("ilan çıkarımının hiç üretmediği gereksinimi ayrı sayar", () => {
+  it("counts a requirement never produced by posting extraction separately", () => {
     // Sorun skorda değil çıkarımda; ayrı sayılmazsa yanlış yere bakılır.
-    const m = compareToExpectations("p1", sonuc([]), [{ match: "React", shouldMatch: true }], 1000)
+    const m = compareToExpectations("p1", outcome([]), [{ match: "React", shouldMatch: true }], 1000)
     expect(m.notExtracted).toBe(1)
     expect(m.hits).toBe(0)
     expect(m.misses).toBe(0)
   })
 
-  it("eşleşmelerin hangi aşamadan geldiğini sayar", () => {
+  it("counts which stage matches came from", () => {
     const m = compareToExpectations(
       "p1",
-      sonuc([
+      outcome([
         { text: "React", status: "matched", method: "keyword" },
         { text: "Takım çalışması", status: "matched", method: "semantic" },
       ]),
@@ -106,10 +106,10 @@ describe("compareToExpectations", () => {
     expect(m.bySemantic).toBe(1)
   })
 
-  it("gereksinim metnini büyük/küçük harf ve ek farkına rağmen eşler", () => {
+  it("matches requirement text despite case and suffix differences", () => {
     const m = compareToExpectations(
       "p1",
-      sonuc([{ text: "En az 3 yıl REACT deneyimi", status: "matched", evidence: "react" }]),
+      outcome([{ text: "En az 3 yıl REACT deneyimi", status: "matched", evidence: "react" }]),
       [{ match: "react deneyim", shouldMatch: true }],
       1000,
     )

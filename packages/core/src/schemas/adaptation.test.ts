@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { AdaptationDraftSchema, hasPendingDecisions } from "./adaptation.js"
 
-const temizMadde = {
+const cleanBullet = {
   id: "b1",
   experienceIndex: 0,
   original: "React ile panel geliştirdim",
@@ -11,38 +11,38 @@ const temizMadde = {
   decision: "accepted" as const,
 }
 
-const taslak = {
+const draftData = {
   summary: {
     original: "3 yıl React deneyimi",
     rewritten: "React odaklı 3 yıllık frontend deneyimi",
     verification: { status: "ok" as const, issues: [] },
     decision: "accepted" as const,
   },
-  bullets: [temizMadde],
+  bullets: [cleanBullet],
   skillOrder: ["React", "TypeScript"],
 }
 
 describe("AdaptationDraftSchema", () => {
-  it("geçerli bir taslağı kabul eder", () => {
-    expect(AdaptationDraftSchema.parse(taslak)).toEqual(taslak)
+  it("accepts a valid draft", () => {
+    expect(AdaptationDraftSchema.parse(draftData)).toEqual(draftData)
   })
 
-  it("tanımsız karar değerini reddeder", () => {
+  it("rejects an undefined decision value", () => {
     expect(() =>
       AdaptationDraftSchema.parse({
-        ...taslak,
-        bullets: [{ ...temizMadde, decision: "belki" }],
+        ...draftData,
+        bullets: [{ ...cleanBullet, decision: "belki" }],
       }),
     ).toThrow()
   })
 
-  it("tanımsız uyarı türünü reddeder", () => {
+  it("rejects an undefined issue kind", () => {
     expect(() =>
       AdaptationDraftSchema.parse({
-        ...taslak,
+        ...draftData,
         bullets: [
           {
-            ...temizMadde,
+            ...cleanBullet,
             verification: { status: "flagged", issues: [{ kind: "baska", detail: "x" }] },
           },
         ],
@@ -50,24 +50,24 @@ describe("AdaptationDraftSchema", () => {
     ).toThrow()
   })
 
-  it("sourceRef zorunludur", () => {
-    const { sourceRef: _atilan, ...eksik } = temizMadde
-    expect(() => AdaptationDraftSchema.parse({ ...taslak, bullets: [eksik] })).toThrow()
+  it("sourceRef is required", () => {
+    const { sourceRef: _discarded, ...missing } = cleanBullet
+    expect(() => AdaptationDraftSchema.parse({ ...draftData, bullets: [missing] })).toThrow()
   })
 })
 
 describe("hasPendingDecisions", () => {
-  it("bekleyen karar yoksa false döner", () => {
-    expect(hasPendingDecisions(AdaptationDraftSchema.parse(taslak))).toBe(false)
+  it("returns false when no decision is pending", () => {
+    expect(hasPendingDecisions(AdaptationDraftSchema.parse(draftData))).toBe(false)
   })
 
-  it("bekleyen karar varsa true döner", () => {
-    const bekleyen = AdaptationDraftSchema.parse({
-      ...taslak,
+  it("returns true when a decision is pending", () => {
+    const pending = AdaptationDraftSchema.parse({
+      ...draftData,
       bullets: [
-        temizMadde,
+        cleanBullet,
         {
-          ...temizMadde,
+          ...cleanBullet,
           id: "b2",
           verification: {
             status: "flagged",
@@ -77,14 +77,14 @@ describe("hasPendingDecisions", () => {
         },
       ],
     })
-    expect(hasPendingDecisions(bekleyen)).toBe(true)
+    expect(hasPendingDecisions(pending)).toBe(true)
   })
 
-  it("reddedilmiş madde bekleyen sayılmaz", () => {
-    const reddedilmis = AdaptationDraftSchema.parse({
-      ...taslak,
-      bullets: [{ ...temizMadde, decision: "rejected" }],
+  it("a rejected bullet does not count as pending", () => {
+    const rejected = AdaptationDraftSchema.parse({
+      ...draftData,
+      bullets: [{ ...cleanBullet, decision: "rejected" }],
     })
-    expect(hasPendingDecisions(reddedilmis)).toBe(false)
+    expect(hasPendingDecisions(rejected)).toBe(false)
   })
 })

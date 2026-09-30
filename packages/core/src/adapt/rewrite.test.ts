@@ -3,7 +3,7 @@ import type { LlmProvider } from "../llm/types.js"
 import type { JobPostingData } from "../schemas/job.js"
 import { mustConceptTerms, rewriteBullet, rewriteBullets, rewriteSummary } from "./rewrite.js"
 
-const ilan: JobPostingData = {
+const testPosting: JobPostingData = {
   position: "Frontend Geliştirici",
   company: "Acme",
   seniority: "mid",
@@ -25,7 +25,7 @@ const ilan: JobPostingData = {
 }
 
 /** Verilen metni döndüren sahte sağlayıcı. */
-function sahteLlm(rewritten: string | (() => never)): LlmProvider {
+function fakeLlm(rewritten: string | (() => never)): LlmProvider {
   return {
     extract: vi.fn(async () => {
       if (typeof rewritten === "function") rewritten()
@@ -35,24 +35,24 @@ function sahteLlm(rewritten: string | (() => never)): LlmProvider {
 }
 
 describe("mustConceptTerms", () => {
-  it("yalnızca must gereksinimlerinin kavramlarını verir", () => {
-    expect(mustConceptTerms(ilan)).toEqual(["React"])
+  it("returns only concepts of must requirements", () => {
+    expect(mustConceptTerms(testPosting)).toEqual(["React"])
   })
 
-  it("tekrarlanan kavramı bir kez verir", () => {
-    const tekrarli: JobPostingData = {
-      ...ilan,
-      requirements: [ilan.requirements[0]!, ilan.requirements[0]!],
+  it("returns a repeated concept once", () => {
+    const repeated: JobPostingData = {
+      ...testPosting,
+      requirements: [testPosting.requirements[0]!, testPosting.requirements[0]!],
     }
-    expect(mustConceptTerms(tekrarli)).toEqual(["React"])
+    expect(mustConceptTerms(repeated)).toEqual(["React"])
   })
 })
 
 /** Hedefli görev: her maddeye bir ilan terimi. */
-const gorev = (bullet: string, targets = ["Web performansı"]) => ({ bullet, targets })
+const job = (bullet: string, targets = ["Web performansı"]) => ({ bullet, targets })
 
 describe("rewriteBullet", () => {
-  it("yazılmış maddeyi, uyumları ve token sayısını döndürür", async () => {
+  it("returns the rewritten bullet, alignments and token count", async () => {
     const llm: LlmProvider = {
       extract: vi.fn(async () => ({
         data: {
@@ -62,124 +62,124 @@ describe("rewriteBullet", () => {
         tokens: 12,
       })),
     }
-    const sonuc = await rewriteBullet(llm, gorev("Sayfa yüklenme süresini %40 azalttım"))
-    expect(sonuc.data.text).toContain("web performansını")
-    expect(sonuc.data.alignments).toEqual([
+    const outcome = await rewriteBullet(llm, job("Sayfa yüklenme süresini %40 azalttım"))
+    expect(outcome.data.text).toContain("web performansını")
+    expect(outcome.data.alignments).toEqual([
       { term: "Web performansı", basis: "sayfa yüklenme süresini" },
     ])
-    expect(sonuc.tokens).toBe(12)
+    expect(outcome.tokens).toBe(12)
   })
 
-  it("modele yalnızca maddeyi ve o maddenin hedeflerini verir", async () => {
+  it("gives the model only the bullet and its targets", async () => {
     // K-29: ilanın bütün kavramları verildiğinde model onları maddelere
     // sokuyordu. K-38: yalnızca maddeye yakın hedefler veriliyor.
-    const llm = sahteLlm("x")
-    await rewriteBullet(llm, gorev("Panel geliştirdim", ["arayüz"]))
+    const llm = fakeLlm("x")
+    await rewriteBullet(llm, job("Panel geliştirdim", ["arayüz"]))
 
-    const cagri = vi.mocked(llm.extract).mock.calls[0]![0]
-    expect(cagri.input).toContain("Panel geliştirdim")
-    expect(cagri.input).toContain("arayüz")
-    for (const terim of ["React", "Kubernetes", "Frontend Geliştirici", "Acme"]) {
-      expect(cagri.input).not.toContain(terim)
+    const call = vi.mocked(llm.extract).mock.calls[0]![0]
+    expect(call.input).toContain("Panel geliştirdim")
+    expect(call.input).toContain("arayüz")
+    for (const termText of ["React", "Kubernetes", "Frontend Geliştirici", "Acme"]) {
+      expect(call.input).not.toContain(termText)
     }
   })
 
-  it("hedefi olmayan maddeyi modele göndermez, olduğu gibi döndürür", async () => {
+  it("does not send a bullet without targets to the model and returns it as is", async () => {
     // Hedefsiz yazım yalnızca eş anlamlı kelime değişikliği üretiyordu (K-38).
-    const llm = sahteLlm("değişti")
-    const sonuc = await rewriteBullet(llm, gorev("Panel geliştirdim", []))
+    const llm = fakeLlm("değişti")
+    const outcome = await rewriteBullet(llm, job("Panel geliştirdim", []))
     expect(llm.extract).not.toHaveBeenCalled()
-    expect(sonuc.data).toEqual({ text: "Panel geliştirdim", alignments: [] })
-    expect(sonuc.tokens).toBe(0)
+    expect(outcome.data).toEqual({ text: "Panel geliştirdim", alignments: [] })
+    expect(outcome.tokens).toBe(0)
   })
 
-  it("boş dönerse orijinali korur", async () => {
+  it("keeps the original when the result is empty", async () => {
     // Model boş string döndürebiliyor; maddeyi silmek veri kaybı olurdu.
-    const llm = sahteLlm("   ")
-    const sonuc = await rewriteBullet(llm, gorev("React ile panel yaptım"))
-    expect(sonuc.data.text).toBe("React ile panel yaptım")
+    const llm = fakeLlm("   ")
+    const outcome = await rewriteBullet(llm, job("React ile panel yaptım"))
+    expect(outcome.data.text).toBe("React ile panel yaptım")
   })
 
-  it("uyum listesini atlayan yanıtı patlatmaz", async () => {
-    const llm = sahteLlm("React ile paneli geliştirdim")
-    const sonuc = await rewriteBullet(llm, gorev("React ile panel yaptım"))
-    expect(sonuc.data.alignments).toEqual([])
+  it("does not break on a response without an alignment list", async () => {
+    const llm = fakeLlm("React ile paneli geliştirdim")
+    const outcome = await rewriteBullet(llm, job("React ile panel yaptım"))
+    expect(outcome.data.alignments).toEqual([])
   })
 })
 
 describe("rewriteSummary", () => {
-  it("özeti yeniden yazar", async () => {
-    const llm = sahteLlm("React odaklı frontend geliştiriciyim")
-    const sonuc = await rewriteSummary(llm, {
+  it("rewrites the summary", async () => {
+    const llm = fakeLlm("React odaklı frontend geliştiriciyim")
+    const outcome = await rewriteSummary(llm, {
       summary: "Frontend geliştirici",
-      posting: ilan,
+      posting: testPosting,
       supportedTerms: ["React"],
     })
-    expect(sonuc.data).toBe("React odaklı frontend geliştiriciyim")
+    expect(outcome.data).toBe("React odaklı frontend geliştiriciyim")
   })
 
-  it("modele pozisyon adını ve CV'de geçen ilan kavramlarını verir", async () => {
+  it("gives the model the position title and posting concepts found in the resume", async () => {
     // Özet kullanıcının kendini tanıttığı yer; vurguyu role göre değiştirmek
     // meşru (spec §6.1). CV'de geçmeyen kavram (Kubernetes) verilmez.
-    const llm = sahteLlm("x")
+    const llm = fakeLlm("x")
     await rewriteSummary(llm, {
       summary: "Frontend geliştirici",
-      posting: ilan,
+      posting: testPosting,
       supportedTerms: ["React"],
     })
-    const girdi = vi.mocked(llm.extract).mock.calls[0]![0].input
-    expect(girdi).toContain("Frontend Geliştirici")
-    expect(girdi).toContain("React")
-    expect(girdi).not.toContain("Kubernetes")
+    const scoreInput = vi.mocked(llm.extract).mock.calls[0]![0].input
+    expect(scoreInput).toContain("Frontend Geliştirici")
+    expect(scoreInput).toContain("React")
+    expect(scoreInput).not.toContain("Kubernetes")
   })
 })
 
 describe("rewriteBullets", () => {
-  it("hedefi olan her madde için ayrı çağrı yapar", async () => {
-    const llm = sahteLlm("yeni")
-    const sonuclar = await rewriteBullets(llm, [gorev("bir"), gorev("iki", []), gorev("üç")])
+  it("makes a separate call for each bullet with targets", async () => {
+    const llm = fakeLlm("yeni")
+    const outcomes = await rewriteBullets(llm, [job("bir"), job("iki", []), job("üç")])
     expect(llm.extract).toHaveBeenCalledTimes(2)
-    expect(sonuclar.map((s) => s?.data.text)).toEqual(["yeni", "iki", "yeni"])
+    expect(outcomes.map((s) => s?.data.text)).toEqual(["yeni", "iki", "yeni"])
   })
 
-  it("bir madde patlarsa yalnızca o madde null olur", async () => {
+  it("if one bullet fails only that bullet is null", async () => {
     // Madde başına izolasyon, madde başına çağrının ikinci faydası
     // (spec §13): bir çağrı patlarsa tüm uyarlama değil o madde kaybedilir.
-    let sayac = 0
+    let counter = 0
     const llm: LlmProvider = {
       extract: vi.fn(async () => {
-        sayac++
-        if (sayac === 2) throw new Error("model düştü")
+        counter++
+        if (counter === 2) throw new Error("model düştü")
         return { data: { rewritten: "yeni" } as never, tokens: 5 }
       }),
     }
-    const sonuclar = await rewriteBullets(llm, [gorev("bir"), gorev("iki"), gorev("üç")])
-    expect(sonuclar.map((s) => s?.data.text ?? null)).toEqual(["yeni", null, "yeni"])
+    const outcomes = await rewriteBullets(llm, [job("bir"), job("iki"), job("üç")])
+    expect(outcomes.map((s) => s?.data.text ?? null)).toEqual(["yeni", null, "yeni"])
   })
 
-  it("eşzamanlı çağrı sayısını sınırlar ve sırayı korur", async () => {
+  it("limits concurrent calls and keeps order", async () => {
     // LM Studio istekleri kuyruğa alıyor; sınırsız paralellikte sondaki
     // maddeler zaman aşımına düşerdi.
-    let ucusta = 0
-    let enFazla = 0
+    let inFlight = 0
+    let atMost = 0
     const llm: LlmProvider = {
       extract: vi.fn(async (opts) => {
-        ucusta++
-        enFazla = Math.max(enFazla, ucusta)
+        inFlight++
+        atMost = Math.max(atMost, inFlight)
         await new Promise((r) => setTimeout(r, 5))
-        ucusta--
-        const madde = opts.input.split("\n")[0]!.replace("Madde: ", "")
-        return { data: { rewritten: `${madde}!` } as never, tokens: 1 }
+        inFlight--
+        const bulletItem = opts.input.split("\n")[0]!.replace("Madde: ", "")
+        return { data: { rewritten: `${bulletItem}!` } as never, tokens: 1 }
       }),
     }
-    const maddeler = ["a", "b", "c", "d", "e", "f", "g"]
-    const sonuclar = await rewriteBullets(llm, maddeler.map((m) => gorev(m)), 3)
-    expect(enFazla).toBe(3)
-    expect(sonuclar.map((s) => s?.data.text)).toEqual(maddeler.map((m) => `${m}!`))
+    const bulletList = ["a", "b", "c", "d", "e", "f", "g"]
+    const outcomes = await rewriteBullets(llm, bulletList.map((m) => job(m)), 3)
+    expect(atMost).toBe(3)
+    expect(outcomes.map((s) => s?.data.text)).toEqual(bulletList.map((m) => `${m}!`))
   })
 
-  it("boş listede çağrı yapmaz", async () => {
-    const llm = sahteLlm("yeni")
+  it("makes no call for an empty list", async () => {
+    const llm = fakeLlm("yeni")
     expect(await rewriteBullets(llm, [])).toEqual([])
     expect(llm.extract).not.toHaveBeenCalled()
   })

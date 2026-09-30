@@ -25,7 +25,7 @@ Bir Teknik Üniversite, Bilgisayar Mühendisliği, 2021
 BECERİLER
 React, TypeScript, Next.js, Git, Jest`
 
-const ILAN = `Frontend Geliştirici (Acme Teknoloji)
+const POSTING = `Frontend Geliştirici (Acme Teknoloji)
 
 Aradığımız nitelikler:
 - En az 3 yıl React deneyimi
@@ -38,50 +38,50 @@ Tercihen:
 - Next.js deneyimi
 - Takım çalışmasına yatkın olmak`
 
-describe("uçtan uca skor · gerçek modeller", () => {
-  it("CV ve ilandan açıklanabilir bir skor üretir", async () => {
+describe("end-to-end score · real models", () => {
+  it("produces an explainable score from a resume and a posting", async () => {
     const llm = new LmStudioProvider(llmConfigFromEnv())
     const embedding = new OpenAiCompatibleEmbeddingProvider(embeddingConfigFromEnv())
 
-    const basladi = Date.now()
+    const startedAt = Date.now()
 
-    const profil = await extractResumeProfile(llm, CV)
-    const ilan = await extractJobPosting(llm, ILAN)
+    const resumeProfile = await extractResumeProfile(llm, CV)
+    const testPosting = await extractJobPosting(llm, POSTING)
 
-    const kanitlar = collectEvidence(profil.data)
-    const kanitMetinleri = kanitlar.map((k) => k.text)
-    const kavramMetinleri = conceptTexts(ilan.data)
-    const vektorler = await embedding.embed([...kanitMetinleri, ...kavramMetinleri])
+    const evidenceList = collectEvidence(resumeProfile.data)
+    const evidenceTexts = evidenceList.map((k) => k.text)
+    const conceptTextList = conceptTexts(testPosting.data)
+    const vecs = await embedding.embed([...evidenceTexts, ...conceptTextList])
 
-    const sonuc = score({
-      profile: profil.data,
-      posting: ilan.data,
-      evidence: kanitlar,
-      evidenceVectors: vektorler.slice(0, kanitMetinleri.length),
-      conceptVectors: vektorler.slice(kanitMetinleri.length),
+    const outcome = score({
+      profile: resumeProfile.data,
+      posting: testPosting.data,
+      evidence: evidenceList,
+      evidenceVectors: vecs.slice(0, evidenceTexts.length),
+      conceptVectors: vecs.slice(evidenceTexts.length),
     })
 
-    const sure = Date.now() - basladi
+    const duration = Date.now() - startedAt
 
-    console.log(`\n  ═══ SKOR: ${sonuc.score} ═══  (${sure} ms, ${profil.tokens + ilan.tokens} token)`)
-    console.log(`  kanıt sayısı: ${kanitlar.length}, gereksinim sayısı: ${ilan.data.requirements.length}\n`)
-    for (const r of sonuc.requirements) {
-      const isaret = r.status === "matched" ? "✓" : "✗"
-      const yontem = r.method ? `${r.method} ${r.confidence.toFixed(2)}` : "—"
-      console.log(`  ${isaret} [${r.requirement.importance}] ${r.requirement.text}  (${yontem})`)
+    console.log(`\n  ═══ SKOR: ${outcome.score} ═══  (${duration} ms, ${resumeProfile.tokens + testPosting.tokens} token)`)
+    console.log(`  kanıt sayısı: ${evidenceList.length}, gereksinim sayısı: ${testPosting.data.requirements.length}\n`)
+    for (const r of outcome.requirements) {
+      const mark = r.status === "matched" ? "✓" : "✗"
+      const approach = r.method ? `${r.method} ${r.confidence.toFixed(2)}` : "—"
+      console.log(`  ${mark} [${r.requirement.importance}] ${r.requirement.text}  (${approach})`)
       if (r.evidence) console.log(`      kanıt: ${r.evidence.text}`)
     }
-    console.log(`\n  eksik kelimeler: ${sonuc.missingKeywords.join(", ") || "yok"}`)
+    console.log(`\n  eksik kelimeler: ${outcome.missingKeywords.join(", ") || "yok"}`)
 
     // Kubernetes CV'de gerçekten yok: uydurma eşleşme olmamalı.
-    const kubernetes = sonuc.requirements.find((r) => /kubernetes/i.test(r.requirement.text))
+    const kubernetes = outcome.requirements.find((r) => /kubernetes/i.test(r.requirement.text))
     expect(kubernetes?.status).toBe("missing")
 
     // React CV'de açıkça var: kaçırılmamalı.
-    const react = sonuc.requirements.find((r) => /react/i.test(r.requirement.text))
+    const react = outcome.requirements.find((r) => /react/i.test(r.requirement.text))
     expect(react?.status).toBe("matched")
 
-    expect(sonuc.score).toBeGreaterThan(0)
-    expect(sonuc.score).toBeLessThan(100)
+    expect(outcome.score).toBeGreaterThan(0)
+    expect(outcome.score).toBeLessThan(100)
   })
 })

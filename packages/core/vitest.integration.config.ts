@@ -13,19 +13,19 @@ import { resolve } from "node:path"
  * dotenv bağımlılığı eklemek yerine dosya burada okunuyor — ihtiyaç
  * "KEY=value satırlarını oku" kadar basit.
  */
-function kokEnviOku(): Record<string, string> {
-  const yol = resolve(import.meta.dirname, "../../.env")
-  if (!existsSync(yol)) return {}
+function readRootEnv(): Record<string, string> {
+  const envPath = resolve(import.meta.dirname, "../../.env")
+  if (!existsSync(envPath)) return {}
 
   const env: Record<string, string> = {}
-  for (const satir of readFileSync(yol, "utf8").split("\n")) {
-    const temiz = satir.trim()
-    if (!temiz || temiz.startsWith("#")) continue
-    const ayrac = temiz.indexOf("=")
-    if (ayrac === -1) continue
-    const anahtar = temiz.slice(0, ayrac).trim()
-    const deger = temiz.slice(ayrac + 1).trim().replace(/^["']|["']$/g, "")
-    env[anahtar] = deger
+  for (const line of readFileSync(envPath, "utf8").split("\n")) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith("#")) continue
+    const separator = trimmed.indexOf("=")
+    if (separator === -1) continue
+    const key = trimmed.slice(0, separator).trim()
+    const value = trimmed.slice(separator + 1).trim().replace(/^["']|["']$/g, "")
+    env[key] = value
   }
   return env
 }
@@ -35,6 +35,6 @@ export default defineConfig({
     include: ["src/**/*.integration.test.ts"],
     testTimeout: 180_000,
     hookTimeout: 180_000,
-    env: kokEnviOku(),
+    env: readRootEnv(),
   },
 })

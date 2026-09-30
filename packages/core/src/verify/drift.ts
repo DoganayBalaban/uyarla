@@ -16,8 +16,8 @@ export function checkSemanticDrift(
   sourceVector: number[],
   threshold: number,
 ): VerificationIssue[] {
-  const benzerlik = cosineSimilarity(rewrittenVector, sourceVector)
-  if (benzerlik >= threshold) return []
+  const similarityScore = cosineSimilarity(rewrittenVector, sourceVector)
+  if (similarityScore >= threshold) return []
 
   return [
     {
