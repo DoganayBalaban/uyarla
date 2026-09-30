@@ -8,7 +8,7 @@
  * İkinci kez çalıştırmak güvenli; taşınmış kayıtlar atlanır.
  */
 import { prisma } from "@uyarla/db"
-import { upgradeCoverLetter, upgradeFormatReport } from "../src/lib/legacyJsonKeys"
+import { upgradeCoverLetter, upgradeFormatReport } from "../src/server/legacyJsonKeys"
 
 const apply = process.argv.includes("--apply")
 
@@ -26,11 +26,11 @@ async function main() {
   }
 
   let letters = 0
-  for (const ad of await prisma.adaptation.findMany({ select: { id: true, coverLetter: true } })) {
-    const { value, changed } = upgradeCoverLetter(ad.coverLetter)
+  for (const adaptationRow of await prisma.adaptation.findMany({ select: { id: true, coverLetter: true } })) {
+    const { value, changed } = upgradeCoverLetter(adaptationRow.coverLetter)
     if (!changed) continue
     letters++
-    if (apply) await prisma.adaptation.update({ where: { id: ad.id }, data: { coverLetter: value as object } })
+    if (apply) await prisma.adaptation.update({ where: { id: adaptationRow.id }, data: { coverLetter: value as object } })
   }
 
   console.log(`${apply ? "taşındı" : "taşınacak (deneme)"}: ${analyses} analiz, ${letters} ön yazı`)

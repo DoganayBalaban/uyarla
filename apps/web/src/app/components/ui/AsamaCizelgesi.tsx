@@ -2,10 +2,10 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { Check, Clock, LoaderCircle, TriangleAlert } from "lucide-react"
-import type { Asama, AsamaDurumu } from "@/lib/asamalar"
+import type { Stage, StageState } from "@/features/analysis/stageStates"
 import { cn } from "@/lib/cn"
 
-export type { Asama, AsamaDurumu }
+export type { Stage as Asama, StageState as AsamaDurumu }
 
 /**
  * Bir işin sıralı aşamalarını gösteren dikey çizelge.
@@ -22,29 +22,29 @@ export type { Asama, AsamaDurumu }
  */
 
 
-const DURUM: Record<AsamaDurumu, { etiket: string; renk: string; zemin: string }> = {
-  bekliyor: { etiket: "Sırada", renk: "text-gri", zemin: "bg-kart border-cizgi" },
-  aktif: { etiket: "Çalışıyor", renk: "text-mavi dark:text-[#8ea2ff]", zemin: "bg-mavi/10 border-mavi/50" },
-  tamam: { etiket: "Tamam", renk: "text-yesil dark:text-[#4ade80]", zemin: "bg-yesil/10 border-yesil/50" },
-  hata: { etiket: "Olmadı", renk: "text-kirmizi dark:text-[#f87171]", zemin: "bg-kirmizi/10 border-kirmizi/50" },
+const DURUM: Record<StageState, { etiket: string; renk: string; zemin: string }> = {
+  pending: { etiket: "Sırada", renk: "text-gri", zemin: "bg-kart border-cizgi" },
+  active: { etiket: "Çalışıyor", renk: "text-mavi dark:text-[#8ea2ff]", zemin: "bg-mavi/10 border-mavi/50" },
+  done: { etiket: "Tamam", renk: "text-yesil dark:text-[#4ade80]", zemin: "bg-yesil/10 border-yesil/50" },
+  error: { etiket: "Olmadı", renk: "text-kirmizi dark:text-[#f87171]", zemin: "bg-kirmizi/10 border-kirmizi/50" },
 }
 
-function DurumIkonu({ durum, className }: { durum: AsamaDurumu; className?: string }) {
+function DurumIkonu({ durum, className }: { durum: StageState; className?: string }) {
   const p = { className: cn("size-3.5", className), strokeWidth: 2.4, "aria-hidden": true } as const
-  if (durum === "tamam") return <Check {...p} />
-  if (durum === "hata") return <TriangleAlert {...p} />
-  if (durum === "aktif") return <LoaderCircle {...p} className={cn(p.className, "motion-safe:animate-spin")} />
+  if (durum === "done") return <Check {...p} />
+  if (durum === "error") return <TriangleAlert {...p} />
+  if (durum === "active") return <LoaderCircle {...p} className={cn(p.className, "motion-safe:animate-spin")} />
   return <Clock {...p} />
 }
 
-function Isaretci({ durum, azHareket }: { durum: AsamaDurumu; azHareket: boolean }) {
+function Isaretci({ durum, azHareket }: { durum: StageState; azHareket: boolean }) {
   const d = DURUM[durum]
   return (
     <span
       aria-hidden
       className={cn("relative grid size-8 shrink-0 place-items-center rounded-full border-2", d.zemin, d.renk)}
     >
-      {durum === "aktif" && !azHareket && (
+      {durum === "active" && !azHareket && (
         <motion.span
           className="absolute inset-0 rounded-full border-2 border-current"
           animate={{ scale: [1, 1.7], opacity: [0.5, 0] }}
@@ -64,11 +64,11 @@ export function AsamaCizelgesi({
 }: {
   baslik: string
   altBaslik?: string
-  asamalar: Asama[]
+  asamalar: Stage[]
   className?: string
 }) {
   const azHareket = useReducedMotion() ?? false
-  const bitenSayisi = asamalar.filter((a) => a.durum === "tamam").length
+  const bitenSayisi = asamalar.filter((a) => a.status === "done").length
 
   return (
     <section
@@ -88,7 +88,7 @@ export function AsamaCizelgesi({
       <ol className="m-0 list-none p-0">
         <AnimatePresence initial={false}>
           {asamalar.map((a, i) => {
-            const d = DURUM[a.durum]
+            const d = DURUM[a.status]
             const son = i === asamalar.length - 1
             return (
               <motion.li
@@ -97,16 +97,16 @@ export function AsamaCizelgesi({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.26, delay: azHareket ? 0 : i * 0.05, ease: [0.2, 0, 0, 1] }}
                 className="relative flex gap-3"
-                aria-current={a.durum === "aktif" ? "step" : undefined}
+                aria-current={a.status === "active" ? "step" : undefined}
               >
                 <div className="flex flex-col items-center">
-                  <Isaretci durum={a.durum} azHareket={azHareket} />
+                  <Isaretci durum={a.status} azHareket={azHareket} />
                   {!son && (
                     <span
                       aria-hidden
                       className={cn(
                         "my-1 w-0.5 flex-1 rounded-full transition-colors duration-500",
-                        a.durum === "tamam" ? "bg-yesil/50" : "bg-cizgi",
+                        a.status === "done" ? "bg-yesil/50" : "bg-cizgi",
                       )}
                     />
                   )}
@@ -116,10 +116,10 @@ export function AsamaCizelgesi({
                     <span
                       className={cn(
                         "font-semibold",
-                        a.durum === "bekliyor" ? "text-gri" : "text-metin",
+                        a.status === "pending" ? "text-gri" : "text-metin",
                       )}
                     >
-                      {a.baslik}
+                      {a.title}
                     </span>
                     <span
                       className={cn(
@@ -128,11 +128,11 @@ export function AsamaCizelgesi({
                         d.renk,
                       )}
                     >
-                      <DurumIkonu durum={a.durum} className="size-3" />
+                      <DurumIkonu durum={a.status} className="size-3" />
                       {d.etiket}
                     </span>
                   </div>
-                  {a.aciklama && <p className="m-0 mt-0.5 text-sm text-gri">{a.aciklama}</p>}
+                  {a.description && <p className="m-0 mt-0.5 text-sm text-gri">{a.description}</p>}
                 </div>
               </motion.li>
             )

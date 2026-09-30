@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { computeScoreAfter, loadAdaptation } from "@/lib/adaptation"
-import { authErrorResponse, ensureOwner, getSession } from "@/lib/authz"
+import { computeScoreAfter, loadAdaptation } from "@/server/adaptationDecision"
+import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 
 export const runtime = "nodejs"
 

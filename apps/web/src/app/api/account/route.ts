@@ -1,7 +1,7 @@
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
-import { authErrorResponse, ensureOwner, ensureSession, getSession } from "@/lib/authz"
-import { kullanicilariSil } from "@/lib/silme"
+import { authErrorResponse, ensureOwner, ensureSession, getSession } from "@/server/authz"
+import { deleteUsers } from "@/server/deleteAccount"
 
 export const runtime = "nodejs"
 
@@ -30,11 +30,11 @@ export async function DELETE(request: Request) {
       ensureOwner(govde.userId, { user })
     }
 
-    const sonuc = await kullanicilariSil(prisma, [user.id])
+    const sonuc = await deleteUsers(prisma, [user.id])
 
     // Oturum satırları da silindi, yani çerez artık hiçbir şeye açılmıyor;
     // ayrıca signOut çağırmak gerekmiyor.
-    return NextResponse.json({ silindi: sonuc.kullanici === 1 })
+    return NextResponse.json({ silindi: sonuc.deletedUsers === 1 })
   } catch (error) {
     const yetkiYaniti = authErrorResponse(error)
     if (yetkiYaniti) return yetkiYaniti

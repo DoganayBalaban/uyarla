@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { YASAL } from "@/lib/yasal"
+import { LEGAL } from "@/features/legal/company"
 import { KAP, SayfaKabi } from "./Sayfa"
 
 /**
@@ -18,13 +18,13 @@ export function YasalSayfa({
   return (
     <>
       <SayfaKabi genislik="dar">
-        {YASAL.taslak && (
+        {LEGAL.draftData && (
           <p className="mb-10 rounded-kart border border-kehribar/40 bg-kehribar/10 px-5 py-4 text-sm text-metin">
             <strong className="font-semibold">Taslak.</strong> Bu metin henüz hukuki olarak gözden
             geçirilmedi ve köşeli parantezli bilgiler doldurulmadı.
           </p>
         )}
-        <p className="text-sm text-gri">Son güncelleme: {YASAL.sonGuncelleme}</p>
+        <p className="text-sm text-gri">Son güncelleme: {LEGAL.lastUpdated}</p>
         <h1 className="mt-2 font-baslik text-4xl font-extrabold tracking-tight sm:text-5xl">{baslik}</h1>
         <p className="mt-5 text-lg leading-relaxed text-gri">{ozet}</p>
 

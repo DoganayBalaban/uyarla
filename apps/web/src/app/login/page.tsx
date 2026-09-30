@@ -1,5 +1,5 @@
-import { guvenliDonus } from "@/lib/donus"
-import { acikSaglayicilar } from "@/lib/saglayicilar"
+import { safeReturnPath } from "@/lib/returnPath"
+import { enabledProviders } from "@/features/auth/providers"
 import { GirisFormu } from "./GirisFormu"
 
 // Hangi sosyal girişin açık olduğu ortam değişkenlerinden okunuyor; sayfa
@@ -15,11 +15,11 @@ export default async function GirisPage({
 }) {
   const { donus } = await searchParams
   // Dönüş adresi burada, sunucuda doğrulanıyor; forma yalnızca güvenli hâli
-  // gidiyor (lib/donus.ts).
+  // gidiyor (src/lib/returnPath.ts).
   return (
     <GirisFormu
-      acikSaglayicilar={acikSaglayicilar()}
-      donus={guvenliDonus(Array.isArray(donus) ? donus[0] : donus)}
+      acikSaglayicilar={enabledProviders()}
+      donus={safeReturnPath(Array.isArray(donus) ? donus[0] : donus)}
     />
   )
 }

@@ -1,8 +1,8 @@
 import { applyAdaptation, hasPendingDecisions, toDocumentModel } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
-import { loadAdaptation } from "@/lib/adaptation"
-import { authErrorResponse, ensureOwner, getSession } from "@/lib/authz"
+import { loadAdaptation } from "@/server/adaptationDecision"
+import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 
 export const runtime = "nodejs"
 

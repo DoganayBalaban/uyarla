@@ -12,7 +12,7 @@ import {
   UserRound,
 } from "lucide-react"
 import { useSession } from "@/lib/authClient"
-import { girisAdresi } from "@/lib/donus"
+import { loginPath } from "@/lib/returnPath"
 import { SayfaBasligi } from "../../components/Sayfa"
 
 /** Marka rehberi §10.2'deki veri silme onay metni, birebir. */
@@ -69,7 +69,7 @@ export default function HesapPage() {
         <h1 className="mt-4 text-2xl">Hesabım</h1>
         <p className="mt-2 text-sm text-gri">Devam etmek için giriş yapman gerekiyor.</p>
         <Link
-          href={girisAdresi("/account")}
+          href={loginPath("/account")}
           className="mt-6 inline-flex items-center gap-2 rounded-buton bg-mavi px-6 py-3 font-semibold text-white no-underline shadow-sm shadow-mavi/30"
         >
           Giriş yap

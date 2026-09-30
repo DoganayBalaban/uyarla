@@ -386,6 +386,6 @@ describe("runAdaptation", () => {
       },
       { adaptationId: "a1" },
     )
-    expect(stages).toEqual(["yeniden_yaziliyor", "kontrol_ediliyor", "tamamlandi"])
+    expect(stages).toEqual(["rewriting", "verifying", "completed"])
   })
 })

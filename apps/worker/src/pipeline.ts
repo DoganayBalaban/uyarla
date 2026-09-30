@@ -35,19 +35,19 @@ export async function runAnalysis(
   })
 
   try {
-    deps.onProgress?.("cv_okunuyor")
+    deps.onProgress?.("reading_resume")
     const resumeText = await deps.store.getResumeText(input.resumeId)
     const format = await formatReport(deps.store, input.resumeId, resumeText)
     const profile = await extractResumeProfile(deps.llm, resumeText)
     const resumeVersionId = await deps.store.saveResumeVersion(input.resumeId, profile.data)
     await deps.store.attachResumeVersion(analysisId, resumeVersionId)
 
-    deps.onProgress?.("ilan_okunuyor")
+    deps.onProgress?.("reading_posting")
     const postingText = await deps.store.getJobPostingText(input.jobPostingId)
     const posting = await extractJobPosting(deps.llm, postingText)
     await deps.store.saveJobPostingData(input.jobPostingId, posting.data)
 
-    deps.onProgress?.("karsilastiriliyor")
+    deps.onProgress?.("comparing")
     const evidence = collectEvidence(profile.data)
     const evidenceTexts = evidence.map((e) => e.text)
     const conceptTerms = conceptTexts(posting.data)
@@ -73,7 +73,7 @@ export async function runAnalysis(
       tokenUsage: profile.tokens + posting.tokens,
     })
 
-    deps.onProgress?.("tamamlandi")
+    deps.onProgress?.("completed")
     return analysisId
   } catch (error) {
     // Başarısız işler de Analysis kaydı yazıyor (spec §11): hangi çiftte ne

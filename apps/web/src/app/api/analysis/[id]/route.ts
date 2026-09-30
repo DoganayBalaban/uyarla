@@ -1,6 +1,6 @@
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
-import { authErrorResponse, ensureOwner, getSession } from "@/lib/authz"
+import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 
 export const runtime = "nodejs"
 

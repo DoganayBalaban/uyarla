@@ -1,8 +1,8 @@
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
-import { authErrorResponse, ensureOwner, getSession } from "@/lib/authz"
-import { analizHataMesaji } from "@/lib/hataMesaji"
-import { analyzeQueue } from "@/lib/queue"
+import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
+import { analysisErrorMessage } from "@/server/analysisErrorMessage"
+import { analyzeQueue } from "@/server/queue"
 
 export const runtime = "nodejs"
 
@@ -50,7 +50,7 @@ export async function GET(
     ensureOwner((job.data as { userId?: string } | undefined)?.userId ?? null, await getSession())
 
     if (state === "failed") {
-      return NextResponse.json({ status: "failed", error: analizHataMesaji(job) })
+      return NextResponse.json({ status: "failed", error: analysisErrorMessage(job) })
     }
 
     const progress = job.progress as { stage?: string } | number

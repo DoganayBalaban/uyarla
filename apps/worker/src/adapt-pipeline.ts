@@ -43,7 +43,7 @@ export async function runAdaptation(
       tokenUsage: tokens,
     })
 
-    deps.onProgress?.("tamamlandi")
+    deps.onProgress?.("completed")
   } catch (error) {
     // Başarısız uyarlamalar da kayda yazıyor (spec §13): hangi adımda ne
     // patlıyor bilgisi olmadan teşhis imkânsız.

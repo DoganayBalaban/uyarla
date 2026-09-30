@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { YasalSayfa } from "../components/YasalSayfa"
-import { YASAL } from "@/lib/yasal"
+import { LEGAL } from "@/features/legal/company"
 
 export const metadata = { title: "Kullanım koşulları · uyarla" }
 
@@ -17,7 +17,7 @@ export default function TermsPage() {
       <section>
         <h2>1. Hizmet</h2>
         <p>
-          Uyarla ({YASAL.veriSorumlusu}), CV'ni bir iş ilanıyla karşılaştırıp ATS uyum skoru
+          Uyarla ({LEGAL.dataController}), CV'ni bir iş ilanıyla karşılaştırıp ATS uyum skoru
           üreten ve CV'ni ilana göre yeniden düzenlemene yardım eden bir web uygulamasıdır. Bu
           koşulları kabul ederek hizmeti kullanabilirsin.
         </p>
@@ -102,7 +102,7 @@ export default function TermsPage() {
         <h2>9. Uygulanacak hukuk ve iletişim</h2>
         <p>
           Bu koşullara Türkiye Cumhuriyeti hukuku uygulanır. Sorun ve soruların için{" "}
-          {YASAL.iletisim}.
+          {LEGAL.contact}.
         </p>
       </section>
     </YasalSayfa>

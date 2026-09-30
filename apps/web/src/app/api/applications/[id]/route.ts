@@ -1,7 +1,7 @@
 import { type Prisma, prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
-import { authErrorResponse, ensureOwner, ensureRegistered, getSession } from "@/lib/authz"
-import { NOT_UZUNLUGU, PANO_SECIMI, gecerliAsama, panoKarti } from "@/lib/pano"
+import { authErrorResponse, ensureOwner, ensureRegistered, getSession } from "@/server/authz"
+import { NOTE_MAX_LENGTH, BOARD_SELECT, isStage, toBoardCard } from "@/features/applications/board"
 
 export const runtime = "nodejs"
 
@@ -18,7 +18,7 @@ export async function PATCH(
     const veri: Prisma.AnalysisUpdateInput = {}
 
     if (govde.asama !== undefined) {
-      if (!gecerliAsama(govde.asama)) {
+      if (!isStage(govde.asama)) {
         return NextResponse.json({ error: "Geçersiz aşama." }, { status: 400 })
       }
       veri.stage = govde.asama
@@ -29,9 +29,9 @@ export async function PATCH(
         return NextResponse.json({ error: "Geçersiz not." }, { status: 400 })
       }
       const not = (govde.not ?? "").trim()
-      if (not.length > NOT_UZUNLUGU) {
+      if (not.length > NOTE_MAX_LENGTH) {
         return NextResponse.json(
-          { error: `Not en fazla ${NOT_UZUNLUGU} karakter olabilir.` },
+          { error: `Not en fazla ${NOTE_MAX_LENGTH} karakter olabilir.` },
           { status: 400 },
         )
       }
@@ -49,9 +49,9 @@ export async function PATCH(
     const guncel = await prisma.analysis.update({
       where: { id },
       data: veri,
-      select: PANO_SECIMI,
+      select: BOARD_SELECT,
     })
-    return NextResponse.json({ kart: panoKarti(guncel) })
+    return NextResponse.json({ kart: toBoardCard(guncel) })
   } catch (error) {
     const yanit = authErrorResponse(error)
     if (yanit) return yanit

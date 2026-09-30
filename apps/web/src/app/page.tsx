@@ -11,7 +11,7 @@ import {
 } from "./components/landing/Mockuplar"
 import s from "./components/landing/landing.module.css"
 import { redirect } from "next/navigation"
-import { getSession } from "@/lib/authz"
+import { getSession } from "@/server/authz"
 
 /**
  * Tanıtım sayfası.

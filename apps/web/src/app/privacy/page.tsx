@@ -1,12 +1,12 @@
 import { YasalSayfa } from "../components/YasalSayfa"
-import { YASAL } from "@/lib/yasal"
+import { LEGAL } from "@/features/legal/company"
 
 export const metadata = { title: "KVKK aydınlatma metni · uyarla" }
 
 /**
  * 6698 sayılı KVKK md. 10 kapsamında aydınlatma metni. İçerik uygulamanın
  * bugün gerçekten işlediği verilere göre yazıldı (packages/db şeması,
- * lib/auth.ts, lib/mail.ts). Yeni bir veri ya da hizmet sağlayıcı eklenirse
+ * src/server/auth.ts, src/server/mail.ts). Yeni bir veri ya da hizmet sağlayıcı eklenirse
  * bu sayfa da güncellenmeli.
  */
 export default function PrivacyPage() {
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
         <h2>1. Veri sorumlusu</h2>
         <p>
           6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) kapsamında veri sorumlusu{" "}
-          {YASAL.veriSorumlusu}&apos;dır ({YASAL.adres}). Bize {YASAL.iletisim} adresinden
+          {LEGAL.dataController}&apos;dır ({LEGAL.address}). Bize {LEGAL.contact} adresinden
           ulaşabilirsin.
         </p>
       </section>
@@ -109,7 +109,7 @@ export default function PrivacyPage() {
         <p>
           Bu sağlayıcıların bir kısmının sunucuları yurt dışında olabilir. Yurt dışına aktarım
           KVKK md. 9&apos;daki şartlara uygun olarak yapılır. Kullandığımız sağlayıcıların güncel
-          listesini {YASAL.iletisim} adresinden isteyebilirsin.
+          listesini {LEGAL.contact} adresinden isteyebilirsin.
         </p>
       </section>
 
@@ -147,7 +147,7 @@ export default function PrivacyPage() {
           <li>Kanuna aykırı işleme nedeniyle zarara uğradıysan zararın giderilmesini istemek.</li>
         </ul>
         <p>
-          Başvurunu {YASAL.iletisim} adresine iletebilirsin. En geç 30 gün içinde ücretsiz olarak
+          Başvurunu {LEGAL.contact} adresine iletebilirsin. En geç 30 gün içinde ücretsiz olarak
           cevaplarız.
         </p>
       </section>

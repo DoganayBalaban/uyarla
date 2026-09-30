@@ -135,7 +135,7 @@ describe("runAnalysis · happy path", () => {
     const stages: PipelineStage[] = []
     await runAnalysis(fakeDeps({ onProgress: (s) => stages.push(s) }), INPUT)
     expect(stages).toEqual([
-      "cv_okunuyor", "ilan_okunuyor", "karsilastiriliyor", "tamamlandi",
+      "reading_resume", "reading_posting", "comparing", "completed",
     ])
   })
 

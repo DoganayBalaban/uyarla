@@ -2,10 +2,10 @@ import type { CoverLetterRecord } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { ADAPT_JOB_OPTIONS, COVER_LETTER_JOB } from "@uyarla/worker/adapt-queue"
 import { NextResponse } from "next/server"
-import { adaptQueue } from "@/lib/adaptQueue"
-import { loadAdaptation } from "@/lib/adaptation"
-import { authErrorResponse, ensureOwner, ensureRegistered, getSession } from "@/lib/authz"
-import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/lib/rateLimit"
+import { adaptQueue } from "@/server/adaptQueue"
+import { loadAdaptation } from "@/server/adaptationDecision"
+import { authErrorResponse, ensureOwner, ensureRegistered, getSession } from "@/server/authz"
+import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 
 export const runtime = "nodejs"
 
@@ -42,7 +42,7 @@ export async function POST(
     }
 
     // Pahalı uç: her çağrı bir LLM üretimi (spec §9).
-    await enforceRateLimit(redisStore, `onyazi:${oturum.user.id}`, RATE_LIMITS.kayitli)
+    await enforceRateLimit(redisStore, `onyazi:${oturum.user.id}`, RATE_LIMITS.registered)
 
     const kayit: CoverLetterRecord = { status: "running" }
     await prisma.adaptation.update({ where: { id }, data: { coverLetter: kayit } })

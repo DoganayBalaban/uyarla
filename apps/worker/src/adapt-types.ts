@@ -35,7 +35,7 @@ export interface AdaptationStore {
 }
 
 /** Arayüzdeki ilerleme metinleri bu aşamalara karşılık geliyor. */
-export type AdaptStage = "yeniden_yaziliyor" | "kontrol_ediliyor" | "tamamlandi"
+export type AdaptStage = "rewriting" | "verifying" | "completed"
 
 export interface AdaptPipelineDeps {
   llm: LlmProvider

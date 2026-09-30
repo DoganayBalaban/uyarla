@@ -13,16 +13,16 @@ import {
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react"
-import { girisAdresi } from "@/lib/donus"
-import { asamalariTuret } from "@/lib/asamalar"
+import { loginPath } from "@/lib/returnPath"
+import { deriveStageStates } from "@/features/analysis/stageStates"
 import {
-  aktifAnaliziBaslat,
-  aktifAnaliziGuncelle,
-  aktifAnaliziOku,
-  aktifAnaliziTemizle,
-  sonucAdresi,
-  yanitiIsle,
-} from "@/lib/aktifAnaliz"
+  startActiveAnalysis,
+  updateActiveAnalysis,
+  readActiveAnalysis,
+  clearActiveAnalysis,
+  resultPath,
+  handleResponse,
+} from "@/features/analysis/activeAnalysis"
 import { SayfaBasligi } from "../../components/Sayfa"
 import { AsamaCizelgesi } from "../../components/ui/AsamaCizelgesi"
 import { CvYukleme } from "../../components/ui/CvYukleme"
@@ -30,9 +30,9 @@ import { SkorSonucu, type ScoreResultView } from "../../components/SkorSonucu"
 
 /** Marka rehberi §10.2'deki yükleme metinleri; aşama çizelgesinin satırları. */
 const ASAMALAR = [
-  { id: "cv_okunuyor", baslik: "CV'ni okuyoruz", aciklama: "Deneyim, eğitim ve becerilerin ayrıştırılıyor." },
-  { id: "ilan_okunuyor", baslik: "İlanı okuyoruz", aciklama: "Gereksinimler ve aranan kavramlar çıkarılıyor." },
-  { id: "karsilastiriliyor", baslik: "İlanla karşılaştırıyoruz", aciklama: "Her gereksinim CV'nde kanıtıyla aranıyor." },
+  { id: "reading_resume", title: "CV'ni okuyoruz", description: "Deneyim, eğitim ve becerilerin ayrıştırılıyor." },
+  { id: "reading_posting", title: "İlanı okuyoruz", description: "Gereksinimler ve aranan kavramlar çıkarılıyor." },
+  { id: "comparing", title: "İlanla karşılaştırıyoruz", description: "Her gereksinim CV'nde kanıtıyla aranıyor." },
 ]
 
 interface AnalysisResponse {
@@ -126,16 +126,16 @@ export default function AnalyzePage() {
 
     // Başka sayfaya geçip "Analize dön" ile gelindi: süren analiz kaldığı
     // yerden izleniyor, bitmiş ama görülmemiş sonuç gösteriliyor.
-    const aktif = aktifAnaliziOku()
-    if (aktif?.durum === "running") {
-      setState({ status: "running", stage: aktif.asama })
+    const aktif = readActiveAnalysis()
+    if (aktif?.status === "running") {
+      setState({ status: "running", stage: aktif.stage })
       setBusy(true)
       poll(aktif.jobId)
-    } else if (aktif?.durum === "completed" && aktif.analysisId && !aktif.goruldu) {
+    } else if (aktif?.status === "completed" && aktif.analysisId && !aktif.seen) {
       void sonucuYukle(aktif.analysisId)
-    } else if (aktif?.durum === "failed" && !aktif.goruldu) {
-      setError(aktif.hata ?? "Analiz tamamlanamadı.")
-      aktifAnaliziTemizle()
+    } else if (aktif?.status === "failed" && !aktif.seen) {
+      setError(aktif.error ?? "Analiz tamamlanamadı.")
+      clearActiveAnalysis()
     }
     // uyarla ve poll her çizimde yeniden tanımlanıyor; efekt yalnızca ilk açılışta.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -158,8 +158,8 @@ export default function AnalyzePage() {
       }
       const govde = (await cevap.json()) as AnalysisResponse
       setState(govde)
-      const aktif = aktifAnaliziOku()
-      if (aktif?.analysisId === analysisId) aktifAnaliziGuncelle(aktif.jobId, { goruldu: true })
+      const aktif = readActiveAnalysis()
+      if (aktif?.analysisId === analysisId) updateActiveAnalysis(aktif.jobId, { seen: true })
     } catch {
       setState(null)
       setError("Sonucu alamadık. Sayfayı yenileyip tekrar dener misin?")
@@ -188,9 +188,9 @@ export default function AnalyzePage() {
     // Dönüş adresi `?uyarla=` taşıyor: girişten sonra bu sayfa açılınca
     // uyarlama kendiliğinden başlıyor ve kullanıcı işine kaldığı yerden
     // devam ediyor. Analiz kimliği kayıtta değişmiyor, yalnızca sahibi
-    // anonim kullanıcıdan yeni hesaba geçiyor (lib/devral.ts).
+    // anonim kullanıcıdan yeni hesaba geçiyor (src/server/claimAnonymousData.ts).
     if (govde.code === "kayit_gerekli") {
-      window.location.href = girisAdresi(`/analyze?uyarla=${encodeURIComponent(analysisId)}`)
+      window.location.href = loginPath(`/analyze?uyarla=${encodeURIComponent(analysisId)}`)
       return
     }
     setError(govde.error ?? "Uyarlama başlatılamadı.")
@@ -219,7 +219,7 @@ export default function AnalyzePage() {
       }
       // Çizelge hemen görünsün; ilk yoklama bir saniye sonra geliyor. Kayıt,
       // kullanıcı başka sayfaya geçerse sağ alttaki bildirimin izlemesi için.
-      aktifAnaliziBaslat(body.jobId)
+      startActiveAnalysis(body.jobId)
       setState({ status: "running" })
       poll(body.jobId)
     } catch {
@@ -237,23 +237,23 @@ export default function AnalyzePage() {
         if (!response.ok) {
           // İş artık yok (kuyruk temizlendi) ya da başkasına ait.
           clearInterval(timer)
-          aktifAnaliziTemizle()
+          clearActiveAnalysis()
           setState(null)
           setError("Bu analizi artık bulamıyoruz. Yeni bir analiz başlatabilirsin.")
           setBusy(false)
           return
         }
         setState(body)
-        yanitiIsle(jobId, body)
+        handleResponse(jobId, body)
 
         if (body.status === "completed" || body.status === "failed") {
           clearInterval(timer)
           setBusy(false)
           // Kullanıcı sonucu bu sayfada görüyor: bildirim gösterilmesin.
-          aktifAnaliziGuncelle(jobId, { goruldu: true })
+          updateActiveAnalysis(jobId, { seen: true })
           // Adres kalıcı sonuca dönüyor; yenilenirse sonuç kaybolmaz (K3).
           if (body.status === "completed" && body.analysisId) {
-            window.history.replaceState(null, "", sonucAdresi(body.analysisId))
+            window.history.replaceState(null, "", resultPath(body.analysisId))
           }
         }
       } catch {
@@ -265,7 +265,7 @@ export default function AnalyzePage() {
 
   function basaDon() {
     if (yoklama.current) clearInterval(yoklama.current)
-    aktifAnaliziTemizle()
+    clearActiveAnalysis()
     window.history.replaceState(null, "", "/analyze")
     setState(null)
     setError(null)
@@ -309,7 +309,7 @@ export default function AnalyzePage() {
         <AsamaCizelgesi
           baslik="Analizin hazırlanıyor"
           altBaslik="Genelde bir dakika kadar sürüyor. Sayfadan ayrılma."
-          asamalar={asamalariTuret(ASAMALAR, state?.stage ?? null)}
+          asamalar={deriveStageStates(ASAMALAR, state?.stage ?? null)}
         />
       </div>
     )

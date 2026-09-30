@@ -1,8 +1,8 @@
 import { AdaptationDraftSchema } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
-import { applyDecision, computeScoreAfter, loadAdaptation, nextStatus } from "@/lib/adaptation"
-import { authErrorResponse, ensureOwner, getSession } from "@/lib/authz"
+import { applyDecision, computeScoreAfter, loadAdaptation, nextStatus } from "@/server/adaptationDecision"
+import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 
 export const runtime = "nodejs"
 

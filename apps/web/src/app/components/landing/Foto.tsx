@@ -8,7 +8,7 @@ import s from "./landing.module.css"
  * Tanıtım sayfasının fotoğrafı: `public/foto/<dosya>` varsa onu, yoksa yer
  * tutucuyu çiziyor. Kontrol derleme anında yapılıyor (sayfa statik); dosya
  * eklenince yeniden derlemek yetiyor. Fotoğraflar Higgsfield'da (Soul 2.0,
- * Seedream 5.0 Lite) üretildi ve `scripts/fotolari-indir.mjs` ile indiriliyor.
+ * Seedream 5.0 Lite) üretildi ve `scripts/download-photos.mjs` ile indiriliyor.
  *
  * Görsel kutunun oranına `object-fit: cover` ile oturuyor; üretilen karenin
  * oranı yer tutucununkinden biraz farklı olabilir (ör. 4:3 ↔ 5:4).

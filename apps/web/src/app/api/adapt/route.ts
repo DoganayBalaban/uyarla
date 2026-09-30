@@ -2,14 +2,14 @@ import { PermanentError } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { ADAPT_JOB_OPTIONS } from "@uyarla/worker/adapt-queue"
 import { NextResponse } from "next/server"
-import { adaptQueue } from "@/lib/adaptQueue"
-import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/lib/rateLimit"
+import { adaptQueue } from "@/server/adaptQueue"
+import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 import {
   authErrorResponse,
   ensureOwner,
   ensureRegistered,
   getSession,
-} from "@/lib/authz"
+} from "@/server/authz"
 
 export const runtime = "nodejs"
 
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const oturum = ensureRegistered(await getSession())
 
     // Pahalı uç: madde başına LLM çağrısı (spec §9).
-    await enforceRateLimit(redisStore, `uyarla:${oturum.user.id}`, RATE_LIMITS.kayitli)
+    await enforceRateLimit(redisStore, `uyarla:${oturum.user.id}`, RATE_LIMITS.registered)
 
     const analysis = await prisma.analysis.findUnique({ where: { id: analysisId } })
     if (!analysis) throw new PermanentError("Analiz bulunamadı.", "analysis_not_found")

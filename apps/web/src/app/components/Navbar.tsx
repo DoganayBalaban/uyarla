@@ -16,7 +16,7 @@ import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { signOut, useSession } from "@/lib/authClient"
 import { cn } from "@/lib/cn"
-import { girisAdresi } from "@/lib/donus"
+import { loginPath } from "@/lib/returnPath"
 import { KAP } from "./Sayfa"
 
 /**
@@ -117,7 +117,7 @@ export function Navbar() {
           ) : (
             <>
               <Link
-                href={girisAdresi(yol)}
+                href={loginPath(yol)}
                 className="inline-flex items-center gap-2 rounded-buton px-3 py-2 text-sm font-semibold text-metin no-underline transition-colors hover:bg-zemin"
               >
                 <LogIn className="size-4" aria-hidden />

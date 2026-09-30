@@ -1,8 +1,8 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
-import { authErrorResponse } from "@/lib/authz"
-import { ilanMetniCikar, izinliAdres } from "@/lib/ilanBaglantisi"
-import { enforceRateLimit, redisStore } from "@/lib/rateLimit"
+import { authErrorResponse } from "@/server/authz"
+import { extractPostingText, isAllowedPath } from "@/server/jobPostingFromUrl"
+import { enforceRateLimit, redisStore } from "@/server/rateLimit"
 
 export const runtime = "nodejs"
 
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "İlan bağlantısını yapıştır." }, { status: 400 })
     }
 
-    let url = izinliAdres(ham)
+    let url = isAllowedPath(ham)
     if (!url) return NextResponse.json({ error: DESTEKLENMIYOR, code: "desteklenmiyor" }, { status: 400 })
 
     const basliklar = await headers()
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       })
       const hedef = cevap.status >= 300 && cevap.status < 400 ? cevap.headers.get("location") : null
       if (!hedef) break
-      const sonraki = izinliAdres(new URL(hedef, url).toString())
+      const sonraki = isAllowedPath(new URL(hedef, url).toString())
       if (!sonraki) {
         return NextResponse.json({ error: DESTEKLENMIYOR, code: "desteklenmiyor" }, { status: 400 })
       }
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     }
     const html = (await cevap.text()).slice(0, EN_FAZLA_BAYT)
 
-    const ilan = ilanMetniCikar(html, url.hostname)
+    const ilan = extractPostingText(html, url.hostname)
     if (!ilan) {
       return NextResponse.json(
         {

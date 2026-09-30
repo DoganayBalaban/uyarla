@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { signIn } from "@/lib/authClient"
-import { epostaOnerisi, postaUygulamasi } from "@/lib/eposta"
-import type { Saglayici } from "@/lib/saglayicilar"
+import { suggestEmail, mailAppFor } from "@/features/auth/emailHints"
+import type { Provider } from "@/features/auth/providers"
 import { GirisGorseli } from "./GirisGorseli"
 import { SosyalGiris, girisHataAdresi } from "./SosyalGiris"
 
@@ -47,7 +47,7 @@ export function GirisFormu({
   acikSaglayicilar,
   donus,
 }: {
-  acikSaglayicilar: Saglayici[]
+  acikSaglayicilar: Provider[]
   /** Girişten sonra gidilecek, doğrulanmış site içi adres. */
   donus: string
 }) {
@@ -64,15 +64,15 @@ export function GirisFormu({
   }, [])
 
   // Tekrar gönderme sayacı. 60 saniye, sunucudaki "dakikada 3 bağlantı"
-  // sınırının (lib/auth.ts) içinde kalıyor: ilk gönderim + dakikada bir tekrar.
+  // sınırının (src/server/auth.ts) içinde kalıyor: ilk gönderim + dakikada bir tekrar.
   useEffect(() => {
     if (kalan <= 0) return
     const id = setTimeout(() => setKalan((k) => k - 1), 1000)
     return () => clearTimeout(id)
   }, [kalan])
 
-  const oneri = durum === "bos" ? epostaOnerisi(email) : null
-  const uygulama = postaUygulamasi(email)
+  const oneri = durum === "bos" ? suggestEmail(email) : null
+  const uygulama = mailAppFor(email)
 
   /** Bağlantıyı gönderir; başarılıysa true. */
   async function baglantiGonder(): Promise<boolean> {
@@ -155,7 +155,7 @@ export function GirisFormu({
                     rel="noopener noreferrer"
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-mavi px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(43_78_255/0.8)] transition hover:-translate-y-px hover:bg-[#2442e0]"
                   >
-                    {uygulama.eylem}
+                    {uygulama.action}
                     <span aria-hidden="true">↗</span>
                   </a>
                 )}

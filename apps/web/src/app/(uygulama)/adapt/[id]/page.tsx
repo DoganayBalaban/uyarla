@@ -15,9 +15,9 @@ import {
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react"
-import { diffWords } from "@/lib/diff"
+import { diffWords } from "@/features/adaptation/diff"
 import { cn } from "@/lib/cn"
-import { asamalariTuret } from "@/lib/asamalar"
+import { deriveStageStates } from "@/features/analysis/stageStates"
 import { OnYaziBolumu, type CoverLetterView } from "../../../components/OnYaziBolumu"
 import { AsamaCizelgesi } from "../../../components/ui/AsamaCizelgesi"
 import { SkorHalkasi, skorDurumu } from "../../../components/ui/SkorHalkasi"
@@ -25,14 +25,14 @@ import { SkorHalkasi, skorDurumu } from "../../../components/ui/SkorHalkasi"
 /** Marka rehberi §10.2 tonunda yükleme metinleri. */
 const ASAMALAR = [
   {
-    id: "yeniden_yaziliyor",
-    baslik: "CV'ni ilana göre yeniden yazıyoruz",
-    aciklama: "Özetini ve deneyim maddelerini ilanın diline yaklaştırıyoruz.",
+    id: "rewriting",
+    title: "CV'ni ilana göre yeniden yazıyoruz",
+    description: "Özetini ve deneyim maddelerini ilanın diline yaklaştırıyoruz.",
   },
   {
-    id: "kontrol_ediliyor",
-    baslik: "Hiçbir şeyin uydurulmadığını kontrol ediyoruz",
-    aciklama: "Her yeni cümleyi CV'ndeki gerçek bilgilerle karşılaştırıyoruz.",
+    id: "verifying",
+    title: "Hiçbir şeyin uydurulmadığını kontrol ediyoruz",
+    description: "Her yeni cümleyi CV'ndeki gerçek bilgilerle karşılaştırıyoruz.",
   },
 ]
 
@@ -231,7 +231,7 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
         <AsamaCizelgesi
           baslik="Uyarlaman hazırlanıyor"
           altBaslik="Genelde bir dakikadan kısa sürüyor. Sayfadan ayrılma."
-          asamalar={asamalariTuret(ASAMALAR, durum?.stage ?? null)}
+          asamalar={deriveStageStates(ASAMALAR, durum?.stage ?? null)}
         />
       </div>
     )
@@ -323,7 +323,7 @@ export default function AdaptPage({ params }: { params: Promise<{ id: string }> 
             </div>
             <div className="text-center">
               <SkorHalkasi skor={sonra} boyut={132} />
-              <p className={cn("mt-1 text-xs font-semibold", skorDurumu(sonra).renk)}>Sonra</p>
+              <p className={cn("mt-1 text-xs font-semibold", skorDurumu(sonra).textClass)}>Sonra</p>
             </div>
           </div>
         </div>

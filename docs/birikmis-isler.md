@@ -242,11 +242,11 @@ e-postası spam klasörüne düşerse kullanıcı hiç giremez.
 `Analysis` kayıtları veritabanında kalıyor. Kayıt olanların anonim kaydı
 `onLinkAccount` sonrası siliniyor, ama olmayanların kalıyor.
 
-**Nasıl kapandı:** `apps/web/lib/temizlik.ts` 30 günden eski, `isAnonymous`
-alanı tam `true` olan kullanıcıları bulup `lib/silme.ts`'e devrediyor — hesap
+**Nasıl kapandı:** `apps/web/src/server/cleanupAnonymousUsers.ts` 30 günden eski, `isAnonymous`
+alanı tam `true` olan kullanıcıları bulup `src/server/deleteAccount.ts`'e devrediyor — hesap
 silme akışıyla (#14) aynı kod, iki kopya yok. Çağıran betik:
-`pnpm --filter @uyarla/web temizlik` (öntanımlı DENEME kipi, silmek için
-`--sil`). Tümleşik test kayıtlı kullanıcının, `isAnonymous` NULL olanın ve
+`pnpm --filter @uyarla/web cleanup:anonymous` (öntanımlı DENEME kipi, silmek için
+`--delete`). Tümleşik test kayıtlı kullanıcının, `isAnonymous` NULL olanın ve
 30 günden yeni ziyaretçinin verisine dokunulmadığını gerçek veritabanında
 doğruluyor. Saklama süresi ve deneme kipi kararı K-41'de.
 
@@ -263,7 +263,7 @@ bir çalıştıracak bir şey yok. Seçenekler dağıtım topolojisine göre (K-
 - **Worker sunucusunda `node-cron` ya da sistem `crontab`** → süre sınırı
   yok, ama worker şu anda kimlik ve kullanıcı verisi bilmiyor (spec §4) ve o
   sınırı aşmak gerekir.
-- **`crontab` + `pnpm --filter @uyarla/web temizlik --sil`** → en az kod,
+- **`crontab` + `pnpm --filter @uyarla/web cleanup:anonymous --delete`** → en az kod,
   worker'ın sınırını da bozmuyor; sunucuda depo ağacının durmasını istiyor.
 
 **Ne zaman gerekli:** Trafik başladığında. Dağıtım kararı verilirken bu üç
@@ -275,7 +275,7 @@ seçenekten biri seçilmeli; kod tarafında yapılacak iş yalnızca tetikleme.
 (`Analysis.userId`, `JobPosting.userId`) bunu artık mümkün kılıyor — bir
 kullanıcının tüm verisi tek sorguyla bulunabiliyor — ama akış yazılmadı.
 
-**Nasıl kapandı:** `apps/web/lib/silme.ts` sekiz tabloyu tek `$transaction`
+**Nasıl kapandı:** `apps/web/src/server/deleteAccount.ts` sekiz tabloyu tek `$transaction`
 içinde siliyor, diskteki CV dosyaları işlemden sonra kaldırılıyor (K-36).
 `DELETE /api/account` yalnızca oturum sahibinin kimliğini kullanıyor;
 `/account` ekranı marka rehberi §10.2'deki onay metnini soruyor. Tümleşik

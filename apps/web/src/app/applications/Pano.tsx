@@ -14,24 +14,24 @@ import {
   StickyNote,
 } from "lucide-react"
 import { cn } from "@/lib/cn"
-import { girisAdresi } from "@/lib/donus"
-import { sonucAdresi } from "@/lib/aktifAnaliz"
+import { loginPath } from "@/lib/returnPath"
+import { resultPath } from "@/features/analysis/activeAnalysis"
 import { SayfaBasligi } from "../components/Sayfa"
 import {
-  ASAMALAR,
-  ASAMA_ETIKETI,
-  ASAMA_RENGI,
-  NOT_UZUNLUGU,
-  sutunlaraDagit,
-  type Asama,
-  type PanoKarti,
-} from "@/lib/pano"
+  STAGES,
+  STAGE_LABEL,
+  STAGE_COLOR,
+  NOTE_MAX_LENGTH,
+  groupByStage,
+  type Stage,
+  type BoardCard,
+} from "@/features/applications/board"
 
 type Yukleme =
   | { durum: "yukleniyor" }
   | { durum: "giris" }
   | { durum: "hata"; mesaj: string }
-  | { durum: "hazir"; kartlar: PanoKarti[] }
+  | { durum: "hazir"; kartlar: BoardCard[] }
 
 /** Skor yalnızca renkle değil etiketle de (rehber §9.2). */
 function skorEtiketi(skor: number): { metin: string; sinif: string } {
@@ -48,7 +48,7 @@ const SURUKLE_TURU = "application/x-uyarla-kart"
 const TARIH = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short" })
 
 /** Sütun başlığının altındaki kısa metin; rehber §6.2 tonunda. */
-const SUTUN_ALTI: Partial<Record<Asama, string>> = {
+const SUTUN_ALTI: Partial<Record<Stage, string>> = {
   saved: "Skorunu aldın, henüz başvurmadın.",
   rejected: "Bu olmadı, olur.",
   offer: "Tebrikler!",
@@ -56,7 +56,7 @@ const SUTUN_ALTI: Partial<Record<Asama, string>> = {
 
 export function Pano() {
   const [yukleme, setYukleme] = useState<Yukleme>({ durum: "yukleniyor" })
-  const [hedef, setHedef] = useState<Asama | null>(null)
+  const [hedef, setHedef] = useState<Stage | null>(null)
   const azHareket = useReducedMotion() ?? false
 
   useEffect(() => {
@@ -66,13 +66,13 @@ export function Pano() {
       if (!cevap.ok) {
         return setYukleme({ durum: "hata", mesaj: "Panonu yükleyemedik. Sayfayı yenileyip tekrar dener misin?" })
       }
-      const { kartlar } = (await cevap.json()) as { kartlar: PanoKarti[] }
+      const { kartlar } = (await cevap.json()) as { kartlar: BoardCard[] }
       setYukleme({ durum: "hazir", kartlar })
     })()
   }, [])
 
   /** İyimser güncelleme: kart hemen yer değiştiriyor, hata olursa geri alınıyor. */
-  async function guncelle(analysisId: string, degisiklik: { asama?: Asama; not?: string }) {
+  async function guncelle(analysisId: string, degisiklik: { asama?: Stage; not?: string }) {
     if (yukleme.durum !== "hazir") return
     const onceki = yukleme.kartlar
     setYukleme({
@@ -81,8 +81,8 @@ export function Pano() {
         k.analysisId === analysisId
           ? {
               ...k,
-              ...(degisiklik.asama && { asama: degisiklik.asama, asamaTarihi: new Date().toISOString() }),
-              ...(degisiklik.not !== undefined && { not: degisiklik.not || null }),
+              ...(degisiklik.asama && { stage: degisiklik.asama, stageChangedAt: new Date().toISOString() }),
+              ...(degisiklik.not !== undefined && { noteText: degisiklik.not || null }),
             }
           : k,
       ),
@@ -116,7 +116,7 @@ export function Pano() {
           analizler hesabına taşınır.
         </p>
         <Link
-          href={girisAdresi("/applications")}
+          href={loginPath("/applications")}
           className="mt-6 inline-flex items-center gap-2 rounded-buton bg-mavi px-6 py-3 font-semibold text-white no-underline shadow-sm shadow-mavi/30"
         >
           Giriş yap
@@ -127,8 +127,8 @@ export function Pano() {
   }
 
   const { kartlar } = yukleme
-  const sutunlar = sutunlaraDagit(kartlar)
-  const basvurulan = kartlar.filter((k) => k.asama !== "saved").length
+  const sutunlar = groupByStage(kartlar)
+  const basvurulan = kartlar.filter((k) => k.stage !== "saved").length
   const mulakat = sutunlar.interview.length + sutunlar.offer.length
 
   return (
@@ -187,7 +187,7 @@ export function Pano() {
         </div>
       ) : (
         <div className="mt-6 grid gap-4 md:grid-flow-col md:auto-cols-[minmax(15rem,1fr)] md:overflow-x-auto md:pb-2 xl:grid-flow-row xl:grid-cols-5 xl:overflow-visible">
-          {ASAMALAR.map((asama) => (
+          {STAGES.map((asama) => (
             <section
               key={asama}
               onDragOver={(e) => {
@@ -203,7 +203,7 @@ export function Pano() {
                 setHedef(null)
                 const id = e.dataTransfer.getData(SURUKLE_TURU)
                 const kart = kartlar.find((k) => k.analysisId === id)
-                if (kart && kart.asama !== asama) void guncelle(id, { asama })
+                if (kart && kart.stage !== asama) void guncelle(id, { asama })
               }}
               className={cn(
                 "flex flex-col rounded-kart border bg-metin/[0.025] p-2.5 transition-colors",
@@ -212,8 +212,8 @@ export function Pano() {
             >
               <header className="px-1.5 pt-1 pb-3">
                 <h2 className="m-0 flex items-center gap-2 text-sm">
-                  <span aria-hidden className={cn("size-2 rounded-full", ASAMA_RENGI[asama])} />
-                  {ASAMA_ETIKETI[asama]}
+                  <span aria-hidden className={cn("size-2 rounded-full", STAGE_COLOR[asama])} />
+                  {STAGE_LABEL[asama]}
                   <span className="ml-auto rounded-full bg-kart px-2 py-0.5 text-xs font-semibold text-gri tabular-nums">
                     {sutunlar[asama].length}
                   </span>
@@ -257,7 +257,7 @@ function PanoIskeleti() {
     <div aria-busy="true" aria-label="Panon yükleniyor">
       <div className="h-8 w-56 rounded-buton bg-metin/[0.06] motion-safe:animate-pulse" />
       <div className="mt-8 grid gap-4 md:grid-cols-3 xl:grid-cols-5">
-        {ASAMALAR.map((a, i) => (
+        {STAGES.map((a, i) => (
           <div key={a} className="space-y-2.5 rounded-kart border border-cizgi p-2.5">
             <div className="h-4 w-24 rounded bg-metin/[0.06]" />
             {Array.from({ length: i < 2 ? 2 : 1 }, (_, j) => (
@@ -274,13 +274,13 @@ function Kart({
   kart,
   onGuncelle,
 }: {
-  kart: PanoKarti
-  onGuncelle: (id: string, d: { asama?: Asama; not?: string }) => Promise<void>
+  kart: BoardCard
+  onGuncelle: (id: string, d: { asama?: Stage; not?: string }) => Promise<void>
 }) {
   const [notAcik, setNotAcik] = useState(false)
-  const [not, setNot] = useState(kart.not ?? "")
+  const [not, setNot] = useState(kart.noteText ?? "")
   const [uyarlaniyor, setUyarlaniyor] = useState(false)
-  const etiket = kart.skor === null ? null : skorEtiketi(kart.skor)
+  const etiket = kart.score === null ? null : skorEtiketi(kart.score)
 
   async function uyarla() {
     setUyarlaniyor(true)
@@ -299,7 +299,7 @@ function Kart({
 
   function notuKaydet() {
     setNotAcik(false)
-    if (not.trim() !== (kart.not ?? "")) void onGuncelle(kart.analysisId, { not: not.trim() })
+    if (not.trim() !== (kart.noteText ?? "")) void onGuncelle(kart.analysisId, { not: not.trim() })
   }
 
   return (
@@ -315,11 +315,11 @@ function Kart({
         <h3 className="m-0 flex-1 text-[15px] leading-snug">
           {/* Analiz sonucuna kalıcı adres; önceden sonuca geri dönmenin yolu yoktu (K3). */}
           <Link
-            href={sonucAdresi(kart.analysisId)}
+            href={resultPath(kart.analysisId)}
             draggable={false}
             className="text-metin no-underline hover:text-mavi hover:underline"
           >
-            {kart.pozisyon}
+            {kart.position}
           </Link>
         </h3>
         <GripVertical
@@ -328,17 +328,17 @@ function Kart({
         />
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-        {etiket && kart.skor !== null && (
+        {etiket && kart.score !== null && (
           <span
             className={`rounded-full px-2 py-0.5 text-xs font-bold ${etiket.sinif}`}
             title="ATS uyum skoru"
           >
-            {kart.skor} · {etiket.metin}
+            {kart.score} · {etiket.metin}
           </span>
         )}
         <span className="inline-flex items-center gap-1 text-xs text-gri">
           <CalendarDays className="size-3.5" aria-hidden />
-          {TARIH.format(new Date(kart.olusturulma))}
+          {TARIH.format(new Date(kart.createdAt))}
         </span>
       </div>
 
@@ -346,19 +346,19 @@ function Kart({
         <textarea
           autoFocus
           value={not}
-          maxLength={NOT_UZUNLUGU}
+          maxLength={NOTE_MAX_LENGTH}
           onChange={(e) => setNot(e.target.value)}
           onBlur={notuKaydet}
           rows={3}
           placeholder="Şirket, görüştüğün kişi, tarih…"
           className="mt-3 w-full rounded-buton border border-cizgi bg-zemin p-2 text-sm dark:bg-white/5"
         />
-      ) : kart.not ? (
+      ) : kart.noteText ? (
         <button
           onClick={() => setNotAcik(true)}
           className="mt-3 block w-full rounded-buton bg-zemin p-2 text-left text-sm text-metin dark:bg-white/5"
         >
-          {kart.not}
+          {kart.noteText}
         </button>
       ) : null}
 
@@ -368,19 +368,19 @@ function Kart({
         </label>
         <select
           id={`asama-${kart.analysisId}`}
-          value={kart.asama}
-          onChange={(e) => void onGuncelle(kart.analysisId, { asama: e.target.value as Asama })}
+          value={kart.stage}
+          onChange={(e) => void onGuncelle(kart.analysisId, { asama: e.target.value as Stage })}
           className="rounded-buton border border-cizgi bg-kart px-2 py-1 text-xs font-medium"
         >
-          {ASAMALAR.map((a) => (
+          {STAGES.map((a) => (
             <option key={a} value={a}>
-              {ASAMA_ETIKETI[a]}
+              {STAGE_LABEL[a]}
             </option>
           ))}
         </select>
 
-        {kart.uyarlama ? (
-          <Link href={`/adapt/${kart.uyarlama.id}`} className="text-sm font-semibold text-mavi dark:text-[#8ea2ff]">
+        {kart.adaptation ? (
+          <Link href={`/adapt/${kart.adaptation.id}`} className="text-sm font-semibold text-mavi dark:text-[#8ea2ff]">
             Uyarlamayı aç
           </Link>
         ) : (
@@ -393,7 +393,7 @@ function Kart({
           </button>
         )}
 
-        {!notAcik && !kart.not && (
+        {!notAcik && !kart.noteText && (
           <button
             onClick={() => setNotAcik(true)}
             className="ml-auto inline-flex items-center gap-1 text-sm text-gri hover:text-metin"

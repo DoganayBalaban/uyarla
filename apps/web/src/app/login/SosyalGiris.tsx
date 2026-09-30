@@ -2,17 +2,17 @@
 
 import { useState } from "react"
 import { signIn } from "@/lib/authClient"
-import { girisAdresi } from "@/lib/donus"
-import type { Saglayici } from "@/lib/saglayicilar"
+import { loginPath } from "@/lib/returnPath"
+import type { Provider } from "@/features/auth/providers"
 
-const ETIKET: Record<Saglayici, string> = {
+const ETIKET: Record<Provider, string> = {
   google: "Google",
   linkedin: "LinkedIn",
   github: "GitHub",
 }
 
 /** Marka ikonları; her sağlayıcının kendi logosu, kendi renginde. */
-function SaglayiciIkon({ s }: { s: Saglayici }) {
+function SaglayiciIkon({ s }: { s: Provider }) {
   if (s === "google") {
     return (
       <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
@@ -53,14 +53,14 @@ function SaglayiciIkon({ s }: { s: Saglayici }) {
  * adresini kaybetmeden.
  */
 export function girisHataAdresi(donus: string): string {
-  return girisAdresi(donus)
+  return loginPath(donus)
 }
 
-export function SosyalGiris({ acik, donus }: { acik: Saglayici[]; donus: string }) {
-  const [bekleyen, setBekleyen] = useState<Saglayici | null>(null)
+export function SosyalGiris({ acik, donus }: { acik: Provider[]; donus: string }) {
+  const [bekleyen, setBekleyen] = useState<Provider | null>(null)
   const [mesaj, setMesaj] = useState<string | null>(null)
 
-  async function giris(s: Saglayici) {
+  async function giris(s: Provider) {
     setMesaj(null)
     if (!acik.includes(s)) {
       setMesaj(`${ETIKET[s]} ile giriş yakında. Şimdilik e-postanla devam edebilirsin.`)

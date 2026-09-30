@@ -102,7 +102,7 @@ export function SkorSonucu({
             <p className="text-xs font-semibold tracking-wider text-gri uppercase">Uyum skoru</p>
             <h1 className="mt-1 text-2xl sm:text-3xl">
               {sonuc.requirements.length} gereksinimin{" "}
-              <span className={durum.renk}>{karsilanan} tanesi</span> karşılanıyor
+              <span className={durum.textClass}>{karsilanan} tanesi</span> karşılanıyor
             </h1>
             <p className="mt-2 text-sm text-gri">
               {eksik > 0

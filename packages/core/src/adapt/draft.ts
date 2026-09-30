@@ -33,7 +33,7 @@ export interface DraftInput {
   /** Analizin skor sonucu; hangi kavramların açık olduğunu söylüyor. */
   result: ScoreResult
   /** Madde yazımları başlarken ve doğrulamaya geçerken çağrılır. */
-  onStage?: (stage: "yeniden_yaziliyor" | "kontrol_ediliyor") => void
+  onStage?: (stage: "rewriting" | "verifying") => void
   targetOptions?: TargetOptions
   alignmentConfig?: AlignmentConfig
   /**
@@ -103,7 +103,7 @@ export async function buildAdaptationDraft(
   const targetList = sameLanguage ? allTargets : allTargets.map(() => [])
 
   // 2. Yazım.
-  input.onStage?.("yeniden_yaziliyor")
+  input.onStage?.("rewriting")
   const fullResumeText = resumeText(profile)
   const [rewrites, summaryText] = await Promise.all([
     rewriteBullets(
@@ -126,7 +126,7 @@ export async function buildAdaptationDraft(
 
   // 3. Doğrulama. Tek toplu gömme: yazımlar, kaynaklar, sonra her uyumun
   // terimi ve dayanağı. Sıra aşağıdaki dilimlemeyle eşleşmek zorunda.
-  input.onStage?.("kontrol_ediliyor")
+  input.onStage?.("verifying")
   const newTexts = bulletList.map((m, i) => rewrites[i]?.data.text ?? m.original)
   const claims = bulletList.flatMap((_, i) =>
     (rewrites[i]?.data.alignments ?? []).map((a) => ({ bulletItem: i, ...a })),

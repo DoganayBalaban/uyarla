@@ -41,10 +41,10 @@ export interface AnalysisStore {
 
 /** Arayüzdeki ilerleme metinleri bu aşamalara karşılık geliyor (spec §8). */
 export type PipelineStage =
-  | "cv_okunuyor"
-  | "ilan_okunuyor"
-  | "karsilastiriliyor"
-  | "tamamlandi"
+  | "reading_resume"
+  | "reading_posting"
+  | "comparing"
+  | "completed"
 
 export interface PipelineDeps {
   llm: LlmProvider

@@ -3,11 +3,11 @@ import { prisma } from "@uyarla/db"
 import { ANALYZE_JOB_OPTIONS } from "@uyarla/worker/queue"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
-import { authErrorResponse, ensureSession, getSession } from "@/lib/authz"
-import { analyzeQueue } from "@/lib/queue"
-import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/lib/rateLimit"
-import { validateUpload } from "@/lib/upload"
+import { auth } from "@/server/auth"
+import { authErrorResponse, ensureSession, getSession } from "@/server/authz"
+import { analyzeQueue } from "@/server/queue"
+import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
+import { validateUpload } from "@/server/upload"
 
 export const runtime = "nodejs"
 
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     await enforceRateLimit(
       redisStore,
       `analiz:${user.id}`,
-      user.isAnonymous ? RATE_LIMITS.anonim : RATE_LIMITS.kayitli,
+      user.isAnonymous ? RATE_LIMITS.anonUser : RATE_LIMITS.registered,
     )
 
     const resume = await prisma.resume.create({

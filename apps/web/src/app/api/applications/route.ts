@@ -1,7 +1,7 @@
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
-import { authErrorResponse, ensureRegistered, getSession } from "@/lib/authz"
-import { PANO_SECIMI, panoKarti } from "@/lib/pano"
+import { authErrorResponse, ensureRegistered, getSession } from "@/server/authz"
+import { BOARD_SELECT, toBoardCard } from "@/features/applications/board"
 
 export const runtime = "nodejs"
 
@@ -16,10 +16,10 @@ export async function GET() {
     const satirlar = await prisma.analysis.findMany({
       where: { userId: user.id, status: "done" },
       orderBy: { createdAt: "desc" },
-      select: PANO_SECIMI,
+      select: BOARD_SELECT,
     })
 
-    return NextResponse.json({ kartlar: satirlar.map(panoKarti) })
+    return NextResponse.json({ kartlar: satirlar.map(toBoardCard) })
   } catch (error) {
     const yanit = authErrorResponse(error)
     if (yanit) return yanit
