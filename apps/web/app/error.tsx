@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { Logo } from "./components/Logo"
+import { SayfaKabi } from "./components/Sayfa"
 
 /**
  * Bir sayfa çizilirken beklenmeyen bir hata olursa. Yığın izi kullanıcıya
@@ -13,11 +13,8 @@ export default function Hata({ error, reset }: { error: Error & { digest?: strin
   }, [error])
 
   return (
-    <div className="flex min-h-dvh flex-col bg-zemin">
-      <header className="mx-auto w-full max-w-3xl px-6 py-5">
-        <Logo />
-      </header>
-      <main role="alert" className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-6 pb-24">
+    <SayfaKabi genislik="dar" className="sm:pt-20">
+      <div role="alert">
         <h1 className="font-baslik text-3xl font-extrabold tracking-tight text-metin sm:text-4xl">
           Bir şeyler ters gitti.
         </h1>
@@ -41,7 +38,7 @@ export default function Hata({ error, reset }: { error: Error & { digest?: strin
             Ana sayfaya dön
           </a>
         </div>
-      </main>
-    </div>
+      </div>
+    </SayfaKabi>
   )
 }

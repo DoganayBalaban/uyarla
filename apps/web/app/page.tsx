@@ -1,5 +1,4 @@
 import { Foto } from "./components/landing/Foto"
-import { Gezinme } from "./components/landing/Gezinme"
 import { Ikon, type IkonAdi } from "./components/landing/Ikon"
 import {
   DosyaCipleri,
@@ -10,6 +9,8 @@ import {
   UyariKarti,
 } from "./components/landing/Mockuplar"
 import s from "./components/landing/landing.module.css"
+import { redirect } from "next/navigation"
+import { getSession } from "@/lib/authz"
 
 /**
  * Tanıtım sayfası.
@@ -186,11 +187,15 @@ const SSS = [
   },
 ]
 
-export default function Home() {
+export default async function Home() {
+  // Tanıtım ziyaretçiler için. Kayıtlı kullanıcı doğrudan uygulamanın ana
+  // ekranına gider; anonim oturum (kayıtsız analiz yapmış ziyaretçi) burada
+  // kalır, çünkü ona henüz anlatılacak şey var.
+  const oturum = await getSession()
+  if (oturum && !oturum.user.isAnonymous) redirect("/dashboard")
+
   return (
     <div className={s.sayfa}>
-      <Gezinme />
-
       <main>
         {/* ——— Hero ——— */}
         <section className={s.hero}>

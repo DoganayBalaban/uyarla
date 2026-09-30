@@ -1,6 +1,7 @@
 import "./globals.css"
 import type { Metadata } from "next"
 import { AnalizBildirimi } from "./components/AnalizBildirimi"
+import { Navbar } from "./components/Navbar"
 import { siteAdresi } from "@/lib/site"
 
 const BASLIK = "uyarla · Her ilana, doğru CV."
@@ -36,6 +37,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        {/* Bütün sayfaların tek üst çubuğu; giriş ekranında kendini gizliyor. */}
+        <Navbar />
         {children}
         {/* Süren analizi her sayfada izleyen sağ alt bildirimi. */}
         <AnalizBildirimi />

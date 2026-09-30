@@ -15,9 +15,11 @@ import {
 import { cn } from "@/lib/cn"
 import { girisAdresi } from "@/lib/donus"
 import { sonucAdresi } from "@/lib/aktifAnaliz"
+import { SayfaBasligi } from "../components/Sayfa"
 import {
   ASAMALAR,
   ASAMA_ETIKETI,
+  ASAMA_RENGI,
   NOT_UZUNLUGU,
   sutunlaraDagit,
   type Asama,
@@ -38,14 +40,6 @@ function skorEtiketi(skor: number): { metin: string; sinif: string } {
   return { metin: "Düşük", sinif: "bg-kirmizi/10 text-kirmizi dark:bg-kirmizi/20 dark:text-[#f87171]" }
 }
 
-/** Aşama durum bildirdiği için durum renkleri burada yerinde (rehber §9.2). */
-const SUTUN_RENGI: Record<Asama, string> = {
-  saved: "bg-gri",
-  applied: "bg-mavi",
-  interview: "bg-kehribar",
-  offer: "bg-yesil",
-  rejected: "bg-kirmizi",
-}
 
 /** Sürükle-bırak verisinin türü; başka sürüklemelerle karışmasın. */
 const SURUKLE_TURU = "application/x-uyarla-kart"
@@ -138,23 +132,24 @@ export function Pano() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="m-0 text-3xl">Başvuru panon</h1>
-          <p className="mt-1.5 text-sm text-gri">
-            {kartlar.length === 0
-              ? "Her analiz buraya bir kart olarak düşer."
-              : "Kartları sürükleyerek ya da aşama menüsünden taşıyabilirsin."}
-          </p>
-        </div>
-        <a
-          href="/analyze"
-          className="inline-flex items-center gap-2 rounded-buton bg-mavi px-5 py-2.5 font-semibold text-white no-underline shadow-sm shadow-mavi/30 transition hover:bg-mavi/90"
-        >
-          <Plus className="size-4" aria-hidden />
-          Yeni analiz
-        </a>
-      </div>
+      <SayfaBasligi
+        baslik="Başvuru panon"
+        aciklama={
+          kartlar.length === 0
+            ? "Her analiz buraya bir kart olarak düşer."
+            : "Kartları sürükleyerek ya da aşama menüsünden taşıyabilirsin."
+        }
+        eylem={
+          <a
+            href="/analyze"
+            className="inline-flex items-center gap-2 rounded-buton bg-mavi px-5 py-2.5 font-semibold text-white no-underline shadow-sm shadow-mavi/30 transition hover:bg-mavi/90"
+          >
+            <Plus className="size-4" aria-hidden />
+            Yeni analiz
+          </a>
+        }
+        className="mb-0"
+      />
 
       {kartlar.length > 0 && (
         <dl className="mt-6 grid grid-cols-3 gap-3 sm:max-w-lg">
@@ -216,7 +211,7 @@ export function Pano() {
             >
               <header className="px-1.5 pt-1 pb-3">
                 <h2 className="m-0 flex items-center gap-2 text-sm">
-                  <span aria-hidden className={cn("size-2 rounded-full", SUTUN_RENGI[asama])} />
+                  <span aria-hidden className={cn("size-2 rounded-full", ASAMA_RENGI[asama])} />
                   {ASAMA_ETIKETI[asama]}
                   <span className="ml-auto rounded-full bg-kart px-2 py-0.5 text-xs font-semibold text-gri tabular-nums">
                     {sutunlar[asama].length}

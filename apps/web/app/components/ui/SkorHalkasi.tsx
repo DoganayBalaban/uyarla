@@ -2,13 +2,10 @@
 
 import { motion, useReducedMotion } from "motion/react"
 import { cn } from "@/lib/cn"
+import { skorDurumu } from "@/lib/skor"
 
-/** Rehber §9.2 ve §9.5: skor rakam + durum etiketiyle, renk tek başına değil. */
-export function skorDurumu(skor: number): { etiket: string; renk: string; iz: string } {
-  if (skor >= 70) return { etiket: "Yüksek uyum", renk: "text-yesil dark:text-[#4ade80]", iz: "stroke-yesil dark:stroke-[#4ade80]" }
-  if (skor >= 40) return { etiket: "Orta uyum", renk: "text-kehribar", iz: "stroke-kehribar" }
-  return { etiket: "Düşük uyum", renk: "text-kirmizi dark:text-[#f87171]", iz: "stroke-kirmizi dark:stroke-[#f87171]" }
-}
+// Eşikler lib/skor.ts'te; mevcut içe aktarmalar bozulmasın diye buradan da açık.
+export { skorDurumu }
 
 /**
  * Dairesel skor göstergesi. 21st.dev'deki radyal ilerleme göstergelerinin
