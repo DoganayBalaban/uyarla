@@ -103,7 +103,7 @@ gerekmiyor. Kayda geçiyor ki ileride bir denetimde şaşırtmasın.
 Hipotez şuydu: anlamsal eşleşmeyi yalnızca `soft` türü gereksinimlerde
 kullanmak. K-15 bu kapıyı açık bırakmıştı.
 
-**Ölçüm kapattı.** `pnpm eval:kapsam`: isabet %91,1'den **%85,7'ye** düşüyor,
+**Ölçüm kapattı.** `pnpm eval:coverage`: isabet %91,1'den **%85,7'ye** düşüyor,
 kaçırma 2'den 8'e çıkıyor. Sebebi verinin kendisinde — değerlendirme setindeki
 beş ilanda **hiç `soft` türü gereksinim yok**, yani kapsam `soft`'a
 daraltılınca anlamsal katman tümüyle susuyor.
@@ -331,7 +331,7 @@ ile en düşük meşru eşleşme (0,6694) arasında 0,0007 var.
    OpenAI, Anthropic Claude) anlamsal eşleşmeyi kapatmak; marka adları
    lafzen ya geçer ya geçmez.
 
-Üçü de `pnpm eval:kapsam`'a varyant olarak eklenip ölçülebilir. Altyapı hazır.
+Üçü de `pnpm eval:coverage`'a varyant olarak eklenip ölçülebilir. Altyapı hazır.
 
 **Uyarı:** Bu iki uydurma tek bir CV'deki tek bir satırdan geliyor. Set
 büyümeden (#4, #5) bu kadar dar bir vakaya kural yazmak, o kuralın yalnızca

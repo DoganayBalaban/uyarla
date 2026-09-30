@@ -10,7 +10,7 @@ import { DEFAULT_SCORING_CONFIG } from "../src/score/config.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { conceptTexts, score, type ScoreInput } from "../src/score/score.js"
 import { compareToExpectations } from "./compare.js"
-import { onbellekDizini, type EvalPair } from "./types.js"
+import { cacheDir as cacheDir, type EvalPair } from "./types.js"
 
 /**
  * Eşik taraması.
@@ -21,16 +21,16 @@ import { onbellekDizini, type EvalPair } from "./types.js"
  * yapmak dakikalarca sürerdi.
  */
 const KOK = import.meta.dirname
-const CACHE = onbellekDizini(KOK)
+const CACHE = cacheDir(KOK)
 const SOURCES = join(KOK, "sources")
 const PAIRS = join(KOK, "pairs")
 const ESIKLER = [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
 
 async function main() {
-  const beklentiDosyalari = existsSync(PAIRS)
+  const expectationFiles = existsSync(PAIRS)
     ? readdirSync(PAIRS).filter((f) => f.endsWith(".json"))
     : []
-  if (beklentiDosyalari.length === 0) {
+  if (expectationFiles.length === 0) {
     console.error(
       `[sweep] ${PAIRS} altında beklenti dosyası yok.\n` +
         "Tarama isabet ölçebilmek için beklentilere ihtiyaç duyuyor.",
@@ -39,67 +39,67 @@ async function main() {
   }
 
   const embedding = new OpenAiCompatibleEmbeddingProvider(embeddingConfigFromEnv())
-  const hazir: Array<{ pair: EvalPair; input: ScoreInput }> = []
+  const ready: Array<{ pair: EvalPair; input: ScoreInput }> = []
 
-  for (const dosya of beklentiDosyalari.sort()) {
-    const pair = JSON.parse(readFileSync(join(PAIRS, dosya), "utf8")) as EvalPair & {
-      cv: string
-      ilan: string
+  for (const file of expectationFiles.sort()) {
+    const pair = JSON.parse(readFileSync(join(PAIRS, file), "utf8")) as EvalPair & {
+      resumeId: string
+      posting: string
     }
-    const profil = JSON.parse(
-      readFileSync(join(CACHE, `cv-${pair.cv}.json`), "utf8"),
+    const resumeProfile = JSON.parse(
+      readFileSync(join(CACHE, `cv-${pair.resumeId}.json`), "utf8"),
     ) as ResumeProfile
-    const ilan = JSON.parse(
-      readFileSync(join(CACHE, `ilan-${pair.ilan}.json`), "utf8"),
+    const postingDataItem = JSON.parse(
+      readFileSync(join(CACHE, `ilan-${pair.postingId}.json`), "utf8"),
     ) as JobPostingData
 
-    const kanitlar = collectEvidence(profil)
-    const kanitMetinleri = kanitlar.map((k) => k.text)
-    const kavramMetinleri = conceptTexts(ilan)
-    const vektorler = await embedding.embed([...kanitMetinleri, ...kavramMetinleri])
+    const evidenceList = collectEvidence(resumeProfile)
+    const evidenceTexts = evidenceList.map((k) => k.text)
+    const conceptTextList = conceptTexts(postingDataItem)
+    const vectors = await embedding.embed([...evidenceTexts, ...conceptTextList])
 
-    hazir.push({
+    ready.push({
       pair,
       input: {
-        profile: profil,
-        posting: ilan,
-        evidence: kanitlar,
-        evidenceVectors: vektorler.slice(0, kanitMetinleri.length),
-        conceptVectors: vektorler.slice(kanitMetinleri.length),
+        profile: resumeProfile,
+        posting: postingDataItem,
+        evidence: evidenceList,
+        evidenceVectors: vectors.slice(0, evidenceTexts.length),
+        conceptVectors: vectors.slice(evidenceTexts.length),
       },
     })
   }
 
-  console.log(`[sweep] ${hazir.length} çift · ${ESIKLER.length} eşik\n`)
+  console.log(`[sweep] ${ready.length} çift · ${ESIKLER.length} eşik\n`)
 
-  const satirlar = ESIKLER.map((esik) => {
+  const rows = ESIKLER.map((threshold) => {
     let hits = 0, misses = 0, fabrications = 0, byKeyword = 0, bySemantic = 0
-    for (const { pair, input } of hazir) {
-      const sonuc = score(input, { ...DEFAULT_SCORING_CONFIG, semanticThreshold: esik })
-      const m = compareToExpectations(pair.id, sonuc, pair.expectations, 0)
+    for (const { pair, input } of ready) {
+      const outcome = score(input, { ...DEFAULT_SCORING_CONFIG, semanticThreshold: threshold })
+      const m = compareToExpectations(pair.id, outcome, pair.expectations, 0)
       hits += m.hits; misses += m.misses; fabrications += m.fabrications
       byKeyword += m.byKeyword; bySemantic += m.bySemantic
     }
-    const kontrol = hits + misses + fabrications
+    const check = hits + misses + fabrications
     return {
-      eşik: esik,
+      eşik: threshold,
       isabet: hits,
       kaçırma: misses,
       uydurma: fabrications,
-      "isabet %": kontrol === 0 ? 0 : Math.round((hits / kontrol) * 1000) / 10,
+      "isabet %": check === 0 ? 0 : Math.round((hits / check) * 1000) / 10,
       kelime: byKeyword,
       anlamsal: bySemantic,
     }
   })
-  console.table(satirlar)
+  console.table(rows)
 
   console.log("\nSkorlar eşiğe göre:")
-  for (const esik of ESIKLER) {
-    const skorlar = hazir.map(({ pair, input }) => {
-      const s = score(input, { ...DEFAULT_SCORING_CONFIG, semanticThreshold: esik })
+  for (const threshold of ESIKLER) {
+    const scores = ready.map(({ pair, input }) => {
+      const s = score(input, { ...DEFAULT_SCORING_CONFIG, semanticThreshold: threshold })
       return `${pair.id.slice(0, 18)}=${String(s.score).padStart(2)}`
     })
-    console.log(`  ${esik.toFixed(2)} → ${skorlar.join("  ")}`)
+    console.log(`  ${threshold.toFixed(2)} → ${scores.join("  ")}`)
   }
 }
 

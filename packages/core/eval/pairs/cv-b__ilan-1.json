@@ -1,7 +1,7 @@
 {
   "id": "cv-b__ilan-1",
-  "cv": "cv-b-test-engineer",
-  "ilan": "ilan-1",
+  "resumeId": "cv-b-test-engineer",
+  "postingId": "ilan-1",
   "note": "Test mühendisi CV'si, AI mühendisi ilanı. Uyumsuz çift: uydurma eşleşmeyi yakalar.",
   "expectations": [
     {

@@ -1,7 +1,7 @@
 {
   "id": "cv-a__ilan-2",
-  "cv": "cv-a-ai-engineer",
-  "ilan": "ilan-2",
+  "resumeId": "cv-a-ai-engineer",
+  "postingId": "ilan-2",
   "note": "AI mühendisi CV'si, kıdemli GenAI ilanı. Vektör veritabanı ürünleri ve Agile CV'de yok.",
   "expectations": [
     {

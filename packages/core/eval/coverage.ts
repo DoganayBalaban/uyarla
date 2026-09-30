@@ -11,7 +11,7 @@ import type { Evidence } from "../src/score/evidence.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { type ScoreInput, conceptTexts, score } from "../src/score/score.js"
 import { compareToExpectations } from "./compare.js"
-import { onbellekDizini, type EvalPair } from "./types.js"
+import { cacheDir as cacheDir, type EvalPair } from "./types.js"
 
 /**
  * Kapsam taraması: anlamsal katmanın ve kanıt türlerinin daraltılmasını ölçer.
@@ -26,16 +26,16 @@ import { onbellekDizini, type EvalPair } from "./types.js"
  * fonksiyon olduğu için her varyant saniyeler sürüyor.
  */
 const KOK = import.meta.dirname
-const CACHE = onbellekDizini(KOK)
+const CACHE = cacheDir(KOK)
 const PAIRS = join(KOK, "pairs")
 
 const HEPSI: readonly Evidence["kind"][] = ["role", "bullet", "skill", "education"]
 const PROZA: readonly Evidence["kind"][] = ["role", "bullet"]
 
 /** Ölçülen varyantlar. Sıra rapor sırasıdır; ilki taban çizgisi. */
-const VARYANTLAR: Array<{ ad: string; cfg: ScoringConfig }> = [
+const VARYANTLAR: Array<{ name: string; cfg: ScoringConfig }> = [
   {
-    ad: "taban (kısıt yok)",
+    name: "taban (kısıt yok)",
     cfg: {
       ...DEFAULT_SCORING_CONFIG,
       evidenceKindsByType: {
@@ -48,7 +48,7 @@ const VARYANTLAR: Array<{ ad: string; cfg: ScoringConfig }> = [
   },
   {
     // Birikmiş işler #1.
-    ad: "#1 experience → proza",
+    name: "#1 experience → proza",
     cfg: {
       ...DEFAULT_SCORING_CONFIG,
       evidenceKindsByType: {
@@ -61,7 +61,7 @@ const VARYANTLAR: Array<{ ad: string; cfg: ScoringConfig }> = [
   },
   {
     // Birikmiş işler #7.
-    ad: "#7 anlamsal yalnız soft",
+    name: "#7 anlamsal yalnız soft",
     cfg: {
       ...DEFAULT_SCORING_CONFIG,
       semanticTypes: ["soft"],
@@ -77,7 +77,7 @@ const VARYANTLAR: Array<{ ad: string; cfg: ScoringConfig }> = [
     // Üçüncü fikir: anlamsal katman yalnızca anlatı kanıtına baksın. Beceri
     // satırı kanonik bir terimdir; ya lafzen eşleşir ya da benzerliği
     // sözlüksel gürültüdür.
-    ad: "3. fikir: her tür → proza",
+    name: "3. fikir: her tür → proza",
     cfg: {
       ...DEFAULT_SCORING_CONFIG,
       evidenceKindsByType: {
@@ -90,7 +90,7 @@ const VARYANTLAR: Array<{ ad: string; cfg: ScoringConfig }> = [
   },
   {
     // Dördüncü fikir: eğitim gereksinimini yalnızca diploma kanıtı karşılasın.
-    ad: "4. fikir: education → diploma",
+    name: "4. fikir: education → diploma",
     cfg: {
       ...DEFAULT_SCORING_CONFIG,
       evidenceKindsByType: {
@@ -102,58 +102,58 @@ const VARYANTLAR: Array<{ ad: string; cfg: ScoringConfig }> = [
     },
   },
   {
-    ad: "öntanımlı (yürürlükteki)",
+    name: "öntanımlı (yürürlükteki)",
     cfg: DEFAULT_SCORING_CONFIG,
   },
 ]
 
 async function main() {
-  const beklentiDosyalari = existsSync(PAIRS)
+  const expectationFiles = existsSync(PAIRS)
     ? readdirSync(PAIRS).filter((f) => f.endsWith(".json"))
     : []
-  if (beklentiDosyalari.length === 0) {
+  if (expectationFiles.length === 0) {
     console.error(`[kapsam] ${PAIRS} altında beklenti dosyası yok.`)
     process.exit(1)
   }
 
   const embedding = new OpenAiCompatibleEmbeddingProvider(embeddingConfigFromEnv())
-  const hazir: Array<{ pair: EvalPair; input: ScoreInput }> = []
+  const ready: Array<{ pair: EvalPair; input: ScoreInput }> = []
 
-  for (const dosya of beklentiDosyalari.sort()) {
-    const pair = JSON.parse(readFileSync(join(PAIRS, dosya), "utf8")) as EvalPair
-    const profil = JSON.parse(
-      readFileSync(join(CACHE, `cv-${pair.cv}.json`), "utf8"),
+  for (const file of expectationFiles.sort()) {
+    const pair = JSON.parse(readFileSync(join(PAIRS, file), "utf8")) as EvalPair
+    const resumeProfile = JSON.parse(
+      readFileSync(join(CACHE, `cv-${pair.resumeId}.json`), "utf8"),
     ) as ResumeProfile
-    const ilan = JSON.parse(
-      readFileSync(join(CACHE, `ilan-${pair.ilan}.json`), "utf8"),
+    const postingDataItem = JSON.parse(
+      readFileSync(join(CACHE, `ilan-${pair.postingId}.json`), "utf8"),
     ) as JobPostingData
 
-    const kanitlar = collectEvidence(profil)
-    const kanitMetinleri = kanitlar.map((k) => k.text)
-    const kavramMetinleri = conceptTexts(ilan)
-    const vektorler = await embedding.embed([...kanitMetinleri, ...kavramMetinleri])
+    const evidenceList = collectEvidence(resumeProfile)
+    const evidenceTexts = evidenceList.map((k) => k.text)
+    const conceptTextList = conceptTexts(postingDataItem)
+    const vectors = await embedding.embed([...evidenceTexts, ...conceptTextList])
 
-    hazir.push({
+    ready.push({
       pair,
       input: {
-        profile: profil,
-        posting: ilan,
-        evidence: kanitlar,
-        evidenceVectors: vektorler.slice(0, kanitMetinleri.length),
-        conceptVectors: vektorler.slice(kanitMetinleri.length),
+        profile: resumeProfile,
+        posting: postingDataItem,
+        evidence: evidenceList,
+        evidenceVectors: vectors.slice(0, evidenceTexts.length),
+        conceptVectors: vectors.slice(evidenceTexts.length),
       },
     })
   }
 
-  console.log(`[kapsam] ${hazir.length} çift · ${VARYANTLAR.length} varyant\n`)
+  console.log(`[kapsam] ${ready.length} çift · ${VARYANTLAR.length} varyant\n`)
 
-  const satirlar = VARYANTLAR.map(({ ad, cfg }) => {
+  const rows = VARYANTLAR.map(({ name: name, cfg }) => {
     let hits = 0
     let misses = 0
     let fabrications = 0
     let byKeyword = 0
     let bySemantic = 0
-    for (const { pair, input } of hazir) {
+    for (const { pair, input } of ready) {
       const m = compareToExpectations(pair.id, score(input, cfg), pair.expectations, 0)
       hits += m.hits
       misses += m.misses
@@ -161,10 +161,10 @@ async function main() {
       byKeyword += m.byKeyword
       bySemantic += m.bySemantic
     }
-    const kontrol = hits + misses + fabrications
+    const check = hits + misses + fabrications
     return {
-      varyant: ad,
-      "isabet %": kontrol === 0 ? 0 : Math.round((hits / kontrol) * 1000) / 10,
+      varyant: name,
+      "isabet %": check === 0 ? 0 : Math.round((hits / check) * 1000) / 10,
       isabet: hits,
       kaçırma: misses,
       uydurma: fabrications,
@@ -172,14 +172,14 @@ async function main() {
       anlamsal: bySemantic,
     }
   })
-  console.table(satirlar)
+  console.table(rows)
 
   console.log("\nSkorlar varyanta göre:")
-  for (const { ad, cfg } of VARYANTLAR) {
-    const skorlar = hazir.map(
+  for (const { name: name, cfg } of VARYANTLAR) {
+    const scores = ready.map(
       ({ pair, input }) => `${pair.id.slice(0, 12)}=${String(score(input, cfg).score).padStart(2)}`,
     )
-    console.log(`  ${ad.padEnd(26)} → ${skorlar.join("  ")}`)
+    console.log(`  ${name.padEnd(26)} → ${scores.join("  ")}`)
   }
 }
 

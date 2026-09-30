@@ -6,8 +6,8 @@ import { join, resolve } from "node:path"
  * değiştirilebiliyor (ör. `eval/cache/modeller/qwen3.5-9b`). Aksi hâlde
  * `--refresh` bir modelin taban çizgisini ötekinin çıktısıyla ezer.
  */
-export function onbellekDizini(kok: string): string {
-  return process.env.EVAL_CACHE ? resolve(process.env.EVAL_CACHE) : join(kok, "cache")
+export function cacheDir(root: string): string {
+  return process.env.EVAL_CACHE ? resolve(process.env.EVAL_CACHE) : join(root, "cache")
 }
 
 export interface ExpectedRequirement {
@@ -22,9 +22,9 @@ export interface ExpectedRequirement {
 export interface EvalPair {
   id: string
   /** sources/cv altındaki dosya adı. */
-  cv: string
+  resumeId: string
   /** sources/ilan altındaki dosya adı. */
-  ilan: string
+  postingId: string
   /** Bu çiftin neyi sınadığı ve verinin nereden geldiği. */
   note: string
   expectations: ExpectedRequirement[]

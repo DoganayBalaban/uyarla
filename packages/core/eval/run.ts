@@ -11,7 +11,7 @@ import { DEFAULT_SCORING_CONFIG } from "../src/score/config.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { conceptTexts, score } from "../src/score/score.js"
 import { compareToExpectations } from "./compare.js"
-import { onbellekDizini, type EvalPair, type EvalTotals, type PairMetrics } from "./types.js"
+import { cacheDir as cacheDir, type EvalPair, type EvalTotals, type PairMetrics } from "./types.js"
 
 /**
  * Değerlendirme koşusu: eşleştirme isabetini ölçer.
@@ -24,7 +24,7 @@ import { onbellekDizini, type EvalPair, type EvalTotals, type PairMetrics } from
  * sinyali eşleştirmenin kendisinde (spec §10).
  */
 const KOK = import.meta.dirname
-const CACHE = onbellekDizini(KOK)
+const CACHE = cacheDir(KOK)
 const PAIRS = join(KOK, "pairs")
 const RUNS = join(KOK, "runs")
 
@@ -41,35 +41,35 @@ async function main() {
   const embeddingConfig = embeddingConfigFromEnv()
   const embedding = new OpenAiCompatibleEmbeddingProvider(embeddingConfig)
 
-  const dosyalar = readdirSync(PAIRS).filter((f) => f.endsWith(".json")).sort()
-  console.log(`[eval] ${dosyalar.length} çift · model: ${llmConfig.model}\n`)
+  const files = readdirSync(PAIRS).filter((f) => f.endsWith(".json")).sort()
+  console.log(`[eval] ${files.length} çift · model: ${llmConfig.model}\n`)
 
   const metrics: PairMetrics[] = []
-  for (const dosya of dosyalar) {
-    const pair = JSON.parse(readFileSync(join(PAIRS, dosya), "utf8")) as EvalPair
-    const basladi = Date.now()
+  for (const file of files) {
+    const pair = JSON.parse(readFileSync(join(PAIRS, file), "utf8")) as EvalPair
+    const startedAt = Date.now()
 
-    const profil = JSON.parse(
-      readFileSync(join(CACHE, `cv-${pair.cv}.json`), "utf8"),
+    const resumeProfile = JSON.parse(
+      readFileSync(join(CACHE, `cv-${pair.resumeId}.json`), "utf8"),
     ) as ResumeProfile
-    const ilan = JSON.parse(
-      readFileSync(join(CACHE, `ilan-${pair.ilan}.json`), "utf8"),
+    const postingDataItem = JSON.parse(
+      readFileSync(join(CACHE, `ilan-${pair.postingId}.json`), "utf8"),
     ) as JobPostingData
 
-    const kanitlar = collectEvidence(profil)
-    const kanitMetinleri = kanitlar.map((k) => k.text)
-    const kavramMetinleri = conceptTexts(ilan)
-    const vektorler = await embedding.embed([...kanitMetinleri, ...kavramMetinleri])
+    const evidenceList = collectEvidence(resumeProfile)
+    const evidenceTexts = evidenceList.map((k) => k.text)
+    const conceptTextList = conceptTexts(postingDataItem)
+    const vectors = await embedding.embed([...evidenceTexts, ...conceptTextList])
 
-    const sonuc = score({
-      profile: profil,
-      posting: ilan,
-      evidence: kanitlar,
-      evidenceVectors: vektorler.slice(0, kanitMetinleri.length),
-      conceptVectors: vektorler.slice(kanitMetinleri.length),
+    const outcome = score({
+      profile: resumeProfile,
+      posting: postingDataItem,
+      evidence: evidenceList,
+      evidenceVectors: vectors.slice(0, evidenceTexts.length),
+      conceptVectors: vectors.slice(evidenceTexts.length),
     })
 
-    const m = compareToExpectations(pair.id, sonuc, pair.expectations, Date.now() - basladi)
+    const m = compareToExpectations(pair.id, outcome, pair.expectations, Date.now() - startedAt)
     metrics.push(m)
     console.log(
       `  ${pair.id.padEnd(30)} skor ${String(m.score).padStart(3)} · ` +
@@ -86,7 +86,7 @@ async function main() {
     })),
   )
 
-  const toplam: EvalTotals = metrics.reduce(
+  const total: EvalTotals = metrics.reduce(
     (acc, m) => ({
       hits: acc.hits + m.hits,
       misses: acc.misses + m.misses,
@@ -97,28 +97,28 @@ async function main() {
     }),
     { hits: 0, misses: 0, fabrications: 0, notExtracted: 0, byKeyword: 0, bySemantic: 0 },
   )
-  const kontrol = toplam.hits + toplam.misses + toplam.fabrications
-  const isabet = kontrol === 0 ? 0 : toplam.hits / kontrol
+  const check = total.hits + total.misses + total.fabrications
+  const accuracyRate = check === 0 ? 0 : total.hits / check
 
   console.log("\n--- Toplam ---")
-  console.log(`İsabet oranı   : ${(isabet * 100).toFixed(1)}%`)
-  console.log(`Kaçırma        : ${toplam.misses}`)
-  console.log(`Uydurma        : ${toplam.fabrications}   <- en zararlısı`)
-  console.log(`Çıkarılmayan   : ${toplam.notExtracted}   <- ilan çıkarımı sorunu`)
-  console.log(`Eşleşme kaynağı: kelime ${toplam.byKeyword} · anlamsal ${toplam.bySemantic}`)
+  console.log(`İsabet oranı   : ${(accuracyRate * 100).toFixed(1)}%`)
+  console.log(`Kaçırma        : ${total.misses}`)
+  console.log(`Uydurma        : ${total.fabrications}   <- en zararlısı`)
+  console.log(`Çıkarılmayan   : ${total.notExtracted}   <- ilan çıkarımı sorunu`)
+  console.log(`Eşleşme kaynağı: kelime ${total.byKeyword} · anlamsal ${total.bySemantic}`)
   console.log(`Model          : ${llmConfig.model} · embedding: ${embeddingConfig.model}`)
   console.log(`Eşik / ağırlık : ${JSON.stringify(DEFAULT_SCORING_CONFIG)}`)
 
   mkdirSync(RUNS, { recursive: true })
-  const damga = new Date().toISOString().replace(/[:.]/g, "-")
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
   writeFileSync(
-    join(RUNS, `${damga}.json`),
+    join(RUNS, `${timestamp}.json`),
     JSON.stringify(
-      { model: llmConfig.model, config: DEFAULT_SCORING_CONFIG, totals: toplam, accuracy: isabet, metrics },
+      { model: llmConfig.model, config: DEFAULT_SCORING_CONFIG, totals: total, accuracy: accuracyRate, metrics },
       null, 2,
     ),
   )
-  console.log(`\nSonuç yazıldı: runs/${damga}.json`)
+  console.log(`\nSonuç yazıldı: runs/${timestamp}.json`)
 }
 
 void main()

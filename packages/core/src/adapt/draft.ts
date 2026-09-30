@@ -44,7 +44,7 @@ export interface DraftInput {
 }
 
 export interface Discard {
-  /** Madde kimliği; özet için "ozet". */
+  /** Madde kimliği; özet için "summary". */
   id: string
   reason: DiscardReason
   /** Kuralın gerekçesi: kaybolan ifade ya da doğrulama uyarıları. */
@@ -53,7 +53,7 @@ export interface Discard {
 }
 
 /** Yazımın neden atıldığı: bilgi kaybı, doğrulama uyarısı, uyumsuz değişiklik. */
-export type DiscardReason = "korunmadi" | "uyarili" | "uyumsuz"
+export type DiscardReason = "not_preserved" | "flagged" | "unaligned"
 
 const CLEAN: Verification = { status: "ok", issues: [] }
 
@@ -176,7 +176,7 @@ export async function buildAdaptationDraft(
       bases: verified.map((d) => d.basis),
     })
     if (!preserved.ok) {
-      input.onDiscard?.({ id: bulletItem.id, reason: "korunmadi", detail: preserved.reason, rewritten: fresh })
+      input.onDiscard?.({ id: bulletItem.id, reason: "not_preserved", detail: preserved.reason, rewritten: fresh })
       return { ...bulletItem, rewritten: bulletItem.original, verification: CLEAN, alignments: [], decision: "accepted" }
     }
 
@@ -201,7 +201,7 @@ export async function buildAdaptationDraft(
     if (verification.status !== "ok" || verified.length === 0) {
       input.onDiscard?.({
         id: bulletItem.id,
-        reason: verification.status !== "ok" ? "uyarili" : "uyumsuz",
+        reason: verification.status !== "ok" ? "flagged" : "unaligned",
         detail:
           verification.status !== "ok"
             ? verification.issues.map((u) => `${u.kind}: ${u.detail}`).join(" | ")
@@ -236,7 +236,7 @@ export async function buildAdaptationDraft(
       : null
   const summaryPreserved = !!summaryPreservation?.ok
   if (summaryText && summaryPreservation && !summaryPreservation.ok) {
-    input.onDiscard?.({ id: "ozet", reason: "korunmadi", detail: summaryPreservation.reason, rewritten: summaryText.data })
+    input.onDiscard?.({ id: "summary", reason: "not_preserved", detail: summaryPreservation.reason, rewritten: summaryText.data })
   }
   const summaryRewrite = summaryPreserved ? summaryText!.data : (profile.summary ?? "")
   const summaryVerification =
@@ -245,8 +245,8 @@ export async function buildAdaptationDraft(
       : CLEAN
   if (summaryVerification.status !== "ok") {
     input.onDiscard?.({
-      id: "ozet",
-      reason: "uyarili",
+      id: "summary",
+      reason: "flagged",
       detail: summaryVerification.issues.map((u) => `${u.kind}: ${u.detail}`).join(" | "),
       rewritten: summaryRewrite,
     })

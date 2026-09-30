@@ -24,37 +24,37 @@ export function compareToExpectations(
   let bySemantic = 0
 
   for (const expected of expectations) {
-    const aranan = normalizeText(expected.match)
-    const gercek = result.requirements.find((r) =>
-      normalizeText(r.requirement.text).includes(aranan),
+    const searched = normalizeText(expected.match)
+    const actual = result.requirements.find((r) =>
+      normalizeText(r.requirement.text).includes(searched),
     )
 
     // İlan çıkarımı bu gereksinimi hiç üretmemiş: sorun skorda değil
     // çıkarımda. Ayrı sayılmazsa yanlış yere bakılır.
-    if (!gercek) {
+    if (!actual) {
       notExtracted++
       continue
     }
 
-    const eslesti = gercek.status === "matched"
-    if (eslesti) {
-      if (gercek.method === "keyword") byKeyword++
-      if (gercek.method === "semantic") bySemantic++
+    const matched = actual.status === "matched"
+    if (matched) {
+      if (actual.method === "keyword") byKeyword++
+      if (actual.method === "semantic") bySemantic++
     }
 
-    if (expected.shouldMatch && eslesti) {
+    if (expected.shouldMatch && matched) {
       // Kanıt beklendiyse doğru maddeyi göstermiş olmalı: doğru sonuç ama
       // yanlış gerekçe, kullanıcıya yanlış bağ kurdurur.
-      const kanitDogru =
+      const evidenceCorrect =
         !expected.evidenceContains ||
-        normalizeText(gercek.evidence?.text ?? "").includes(
+        normalizeText(actual.evidence?.text ?? "").includes(
           normalizeText(expected.evidenceContains),
         )
-      if (kanitDogru) hits++
+      if (evidenceCorrect) hits++
       else misses++
-    } else if (expected.shouldMatch && !eslesti) {
+    } else if (expected.shouldMatch && !matched) {
       misses++
-    } else if (!expected.shouldMatch && eslesti) {
+    } else if (!expected.shouldMatch && matched) {
       fabrications++
     } else {
       hits++

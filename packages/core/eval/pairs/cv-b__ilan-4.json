@@ -1,7 +1,7 @@
 {
   "id": "cv-b__ilan-4",
-  "cv": "cv-b-test-engineer",
-  "ilan": "ilan-4",
+  "resumeId": "cv-b-test-engineer",
+  "postingId": "ilan-4",
   "note": "Test mühendisi CV'si, AI ajan ilanı. Tümüyle uyumsuz; hiçbir teknik gereksinim eşleşmemeli.",
   "expectations": [
     {
