@@ -9,7 +9,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "test:integration": "dotenv -e ../../.env -- vitest run --config vitest.integration.config.ts",
-    "temizlik": "dotenv -e ../../.env -- tsx scripts/temizlik.ts"
+    "temizlik": "dotenv -e ../../.env -- tsx scripts/temizlik.ts",
+    "migrate:json-keys": "dotenv -e ../../.env -- tsx scripts/migrate-json-keys.ts"
   },
   "dependencies": {
     "@uyarla/core": "workspace:*",
