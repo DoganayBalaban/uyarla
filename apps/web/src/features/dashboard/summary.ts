@@ -56,8 +56,8 @@ export function summarize(cards: BoardCard[]): DashboardSummary {
   const stageCounts = Object.fromEntries(STAGES.map((a) => [a, 0])) as Record<Stage, number>
   for (const k of cards) stageCounts[k.stage]++
 
-  const again = [...cards].sort((x, y) => time(y) - time(x))
-  const pending = again
+  const newestFirst = [...cards].sort((x, y) => time(y) - time(x))
+  const pending = newestFirst
     .map(pendingFor)
     .filter((b): b is PendingItem => b !== null)
     // Sıralama kararlı: aynı türde en yeni analiz önde kalıyor.
@@ -68,6 +68,6 @@ export function summarize(cards: BoardCard[]): DashboardSummary {
     total: cards.length,
     stageCounts,
     pending,
-    recentAnalyses: again.slice(0, RECENT_ANALYSIS_LIMIT),
+    recentAnalyses: newestFirst.slice(0, RECENT_ANALYSIS_LIMIT),
   }
 }

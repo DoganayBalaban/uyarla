@@ -279,7 +279,7 @@ kullanıcının tüm verisi tek sorguyla bulunabiliyor — ama akış yazılmad�
 içinde siliyor, diskteki CV dosyaları işlemden sonra kaldırılıyor (K-36).
 `DELETE /api/account` yalnızca oturum sahibinin kimliğini kullanıyor;
 `/account` ekranı marka rehberi §10.2'deki onay metnini soruyor. Tümleşik
-test (`lib/silme.integration.test.ts`) başka kullanıcıların verisine
+test (`src/server/deleteAccount.integration.test.ts`) başka kullanıcıların verisine
 dokunulmadığını ve işlem düşerse hiçbir şeyin gitmediğini gerçek
 veritabanında doğruluyor.
 

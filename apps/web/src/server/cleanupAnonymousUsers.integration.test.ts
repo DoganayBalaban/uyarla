@@ -12,7 +12,7 @@ let storage: string
 /**
  * Testin "şimdi"si GEÇMİŞTE, 2020'de.
  *
- * `temizlikYap` veritabanının tamamına bakıyor ve geliştirme veritabanı
+ * `cleanupAnonymousUsers` veritabanının tamamına bakıyor ve geliştirme veritabanı
  * paylaşılıyor. Gerçek "şimdi" verilseydi test, başka birinin bıraktığı eski
  * anonim kayıtları da silerdi. Kesim 2020'ye çekildiğinde yalnızca bu testin
  * ürettiği (yine 2020'de yaşlandırılmış) kayıtlar eşleşiyor; 2026'da
@@ -22,7 +22,7 @@ const NOW = new Date("2020-06-01T12:00:00.000Z")
 
 beforeAll(async () => {
   storage = await mkdtemp(join(tmpdir(), "uyarla-temizlik-"))
-  // temizlikYap dosya yolunu STORAGE_DIR'dan okuyor; testin gerçek depoya
+  // cleanupAnonymousUsers dosya yolunu STORAGE_DIR'dan okuyor; testin gerçek depoya
   // dokunmaması için geçici dizine yönlendiriyoruz.
   process.env.STORAGE_DIR = storage
 })

@@ -174,7 +174,7 @@ export function AdaptationView({ id }: { id: string }) {
     return fresh
   }, [id])
 
-  // Çalışırken yokluyor, bitince duruyor. Zamanlayıcı setDurum içinden değil
+  // Çalışırken yokluyor, bitince duruyor. Zamanlayıcı setState içinden değil
   // bu döngüden yönetiliyor: durum güncelleyicisinin yan etkisi olması
   // React'in çift çağırmasıyla iki döngü başlatırdı.
   useEffect(() => {

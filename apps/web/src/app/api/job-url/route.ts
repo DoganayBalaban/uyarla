@@ -50,9 +50,9 @@ export async function POST(request: Request) {
           "accept-language": "tr-TR,tr;q=0.9,en;q=0.8",
         },
       })
-      const dropTarget = response.status >= 300 && response.status < 400 ? response.headers.get("location") : null
-      if (!dropTarget) break
-      const next = isAllowedPath(new URL(dropTarget, url).toString())
+      const redirectUrl = response.status >= 300 && response.status < 400 ? response.headers.get("location") : null
+      if (!redirectUrl) break
+      const next = isAllowedPath(new URL(redirectUrl, url).toString())
       if (!next) {
         return NextResponse.json({ error: UNSUPPORTED, code: "unsupported" }, { status: 400 })
       }

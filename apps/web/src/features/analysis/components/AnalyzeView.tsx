@@ -107,8 +107,8 @@ export function AnalyzeView() {
   // geliştirme modunda efekti iki kez çalıştırmasına karşı: iki uyarlama
   // isteği gitmesin.
   useEffect(() => {
-    const searchParams2 = new URLSearchParams(window.location.search)
-    const analysisId = searchParams2.get("uyarla")
+    const urlParams = new URLSearchParams(window.location.search)
+    const analysisId = urlParams.get("uyarla")
     if (analysisId && !resumeStarted.current) {
       resumeStarted.current = true
       setResuming(true)
@@ -118,7 +118,7 @@ export function AnalyzeView() {
 
     // Kalıcı sonuç adresi: `?analiz=<id>`. Sayfa yenilense de, panodan ya da
     // sağ alttaki bildirimden gelinse de sonuç buradan açılıyor (K3).
-    const permanent = searchParams2.get("analiz")
+    const permanent = urlParams.get("analiz")
     if (permanent) {
       void loadResult(permanent)
       return
@@ -126,15 +126,15 @@ export function AnalyzeView() {
 
     // Başka sayfaya geçip "Analize dön" ile gelindi: süren analiz kaldığı
     // yerden izleniyor, bitmiş ama görülmemiş sonuç gösteriliyor.
-    const isActive = readActiveAnalysis()
-    if (isActive?.status === "running") {
-      setState({ status: "running", stage: isActive.stage })
+    const activeRecord = readActiveAnalysis()
+    if (activeRecord?.status === "running") {
+      setState({ status: "running", stage: activeRecord.stage })
       setBusy(true)
-      poll(isActive.jobId)
-    } else if (isActive?.status === "completed" && isActive.analysisId && !isActive.seen) {
-      void loadResult(isActive.analysisId)
-    } else if (isActive?.status === "failed" && !isActive.seen) {
-      setError(isActive.error ?? "Analiz tamamlanamadı.")
+      poll(activeRecord.jobId)
+    } else if (activeRecord?.status === "completed" && activeRecord.analysisId && !activeRecord.seen) {
+      void loadResult(activeRecord.analysisId)
+    } else if (activeRecord?.status === "failed" && !activeRecord.seen) {
+      setError(activeRecord.error ?? "Analiz tamamlanamadı.")
       clearActiveAnalysis()
     }
     // uyarla ve poll her çizimde yeniden tanımlanıyor; efekt yalnızca ilk açılışta.
@@ -158,8 +158,8 @@ export function AnalyzeView() {
       }
       const parsed = (await res.json()) as AnalysisResponse
       setState(parsed)
-      const isActive = readActiveAnalysis()
-      if (isActive?.analysisId === analysisId) updateActiveAnalysis(isActive.jobId, { seen: true })
+      const activeRecord = readActiveAnalysis()
+      if (activeRecord?.analysisId === analysisId) updateActiveAnalysis(activeRecord.jobId, { seen: true })
     } catch {
       setState(null)
       setError("Sonucu alamadık. Sayfayı yenileyip tekrar dener misin?")

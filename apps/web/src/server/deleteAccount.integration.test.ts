@@ -16,7 +16,7 @@ beforeAll(async () => {
 
 afterEach(async () => {
   // Testler zaten silme testi, ama başarısız bir koşuda satırlar kalır.
-  // Sıra silmeIslemleri'ndeki sıranın aynısı.
+  // Sıra deletionOperations'ndeki sıranın aynısı.
   await prisma.$transaction(deletionOperations(prisma, toClean))
   toClean.length = 0
 })

@@ -73,7 +73,7 @@ export interface CleanupOptions {
  * Kayıt olanların anonim kaydı `onLinkAccount` sonrasında zaten siliniyor
  * (bkz. `devral.ts`); burada kalanlar kayıt olmadan giden ziyaretçiler.
  *
- * Silme işini kendisi yapmıyor, `kullanicilariSil`'e devrediyor: hesap silme
+ * Silme işini kendisi yapmıyor, `deleteUsers`'e devrediyor: hesap silme
  * akışıyla (#14) aynı kod. İki kopya tutmak, biri düzeltilip öteki
  * unutulduğunda veri sızdırırdı.
  *
