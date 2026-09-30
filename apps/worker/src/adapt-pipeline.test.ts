@@ -151,7 +151,7 @@ const fakeEmbedding = {
 
 describe("runAdaptation", () => {
   it("makes one call per bullet and saves the draft", async () => {
-    const { store, record: record } = fakeStore()
+    const { store, record } = fakeStore()
     const llm = fakeLlm(() => "yeniden yazıldı")
 
     await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
@@ -163,7 +163,7 @@ describe("runAdaptation", () => {
   })
 
   it("orders skills by the posting", async () => {
-    const { store, record: record } = fakeStore()
+    const { store, record } = fakeStore()
     await runAdaptation(
       { llm: fakeLlm(() => "x"), embedding: fakeEmbedding, store },
       { adaptationId: "a1" },
@@ -175,7 +175,7 @@ describe("runAdaptation", () => {
     // K-38: yalnızca hedefi olan maddeler yazılıyor; uyarılı bir yazım
     // başarısız bir denemedir ve kullanıcının önüne konmuyor (K-26'nın yerini
     // alıyor). Burada ikinci madde kaynağında olmayan bir sayı ekliyor.
-    const { store, record: record } = fakeStore()
+    const { store, record } = fakeStore()
     const llm = fakeLlm((llmInput) =>
       llmInput.includes("%40") ? "Süreyi %40 düşürdüm, hızı %90 artırdım" : "React ile paneli geliştirdim",
     )
@@ -192,7 +192,7 @@ describe("runAdaptation", () => {
   })
 
   it("status is ready when everything is clean", async () => {
-    const { store, record: record } = fakeStore()
+    const { store, record } = fakeStore()
     await runAdaptation(
       { llm: echoLlm(), embedding: fakeEmbedding, store },
       { adaptationId: "a1" },
@@ -204,7 +204,7 @@ describe("runAdaptation", () => {
   it("does not suggest a rewrite that injects a posting term", async () => {
     // Uydurmanın en tehlikeli biçimi (spec §7.2): model ilanın istediğini
     // CV'ye yazıveriyor. Burada React, ikinci maddenin kaynağında geçmiyor.
-    const { store, record: record } = fakeStore()
+    const { store, record } = fakeStore()
     await runAdaptation(
       {
         llm: fakeLlm((llmInput) =>
@@ -225,7 +225,7 @@ describe("runAdaptation", () => {
     // K-38: model ilan terimini kullandığında dayanağını maddeden birebir
     // gösteriyor; dayanak kaynakta geçiyorsa uydurma sayılmıyor. Terimin
     // deneyimi doğru anlatıp anlatmadığına ise kullanıcı karar veriyor.
-    const { store, record: record } = fakeStore()
+    const { store, record } = fakeStore()
     const llm: LlmProvider = {
       extract: vi.fn(async ({ input }) => {
         if (!input.startsWith("Madde: React")) {
@@ -250,7 +250,7 @@ describe("runAdaptation", () => {
   })
 
   it("treats a term whose basis is not in the bullet as fabrication and does not suggest the rewrite", async () => {
-    const { store, record: record } = fakeStore()
+    const { store, record } = fakeStore()
     const llm: LlmProvider = {
       extract: vi.fn(async ({ input }) => ({
         data: (input.startsWith("Madde: React")
@@ -274,7 +274,7 @@ describe("runAdaptation", () => {
   it("does not suggest a rewrite that loses source information; the bullet stays as is", async () => {
     // K-38: "sayfa yüklenme süresini %40 azalttım" → "web performansı %40
     // azalttım" gibi anlamı bozan ya da sayıyı düşüren yazımlar gösterilmiyor.
-    const { store, record: record } = fakeStore()
+    const { store, record } = fakeStore()
     const llm = fakeLlm((llmInput) => (llmInput.includes("%40") ? "Süreyi azalttım" : "Panel yaptım"))
     await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
 
@@ -287,7 +287,7 @@ describe("runAdaptation", () => {
   it("does not translate bullets when adapting an English resume to a Turkish posting; writes the summary in English", async () => {
     // K-39: İngilizce CV Türkçeye çevriliyordu. Diller farklıysa terim uyumu
     // kapalı (maddeler modele gitmiyor), özet yazımına dil açıkça veriliyor.
-    const { store, record: record } = fakeStore()
+    const { store, record } = fakeStore()
     const englishProfile: ResumeProfile = {
       ...testProfile,
       summary: "Frontend developer with experience in React.",
@@ -325,7 +325,7 @@ describe("runAdaptation", () => {
         return { data: { rewritten: "yeni" } as never, tokens: 4 }
       }),
     }
-    const { store, record: record } = fakeStore()
+    const { store, record } = fakeStore()
     await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
 
     const failedBullet = record.draft!.bullets.find((b) => b.rewritten === b.original)
@@ -335,7 +335,7 @@ describe("runAdaptation", () => {
   })
 
   it("makes no summary call for a resume without a summary", async () => {
-    const { store, record: record } = fakeStore()
+    const { store, record } = fakeStore()
     store.getAdaptationContext = vi.fn(async () => ({
       profile: { ...testProfile, summary: null },
       posting: testPosting,
@@ -360,7 +360,7 @@ describe("runAdaptation", () => {
   })
 
   it("marks the adaptation failed and rethrows if the context cannot be read", async () => {
-    const { store, record: record } = fakeStore()
+    const { store, record } = fakeStore()
     store.getAdaptationContext = vi.fn(async () => {
       throw new Error("bulunamadı")
     })

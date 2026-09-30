@@ -1,27 +1,27 @@
 import "@/app/globals.css"
 import type { Metadata } from "next"
-import { AnalizBildirimi } from "@/features/analysis/components/AnalysisNotice"
+import { AnalysisNotice as AnalysisNotice } from "@/features/analysis/components/AnalysisNotice"
 import { Navbar } from "@/components/layout/Navbar"
-import { siteAdresi } from "@/lib/site"
+import { siteUrl as siteUrl } from "@/lib/site"
 
-const BASLIK = "uyarla · Her ilana, doğru CV."
-const ACIKLAMA =
+const TITLE = "uyarla · Her ilana, doğru CV."
+const DESCRIPTION =
   "İlanı yapıştır, CV'nin ne kadar uyduğunu gör ve tek tıkla ilana özel hâle getir. Deneyimini uydurmadan."
 
 // Görsel app/opengraph-image.tsx'ten, ikon app/icon.svg'den kendiliğinden
 // ekleniyor; metadataBase onların tam adresini üretiyor.
 export const metadata: Metadata = {
-  metadataBase: new URL(siteAdresi()),
-  title: BASLIK,
-  description: ACIKLAMA,
+  metadataBase: new URL(siteUrl()),
+  title: TITLE,
+  description: DESCRIPTION,
   openGraph: {
     type: "website",
     locale: "tr_TR",
     siteName: "uyarla",
-    title: BASLIK,
-    description: ACIKLAMA,
+    title: TITLE,
+    description: DESCRIPTION,
   },
-  twitter: { card: "summary_large_image", title: BASLIK, description: ACIKLAMA },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Navbar />
         {children}
         {/* Süren analizi her sayfada izleyen sağ alt bildirimi. */}
-        <AnalizBildirimi />
+        <AnalysisNotice />
       </body>
     </html>
   )

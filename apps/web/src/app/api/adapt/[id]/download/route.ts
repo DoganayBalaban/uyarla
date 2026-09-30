@@ -13,22 +13,22 @@ export async function GET(
   const { id } = await params
   const format = new URL(request.url).searchParams.get("format") === "docx" ? "docx" : "pdf"
 
-  const yuk = await loadAdaptation(id)
-  if (!yuk?.draft || !yuk.profile || !yuk.resumeId) {
+  const payload = await loadAdaptation(id)
+  if (!payload?.draft || !payload.profile || !payload.resumeId) {
     return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
   }
 
   try {
-    ensureOwner(yuk.ownerId, await getSession())
+    ensureOwner(payload.ownerId, await getSession())
   } catch (error) {
-    const yanit = authErrorResponse(error)
-    if (yanit) return yanit
+    const reply = authErrorResponse(error)
+    if (reply) return reply
     throw error
   }
 
   // İndirme kapısı (spec §8; §16'da "asla kesilmeyecek" listesinde): uyarı
   // taşıyan bir madde karara bağlanmadan belge üretilmez.
-  if (hasPendingDecisions(yuk.draft)) {
+  if (hasPendingDecisions(payload.draft)) {
     return NextResponse.json(
       {
         error: "Önce işaretli maddeler için karar ver. Sonra indirebilirsin.",
@@ -38,22 +38,22 @@ export async function GET(
     )
   }
 
-  const uyarlanmis = applyAdaptation(yuk.profile, yuk.draft)
+  const adapted = applyAdaptation(payload.profile, payload.draft)
 
   // Nihai eser burada doğuyor: indirilen belge tam olarak onaylanan hâl
   // (spec §4). Çalışma hâli (draft) ile nihai sürüm farklı şeyler.
-  const mevcut = await prisma.resumeVersion.count({ where: { resumeId: yuk.resumeId } })
+  const existing = await prisma.resumeVersion.count({ where: { resumeId: payload.resumeId } })
   const version = await prisma.resumeVersion.create({
     data: {
-      resumeId: yuk.resumeId,
-      profile: uyarlanmis as unknown as object,
+      resumeId: payload.resumeId,
+      profile: adapted as unknown as object,
       source: "adapted",
-      versionNo: mevcut + 1,
+      versionNo: existing + 1,
     },
   })
   await prisma.adaptation.update({ where: { id }, data: { resumeVersionId: version.id } })
 
-  const model = toDocumentModel(uyarlanmis)
+  const model = toDocumentModel(adapted)
 
   // Tembel import: pdfkit ve docx ağır bağımlılıklar. Sprint 1'de pdf-parse'ın
   // Next sunucu katmanında üst seviyeden yüklenemediğini görmüştük; yalnızca

@@ -11,54 +11,54 @@ import { cn } from "@/lib/cn"
  * - orta:  form ve sonuç ekranları (analiz, uyarlama)
  * - dar:   okuma ve ayar ekranları (hesap, yasal metinler, hata sayfaları)
  */
-const GENISLIK = {
-  genis: "",
-  orta: "max-w-5xl",
-  dar: "max-w-3xl",
+const WIDTH = {
+  wide: "",
+  medium: "max-w-5xl",
+  narrow: "max-w-3xl",
 } as const
 
-export type SayfaGenisligi = keyof typeof GENISLIK
+export type PageWidth = keyof typeof WIDTH
 
 /** Navbar'ın ve geniş sayfaların ortak kabı; sağ-sol boşluk tek yerde. */
-export const KAP = "mx-auto w-full px-4 sm:px-6"
+export const CONTAINER = "mx-auto w-full px-4 sm:px-6"
 
-export function SayfaKabi({
-  genislik = "orta",
+export function PageShell({
+  width = "medium",
   className,
   children,
 }: {
-  genislik?: SayfaGenisligi
+  width?: PageWidth
   className?: string
   children: React.ReactNode
 }) {
   return (
-    <main className={cn(KAP, "max-w-[75rem] pt-10 pb-20 sm:pt-12", className)}>
-      <div className={GENISLIK[genislik]}>{children}</div>
+    <main className={cn(CONTAINER, "max-w-[75rem] pt-10 pb-20 sm:pt-12", className)}>
+      <div className={WIDTH[width]}>{children}</div>
     </main>
   )
 }
 
-export function SayfaBasligi({
-  baslik,
-  aciklama,
-  eylem,
+export function PageHeader({
+  title,
+  description,
+  action,
   className,
 }: {
-  baslik: React.ReactNode
-  aciklama?: React.ReactNode
+  title: React.ReactNode
+  description?: React.ReactNode
   /** Sağda duran tek birincil eylem (rehber §9.5). */
-  eylem?: React.ReactNode
+  action?: React.ReactNode
   className?: string
 }) {
   return (
     <header className={cn("mb-8 flex flex-wrap items-end justify-between gap-4", className)}>
       <div className="min-w-0 max-w-2xl">
         <h1 className="m-0 font-baslik text-3xl font-extrabold tracking-tight text-metin sm:text-4xl">
-          {baslik}
+          {title}
         </h1>
-        {aciklama && <p className="m-0 mt-2 text-gri">{aciklama}</p>}
+        {description && <p className="m-0 mt-2 text-gri">{description}</p>}
       </div>
-      {eylem}
+      {action}
     </header>
   )
 }

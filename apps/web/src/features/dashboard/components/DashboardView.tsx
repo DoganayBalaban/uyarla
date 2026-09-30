@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn"
 import type { DashboardSummary, PendingItem, PendingKind } from "@/features/dashboard/summary"
 import { STAGES, STAGE_LABEL, STAGE_COLOR, type Stage } from "@/features/applications/board"
 import { scoreStatus } from "@/lib/scoreStatus"
-import { SayfaBasligi, SayfaKabi } from "@/components/layout/PageShell"
+import { PageHeader, PageShell } from "@/components/layout/PageShell"
 
 /**
  * Kayıtlı kullanıcının ana ekranı. Tanıtım sayfası kayıtlı kullanıcıyı buraya
@@ -15,12 +15,12 @@ import { SayfaBasligi, SayfaKabi } from "@/components/layout/PageShell"
  * analizlerin, yanda başvuruların nerede durduğu. Sayılar yalnızca
  * kullanıcının kendi verisinden (rehber §11).
  */
-export function DashboardView({ name, summary: ozet }: { name: string | null; summary: DashboardSummary }) {
+export function DashboardView({ name, summary: summaryData }: { name: string | null; summary: DashboardSummary }) {
   // Ad yoksa ya da e-postanın kendisiyse selamda kullanılmıyor.
-  const ad = name?.trim()
-  const selam = ad && !ad.includes("@") ? `Merhaba, ${ad.split(" ")[0]}.` : "Merhaba."
+  const userName = name?.trim()
+  const greeting = userName && !userName.includes("@") ? `Merhaba, ${userName.split(" ")[0]}.` : "Merhaba."
 
-  const yeniAnaliz = (
+  const newAnalysisButton = (
     <Link
       href="/analyze"
       className="inline-flex items-center gap-2 rounded-buton bg-mavi px-5 py-2.5 font-semibold text-white no-underline shadow-sm shadow-mavi/30 transition hover:bg-mavi/90"
@@ -30,10 +30,10 @@ export function DashboardView({ name, summary: ozet }: { name: string | null; su
     </Link>
   )
 
-  if (ozet.total === 0) {
+  if (summaryData.total === 0) {
     return (
-      <SayfaKabi genislik="genis">
-        <SayfaBasligi baslik={selam} aciklama="Burası senin ana ekranın. İlk analizinden sonra dolmaya başlar." />
+      <PageShell width="wide">
+        <PageHeader title={greeting} description="Burası senin ana ekranın. İlk analizinden sonra dolmaya başlar." />
         <div className="rounded-kart border border-dashed border-cizgi bg-kart p-10 text-center">
           <span className="mx-auto grid size-12 place-items-center rounded-full bg-mavi/10 text-mavi">
             <Inbox className="size-6" aria-hidden />
@@ -47,46 +47,46 @@ export function DashboardView({ name, summary: ozet }: { name: string | null; su
             İlk analizini yap
           </Link>
         </div>
-      </SayfaKabi>
+      </PageShell>
     )
   }
 
   return (
-    <SayfaKabi genislik="genis">
-      <SayfaBasligi
-        baslik={selam}
-        aciklama={
-          ozet.pending.length > 0 ? "Kaldığın yerden devam et." : "Bekleyen bir işin yok. Yeni bir ilana bakalım mı?"
+    <PageShell width="wide">
+      <PageHeader
+        title={greeting}
+        description={
+          summaryData.pending.length > 0 ? "Kaldığın yerden devam et." : "Bekleyen bir işin yok. Yeni bir ilana bakalım mı?"
         }
-        eylem={yeniAnaliz}
+        action={newAnalysisButton}
       />
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-6">
-          {ozet.pending.length > 0 && <Bekleyenler liste={ozet.pending} />}
-          <SonAnalizler kartlar={ozet.recentAnalyses} toplam={ozet.total} />
+          {summaryData.pending.length > 0 && <PendingList list={summaryData.pending} />}
+          <RecentAnalyses cards={summaryData.recentAnalyses} totalCount={summaryData.total} />
         </div>
-        <Basvurular sayilar={ozet.stageCounts} toplam={ozet.total} />
+        <ApplicationStages counts={summaryData.stageCounts} totalCount={summaryData.total} />
       </div>
-    </SayfaKabi>
+    </PageShell>
   )
 }
 
-const BEKLEYEN_METNI: Record<PendingKind, { metin: string; eylem: string; Ikon: typeof ListChecks }> = {
-  decide: { metin: "Kararını bekleyen maddeler var", eylem: "Karar ver", Ikon: ListChecks },
-  ready: { metin: "CV'n hazır, henüz başvurmadın", eylem: "CV'ni gör", Ikon: CircleCheck },
-  adapt: { metin: "Skorunu aldın, CV'ni uyarlamadın", eylem: "Uyarla", Ikon: FilePen },
+const PENDING_COPY: Record<PendingKind, { text: string; action: string; Icon: typeof ListChecks }> = {
+  decide: { text: "Kararını bekleyen maddeler var", action: "Karar ver", Icon: ListChecks },
+  ready: { text: "CV'n hazır, henüz başvurmadın", action: "CV'ni gör", Icon: CircleCheck },
+  adapt: { text: "Skorunu aldın, CV'ni uyarlamadın", action: "Uyarla", Icon: FilePen },
 }
 
-function Bekleyenler({ liste }: { liste: PendingItem[] }) {
+function PendingList({ list }: { list: PendingItem[] }) {
   return (
     <section aria-labelledby="bekleyenler" className="rounded-kart border border-cizgi bg-kart">
       <h2 id="bekleyenler" className="m-0 px-5 pt-4 pb-3 text-base font-bold">
         Seni bekleyenler
       </h2>
       <ul className="m-0 list-none divide-y divide-cizgi border-t border-cizgi p-0">
-        {liste.map((b) => {
-          const { metin, eylem, Ikon } = BEKLEYEN_METNI[b.kind]
+        {list.map((b) => {
+          const { text, action: actionButton, Icon } = PENDING_COPY[b.kind]
           return (
             <li key={b.analysisId}>
               <Link
@@ -99,14 +99,14 @@ function Bekleyenler({ liste }: { liste: PendingItem[] }) {
                     b.kind === "decide" ? "bg-kehribar/15 text-kehribar" : "bg-mavi/10 text-mavi",
                   )}
                 >
-                  <Ikon className="size-4" aria-hidden />
+                  <Icon className="size-4" aria-hidden />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{b.position}</span>
-                  <span className="block text-sm text-gri">{metin}</span>
+                  <span className="block text-sm text-gri">{text}</span>
                 </span>
                 <span className="hidden shrink-0 items-center gap-1 text-sm font-semibold text-mavi sm:inline-flex">
-                  {eylem}
+                  {actionButton}
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
                 </span>
               </Link>
@@ -118,24 +118,24 @@ function Bekleyenler({ liste }: { liste: PendingItem[] }) {
   )
 }
 
-const TARIH = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short" })
+const DATE_FORMAT = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short" })
 
-function SonAnalizler({ kartlar, toplam }: { kartlar: DashboardSummary["recentAnalyses"]; toplam: number }) {
+function RecentAnalyses({ cards, totalCount }: { cards: DashboardSummary["recentAnalyses"]; totalCount: number }) {
   return (
     <section aria-labelledby="son-analizler" className="rounded-kart border border-cizgi bg-kart">
       <div className="flex items-baseline justify-between gap-4 px-5 pt-4 pb-3">
         <h2 id="son-analizler" className="m-0 text-base font-bold">
           Son analizler
         </h2>
-        {toplam > kartlar.length && (
+        {totalCount > cards.length && (
           <Link href="/applications" className="text-sm font-semibold text-mavi no-underline hover:underline">
-            Tümü ({toplam})
+            Tümü ({totalCount})
           </Link>
         )}
       </div>
       <ul className="m-0 list-none divide-y divide-cizgi border-t border-cizgi p-0">
-        {kartlar.map((k) => {
-          const durum = k.score === null ? null : scoreStatus(k.score)
+        {cards.map((k) => {
+          const state = k.score === null ? null : scoreStatus(k.score)
           return (
             <li key={k.analysisId}>
               <Link
@@ -145,18 +145,18 @@ function SonAnalizler({ kartlar, toplam }: { kartlar: DashboardSummary["recentAn
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{k.position}</span>
                   <span className="block text-sm text-gri">
-                    {TARIH.format(new Date(k.createdAt))} · {STAGE_LABEL[k.stage]}
+                    {DATE_FORMAT.format(new Date(k.createdAt))} · {STAGE_LABEL[k.stage]}
                   </span>
                 </span>
-                {durum && k.score !== null && (
+                {state && k.score !== null && (
                   <span
-                    className={cn("shrink-0 rounded-buton px-2.5 py-1 text-right", durum.bgClass)}
-                    title={durum.label}
+                    className={cn("shrink-0 rounded-buton px-2.5 py-1 text-right", state.bgClass)}
+                    title={state.label}
                   >
-                    <span className={cn("block font-baslik text-lg leading-none font-extrabold tabular-nums", durum.textClass)}>
+                    <span className={cn("block font-baslik text-lg leading-none font-extrabold tabular-nums", state.textClass)}>
                       {k.score}
                     </span>
-                    <span className={cn("block text-[0.6875rem] font-semibold", durum.textClass)}>{durum.label}</span>
+                    <span className={cn("block text-[0.6875rem] font-semibold", state.textClass)}>{state.label}</span>
                   </span>
                 )}
               </Link>
@@ -168,19 +168,19 @@ function SonAnalizler({ kartlar, toplam }: { kartlar: DashboardSummary["recentAn
   )
 }
 
-function Basvurular({ sayilar, toplam }: { sayilar: Record<Stage, number>; toplam: number }) {
+function ApplicationStages({ counts, totalCount }: { counts: Record<Stage, number>; totalCount: number }) {
   return (
     <section aria-labelledby="basvurular" className="rounded-kart border border-cizgi bg-kart p-5">
       <h2 id="basvurular" className="m-0 text-base font-bold">
         Başvuruların
       </h2>
-      <p className="m-0 mt-1 text-sm text-gri">{toplam} ilan, aşamalarına göre.</p>
+      <p className="m-0 mt-1 text-sm text-gri">{totalCount} ilan, aşamalarına göre.</p>
 
       {/* Dağılım çubuğu: her aşama payı kadar. Sayılar aşağıdaki listede
           yazılı; çubuk yalnızca göz için, ekran okuyucudan gizli. */}
       <div aria-hidden className="mt-4 flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-zemin">
-        {STAGES.filter((a) => sayilar[a] > 0).map((a) => (
-          <span key={a} className={STAGE_COLOR[a]} style={{ flexGrow: sayilar[a] }} />
+        {STAGES.filter((a) => counts[a] > 0).map((a) => (
+          <span key={a} className={STAGE_COLOR[a]} style={{ flexGrow: counts[a] }} />
         ))}
       </div>
 
@@ -189,7 +189,7 @@ function Basvurular({ sayilar, toplam }: { sayilar: Record<Stage, number>; topla
           <div key={a} className="flex items-center gap-2.5 text-sm">
             <span aria-hidden className={cn("size-2.5 rounded-full", STAGE_COLOR[a])} />
             <dt className="flex-1 text-gri">{STAGE_LABEL[a]}</dt>
-            <dd className="m-0 font-semibold tabular-nums">{sayilar[a]}</dd>
+            <dd className="m-0 font-semibold tabular-nums">{counts[a]}</dd>
           </div>
         ))}
       </dl>

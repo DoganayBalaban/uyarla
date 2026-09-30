@@ -25,19 +25,19 @@ export async function DELETE(request: Request) {
     // Gövde kimlik taşıyorsa oturumla eşleşmek zorunda. Bir istemci hatası
     // sessizce yanlış hesabı silmesin; uymuyorsa 404 (K-35: 403 hesabın var
     // olduğunu sızdırır).
-    const govde = await govdeyiOku(request)
-    if (govde?.userId) {
-      ensureOwner(govde.userId, { user })
+    const body = await readBody(request)
+    if (body?.userId) {
+      ensureOwner(body.userId, { user })
     }
 
-    const sonuc = await deleteUsers(prisma, [user.id])
+    const result = await deleteUsers(prisma, [user.id])
 
     // Oturum satırları da silindi, yani çerez artık hiçbir şeye açılmıyor;
     // ayrıca signOut çağırmak gerekmiyor.
-    return NextResponse.json({ silindi: sonuc.deletedUsers === 1 })
+    return NextResponse.json({ deleted: result.deletedUsers === 1 })
   } catch (error) {
-    const yetkiYaniti = authErrorResponse(error)
-    if (yetkiYaniti) return yetkiYaniti
+    const authResponse = authErrorResponse(error)
+    if (authResponse) return authResponse
     console.error("[api/account]", error)
     return NextResponse.json(
       { error: "Hesabını silemedik. Birazdan tekrar dener misin?", code: "unknown" },
@@ -53,11 +53,11 @@ export async function DELETE(request: Request) {
  * Bozuk gövde yüzünden silme isteğinin 500 dönmesi kullanıcıyı hesabıyla
  * kilitli bırakırdı.
  */
-async function govdeyiOku(request: Request): Promise<{ userId?: string } | null> {
+async function readBody(request: Request): Promise<{ userId?: string } | null> {
   try {
-    const metin = await request.text()
-    if (!metin.trim()) return null
-    return JSON.parse(metin) as { userId?: string }
+    const bodyText = await request.text()
+    if (!bodyText.trim()) return null
+    return JSON.parse(bodyText) as { userId?: string }
   } catch {
     return null
   }

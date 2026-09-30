@@ -1,6 +1,6 @@
 import { safeReturnPath } from "@/lib/returnPath"
 import { enabledProviders } from "@/features/auth/providers"
-import { GirisFormu } from "@/features/auth/components/LoginForm"
+import { LoginForm as LoginForm } from "@/features/auth/components/LoginForm"
 
 // Hangi sosyal girişin açık olduğu ortam değişkenlerinden okunuyor; sayfa
 // derleme anında sabitlenirse sonradan eklenen kimlik bilgisi görünmez.
@@ -8,18 +8,18 @@ export const dynamic = "force-dynamic"
 
 export const metadata = { title: "Giriş yap · uyarla" }
 
-export default async function GirisPage({
+export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ donus?: string | string[] }>
+  searchParams: Promise<{ returnTo?: string | string[] }>
 }) {
-  const { donus } = await searchParams
+  const { returnTo } = await searchParams
   // Dönüş adresi burada, sunucuda doğrulanıyor; forma yalnızca güvenli hâli
   // gidiyor (src/lib/returnPath.ts).
   return (
-    <GirisFormu
-      acikSaglayicilar={enabledProviders()}
-      donus={safeReturnPath(Array.isArray(donus) ? donus[0] : donus)}
+    <LoginForm
+      enabledProviders={enabledProviders()}
+      returnTo={safeReturnPath(Array.isArray(returnTo) ? returnTo[0] : returnTo)}
     />
   )
 }

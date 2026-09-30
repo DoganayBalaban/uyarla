@@ -15,10 +15,10 @@ import {
   handleResponse,
   type ActiveAnalysis,
 } from "@/features/analysis/activeAnalysis"
-import { skorDurumu } from "@/features/analysis/components/ScoreRing"
+import { skorDurumu as scoreStatus } from "@/features/analysis/components/ScoreRing"
 
-const YOKLAMA_MS = 3000
-const BITTI_BASLIGI = "✓ Analizin hazır · uyarla"
+const POLL_MS = 3000
+const DONE_TITLE = "✓ Analizin hazır · uyarla"
 
 /**
  * Sağ alttaki analiz bildirimi.
@@ -30,51 +30,51 @@ const BITTI_BASLIGI = "✓ Analizin hazır · uyarla"
  *
  * Analiz sayfasında gösterilmiyor: orada aşama çizelgesi zaten açık.
  */
-export function AnalizBildirimi() {
+export function AnalysisNotice() {
   const pathname = usePathname()
   const router = useRouter()
-  const azHareket = useReducedMotion() ?? false
-  const [kayit, setKayit] = useState<ActiveAnalysis | null>(null)
-  const [izin, setIzin] = useState<NotificationPermission | "yok">("yok")
-  const ozgunBaslik = useRef<string | null>(null)
+  const reducedMotion = useReducedMotion() ?? false
+  const [record, setRecord] = useState<ActiveAnalysis | null>(null)
+  const [notificationPermission, setPermission] = useState<NotificationPermission | "unsupported">("unsupported")
+  const originalTitle = useRef<string | null>(null)
 
-  const analizSayfasinda = pathname === "/analyze"
+  const onAnalyzePage = pathname === "/analyze"
 
   // Kayıt localStorage'da; aynı sekmedeki değişiklikler özel olayla, diğer
   // sekmelerdekiler `storage` olayıyla geliyor.
   useEffect(() => {
-    const yenile = () => setKayit(readActiveAnalysis())
-    yenile()
-    setIzin(typeof Notification === "undefined" ? "yok" : Notification.permission)
-    window.addEventListener(ACTIVE_ANALYSIS_EVENT, yenile)
-    window.addEventListener("storage", yenile)
+    const reload = () => setRecord(readActiveAnalysis())
+    reload()
+    setPermission(typeof Notification === "undefined" ? "unsupported" : Notification.permission)
+    window.addEventListener(ACTIVE_ANALYSIS_EVENT, reload)
+    window.addEventListener("storage", reload)
     return () => {
-      window.removeEventListener(ACTIVE_ANALYSIS_EVENT, yenile)
-      window.removeEventListener("storage", yenile)
+      window.removeEventListener(ACTIVE_ANALYSIS_EVENT, reload)
+      window.removeEventListener("storage", reload)
     }
   }, [])
 
-  const bitti = useCallback(
-    (sonuc: ActiveAnalysis) => {
+  const finished = useCallback(
+    (result: ActiveAnalysis) => {
       if (!document.hidden) return
       // Sekme arka planda: başlıkla ve (izin varsa) tarayıcı bildirimiyle haber ver.
-      ozgunBaslik.current ??= document.title
-      document.title = sonuc.status === "completed" ? BITTI_BASLIGI : "Analiz tamamlanamadı · uyarla"
+      originalTitle.current ??= document.title
+      document.title = result.status === "completed" ? DONE_TITLE : "Analiz tamamlanamadı · uyarla"
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-        const bildirim = new Notification(
-          sonuc.status === "completed" ? "Analizin hazır" : "Analiz tamamlanamadı",
+        const notification = new Notification(
+          result.status === "completed" ? "Analizin hazır" : "Analiz tamamlanamadı",
           {
             body:
-              sonuc.status === "completed" && sonuc.score != null
-                ? `Uyum skorun ${sonuc.score} · ${skorDurumu(sonuc.score).label}`
+              result.status === "completed" && result.score != null
+                ? `Uyum skorun ${result.score} · ${scoreStatus(result.score).label}`
                 : "Ayrıntı için uyarla'ya dön.",
-            tag: `uyarla-analiz-${sonuc.jobId}`,
+            tag: `uyarla-analiz-${result.jobId}`,
           },
         )
-        bildirim.onclick = () => {
+        notification.onclick = () => {
           window.focus()
-          if (sonuc.analysisId) router.push(resultPath(sonuc.analysisId))
-          bildirim.close()
+          if (result.analysisId) router.push(resultPath(result.analysisId))
+          notification.close()
         }
       }
     },
@@ -83,56 +83,56 @@ export function AnalizBildirimi() {
 
   // Sekme öne gelince özgün başlık geri geliyor.
   useEffect(() => {
-    const gorunur = () => {
-      if (!document.hidden && ozgunBaslik.current) {
-        document.title = ozgunBaslik.current
-        ozgunBaslik.current = null
+    const shown = () => {
+      if (!document.hidden && originalTitle.current) {
+        document.title = originalTitle.current
+        originalTitle.current = null
       }
     }
-    document.addEventListener("visibilitychange", gorunur)
-    return () => document.removeEventListener("visibilitychange", gorunur)
+    document.addEventListener("visibilitychange", shown)
+    return () => document.removeEventListener("visibilitychange", shown)
   }, [])
 
   // Yoklama. Analiz sayfası kendi yoklamasını yapıyor; iki kez sormamak için
   // orada durmuş oluyoruz.
-  const jobId = kayit?.status === "running" ? kayit.jobId : null
+  const jobId = record?.status === "running" ? record.jobId : null
   useEffect(() => {
-    if (!jobId || analizSayfasinda) return
-    let durdu = false
-    const sor = async () => {
+    if (!jobId || onAnalyzePage) return
+    let stopped = false
+    const ask = async () => {
       try {
-        const cevap = await fetch(`/api/analyze/${jobId}`)
-        if (cevap.status === 404 || cevap.status === 401) {
+        const response = await fetch(`/api/analyze/${jobId}`)
+        if (response.status === 404 || response.status === 401) {
           // İş bulunamıyor (kuyruk temizlendi ya da oturum değişti): izleme bitti.
           clearActiveAnalysis()
           return
         }
-        const yanit = (await cevap.json()) as Parameters<typeof handleResponse>[1]
-        if (durdu) return
-        handleResponse(jobId, yanit)
-        if (yanit.status === "completed" || yanit.status === "failed") {
-          const son = readActiveAnalysis()
-          if (son) bitti(son)
+        const reply = (await response.json()) as Parameters<typeof handleResponse>[1]
+        if (stopped) return
+        handleResponse(jobId, reply)
+        if (reply.status === "completed" || reply.status === "failed") {
+          const last = readActiveAnalysis()
+          if (last) finished(last)
           return
         }
       } catch {
         // Ağ kesintisi: bir sonraki turda tekrar dene.
       }
-      if (!durdu) zamanlayici = setTimeout(sor, YOKLAMA_MS)
+      if (!stopped) timerRef = setTimeout(ask, POLL_MS)
     }
-    let zamanlayici = setTimeout(sor, 500)
+    let timerRef = setTimeout(ask, 500)
     return () => {
-      durdu = true
-      clearTimeout(zamanlayici)
+      stopped = true
+      clearTimeout(timerRef)
     }
-  }, [jobId, analizSayfasinda, bitti])
+  }, [jobId, onAnalyzePage, finished])
 
-  async function izinIste() {
+  async function askPermission() {
     if (typeof Notification === "undefined") return
-    setIzin(await Notification.requestPermission())
+    setPermission(await Notification.requestPermission())
   }
 
-  const gorunur = !!kayit && !analizSayfasinda && !kayit.seen
+  const shown = !!record && !onAnalyzePage && !record.seen
 
   return (
     <div
@@ -141,26 +141,26 @@ export function AnalizBildirimi() {
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <AnimatePresence>
-        {gorunur && kayit && (
+        {shown && record && (
           <motion.div
-            key={`${kayit.jobId}-${kayit.status}`}
-            initial={azHareket ? false : { opacity: 0, y: 16, scale: 0.98 }}
+            key={`${record.jobId}-${record.status}`}
+            initial={reducedMotion ? false : { opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={azHareket ? undefined : { opacity: 0, y: 16, scale: 0.98 }}
+            exit={reducedMotion ? undefined : { opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             className="pointer-events-auto w-full max-w-sm rounded-kart border border-cizgi bg-kart p-4 shadow-xl shadow-gece/10"
           >
-            {kayit.status === "running" && (
-              <Calisiyor
-                kayit={kayit}
-                izin={izin}
-                onIzin={() => void izinIste()}
+            {record.status === "running" && (
+              <RunningNotice
+                record={record}
+                notificationPermission={notificationPermission}
+                onAskPermission={() => void askPermission()}
               />
             )}
-            {kayit.status === "completed" && (
-              <Bitti kayit={kayit} onKapat={() => updateActiveAnalysis(kayit.jobId, { seen: true })} />
+            {record.status === "completed" && (
+              <DoneNotice record={record} onClose={() => updateActiveAnalysis(record.jobId, { seen: true })} />
             )}
-            {kayit.status === "failed" && <Basarisiz kayit={kayit} onKapat={clearActiveAnalysis} />}
+            {record.status === "failed" && <FailedNotice record={record} onClose={clearActiveAnalysis} />}
           </motion.div>
         )}
       </AnimatePresence>
@@ -168,14 +168,14 @@ export function AnalizBildirimi() {
   )
 }
 
-function Calisiyor({
-  kayit,
-  izin,
-  onIzin,
+function RunningNotice({
+  record,
+  notificationPermission,
+  onAskPermission,
 }: {
-  kayit: ActiveAnalysis
-  izin: NotificationPermission | "yok"
-  onIzin: () => void
+  record: ActiveAnalysis
+  notificationPermission: NotificationPermission | "unsupported"
+  onAskPermission: () => void
 }) {
   return (
     <div className="flex items-start gap-3">
@@ -185,7 +185,7 @@ function Calisiyor({
       <div className="min-w-0 flex-1">
         <p className="m-0 font-semibold">Analizin hazırlanıyor</p>
         <p className="m-0 mt-0.5 text-sm text-gri">
-          {(kayit.stage && STAGE_SHORT_LABEL[kayit.stage]) ?? "Sıraya alındı"} · bitince haber vereceğiz
+          {(record.stage && STAGE_SHORT_LABEL[record.stage]) ?? "Sıraya alındı"} · bitince haber vereceğiz
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Link
@@ -195,10 +195,10 @@ function Calisiyor({
             Analize dön
             <ArrowRight className="size-3.5" aria-hidden />
           </Link>
-          {izin === "default" && (
+          {notificationPermission === "default" && (
             <button
               type="button"
-              onClick={onIzin}
+              onClick={onAskPermission}
               className="inline-flex items-center gap-1.5 rounded-buton border border-cizgi px-3 py-1.5 text-sm font-medium text-metin transition hover:border-mavi/40 hover:text-mavi"
             >
               <BellRing className="size-3.5" aria-hidden />
@@ -211,8 +211,8 @@ function Calisiyor({
   )
 }
 
-function Bitti({ kayit, onKapat }: { kayit: ActiveAnalysis; onKapat: () => void }) {
-  const durum = kayit.score != null ? skorDurumu(kayit.score) : null
+function DoneNotice({ record, onClose }: { record: ActiveAnalysis; onClose: () => void }) {
+  const state = record.score != null ? scoreStatus(record.score) : null
   return (
     <div className="flex items-start gap-3">
       <span className="grid size-9 shrink-0 place-items-center rounded-full bg-yesil/10 text-yesil dark:text-[#4ade80]">
@@ -220,15 +220,15 @@ function Bitti({ kayit, onKapat }: { kayit: ActiveAnalysis; onKapat: () => void 
       </span>
       <div className="min-w-0 flex-1">
         <p className="m-0 font-semibold">Analizin hazır</p>
-        {durum && kayit.score != null && (
+        {state && record.score != null && (
           <p className="m-0 mt-0.5 text-sm text-gri">
-            Uyum skorun <span className={`font-semibold ${durum.textClass}`}>{kayit.score} · {durum.label}</span>
+            Uyum skorun <span className={`font-semibold ${state.textClass}`}>{record.score} · {state.label}</span>
           </p>
         )}
-        {kayit.analysisId && (
+        {record.analysisId && (
           <Link
-            href={resultPath(kayit.analysisId)}
-            onClick={onKapat}
+            href={resultPath(record.analysisId)}
+            onClick={onClose}
             className="mt-3 inline-flex items-center gap-1.5 rounded-buton bg-mavi px-3 py-1.5 text-sm font-semibold text-white no-underline transition hover:bg-mavi/90"
           >
             Sonucu gör
@@ -236,12 +236,12 @@ function Bitti({ kayit, onKapat }: { kayit: ActiveAnalysis; onKapat: () => void 
           </Link>
         )}
       </div>
-      <KapatDugmesi onKapat={onKapat} />
+      <CloseButton onClose={onClose} />
     </div>
   )
 }
 
-function Basarisiz({ kayit, onKapat }: { kayit: ActiveAnalysis; onKapat: () => void }) {
+function FailedNotice({ record, onClose }: { record: ActiveAnalysis; onClose: () => void }) {
   return (
     <div className="flex items-start gap-3">
       <span className="grid size-9 shrink-0 place-items-center rounded-full bg-kirmizi/10 text-kirmizi dark:text-[#f87171]">
@@ -249,26 +249,26 @@ function Basarisiz({ kayit, onKapat }: { kayit: ActiveAnalysis; onKapat: () => v
       </span>
       <div className="min-w-0 flex-1">
         <p className="m-0 font-semibold">Analiz tamamlanamadı</p>
-        <p className="m-0 mt-0.5 text-sm text-gri">{kayit.error ?? "Birkaç dakika sonra tekrar dener misin?"}</p>
+        <p className="m-0 mt-0.5 text-sm text-gri">{record.error ?? "Birkaç dakika sonra tekrar dener misin?"}</p>
         <Link
           href="/analyze"
-          onClick={onKapat}
+          onClick={onClose}
           className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-mavi no-underline dark:text-[#8ea2ff]"
         >
           Tekrar dene
           <ArrowRight className="size-3.5" aria-hidden />
         </Link>
       </div>
-      <KapatDugmesi onKapat={onKapat} />
+      <CloseButton onClose={onClose} />
     </div>
   )
 }
 
-function KapatDugmesi({ onKapat }: { onKapat: () => void }) {
+function CloseButton({ onClose }: { onClose: () => void }) {
   return (
     <button
       type="button"
-      onClick={onKapat}
+      onClick={onClose}
       aria-label="Bildirimi kapat"
       className="-m-1 grid size-7 shrink-0 place-items-center rounded-full text-gri transition hover:bg-zemin hover:text-metin"
     >

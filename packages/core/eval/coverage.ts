@@ -147,7 +147,7 @@ async function main() {
 
   console.log(`[kapsam] ${ready.length} çift · ${VARYANTLAR.length} varyant\n`)
 
-  const rows = VARYANTLAR.map(({ name: name, cfg }) => {
+  const rows = VARYANTLAR.map(({ name, cfg }) => {
     let hits = 0
     let misses = 0
     let fabrications = 0
@@ -175,7 +175,7 @@ async function main() {
   console.table(rows)
 
   console.log("\nSkorlar varyanta göre:")
-  for (const { name: name, cfg } of VARYANTLAR) {
+  for (const { name, cfg } of VARYANTLAR) {
     const scores = ready.map(
       ({ pair, input }) => `${pair.id.slice(0, 12)}=${String(score(input, cfg).score).padStart(2)}`,
     )

@@ -10,8 +10,8 @@ export const contentType = "image/png"
  * Paylaşılan bağlantının önizlemesi. Font DejaVu Sans: ImageResponse'un
  * gömülü fontunda ş/ğ/ı yok, CV çıktısıyla aynı dosya kullanılıyor.
  */
-export default async function OgGorseli() {
-  const kalin = await readFile(fontPaths().bold)
+export default async function OgImage() {
+  const boldFont = await readFile(fontPaths().bold)
 
   return new ImageResponse(
     (
@@ -44,6 +44,6 @@ export default async function OgGorseli() {
         </div>
       </div>
     ),
-    { ...size, fonts: [{ name: "DejaVu", data: kalin, weight: 700, style: "normal" }] },
+    { ...size, fonts: [{ name: "DejaVu", data: boldFont, weight: 700, style: "normal" }] },
   )
 }

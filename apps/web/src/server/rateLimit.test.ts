@@ -30,7 +30,7 @@ describe("enforceRateLimit", () => {
     } catch (e) {
       expect(e).toBeInstanceOf(AuthError)
       expect((e as AuthError).status).toBe(429)
-      expect((e as AuthError).code).toBe("limit_asildi")
+      expect((e as AuthError).code).toBe("rate_limited")
     }
   })
 

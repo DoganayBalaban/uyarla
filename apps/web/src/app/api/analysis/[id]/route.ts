@@ -39,8 +39,8 @@ export async function GET(
       modelId: analysis!.modelId,
     })
   } catch (error) {
-    const yanit = authErrorResponse(error)
-    if (yanit) return yanit
+    const reply = authErrorResponse(error)
+    if (reply) return reply
     console.error("[api/analysis/[id]]", error)
     return NextResponse.json({ error: "Bir şeyler ters gitti." }, { status: 500 })
   }

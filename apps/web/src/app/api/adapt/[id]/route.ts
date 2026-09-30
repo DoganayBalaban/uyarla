@@ -11,12 +11,12 @@ export async function GET(
 ) {
   const { id } = await params
   try {
-    const yuk = await loadAdaptation(id)
-    if (!yuk) return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
+    const payload = await loadAdaptation(id)
+    if (!payload) return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
 
-    ensureOwner(yuk.ownerId, await getSession())
+    ensureOwner(payload.ownerId, await getSession())
 
-    const { adaptation, profile, posting, draft, scoreBefore } = yuk
+    const { adaptation, profile, posting, draft, scoreBefore } = payload
 
     return NextResponse.json({
       status: adaptation.status,
@@ -29,8 +29,8 @@ export async function GET(
       coverLetter: adaptation.coverLetter ?? null,
     })
   } catch (error) {
-    const yanit = authErrorResponse(error)
-    if (yanit) return yanit
+    const reply = authErrorResponse(error)
+    if (reply) return reply
     console.error("[api/adapt/[id]]", error)
     return NextResponse.json({ error: "Bir şeyler ters gitti." }, { status: 500 })
   }

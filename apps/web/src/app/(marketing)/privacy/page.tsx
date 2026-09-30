@@ -1,4 +1,4 @@
-import { YasalSayfa } from "@/features/legal/LegalPage"
+import { YasalSayfa as LegalPage } from "@/features/legal/LegalPage"
 import { LEGAL } from "@/features/legal/company"
 
 export const metadata = { title: "KVKK aydınlatma metni · uyarla" }
@@ -11,7 +11,7 @@ export const metadata = { title: "KVKK aydınlatma metni · uyarla" }
  */
 export default function PrivacyPage() {
   return (
-    <YasalSayfa
+    <LegalPage
       baslik="KVKK aydınlatma metni"
       ozet="CV'n kişisel veri. Hangisini neden işlediğimizi, kimlerle paylaştığımızı ve nasıl silebileceğini burada sade Türkçeyle anlatıyoruz."
     >
@@ -159,6 +159,6 @@ export default function PrivacyPage() {
           izleme çerezi kullanmıyoruz.
         </p>
       </section>
-    </YasalSayfa>
+    </LegalPage>
   )
 }

@@ -19,7 +19,7 @@ describe("deletionOperations", () => {
   it("deletes eight tables in foreign-key order", () => {
     // Sıra bu dosyanın en kırılgan yeri: Adaptation, Analysis'ten önce
     // silinmezse yabancı anahtar işlemi düşürür ve hesap yarı silinmiş kalır.
-    const { callList: callList, client } = fakePrisma()
+    const { callList, client } = fakePrisma()
     deletionOperations(client as never, ["k1"])
 
     expect(callList.map((c) => c.tablo)).toEqual([
@@ -37,7 +37,7 @@ describe("deletionOperations", () => {
   it("every operation targets only the given users", () => {
     // Bu dosyanın en kritik iddiası: bir `where` koşulu düşerse BÜTÜN
     // kullanıcıların verisi silinir ve geri dönüşü yok.
-    const { callList: callList, client } = fakePrisma()
+    const { callList, client } = fakePrisma()
     deletionOperations(client as never, ["k1", "k2"])
 
     const ids = ["k1", "k2"]
@@ -60,7 +60,7 @@ describe("deletionOperations", () => {
     // `{ in: [] }` Prisma'da hiçbir satırı tutmaz, ama bir sonraki elde
     // koşulun elden kaçması hâlinde tabloyu boşaltacak sorgular hiç
     // kurulmamış olsun: boş listede erken çıkıyoruz.
-    const { callList: callList, client } = fakePrisma()
+    const { callList, client } = fakePrisma()
     expect(deletionOperations(client as never, [])).toEqual([])
     expect(callList).toHaveLength(0)
   })
@@ -72,7 +72,7 @@ describe("deletionOperations", () => {
   })
 
   it("deduplicates repeated ids", () => {
-    const { callList: callList, client } = fakePrisma()
+    const { callList, client } = fakePrisma()
     deletionOperations(client as never, ["k1", "k1"])
     expect(callList).toHaveLength(DELETION_ORDER.length)
     expect(callList[0]?.where).toEqual({ analysis: { userId: { in: ["k1"] } } })

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { YasalSayfa } from "@/features/legal/LegalPage"
+import { YasalSayfa as LegalPage } from "@/features/legal/LegalPage"
 import { LEGAL } from "@/features/legal/company"
 
 export const metadata = { title: "Kullanım koşulları · uyarla" }
@@ -10,7 +10,7 @@ export const metadata = { title: "Kullanım koşulları · uyarla" }
  */
 export default function TermsPage() {
   return (
-    <YasalSayfa
+    <LegalPage
       baslik="Kullanım koşulları"
       ozet="Uyarla'yı kullanırken neye söz verdiğimizi, neye söz vermediğimizi ve senden ne beklediğimizi anlatıyoruz."
     >
@@ -105,6 +105,6 @@ export default function TermsPage() {
           {LEGAL.contact}.
         </p>
       </section>
-    </YasalSayfa>
+    </LegalPage>
   )
 }

@@ -18,7 +18,7 @@ function fakePrisma() {
 
 describe("claimOperations", () => {
   it("moves all three tables from the anonymous user to the new user", () => {
-    const { callList: callList, client } = fakePrisma()
+    const { callList, client } = fakePrisma()
     claimOperations(client as never, "anon1", "yeni1")
     expect(callList.map((c) => c.tablo).sort()).toEqual(["analysis", "jobPosting", "resume"])
   })
@@ -26,7 +26,7 @@ describe("claimOperations", () => {
   it("targets only the anonymous user's rows", () => {
     // Bu dosyanın en kritik iddiası: where koşulu düşerse BÜTÜN
     // kullanıcıların verisi tek hesaba taşınır.
-    const { callList: callList, client } = fakePrisma()
+    const { callList, client } = fakePrisma()
     claimOperations(client as never, "anon1", "yeni1")
     for (const c of callList) {
       expect(c.where).toEqual({ userId: "anon1" })
@@ -36,7 +36,7 @@ describe("claimOperations", () => {
 
   it("produces no operation for the same id", () => {
     // Kendine taşımak anlamsız ve bir hata işareti.
-    const { callList: callList, client } = fakePrisma()
+    const { callList, client } = fakePrisma()
     claimOperations(client as never, "ayni", "ayni")
     expect(callList).toHaveLength(0)
   })

@@ -26,10 +26,10 @@ export async function POST(request: Request) {
     // Kayıt kontrolü kaynağı ARAMADAN ÖNCE: aksi hâlde anonim kullanıcı
     // "bu analiz var" ile "yok" arasındaki farkı yanıt kodundan okuyabiliyor.
     // Oturum değişkende tutuluyor; Görev 6 hız limiti anahtarı için kullanacak.
-    const oturum = ensureRegistered(await getSession())
+    const session = ensureRegistered(await getSession())
 
     // Pahalı uç: madde başına LLM çağrısı (spec §9).
-    await enforceRateLimit(redisStore, `uyarla:${oturum.user.id}`, RATE_LIMITS.registered)
+    await enforceRateLimit(redisStore, `uyarla:${session.user.id}`, RATE_LIMITS.registered)
 
     const analysis = await prisma.analysis.findUnique({ where: { id: analysisId } })
     if (!analysis) throw new PermanentError("Analiz bulunamadı.", "analysis_not_found")
@@ -37,12 +37,12 @@ export async function POST(request: Request) {
       throw new PermanentError("Bu analiz henüz tamamlanmadı.", "analysis_incomplete")
     }
 
-    ensureOwner(analysis.userId, oturum)
+    ensureOwner(analysis.userId, session)
 
     // analysisId benzersiz: bir analizin tek uyarlaması olur (spec §5).
     // Varsa yeniden çalıştırmak yerine mevcut kaydı döndürüyoruz.
-    const mevcut = await prisma.adaptation.findUnique({ where: { analysisId } })
-    if (mevcut) return NextResponse.json({ adaptationId: mevcut.id })
+    const existing = await prisma.adaptation.findUnique({ where: { analysisId } })
+    if (existing) return NextResponse.json({ adaptationId: existing.id })
 
     const adaptation = await prisma.adaptation.create({
       data: { analysisId, draft: {}, modelId: analysis.modelId, status: "running" },
@@ -52,8 +52,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ adaptationId: adaptation.id })
   } catch (error) {
-    const yetkiYaniti = authErrorResponse(error)
-    if (yetkiYaniti) return yetkiYaniti
+    const authResponse = authErrorResponse(error)
+    if (authResponse) return authResponse
     if (error instanceof PermanentError) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: 400 })
     }

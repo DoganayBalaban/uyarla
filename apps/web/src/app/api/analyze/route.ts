@@ -38,16 +38,16 @@ export async function POST(request: Request) {
     // Oturum yoksa anonim aç. Sayfa yüklenince değil burada: her ziyaretçiye
     // kullanıcı kaydı açmanın anlamı yok, sadece iş üretenlere gerekiyor
     // (spec §7).
-    let oturum = await getSession()
-    if (!oturum) {
+    let session = await getSession()
+    if (!session) {
       // signInAnonymous'un kendi yanıtı kullanılıyor. getSession'ı tekrar
       // çağırmak işe yaramıyor: o İSTEK başlıklarını okuyor ve yeni çerez
       // henüz orada değil — nextCookies onu YANITA yazıyor, yani ancak
       // sonraki istekte görünür hâle geliyor.
-      const yeni = await auth.api.signInAnonymous({ headers: await headers() })
-      oturum = yeni?.user ? { user: { id: yeni.user.id, isAnonymous: true } } : null
+      const fresh = await auth.api.signInAnonymous({ headers: await headers() })
+      session = fresh?.user ? { user: { id: fresh.user.id, isAnonymous: true } } : null
     }
-    const { user } = ensureSession(oturum)
+    const { user } = ensureSession(session)
 
     // Pahalı uç: her çağrı ~60 saniyelik LLM işi başlatıyor (spec §9).
     await enforceRateLimit(
@@ -72,8 +72,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ jobId: job.id })
   } catch (error) {
-    const yetkiYaniti = authErrorResponse(error)
-    if (yetkiYaniti) return yetkiYaniti
+    const authResponse = authErrorResponse(error)
+    if (authResponse) return authResponse
     if (error instanceof PermanentError) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: 400 })
     }

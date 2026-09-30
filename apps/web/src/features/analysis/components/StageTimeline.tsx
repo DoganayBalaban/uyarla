@@ -22,86 +22,86 @@ export type { Stage as Asama, StageState as AsamaDurumu }
  */
 
 
-const DURUM: Record<StageState, { etiket: string; renk: string; zemin: string }> = {
-  pending: { etiket: "Sırada", renk: "text-gri", zemin: "bg-kart border-cizgi" },
-  active: { etiket: "Çalışıyor", renk: "text-mavi dark:text-[#8ea2ff]", zemin: "bg-mavi/10 border-mavi/50" },
-  done: { etiket: "Tamam", renk: "text-yesil dark:text-[#4ade80]", zemin: "bg-yesil/10 border-yesil/50" },
-  error: { etiket: "Olmadı", renk: "text-kirmizi dark:text-[#f87171]", zemin: "bg-kirmizi/10 border-kirmizi/50" },
+const STATE_STYLE: Record<StageState, { label: string; textClass: string; bgClass: string }> = {
+  pending: { label: "Sırada", textClass: "text-gri", bgClass: "bg-kart border-cizgi" },
+  active: { label: "Çalışıyor", textClass: "text-mavi dark:text-[#8ea2ff]", bgClass: "bg-mavi/10 border-mavi/50" },
+  done: { label: "Tamam", textClass: "text-yesil dark:text-[#4ade80]", bgClass: "bg-yesil/10 border-yesil/50" },
+  error: { label: "Olmadı", textClass: "text-kirmizi dark:text-[#f87171]", bgClass: "bg-kirmizi/10 border-kirmizi/50" },
 }
 
-function DurumIkonu({ durum, className }: { durum: StageState; className?: string }) {
+function StateIcon({ state, className }: { state: StageState; className?: string }) {
   const p = { className: cn("size-3.5", className), strokeWidth: 2.4, "aria-hidden": true } as const
-  if (durum === "done") return <Check {...p} />
-  if (durum === "error") return <TriangleAlert {...p} />
-  if (durum === "active") return <LoaderCircle {...p} className={cn(p.className, "motion-safe:animate-spin")} />
+  if (state === "done") return <Check {...p} />
+  if (state === "error") return <TriangleAlert {...p} />
+  if (state === "active") return <LoaderCircle {...p} className={cn(p.className, "motion-safe:animate-spin")} />
   return <Clock {...p} />
 }
 
-function Isaretci({ durum, azHareket }: { durum: StageState; azHareket: boolean }) {
-  const d = DURUM[durum]
+function StepMarker({ state, reducedMotion }: { state: StageState; reducedMotion: boolean }) {
+  const d = STATE_STYLE[state]
   return (
     <span
       aria-hidden
-      className={cn("relative grid size-8 shrink-0 place-items-center rounded-full border-2", d.zemin, d.renk)}
+      className={cn("relative grid size-8 shrink-0 place-items-center rounded-full border-2", d.bgClass, d.textClass)}
     >
-      {durum === "active" && !azHareket && (
+      {state === "active" && !reducedMotion && (
         <motion.span
           className="absolute inset-0 rounded-full border-2 border-current"
           animate={{ scale: [1, 1.7], opacity: [0.5, 0] }}
           transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }}
         />
       )}
-      <DurumIkonu durum={durum} className="size-4" />
+      <StateIcon state={state} className="size-4" />
     </span>
   )
 }
 
-export function AsamaCizelgesi({
-  baslik,
-  altBaslik,
-  asamalar,
+export function StageTimeline({
+  heading,
+  subtitle,
+  stages,
   className,
 }: {
-  baslik: string
-  altBaslik?: string
-  asamalar: Stage[]
+  heading: string
+  subtitle?: string
+  stages: Stage[]
   className?: string
 }) {
-  const azHareket = useReducedMotion() ?? false
-  const bitenSayisi = asamalar.filter((a) => a.status === "done").length
+  const reducedMotion = useReducedMotion() ?? false
+  const doneCount = stages.filter((a) => a.status === "done").length
 
   return (
     <section
       className={cn("rounded-kart border border-cizgi bg-kart p-5 shadow-sm sm:p-6", className)}
-      aria-label={baslik}
+      aria-label={heading}
     >
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <h2 className="m-0 text-lg">{baslik}</h2>
-          {altBaslik && <p className="m-0 mt-1 text-sm text-gri">{altBaslik}</p>}
+          <h2 className="m-0 text-lg">{heading}</h2>
+          {subtitle && <p className="m-0 mt-1 text-sm text-gri">{subtitle}</p>}
         </div>
         <span className="shrink-0 rounded-full bg-zemin px-2.5 py-1 text-xs font-semibold tabular-nums text-gri">
-          {bitenSayisi}/{asamalar.length}
+          {doneCount}/{stages.length}
         </span>
       </header>
 
       <ol className="m-0 list-none p-0">
         <AnimatePresence initial={false}>
-          {asamalar.map((a, i) => {
-            const d = DURUM[a.status]
-            const son = i === asamalar.length - 1
+          {stages.map((a, i) => {
+            const d = STATE_STYLE[a.status]
+            const last = i === stages.length - 1
             return (
               <motion.li
                 key={a.id}
-                initial={azHareket ? false : { opacity: 0, y: 8 }}
+                initial={reducedMotion ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.26, delay: azHareket ? 0 : i * 0.05, ease: [0.2, 0, 0, 1] }}
+                transition={{ duration: 0.26, delay: reducedMotion ? 0 : i * 0.05, ease: [0.2, 0, 0, 1] }}
                 className="relative flex gap-3"
                 aria-current={a.status === "active" ? "step" : undefined}
               >
                 <div className="flex flex-col items-center">
-                  <Isaretci durum={a.status} azHareket={azHareket} />
-                  {!son && (
+                  <StepMarker state={a.status} reducedMotion={reducedMotion} />
+                  {!last && (
                     <span
                       aria-hidden
                       className={cn(
@@ -111,7 +111,7 @@ export function AsamaCizelgesi({
                     />
                   )}
                 </div>
-                <div className={cn("min-w-0 flex-1", son ? "pb-0" : "pb-5")}>
+                <div className={cn("min-w-0 flex-1", last ? "pb-0" : "pb-5")}>
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-1">
                     <span
                       className={cn(
@@ -124,12 +124,12 @@ export function AsamaCizelgesi({
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold",
-                        d.zemin,
-                        d.renk,
+                        d.bgClass,
+                        d.textClass,
                       )}
                     >
-                      <DurumIkonu durum={a.status} className="size-3" />
-                      {d.etiket}
+                      <StateIcon state={a.status} className="size-3" />
+                      {d.label}
                     </span>
                   </div>
                   {a.description && <p className="m-0 mt-0.5 text-sm text-gri">{a.description}</p>}

@@ -37,7 +37,7 @@ describe("ensureRegistered", () => {
       throw new Error("fırlatmalıydı")
     } catch (e) {
       expect((e as AuthError).status).toBe(401)
-      expect((e as AuthError).code).toBe("kayit_gerekli")
+      expect((e as AuthError).code).toBe("registration_required")
       expect((e as AuthError).message).toMatch(/e-posta/i)
     }
   })

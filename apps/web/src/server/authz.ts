@@ -22,7 +22,7 @@ export class AuthError extends Error {
 export function ensureSession(session: AppSession | null): AppSession {
   // Mesajlar spec §10'daki tablodan; marka rehberi §6 tonunda.
   if (!session) {
-    throw new AuthError("Devam etmek için giriş yapman gerekiyor.", 401, "oturum_yok")
+    throw new AuthError("Devam etmek için giriş yapman gerekiyor.", 401, "no_session")
   }
   return session
 }
@@ -34,7 +34,7 @@ export function ensureRegistered(session: AppSession | null): AppSession {
     throw new AuthError(
       "CV'ni uyarlamak için e-postanı bırakman yeterli.",
       401,
-      "kayit_gerekli",
+      "registration_required",
     )
   }
   return currentSession
@@ -53,7 +53,7 @@ export function ensureRegistered(session: AppSession | null): AppSession {
 export function ensureOwner(ownerId: string | null, session: AppSession | null): AppSession {
   const currentSession = ensureSession(session)
   if (!ownerId || ownerId !== currentSession.user.id) {
-    throw new AuthError("Bulunamadı.", 404, "bulunamadi")
+    throw new AuthError("Bulunamadı.", 404, "not_found")
   }
   return currentSession
 }

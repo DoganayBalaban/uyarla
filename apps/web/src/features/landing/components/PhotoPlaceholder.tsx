@@ -1,4 +1,4 @@
-import { Ikon } from "@/features/landing/components/Icon"
+import { Icon } from "@/features/landing/components/Icon"
 import s from "@/features/landing/landing.module.css"
 
 /**
@@ -9,31 +9,31 @@ import s from "@/features/landing/landing.module.css"
  * değiştirilecek; `aciklama` hangi karenin beklendiğini söylüyor
  * (marka rehberi §9.4: doğal ışık, gerçek mekân, stok takım elbise yok).
  */
-export function FotoYeri({
+export function PhotoPlaceholder({
   id,
-  oran,
-  aciklama,
+  ratio,
+  description,
   className,
 }: {
   id: string
   /** CSS aspect-ratio, ör. "4 / 5". */
-  oran: string
-  aciklama: string
+  ratio: string
+  description: string
   className?: string
 }) {
   return (
     <div
       id={id}
       className={`${s.fotoYeri} ${className ?? ""}`}
-      style={{ aspectRatio: oran }}
+      style={{ aspectRatio: ratio }}
       role="img"
-      aria-label={`Fotoğraf yeri: ${aciklama}`}
+      aria-label={`Fotoğraf yeri: ${description}`}
     >
       <div className={s.fotoYeriIc}>
-        <Ikon ad="resim" boyut={26} />
+        <Icon name="image" size={26} />
         <span className={s.fotoYeriEtiket}>{id}</span>
-        <span className={s.fotoYeriAciklama}>{aciklama}</span>
-        <span className={s.fotoYeriOran}>{oran.replace(/\s/g, "")}</span>
+        <span className={s.fotoYeriAciklama}>{description}</span>
+        <span className={s.fotoYeriOran}>{ratio.replace(/\s/g, "")}</span>
       </div>
     </div>
   )

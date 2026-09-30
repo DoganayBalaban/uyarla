@@ -20,35 +20,35 @@ export async function PATCH(
     return NextResponse.json({ error: "Geçersiz karar." }, { status: 400 })
   }
 
-  const yuk = await loadAdaptation(id)
-  if (!yuk?.draft) {
+  const payload = await loadAdaptation(id)
+  if (!payload?.draft) {
     return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
   }
 
   try {
-    ensureOwner(yuk.ownerId, await getSession())
+    ensureOwner(payload.ownerId, await getSession())
   } catch (error) {
-    const yanit = authErrorResponse(error)
-    if (yanit) return yanit
+    const reply = authErrorResponse(error)
+    if (reply) return reply
     throw error
   }
 
-  let yeni
+  let fresh
   try {
-    yeni = applyDecision(yuk.draft, itemId, decision)
+    fresh = applyDecision(payload.draft, itemId, decision)
   } catch {
     return NextResponse.json({ error: "Madde bulunamadı." }, { status: 404 })
   }
 
-  const status = nextStatus(yeni)
+  const status = nextStatus(fresh)
   await prisma.adaptation.update({
     where: { id },
-    data: { draft: AdaptationDraftSchema.parse(yeni) as unknown as object, status },
+    data: { draft: AdaptationDraftSchema.parse(fresh) as unknown as object, status },
   })
 
   return NextResponse.json({
     status,
-    draft: yeni,
-    scoreAfter: await computeScoreAfter(yuk.profile, yuk.posting, yeni),
+    draft: fresh,
+    scoreAfter: await computeScoreAfter(payload.profile, payload.posting, fresh),
   })
 }

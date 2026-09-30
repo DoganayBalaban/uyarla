@@ -82,7 +82,7 @@ export interface CleanupOptions {
  */
 export async function cleanupAnonymousUsers(
   prisma: Db,
-  { now: nowDate = new Date(), days: dayCount = RETENTION_DAYS, dryRun: dryRun = false }: CleanupOptions = {},
+  { now: nowDate = new Date(), days: dayCount = RETENTION_DAYS, dryRun = false }: CleanupOptions = {},
 ): Promise<CleanupResult> {
   const condition = staleAnonymousWhere(nowDate, dayCount)
 

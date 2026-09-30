@@ -18,38 +18,38 @@ import { cn } from "@/lib/cn"
  * tarayıcının "zorunlu alan" doğrulaması olduğu gibi çalışıyor.
  */
 
-const KABUL = [".pdf", ".docx"]
+const ACCEPT = [".pdf", ".docx"]
 
-function boyut(bayt: number): string {
-  if (bayt < 1024 * 1024) return `${Math.max(1, Math.round(bayt / 1024))} KB`
-  return `${(bayt / 1024 / 1024).toFixed(1)} MB`
+function sizePx(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
-export function CvYukleme({ name = "cv" }: { name?: string }) {
-  const girdi = useRef<HTMLInputElement>(null)
-  const [dosya, setDosya] = useState<File | null>(null)
-  const [surukleniyor, setSurukleniyor] = useState(false)
-  const [hata, setHata] = useState<string | null>(null)
+export function ResumeUpload({ name = "cv" }: { name?: string }) {
+  const inputValue = useRef<HTMLInputElement>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [dragging, setDragging] = useState(false)
+  const [error, setErrorMessage] = useState<string | null>(null)
 
-  function sec(yeni: File | null) {
-    setHata(null)
-    if (!yeni) return
-    const uzanti = `.${yeni.name.toLowerCase().split(".").pop()}`
-    if (!KABUL.includes(uzanti)) {
-      setHata("Yalnızca PDF ve DOCX dosyalarını okuyabiliyoruz.")
+  function select(fresh: File | null) {
+    setErrorMessage(null)
+    if (!fresh) return
+    const extension = `.${fresh.name.toLowerCase().split(".").pop()}`
+    if (!ACCEPT.includes(extension)) {
+      setErrorMessage("Yalnızca PDF ve DOCX dosyalarını okuyabiliyoruz.")
       return
     }
-    if (girdi.current) {
+    if (inputValue.current) {
       const dt = new DataTransfer()
-      dt.items.add(yeni)
-      girdi.current.files = dt.files
+      dt.items.add(fresh)
+      inputValue.current.files = dt.files
     }
-    setDosya(yeni)
+    setFile(fresh)
   }
 
-  function kaldir() {
-    if (girdi.current) girdi.current.value = ""
-    setDosya(null)
+  function remove() {
+    if (inputValue.current) inputValue.current.value = ""
+    setFile(null)
   }
 
   return (
@@ -58,20 +58,20 @@ export function CvYukleme({ name = "cv" }: { name?: string }) {
         htmlFor="cv"
         onDragOver={(e) => {
           e.preventDefault()
-          setSurukleniyor(true)
+          setDragging(true)
         }}
-        onDragLeave={() => setSurukleniyor(false)}
+        onDragLeave={() => setDragging(false)}
         onDrop={(e) => {
           e.preventDefault()
-          setSurukleniyor(false)
-          sec(e.dataTransfer.files[0] ?? null)
+          setDragging(false)
+          select(e.dataTransfer.files[0] ?? null)
         }}
         className={cn(
           "group relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-kart border-2 border-dashed px-6 py-8 text-center transition-colors",
-          surukleniyor
+          dragging
             ? "border-mavi bg-mavi/5"
             : "border-cizgi bg-zemin/60 hover:border-mavi/60 hover:bg-mavi/[0.03]",
-          dosya && "sr-only",
+          file && "sr-only",
         )}
       >
         <span className="grid size-11 place-items-center rounded-full bg-kart text-mavi shadow-sm ring-1 ring-cizgi transition-transform group-hover:-translate-y-0.5 dark:text-[#8ea2ff]">
@@ -82,19 +82,19 @@ export function CvYukleme({ name = "cv" }: { name?: string }) {
         </span>
         <span className="text-sm text-gri">PDF veya Word (DOCX) · en fazla 10 MB</span>
         <input
-          ref={girdi}
+          ref={inputValue}
           id="cv"
           name={name}
           type="file"
-          accept={KABUL.join(",")}
+          accept={ACCEPT.join(",")}
           required
-          onChange={(e) => sec(e.target.files?.[0] ?? null)}
+          onChange={(e) => select(e.target.files?.[0] ?? null)}
           className="sr-only"
         />
       </label>
 
       <AnimatePresence>
-        {dosya && (
+        {file && (
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -105,12 +105,12 @@ export function CvYukleme({ name = "cv" }: { name?: string }) {
               <FileText className="size-5" aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="m-0 truncate font-semibold">{dosya.name}</p>
-              <p className="m-0 text-xs text-gri">{boyut(dosya.size)} · hazır</p>
+              <p className="m-0 truncate font-semibold">{file.name}</p>
+              <p className="m-0 text-xs text-gri">{sizePx(file.size)} · hazır</p>
             </div>
             <button
               type="button"
-              onClick={kaldir}
+              onClick={remove}
               className="grid size-8 place-items-center rounded-full text-gri transition-colors hover:bg-zemin hover:text-metin"
               aria-label="Dosyayı kaldır"
             >
@@ -120,7 +120,7 @@ export function CvYukleme({ name = "cv" }: { name?: string }) {
         )}
       </AnimatePresence>
 
-      {hata && <p className="mt-2 text-sm text-kehribar">{hata}</p>}
+      {error && <p className="mt-2 text-sm text-kehribar">{error}</p>}
     </div>
   )
 }

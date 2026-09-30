@@ -5,14 +5,14 @@ import { signIn } from "@/lib/authClient"
 import { loginPath } from "@/lib/returnPath"
 import type { Provider } from "@/features/auth/providers"
 
-const ETIKET: Record<Provider, string> = {
+const LABEL: Record<Provider, string> = {
   google: "Google",
   linkedin: "LinkedIn",
   github: "GitHub",
 }
 
 /** Marka ikonları; her sağlayıcının kendi logosu, kendi renginde. */
-function SaglayiciIkon({ s }: { s: Provider }) {
+function ProviderIcon({ s }: { s: Provider }) {
   if (s === "google") {
     return (
       <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
@@ -52,30 +52,30 @@ function SaglayiciIkon({ s }: { s: Provider }) {
  * Giriş başarısız olursa dönülecek adres: yine giriş ekranı, ama dönüş
  * adresini kaybetmeden.
  */
-export function girisHataAdresi(donus: string): string {
-  return loginPath(donus)
+export function girisHataAdresi(returnTo: string): string {
+  return loginPath(returnTo)
 }
 
-export function SosyalGiris({ acik, donus }: { acik: Provider[]; donus: string }) {
-  const [bekleyen, setBekleyen] = useState<Provider | null>(null)
-  const [mesaj, setMesaj] = useState<string | null>(null)
+export function SocialLogin({ open, returnTo }: { open: Provider[]; returnTo: string }) {
+  const [pendingCount, setPendingCount] = useState<Provider | null>(null)
+  const [messageText, setMessageText] = useState<string | null>(null)
 
-  async function giris(s: Provider) {
-    setMesaj(null)
-    if (!acik.includes(s)) {
-      setMesaj(`${ETIKET[s]} ile giriş yakında. Şimdilik e-postanla devam edebilirsin.`)
+  async function login(s: Provider) {
+    setMessageText(null)
+    if (!open.includes(s)) {
+      setMessageText(`${LABEL[s]} ile giriş yakında. Şimdilik e-postanla devam edebilirsin.`)
       return
     }
-    setBekleyen(s)
+    setPendingCount(s)
     const { error } = await signIn.social({
       provider: s,
-      callbackURL: donus,
-      errorCallbackURL: girisHataAdresi(donus),
+      callbackURL: returnTo,
+      errorCallbackURL: girisHataAdresi(returnTo),
     })
     // Başarılıysa tarayıcı sağlayıcıya yönleniyor; buraya yalnızca hata düşer.
     if (error) {
-      setMesaj(`${ETIKET[s]} ile giriş başlatılamadı. Birazdan tekrar dener misin?`)
-      setBekleyen(null)
+      setMessageText(`${LABEL[s]} ile giriş başlatılamadı. Birazdan tekrar dener misin?`)
+      setPendingCount(null)
     }
   }
 
@@ -86,23 +86,23 @@ export function SosyalGiris({ acik, donus }: { acik: Provider[]; donus: string }
           <button
             key={s}
             type="button"
-            onClick={() => void giris(s)}
-            disabled={bekleyen !== null}
-            aria-label={`${ETIKET[s]} ile devam et`}
+            onClick={() => void login(s)}
+            disabled={pendingCount !== null}
+            aria-label={`${LABEL[s]} ile devam et`}
             className="flex items-center justify-center gap-2 rounded-2xl border border-cizgi px-3 py-3.5 text-sm font-semibold text-metin transition hover:-translate-y-px hover:border-metin/25 hover:bg-zemin disabled:translate-y-0 disabled:opacity-60 dark:hover:bg-white/5"
           >
-            {bekleyen === s ? (
+            {pendingCount === s ? (
               <span className="size-5 animate-spin rounded-full border-2 border-cizgi border-t-mavi" />
             ) : (
-              <SaglayiciIkon s={s} />
+              <ProviderIcon s={s} />
             )}
-            <span className="hidden sm:inline">{ETIKET[s]}</span>
+            <span className="hidden sm:inline">{LABEL[s]}</span>
           </button>
         ))}
       </div>
-      {mesaj && (
+      {messageText && (
         <p role="status" className="mt-3 text-sm text-gri">
-          {mesaj}
+          {messageText}
         </p>
       )}
     </div>

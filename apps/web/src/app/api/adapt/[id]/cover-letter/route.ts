@@ -23,35 +23,35 @@ export async function POST(
   const { id } = await params
   try {
     // Kayıt kontrolü kaynağı aramadan önce (bkz. POST /api/adapt).
-    const oturum = ensureRegistered(await getSession())
+    const session = ensureRegistered(await getSession())
 
-    const yuk = await loadAdaptation(id)
-    if (!yuk) return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
-    ensureOwner(yuk.ownerId, oturum)
+    const payload = await loadAdaptation(id)
+    if (!payload) return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
+    ensureOwner(payload.ownerId, session)
 
-    if (yuk.adaptation.status !== "draft" && yuk.adaptation.status !== "ready") {
+    if (payload.adaptation.status !== "draft" && payload.adaptation.status !== "ready") {
       return NextResponse.json(
-        { error: "Uyarlama tamamlanınca ön yazı hazırlayabilirsin.", code: "uyarlama_hazir_degil" },
+        { error: "Uyarlama tamamlanınca ön yazı hazırlayabilirsin.", code: "adaptation_not_ready" },
         { status: 400 },
       )
     }
 
-    const mevcut = yuk.adaptation.coverLetter as CoverLetterRecord | null
-    if (mevcut?.status === "running") {
-      return NextResponse.json({ coverLetter: mevcut }, { status: 202 })
+    const existing = payload.adaptation.coverLetter as CoverLetterRecord | null
+    if (existing?.status === "running") {
+      return NextResponse.json({ coverLetter: existing }, { status: 202 })
     }
 
     // Pahalı uç: her çağrı bir LLM üretimi (spec §9).
-    await enforceRateLimit(redisStore, `onyazi:${oturum.user.id}`, RATE_LIMITS.registered)
+    await enforceRateLimit(redisStore, `onyazi:${session.user.id}`, RATE_LIMITS.registered)
 
-    const kayit: CoverLetterRecord = { status: "running" }
-    await prisma.adaptation.update({ where: { id }, data: { coverLetter: kayit } })
+    const record: CoverLetterRecord = { status: "running" }
+    await prisma.adaptation.update({ where: { id }, data: { coverLetter: record } })
     await adaptQueue.add(COVER_LETTER_JOB, { adaptationId: id }, ADAPT_JOB_OPTIONS)
 
-    return NextResponse.json({ coverLetter: kayit }, { status: 202 })
+    return NextResponse.json({ coverLetter: record }, { status: 202 })
   } catch (error) {
-    const yanit = authErrorResponse(error)
-    if (yanit) return yanit
+    const reply = authErrorResponse(error)
+    if (reply) return reply
     console.error("[api/adapt/[id]/cover-letter]", error)
     return NextResponse.json(
       { error: "Bir şeyler ters gitti. Birazdan tekrar dener misin?" },

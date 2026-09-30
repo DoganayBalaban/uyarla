@@ -56,7 +56,7 @@ export async function enforceRateLimit(
     throw new AuthError(
       "Çok hızlı gidiyoruz. Bir saat sonra tekrar dener misin?",
       429,
-      "limit_asildi",
+      "rate_limited",
     )
   }
 }

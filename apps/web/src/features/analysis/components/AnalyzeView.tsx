@@ -23,13 +23,13 @@ import {
   resultPath,
   handleResponse,
 } from "@/features/analysis/activeAnalysis"
-import { SayfaBasligi } from "@/components/layout/PageShell"
-import { AsamaCizelgesi } from "@/features/analysis/components/StageTimeline"
-import { CvYukleme } from "@/features/analysis/components/ResumeUpload"
-import { SkorSonucu, type ScoreResultView } from "@/features/analysis/components/ScoreResult"
+import { PageHeader } from "@/components/layout/PageShell"
+import { StageTimeline as StageTimeline } from "@/features/analysis/components/StageTimeline"
+import { ResumeUpload as ResumeUpload } from "@/features/analysis/components/ResumeUpload"
+import { ScoreResult as ScoreResult, type ScoreResultView } from "@/features/analysis/components/ScoreResult"
 
 /** Marka rehberi §10.2'deki yükleme metinleri; aşama çizelgesinin satırları. */
-const ASAMALAR = [
+const STAGES = [
   { id: "reading_resume", title: "CV'ni okuyoruz", description: "Deneyim, eğitim ve becerilerin ayrıştırılıyor." },
   { id: "reading_posting", title: "İlanı okuyoruz", description: "Gereksinimler ve aranan kavramlar çıkarılıyor." },
   { id: "comparing", title: "İlanla karşılaştırıyoruz", description: "Her gereksinim CV'nde kanıtıyla aranıyor." },
@@ -46,18 +46,18 @@ interface AnalysisResponse {
   result?: ScoreResultView | null
 }
 
-const girdiSinifi =
+const inputClass =
   "w-full rounded-buton border border-cizgi bg-kart px-3.5 py-2.5 text-sm text-metin outline-none transition placeholder:text-gri/70 focus:border-mavi focus:ring-4 focus:ring-mavi/15"
 
-function AdimBasligi({ no, baslik, aciklama }: { no: number; baslik: string; aciklama: string }) {
+function StepHeading({ number, heading, hint }: { number: number; heading: string; hint: string }) {
   return (
     <div className="mb-3 flex items-start gap-3">
       <span className="grid size-7 shrink-0 place-items-center rounded-full bg-mavi text-sm font-bold text-white">
-        {no}
+        {number}
       </span>
       <div>
-        <p className="m-0 font-semibold">{baslik}</p>
-        <p className="m-0 text-sm text-gri">{aciklama}</p>
+        <p className="m-0 font-semibold">{heading}</p>
+        <p className="m-0 text-sm text-gri">{hint}</p>
       </div>
     </div>
   )
@@ -67,74 +67,74 @@ export function AnalyzeView() {
   const [state, setState] = useState<AnalysisResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const ilanKutusu = useRef<HTMLTextAreaElement>(null)
-  const [ilanUrl, setIlanUrl] = useState("")
-  const [ilanDurumu, setIlanDurumu] = useState<
-    { tur: "yukleniyor" } | { tur: "tamam"; metin: string } | { tur: "hata"; metin: string } | null
+  const postingBox = useRef<HTMLTextAreaElement>(null)
+  const [postingUrl, setPostingUrl] = useState("")
+  const [postingState, setPostingState] = useState<
+    { kind: "loading" } | { kind: "done"; text: string } | { kind: "error"; text: string } | null
   >(null)
 
   /**
    * İlan bağlantısından metni alıp kutuya doldurur. Kutu düzenlenebilir
    * kalıyor: çekilen metinde gereksiz kısım varsa kullanıcı silebilir.
    */
-  async function ilaniGetir() {
-    if (!ilanUrl.trim()) return
-    setIlanDurumu({ tur: "yukleniyor" })
+  async function fetchPosting() {
+    if (!postingUrl.trim()) return
+    setPostingState({ kind: "loading" })
     try {
-      const cevap = await fetch("/api/job-url", {
+      const res = await fetch("/api/job-url", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url: ilanUrl }),
+        body: JSON.stringify({ url: postingUrl }),
       })
-      const govde = (await cevap.json()) as { metin?: string; pozisyon?: string | null; error?: string }
-      if (!cevap.ok || !govde.metin) {
-        setIlanDurumu({ tur: "hata", metin: govde.error ?? "İlanı alamadık." })
+      const parsed = (await res.json()) as { text?: string; position?: string | null; error?: string }
+      if (!res.ok || !parsed.text) {
+        setPostingState({ kind: "error", text: parsed.error ?? "İlanı alamadık." })
         return
       }
-      if (ilanKutusu.current) ilanKutusu.current.value = govde.metin
-      setIlanDurumu({
-        tur: "tamam",
-        metin: `${govde.pozisyon ? `“${govde.pozisyon}” ilanı` : "İlan metni"} aşağıya eklendi. Göndermeden önce göz atabilirsin.`,
+      if (postingBox.current) postingBox.current.value = parsed.text
+      setPostingState({
+        kind: "done",
+        text: `${parsed.position ? `“${parsed.position}” ilanı` : "İlan metni"} aşağıya eklendi. Göndermeden önce göz atabilirsin.`,
       })
     } catch {
-      setIlanDurumu({ tur: "hata", metin: "Sunucuya ulaşamadık. Metni kopyalayıp yapıştırır mısın?" })
+      setPostingState({ kind: "error", text: "Sunucuya ulaşamadık. Metni kopyalayıp yapıştırır mısın?" })
     }
   }
-  const [devamEdiliyor, setDevamEdiliyor] = useState(false)
-  const devamBasladi = useRef(false)
+  const [resuming, setResuming] = useState(false)
+  const resumeStarted = useRef(false)
 
   // Girişten dönüş: `?uyarla=<analiz>` varsa uyarlamayı başlat. Ref, React'in
   // geliştirme modunda efekti iki kez çalıştırmasına karşı: iki uyarlama
   // isteği gitmesin.
   useEffect(() => {
-    const parametreler = new URLSearchParams(window.location.search)
-    const analysisId = parametreler.get("uyarla")
-    if (analysisId && !devamBasladi.current) {
-      devamBasladi.current = true
-      setDevamEdiliyor(true)
-      void uyarla(analysisId)
+    const searchParams2 = new URLSearchParams(window.location.search)
+    const analysisId = searchParams2.get("uyarla")
+    if (analysisId && !resumeStarted.current) {
+      resumeStarted.current = true
+      setResuming(true)
+      void adapt(analysisId)
       return
     }
 
     // Kalıcı sonuç adresi: `?analiz=<id>`. Sayfa yenilense de, panodan ya da
     // sağ alttaki bildirimden gelinse de sonuç buradan açılıyor (K3).
-    const kalici = parametreler.get("analiz")
-    if (kalici) {
-      void sonucuYukle(kalici)
+    const permanent = searchParams2.get("analiz")
+    if (permanent) {
+      void loadResult(permanent)
       return
     }
 
     // Başka sayfaya geçip "Analize dön" ile gelindi: süren analiz kaldığı
     // yerden izleniyor, bitmiş ama görülmemiş sonuç gösteriliyor.
-    const aktif = readActiveAnalysis()
-    if (aktif?.status === "running") {
-      setState({ status: "running", stage: aktif.stage })
+    const isActive = readActiveAnalysis()
+    if (isActive?.status === "running") {
+      setState({ status: "running", stage: isActive.stage })
       setBusy(true)
-      poll(aktif.jobId)
-    } else if (aktif?.status === "completed" && aktif.analysisId && !aktif.seen) {
-      void sonucuYukle(aktif.analysisId)
-    } else if (aktif?.status === "failed" && !aktif.seen) {
-      setError(aktif.error ?? "Analiz tamamlanamadı.")
+      poll(isActive.jobId)
+    } else if (isActive?.status === "completed" && isActive.analysisId && !isActive.seen) {
+      void loadResult(isActive.analysisId)
+    } else if (isActive?.status === "failed" && !isActive.seen) {
+      setError(isActive.error ?? "Analiz tamamlanamadı.")
       clearActiveAnalysis()
     }
     // uyarla ve poll her çizimde yeniden tanımlanıyor; efekt yalnızca ilk açılışta.
@@ -142,24 +142,24 @@ export function AnalyzeView() {
   }, [])
 
   // Sayfadan ayrılınca yoklama duruyor; izlemeyi sağ alttaki bildirim devralıyor.
-  const yoklama = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   useEffect(() => () => {
-    if (yoklama.current) clearInterval(yoklama.current)
+    if (pollRef.current) clearInterval(pollRef.current)
   }, [])
 
-  async function sonucuYukle(analysisId: string) {
+  async function loadResult(analysisId: string) {
     setState({ status: "running" })
     try {
-      const cevap = await fetch(`/api/analysis/${encodeURIComponent(analysisId)}`)
-      if (!cevap.ok) {
+      const res = await fetch(`/api/analysis/${encodeURIComponent(analysisId)}`)
+      if (!res.ok) {
         setState(null)
         setError("Bu analizi bulamadık. Yeni bir analiz başlatabilirsin.")
         return
       }
-      const govde = (await cevap.json()) as AnalysisResponse
-      setState(govde)
-      const aktif = readActiveAnalysis()
-      if (aktif?.analysisId === analysisId) updateActiveAnalysis(aktif.jobId, { seen: true })
+      const parsed = (await res.json()) as AnalysisResponse
+      setState(parsed)
+      const isActive = readActiveAnalysis()
+      if (isActive?.analysisId === analysisId) updateActiveAnalysis(isActive.jobId, { seen: true })
     } catch {
       setState(null)
       setError("Sonucu alamadık. Sayfayı yenileyip tekrar dener misin?")
@@ -167,20 +167,20 @@ export function AnalyzeView() {
   }
 
   /** Uyarlamayı başlatır ve uyarlama ekranına geçer. */
-  async function uyarla(analysisId: string) {
+  async function adapt(analysisId: string) {
     setBusy(true)
-    const cevap = await fetch("/api/adapt", {
+    const res = await fetch("/api/adapt", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ analysisId }),
     })
-    const govde = (await cevap.json()) as {
+    const parsed = (await res.json()) as {
       adaptationId?: string
       error?: string
       code?: string
     }
-    if (cevap.ok && govde.adaptationId) {
-      window.location.href = `/adapt/${govde.adaptationId}`
+    if (res.ok && parsed.adaptationId) {
+      window.location.href = `/adapt/${parsed.adaptationId}`
       return
     }
     // Anonim kullanıcı uyarlama isteyince kayıt gerekiyor (spec §7). Hata
@@ -189,13 +189,13 @@ export function AnalyzeView() {
     // uyarlama kendiliğinden başlıyor ve kullanıcı işine kaldığı yerden
     // devam ediyor. Analiz kimliği kayıtta değişmiyor, yalnızca sahibi
     // anonim kullanıcıdan yeni hesaba geçiyor (src/server/claimAnonymousData.ts).
-    if (govde.code === "kayit_gerekli") {
+    if (parsed.code === "registration_required") {
       window.location.href = loginPath(`/analyze?uyarla=${encodeURIComponent(analysisId)}`)
       return
     }
-    setError(govde.error ?? "Uyarlama başlatılamadı.")
+    setError(parsed.error ?? "Uyarlama başlatılamadı.")
     setBusy(false)
-    setDevamEdiliyor(false)
+    setResuming(false)
   }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -229,7 +229,7 @@ export function AnalyzeView() {
   }
 
   function poll(jobId: string) {
-    if (yoklama.current) clearInterval(yoklama.current)
+    if (pollRef.current) clearInterval(pollRef.current)
     const timer = setInterval(async () => {
       try {
         const response = await fetch(`/api/analyze/${jobId}`)
@@ -260,11 +260,11 @@ export function AnalyzeView() {
         // Ağ kesintisi: bir sonraki turda tekrar denenir.
       }
     }, 1000)
-    yoklama.current = timer
+    pollRef.current = timer
   }
 
-  function basaDon() {
-    if (yoklama.current) clearInterval(yoklama.current)
+  function startOver() {
+    if (pollRef.current) clearInterval(pollRef.current)
     clearActiveAnalysis()
     window.history.replaceState(null, "", "/analyze")
     setState(null)
@@ -273,12 +273,12 @@ export function AnalyzeView() {
   }
 
   // Sonuç geldiğinde form gizleniyor: ekranda tek iş olsun.
-  const sonucVar = state?.status === "completed" && state.result
-  const calisiyor = state?.status === "running"
+  const hasResult = state?.status === "completed" && state.result
+  const running = state?.status === "running"
 
   // Girişten dönüşte form bir an bile görünmesin; başarılıysa sayfa
   // uyarlama ekranına geçiyor, değilse hata ile birlikte form geri geliyor.
-  if (devamEdiliyor) {
+  if (resuming) {
     return (
       <div className="mx-auto max-w-md rounded-kart border border-cizgi bg-kart p-10 text-center shadow-sm">
         <LoaderCircle className="mx-auto size-8 text-mavi motion-safe:animate-spin" aria-hidden />
@@ -288,28 +288,28 @@ export function AnalyzeView() {
     )
   }
 
-  if (sonucVar && state.result) {
+  if (hasResult && state.result) {
     return (
-      <SkorSonucu
-        sonuc={state.result}
+      <ScoreResult
+        result={state.result}
         durationMs={state.durationMs}
         tokenUsage={state.tokenUsage}
         modelId={state.modelId}
-        uyarlaniyor={busy}
-        hata={error}
-        onUyarla={state.analysisId ? () => uyarla(state.analysisId!) : undefined}
-        onYeniAnaliz={basaDon}
+        adapting={busy}
+        error={error}
+        onAdapt={state.analysisId ? () => adapt(state.analysisId!) : undefined}
+        onYeniAnaliz={startOver}
       />
     )
   }
 
-  if (calisiyor) {
+  if (running) {
     return (
       <div className="mx-auto max-w-2xl">
-        <AsamaCizelgesi
-          baslik="Analizin hazırlanıyor"
-          altBaslik="Genelde bir dakika kadar sürüyor. Sayfadan ayrılma."
-          asamalar={deriveStageStates(ASAMALAR, state?.stage ?? null)}
+        <StageTimeline
+          heading="Analizin hazırlanıyor"
+          subtitle="Genelde bir dakika kadar sürüyor. Sayfadan ayrılma."
+          stages={deriveStageStates(STAGES, state?.stage ?? null)}
         />
       </div>
     )
@@ -317,9 +317,9 @@ export function AnalyzeView() {
 
   return (
     <div>
-      <SayfaBasligi
-        baslik="CV'ni ilanla karşılaştır"
-        aciklama="CV'ni yükle, ilanı yapıştır. Uyumunu ve eksik anahtar kelimeleri hemen gör. Ücretsiz, kayıt gerekmez."
+      <PageHeader
+        title="CV'ni ilanla karşılaştır"
+        description="CV'ni yükle, ilanı yapıştır. Uyumunu ve eksik anahtar kelimeleri hemen gör. Ücretsiz, kayıt gerekmez."
       />
 
       {(error || state?.status === "failed") && (
@@ -334,12 +334,12 @@ export function AnalyzeView() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <form onSubmit={onSubmit} className="rounded-kart border border-cizgi bg-kart p-5 shadow-sm sm:p-7">
-          <AdimBasligi no={1} baslik="CV'n" aciklama="Başvuracağın CV'nin güncel hâli." />
-          <CvYukleme />
+          <StepHeading number={1} heading="CV'n" hint="Başvuracağın CV'nin güncel hâli." />
+          <ResumeUpload />
 
           <div className="my-7 h-px bg-cizgi" />
 
-          <AdimBasligi no={2} baslik="İlan" aciklama="Bağlantıyı yapıştır ya da metni kutuya ekle." />
+          <StepHeading number={2} heading="İlan" hint="Bağlantıyı yapıştır ya da metni kutuya ekle." />
           <label htmlFor="ilanUrl" className="sr-only">
             İlan bağlantısı
           </label>
@@ -350,36 +350,36 @@ export function AnalyzeView() {
                 id="ilanUrl"
                 type="url"
                 inputMode="url"
-                value={ilanUrl}
-                onChange={(e) => setIlanUrl(e.target.value)}
+                value={postingUrl}
+                onChange={(e) => setPostingUrl(e.target.value)}
                 onKeyDown={(e) => {
                   // Enter formu (analizi) göndermesin; bağlantıyı getirsin.
                   if (e.key === "Enter") {
                     e.preventDefault()
-                    void ilaniGetir()
+                    void fetchPosting()
                   }
                 }}
                 placeholder="https://www.kariyer.net/is-ilani/…"
-                className={`${girdiSinifi} pl-9`}
+                className={`${inputClass} pl-9`}
               />
             </div>
             <button
               type="button"
-              onClick={() => void ilaniGetir()}
-              disabled={!ilanUrl.trim() || ilanDurumu?.tur === "yukleniyor"}
+              onClick={() => void fetchPosting()}
+              disabled={!postingUrl.trim() || postingState?.kind === "loading"}
               className="inline-flex shrink-0 items-center gap-2 rounded-buton border border-cizgi bg-kart px-4 text-sm font-semibold transition-colors hover:border-metin/25 disabled:cursor-not-allowed disabled:opacity-45"
             >
-              {ilanDurumu?.tur === "yukleniyor" && <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden />}
-              {ilanDurumu?.tur === "yukleniyor" ? "Getiriliyor…" : "İlanı getir"}
+              {postingState?.kind === "loading" && <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden />}
+              {postingState?.kind === "loading" ? "Getiriliyor…" : "İlanı getir"}
             </button>
           </div>
-          {ilanDurumu?.tur === "tamam" && (
+          {postingState?.kind === "done" && (
             <p className="mt-2 flex items-center gap-1.5 text-sm text-yesil dark:text-[#4ade80]">
               <FileCheck2 className="size-4" aria-hidden />
-              {ilanDurumu.metin}
+              {postingState.text}
             </p>
           )}
-          {ilanDurumu?.tur === "hata" && <p className="mt-2 text-sm text-kehribar">{ilanDurumu.metin}</p>}
+          {postingState?.kind === "error" && <p className="mt-2 text-sm text-kehribar">{postingState.text}</p>}
 
           <label htmlFor="jobText" className="mt-4 mb-1.5 block text-sm font-medium">
             İlan metni
@@ -387,11 +387,11 @@ export function AnalyzeView() {
           <textarea
             id="jobText"
             name="jobText"
-            ref={ilanKutusu}
+            ref={postingBox}
             rows={10}
             required
             placeholder="İlanın tamamını yapıştır — gereksinimler bölümü dahil. Bağlantıyı yukarıya yapıştırırsan buraya kendiliğinden gelir."
-            className={`${girdiSinifi} resize-y leading-relaxed`}
+            className={`${inputClass} resize-y leading-relaxed`}
           />
 
           <button
@@ -418,13 +418,13 @@ export function AnalyzeView() {
             <p className="m-0 text-sm font-semibold">Ne göreceksin</p>
             <ul className="mt-3 list-none space-y-3 p-0 text-sm">
               {[
-                { Ikon: Gauge, b: "ATS uyum skoru", m: "CV'nin bu ilana ne kadar uyduğu." },
-                { Ikon: SearchCheck, b: "Eksik anahtar kelimeler", m: "Her gereksinim, CV'ndeki kanıtıyla." },
-                { Ikon: FileCheck2, b: "Biçim kontrolü", m: "ATS CV'ni doğru okuyabiliyor mu." },
-              ].map(({ Ikon, b, m }) => (
+                { Icon: Gauge, b: "ATS uyum skoru", m: "CV'nin bu ilana ne kadar uyduğu." },
+                { Icon: SearchCheck, b: "Eksik anahtar kelimeler", m: "Her gereksinim, CV'ndeki kanıtıyla." },
+                { Icon: FileCheck2, b: "Biçim kontrolü", m: "ATS CV'ni doğru okuyabiliyor mu." },
+              ].map(({ Icon, b, m }) => (
                 <li key={b} className="flex gap-3">
                   <span className="grid size-8 shrink-0 place-items-center rounded-buton bg-mavi/10 text-mavi dark:text-[#8ea2ff]">
-                    <Ikon className="size-4" aria-hidden />
+                    <Icon className="size-4" aria-hidden />
                   </span>
                   <span>
                     <span className="block font-medium">{b}</span>
@@ -445,7 +445,7 @@ export function AnalyzeView() {
           </div>
           {state?.status === "failed" && (
             <button
-              onClick={basaDon}
+              onClick={startOver}
               className="inline-flex w-full items-center justify-center gap-2 rounded-buton border border-cizgi bg-kart px-4 py-2.5 text-sm font-semibold"
             >
               <RotateCcw className="size-4" aria-hidden /> Baştan başla

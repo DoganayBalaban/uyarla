@@ -12,49 +12,49 @@ export async function PATCH(
 ) {
   const { id } = await params
   try {
-    const oturum = ensureRegistered(await getSession())
+    const session = ensureRegistered(await getSession())
 
-    const govde = (await request.json().catch(() => ({}))) as { asama?: unknown; not?: unknown }
-    const veri: Prisma.AnalysisUpdateInput = {}
+    const body = (await request.json().catch(() => ({}))) as { stage?: unknown; note?: unknown }
+    const patchData: Prisma.AnalysisUpdateInput = {}
 
-    if (govde.asama !== undefined) {
-      if (!isStage(govde.asama)) {
+    if (body.stage !== undefined) {
+      if (!isStage(body.stage)) {
         return NextResponse.json({ error: "Geçersiz aşama." }, { status: 400 })
       }
-      veri.stage = govde.asama
-      veri.stageChangedAt = new Date()
+      patchData.stage = body.stage
+      patchData.stageChangedAt = new Date()
     }
-    if (govde.not !== undefined) {
-      if (govde.not !== null && typeof govde.not !== "string") {
+    if (body.note !== undefined) {
+      if (body.note !== null && typeof body.note !== "string") {
         return NextResponse.json({ error: "Geçersiz not." }, { status: 400 })
       }
-      const not = (govde.not ?? "").trim()
-      if (not.length > NOTE_MAX_LENGTH) {
+      const trimmedNote = (body.note ?? "").trim()
+      if (trimmedNote.length > NOTE_MAX_LENGTH) {
         return NextResponse.json(
           { error: `Not en fazla ${NOTE_MAX_LENGTH} karakter olabilir.` },
           { status: 400 },
         )
       }
-      veri.note = not || null
+      patchData.note = trimmedNote || null
     }
-    if (Object.keys(veri).length === 0) {
+    if (Object.keys(patchData).length === 0) {
       return NextResponse.json({ error: "Güncellenecek bir şey yok." }, { status: 400 })
     }
 
-    const mevcut = await prisma.analysis.findUnique({ where: { id }, select: { userId: true } })
+    const existing = await prisma.analysis.findUnique({ where: { id }, select: { userId: true } })
     // Başkasının kaydı da "yok" gibi görünüyor (404), 403 değil: var olduğunu
     // sızdırmamak için (Sprint 3A kararı).
-    ensureOwner(mevcut?.userId ?? null, oturum)
+    ensureOwner(existing?.userId ?? null, session)
 
-    const guncel = await prisma.analysis.update({
+    const current = await prisma.analysis.update({
       where: { id },
-      data: veri,
+      data: patchData,
       select: BOARD_SELECT,
     })
-    return NextResponse.json({ kart: toBoardCard(guncel) })
+    return NextResponse.json({ card: toBoardCard(current) })
   } catch (error) {
-    const yanit = authErrorResponse(error)
-    if (yanit) return yanit
+    const reply = authErrorResponse(error)
+    if (reply) return reply
     console.error("[api/applications/[id]]", error)
     return NextResponse.json({ error: "Bir şeyler ters gitti." }, { status: 500 })
   }

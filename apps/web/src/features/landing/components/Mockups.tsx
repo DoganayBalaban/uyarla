@@ -1,4 +1,4 @@
-import { Ikon } from "@/features/landing/components/Icon"
+import { Icon } from "@/features/landing/components/Icon"
 import s from "@/features/landing/landing.module.css"
 
 /**
@@ -11,31 +11,31 @@ import s from "@/features/landing/landing.module.css"
  */
 
 /** Skor halkası; durum hem renkle hem etiketle (rehber §9.2, §9.5). */
-export function SkorHalkasi({ skor = 47, boyut = 112 }: { skor?: number; boyut?: number }) {
+export function ScoreRing({ score = 47, sizePx = 112 }: { score?: number; sizePx?: number }) {
   const r = 44
-  const cevre = 2 * Math.PI * r
-  const durum = skor >= 70 ? "Yüksek" : skor >= 40 ? "Orta" : "Düşük"
-  const renk = skor >= 70 ? "var(--yesil)" : skor >= 40 ? "var(--kehribar)" : "var(--kirmizi)"
+  const circumference = 2 * Math.PI * r
+  const state = score >= 70 ? "Yüksek" : score >= 40 ? "Orta" : "Düşük"
+  const textClass = score >= 70 ? "var(--yesil)" : score >= 40 ? "var(--kehribar)" : "var(--kirmizi)"
   return (
-    <div className={s.halka} style={{ width: boyut, height: boyut, fontSize: (boyut / 112) * 16 }}>
-      <svg viewBox="0 0 100 100" width={boyut} height={boyut} aria-hidden="true">
+    <div className={s.halka} style={{ width: sizePx, height: sizePx, fontSize: (sizePx / 112) * 16 }}>
+      <svg viewBox="0 0 100 100" width={sizePx} height={sizePx} aria-hidden="true">
         <circle cx="50" cy="50" r={r} fill="none" stroke="var(--cizgi)" strokeWidth="8" />
         <circle
           cx="50"
           cy="50"
           r={r}
           fill="none"
-          stroke={renk}
+          stroke={textClass}
           strokeWidth="8"
           strokeLinecap="round"
-          strokeDasharray={`${(cevre * skor) / 100} ${cevre}`}
+          strokeDasharray={`${(circumference * score) / 100} ${circumference}`}
           transform="rotate(-90 50 50)"
         />
       </svg>
       <div className={s.halkaIc}>
-        <span className={s.halkaRakam}>{skor}</span>
-        <span className={s.halkaDurum} style={{ color: renk }}>
-          {durum}
+        <span className={s.halkaRakam}>{score}</span>
+        <span className={s.halkaDurum} style={{ color: textClass }}>
+          {state}
         </span>
       </div>
     </div>
@@ -47,16 +47,16 @@ export function SkorHalkasi({ skor = 47, boyut = 112 }: { skor?: number; boyut?:
  * Gerçek uygulamanın düzenini izliyor (yan menü değil üst çubuk; zemin buz,
  * kartlar beyaz) ki tanıtım sayfası ürünün kendisini göstersin.
  */
-export function HeroUygulama() {
-  const gereksinimler: { metin: string; eslesti: boolean }[] = [
-    { metin: "React ile arayüz geliştirme", eslesti: true },
-    { metin: "TypeScript", eslesti: true },
-    { metin: "Birim testi (Jest)", eslesti: false },
-    { metin: "Web erişilebilirliği", eslesti: false },
-    { metin: "Ekiple kod incelemesi", eslesti: true },
+export function HeroApp() {
+  const requirementList: { text: string; matched: boolean }[] = [
+    { text: "React ile arayüz geliştirme", matched: true },
+    { text: "TypeScript", matched: true },
+    { text: "Birim testi (Jest)", matched: false },
+    { text: "Web erişilebilirliği", matched: false },
+    { text: "Ekiple kod incelemesi", matched: true },
   ]
-  const eksik = ["Jest", "Erişilebilirlik", "CI/CD", "Figma"]
-  const eslesen = ["React", "TypeScript", "REST API", "Git"]
+  const missing = ["Jest", "Erişilebilirlik", "CI/CD", "Figma"]
+  const matchedList = ["React", "TypeScript", "REST API", "Git"]
   return (
     <div className={s.pencere}>
       <div className={s.pencereUst}>
@@ -68,10 +68,10 @@ export function HeroUygulama() {
           uyarla
         </span>
         <span className={`${s.pencereLink} ${s.pencereLinkAktif}`}>
-          <Ikon ad="skor" boyut={15} /> Yeni analiz
+          <Icon name="score" size={15} /> Yeni analiz
         </span>
         <span className={s.pencereLink}>
-          <Ikon ad="kolonlar" boyut={15} /> Başvuru panosu
+          <Icon name="columns" size={15} /> Başvuru panosu
         </span>
       </div>
 
@@ -81,7 +81,7 @@ export function HeroUygulama() {
 
         <div className={s.pencereIzgara}>
           <div className={`${s.pencereKart} ${s.pencereSkor}`}>
-            <SkorHalkasi boyut={96} />
+            <ScoreRing sizePx={96} />
             <div>
               <p className={s.skorKartiCumle}>Bu ilana uyumun %47.</p>
               <p className={s.mockKucuk}>4 eksik anahtar kelime var. Çoğu anlatımla ilgili.</p>
@@ -92,12 +92,12 @@ export function HeroUygulama() {
           <div className={s.pencereKart}>
             <p className={s.pencereKartBaslik}>5 gereksinimden 3'ü karşılanıyor</p>
             <ul className={s.pencereListe}>
-              {gereksinimler.map((g) => (
-                <li key={g.metin}>
-                  <span className={g.eslesti ? s.durumEslesti : s.durumEksik}>
-                    <Ikon ad={g.eslesti ? "check" : "x"} boyut={12} />
+              {requirementList.map((g) => (
+                <li key={g.text}>
+                  <span className={g.matched ? s.durumEslesti : s.durumEksik}>
+                    <Icon name={g.matched ? "check" : "x"} size={12} />
                   </span>
-                  {g.metin}
+                  {g.text}
                 </li>
               ))}
             </ul>
@@ -106,17 +106,17 @@ export function HeroUygulama() {
           <div className={s.pencereKart}>
             <p className={s.pencereKartBaslik}>Eksik anahtar kelimeler</p>
             <div className={s.cipler}>
-              {eksik.map((k) => (
+              {missing.map((k) => (
                 <span key={k} className={`${s.cip} ${s.cipEksik}`}>
-                  <Ikon ad="x" boyut={12} /> {k}
+                  <Icon name="x" size={12} /> {k}
                 </span>
               ))}
             </div>
             <p className={s.pencereKartBaslik}>Eşleşenler</p>
             <div className={s.cipler}>
-              {eslesen.map((k) => (
+              {matchedList.map((k) => (
                 <span key={k} className={`${s.cip} ${s.cipEslesen}`}>
-                  <Ikon ad="check" boyut={12} /> {k}
+                  <Icon name="check" size={12} /> {k}
                 </span>
               ))}
             </div>
@@ -145,7 +145,7 @@ export function HeroUygulama() {
 }
 
 /** Hero'da pencerenin kenarından taşan kart: uydurma kontrolünün yakaladığı madde. */
-export function HeroKontrol() {
+export function HeroCheck() {
   return (
     <div className={`${s.mock} ${s.heroKontrol}`}>
       <span className="inline-block rounded-full bg-kehribar/20 px-2 py-0.5 text-xs font-bold text-kehribar">
@@ -167,13 +167,13 @@ export function HeroKontrol() {
 }
 
 /** Gereksinim listesi: her eşleşme CV'deki kanıtıyla birlikte. */
-export function GereksinimListesi() {
-  const satirlar: { metin: string; durum: "eslesti" | "eksik"; kanit?: string; onem: string }[] = [
-    { metin: "React ile arayüz geliştirme", durum: "eslesti", kanit: "“…React kullandım” · Deneyim", onem: "Zorunlu" },
-    { metin: "TypeScript", durum: "eslesti", kanit: "Beceriler bölümü", onem: "Zorunlu" },
-    { metin: "Birim testi (Jest, Testing Library)", durum: "eksik", onem: "Zorunlu" },
-    { metin: "Web erişilebilirliği (WCAG)", durum: "eksik", onem: "Tercihen" },
-    { metin: "Ekiple kod incelemesi", durum: "eslesti", kanit: "“Haftalık kod incelemelerine katıldım” · Deneyim", onem: "Tercihen" },
+export function RequirementList() {
+  const satirlar: { text: string; state: "matched" | "missing"; evidence?: string; importance: string }[] = [
+    { text: "React ile arayüz geliştirme", state: "matched", evidence: "“…React kullandım” · Deneyim", importance: "Zorunlu" },
+    { text: "TypeScript", state: "matched", evidence: "Beceriler bölümü", importance: "Zorunlu" },
+    { text: "Birim testi (Jest, Testing Library)", state: "missing", importance: "Zorunlu" },
+    { text: "Web erişilebilirliği (WCAG)", state: "missing", importance: "Tercihen" },
+    { text: "Ekiple kod incelemesi", state: "matched", evidence: "“Haftalık kod incelemelerine katıldım” · Deneyim", importance: "Tercihen" },
   ]
   return (
     <div className={`${s.mock} ${s.mockGenis}`}>
@@ -182,19 +182,19 @@ export function GereksinimListesi() {
           <p className={s.mockEtiket}>İlan gereksinimleri</p>
           <p className={s.mockBaslikMetin}>5 gereksinimden 3'ü karşılanıyor</p>
         </div>
-        <SkorHalkasi boyut={72} />
+        <ScoreRing sizePx={72} />
       </div>
       <ul className={s.gereksinimler}>
         {satirlar.map((g) => (
-          <li key={g.metin}>
-            <span className={g.durum === "eslesti" ? s.durumEslesti : s.durumEksik}>
-              <Ikon ad={g.durum === "eslesti" ? "check" : "x"} boyut={14} />
+          <li key={g.text}>
+            <span className={g.state === "matched" ? s.durumEslesti : s.durumEksik}>
+              <Icon name={g.state === "matched" ? "check" : "x"} size={14} />
             </span>
             <div>
               <p className={s.gereksinimMetin}>
-                {g.metin} <span className={s.onem}>{g.onem}</span>
+                {g.text} <span className={s.onem}>{g.importance}</span>
               </p>
-              <p className={s.mockKucuk}>{g.kanit ?? "CV'nde karşılığı bulunamadı"}</p>
+              <p className={s.mockKucuk}>{g.evidence ?? "CV'nde karşılığı bulunamadı"}</p>
             </div>
           </li>
         ))}
@@ -204,7 +204,7 @@ export function GereksinimListesi() {
 }
 
 /** Önce/sonra: eklenen yeşil vurgulu, çıkarılan üstü çizili gri (rehber §9.5). */
-export function OnceSonra() {
+export function BeforeAfter() {
   return (
     <div className={`${s.mock} ${s.mockGenis}`}>
       <p className={s.mockEtiket}>Deneyim · Acme Yazılım · 2. madde</p>
@@ -214,7 +214,7 @@ export function OnceSonra() {
           <p>Müşteri paneli projesinde görev aldım, React kullandım.</p>
         </div>
         <div className={s.onceSonraOk}>
-          <Ikon ad="ok" boyut={18} />
+          <Icon name="ok" size={18} />
         </div>
         <div className={`${s.onceSonraBlok} ${s.onceSonraYeni}`}>
           <span className={`${s.onceSonraRozet} ${s.onceSonraRozetYeni}`}>Sonra</span>
@@ -226,7 +226,7 @@ export function OnceSonra() {
         </div>
       </div>
       <div className={s.kaynak}>
-        <Ikon ad="goz" boyut={14} />
+        <Icon name="eye" size={14} />
         Kaynak: Senin yazdığın madde ve Beceriler bölümün. Yeni olgu eklenmedi.
       </div>
     </div>
@@ -234,7 +234,7 @@ export function OnceSonra() {
 }
 
 /** Uydurma kontrolünün yakaladığı madde: karar verilmeden indirme kapalı. */
-export function UyariKarti() {
+export function WarningCard() {
   return (
     <div className={`${s.mock} ${s.mockGenis}`}>
       <span className="mb-1.5 inline-block rounded-full bg-kehribar/20 px-2 py-0.5 text-xs font-bold text-kehribar">Kontrol et</span>
@@ -250,14 +250,14 @@ export function UyariKarti() {
         <span className={s.sahteBirincil}>Yeni hâlini kullan</span>
       </div>
       <div className={s.kilitSatiri}>
-        <Ikon ad="kilit" boyut={14} />
+        <Icon name="lock" size={14} />
         İşaretli maddelere karar verene kadar indirme kapalı.
       </div>
     </div>
   )
 }
 
-export function DosyaCipleri() {
+export function FileChips() {
   return (
     <div className={s.dosyalar}>
       <div className={s.dosya}>

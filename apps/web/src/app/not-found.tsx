@@ -1,12 +1,12 @@
 import Link from "next/link"
-import { SayfaKabi } from "@/components/layout/PageShell"
+import { PageShell as PageShell } from "@/components/layout/PageShell"
 
 export const metadata = { title: "Sayfa bulunamadı · uyarla" }
 
 /** Next'in varsayılan İngilizce 404'ü yerine. */
 export default function NotFound() {
   return (
-    <SayfaKabi genislik="dar" className="sm:pt-20">
+    <PageShell width="narrow" className="sm:pt-20">
       <p className="font-baslik text-sm font-bold tracking-wide text-mavi">404</p>
       <h1 className="mt-3 font-baslik text-3xl font-extrabold tracking-tight text-metin sm:text-4xl">
         Aradığın sayfa burada değil.
@@ -28,6 +28,6 @@ export default function NotFound() {
           Ana sayfaya dön
         </Link>
       </div>
-    </SayfaKabi>
+    </PageShell>
   )
 }

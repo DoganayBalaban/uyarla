@@ -24,61 +24,61 @@ export type CoverLetterView = CoverLetterRecord
  * Kendi yoklamasını yapıyor: uyarlama ekranının yoklaması uyarlama bitince
  * duruyor, ön yazı ise sonradan istenen ayrı bir iş.
  */
-export function OnYaziBolumu({
+export function CoverLetterSection({
   adaptationId,
-  baslangic,
+  initialLetter,
 }: {
   adaptationId: string
-  baslangic: CoverLetterView | null
+  initialLetter: CoverLetterView | null
 }) {
-  const [kayit, setKayit] = useState<CoverLetterView | null>(baslangic)
-  const [hata, setHata] = useState<string | null>(null)
-  const [kopyalandi, setKopyalandi] = useState(false)
+  const [record, setRecord] = useState<CoverLetterView | null>(initialLetter)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
-  const calisiyor = kayit?.status === "running"
+  const running = record?.status === "running"
 
   useEffect(() => {
-    if (!calisiyor) return
-    let durduruldu = false
+    if (!running) return
+    let halted = false
     void (async () => {
-      while (!durduruldu) {
+      while (!halted) {
         await new Promise((r) => setTimeout(r, 2000))
-        if (durduruldu) return
-        const cevap = await fetch(`/api/adapt/${adaptationId}`)
-        if (!cevap.ok) return
-        const { coverLetter } = (await cevap.json()) as { coverLetter: CoverLetterView | null }
-        setKayit(coverLetter)
+        if (halted) return
+        const response = await fetch(`/api/adapt/${adaptationId}`)
+        if (!response.ok) return
+        const { coverLetter } = (await response.json()) as { coverLetter: CoverLetterView | null }
+        setRecord(coverLetter)
         if (coverLetter?.status !== "running") return
       }
     })()
     return () => {
-      durduruldu = true
+      halted = true
     }
-  }, [calisiyor, adaptationId])
+  }, [running, adaptationId])
 
-  async function olustur() {
-    setHata(null)
-    setKopyalandi(false)
-    const cevap = await fetch(`/api/adapt/${adaptationId}/cover-letter`, { method: "POST" })
-    const govde = (await cevap.json()) as { coverLetter?: CoverLetterView; error?: string }
-    if (!cevap.ok || !govde.coverLetter) {
-      setHata(govde.error ?? "Ön yazıyı başlatamadık. Birazdan tekrar dener misin?")
+  async function create() {
+    setErrorMessage(null)
+    setCopied(false)
+    const response = await fetch(`/api/adapt/${adaptationId}/cover-letter`, { method: "POST" })
+    const body = (await response.json()) as { coverLetter?: CoverLetterView; error?: string }
+    if (!response.ok || !body.coverLetter) {
+      setErrorMessage(body.error ?? "Ön yazıyı başlatamadık. Birazdan tekrar dener misin?")
       return
     }
-    setKayit(govde.coverLetter)
+    setRecord(body.coverLetter)
   }
 
-  const metin =
-    kayit?.status === "done" ? kayit.paragraphs.map((p) => p.text).join("\n\n") : ""
-  const isaretli = kayit?.status === "done" ? kayit.paragraphs.filter((p) => p.verification.status === "flagged").length : 0
+  const bodyText =
+    record?.status === "done" ? record.paragraphs.map((p) => p.text).join("\n\n") : ""
+  const flaggedCount = record?.status === "done" ? record.paragraphs.filter((p) => p.verification.status === "flagged").length : 0
 
-  async function kopyala() {
-    await navigator.clipboard.writeText(metin)
-    setKopyalandi(true)
+  async function copy() {
+    await navigator.clipboard.writeText(bodyText)
+    setCopied(true)
   }
 
-  function indir() {
-    const url = URL.createObjectURL(new Blob([metin], { type: "text/plain;charset=utf-8" }))
+  function downloadFile() {
+    const url = URL.createObjectURL(new Blob([bodyText], { type: "text/plain;charset=utf-8" }))
     const a = document.createElement("a")
     a.href = url
     a.download = "uyarla-on-yazi.txt"
@@ -100,34 +100,34 @@ export function OnYaziBolumu({
             </p>
           </div>
         </div>
-        {kayit?.status !== "running" && (
+        {record?.status !== "running" && (
           <button
             type="button"
-            onClick={() => void olustur()}
+            onClick={() => void create()}
             className={cn(
               "inline-flex items-center gap-2 rounded-buton px-4 py-2.5 text-sm font-semibold transition",
-              kayit?.status === "done"
+              record?.status === "done"
                 ? "border border-cizgi hover:border-mavi/40 hover:text-mavi"
                 : "bg-mavi text-white shadow-sm shadow-mavi/30 hover:bg-mavi/90",
             )}
           >
-            {kayit?.status === "done" ? (
+            {record?.status === "done" ? (
               <RefreshCw className="size-4" aria-hidden />
             ) : (
               <Sparkles className="size-4" aria-hidden />
             )}
-            {kayit?.status === "done" ? "Yeniden yaz" : "Ön yazı oluştur"}
+            {record?.status === "done" ? "Yeniden yaz" : "Ön yazı oluştur"}
           </button>
         )}
       </div>
 
-      {hata && (
+      {errorMessage && (
         <p role="alert" className="mt-3 text-sm text-kirmizi dark:text-[#f87171]">
-          {hata}
+          {errorMessage}
         </p>
       )}
 
-      {calisiyor && (
+      {running && (
         <div className="mt-5 space-y-2.5" role="status">
           <p className="m-0 flex items-center gap-2 text-sm text-gri">
             <LoaderCircle className="size-4 text-mavi motion-safe:animate-spin" aria-hidden />
@@ -145,25 +145,25 @@ export function OnYaziBolumu({
         </div>
       )}
 
-      {kayit?.status === "failed" && (
+      {record?.status === "failed" && (
         <p className="mt-4 text-sm text-kirmizi dark:text-[#f87171]">
           Ön yazıyı yazamadık. “Ön yazı oluştur” ile tekrar dener misin?
         </p>
       )}
 
-      {kayit?.status === "done" && (
+      {record?.status === "done" && (
         <>
-          {isaretli > 0 && (
+          {flaggedCount > 0 && (
             <p className="mt-4 flex gap-2 rounded-buton bg-kehribar/10 p-3 text-sm">
               <TriangleAlert className="mt-0.5 size-4 shrink-0 text-kehribar" aria-hidden />
               <span>
-                {isaretli} paragrafta CV&apos;nde olmayan bir bilgi olabilir. Kullanmadan önce işaretli
+                {flaggedCount} paragrafta CV&apos;nde olmayan bir bilgi olabilir. Kullanmadan önce işaretli
                 yerleri düzelt ya da çıkar.
               </span>
             </p>
           )}
           <div className="mt-4 space-y-2 rounded-buton border border-cizgi bg-zemin/60 p-2 sm:p-3">
-            {kayit.paragraphs.map((p, i) => (
+            {record.paragraphs.map((p, i) => (
               <div
                 key={i}
                 className={cn(
@@ -190,15 +190,15 @@ export function OnYaziBolumu({
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => void kopyala()}
+              onClick={() => void copy()}
               className="inline-flex items-center gap-2 rounded-buton bg-mavi px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-mavi/30 transition hover:bg-mavi/90"
             >
-              {kopyalandi ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
-              {kopyalandi ? "Kopyalandı" : "Metni kopyala"}
+              {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
+              {copied ? "Kopyalandı" : "Metni kopyala"}
             </button>
             <button
               type="button"
-              onClick={indir}
+              onClick={downloadFile}
               className="inline-flex items-center gap-2 rounded-buton border border-cizgi px-4 py-2.5 text-sm font-semibold transition hover:border-mavi/40 hover:text-mavi"
             >
               <Download className="size-4" aria-hidden />

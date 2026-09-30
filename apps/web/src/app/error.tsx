@@ -2,19 +2,19 @@
 
 import Link from "next/link"
 import { useEffect } from "react"
-import { SayfaKabi } from "@/components/layout/PageShell"
+import { PageShell as PageShell } from "@/components/layout/PageShell"
 
 /**
  * Bir sayfa çizilirken beklenmeyen bir hata olursa. Yığın izi kullanıcıya
  * gösterilmiyor; `digest` sunucu günlüğündeki kaydı bulmaya yetiyor.
  */
-export default function Hata({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error(error)
   }, [error])
 
   return (
-    <SayfaKabi genislik="dar" className="sm:pt-20">
+    <PageShell width="narrow" className="sm:pt-20">
       <div role="alert">
         <h1 className="font-baslik text-3xl font-extrabold tracking-tight text-metin sm:text-4xl">
           Bir şeyler ters gitti.
@@ -40,6 +40,6 @@ export default function Hata({ error, reset }: { error: Error & { digest?: strin
           </Link>
         </div>
       </div>
-    </SayfaKabi>
+    </PageShell>
   )
 }

@@ -59,8 +59,8 @@ export async function GET(
       stage: typeof progress === "object" ? progress.stage : undefined,
     })
   } catch (error) {
-    const yanit = authErrorResponse(error)
-    if (yanit) return yanit
+    const reply = authErrorResponse(error)
+    if (reply) return reply
     console.error("[api/analyze/[id]]", error)
     return NextResponse.json({ error: "Bir şeyler ters gitti." }, { status: 500 })
   }

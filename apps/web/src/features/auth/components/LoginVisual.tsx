@@ -8,18 +8,18 @@
  */
 
 /** Yörüngedeki kavramlar: yarıçap (% kutu genişliği), açı (derece), durum. */
-const KAVRAMLAR: { metin: string; r: number; aci: number; eksik?: boolean }[] = [
-  { metin: "React", r: 25, aci: 200 },
-  { metin: "TypeScript", r: 25, aci: 20 },
-  { metin: "Jest", r: 25, aci: 110, eksik: true },
-  { metin: "SQL", r: 37, aci: 250 },
-  { metin: "Figma", r: 37, aci: 150, eksik: true },
-  { metin: "REST API", r: 37, aci: 330 },
-  { metin: "Takım çalışması", r: 48, aci: 60 },
-  { metin: "CI/CD", r: 48, aci: 285, eksik: true },
+const CONCEPTS: { text: string; r: number; angle: number; missing?: boolean }[] = [
+  { text: "React", r: 25, angle: 200 },
+  { text: "TypeScript", r: 25, angle: 20 },
+  { text: "Jest", r: 25, angle: 110, missing: true },
+  { text: "SQL", r: 37, angle: 250 },
+  { text: "Figma", r: 37, angle: 150, missing: true },
+  { text: "REST API", r: 37, angle: 330 },
+  { text: "Takım çalışması", r: 48, angle: 60 },
+  { text: "CI/CD", r: 48, angle: 285, missing: true },
 ]
 
-const HALKALAR = [26, 50, 74, 96]
+const RINGS = [26, 50, 74, 96]
 
 /**
  * Alt karttaki sözler. Burada önceden yer tutucu bir kullanıcı yorumu
@@ -28,13 +28,13 @@ const HALKALAR = [26, 50, 74, 96]
  * kodda karşılığı olan sözleri duruyor (tanıtım sayfasındaki güven satırıyla
  * aynı).
  */
-const SOZLER = [
+const QUOTES = [
   "Deneyimin uydurulmaz; her değişiklik CV'ndeki bir ifadeye dayanır.",
   "Her değişikliği sen onaylarsın.",
   "Uyarlanmış CV'ni sade bir şablonla PDF ya da DOCX olarak indirirsin.",
 ]
 
-export function GirisGorseli() {
+export function LoginVisual() {
   return (
     <div
       aria-hidden="true"
@@ -59,7 +59,7 @@ export function GirisGorseli() {
 
       {/* Yörünge. */}
       <div className="absolute left-1/2 top-[42%] aspect-square w-[92%] max-w-[560px] -translate-x-1/2 -translate-y-1/2">
-        {HALKALAR.map((b) => (
+        {RINGS.map((b) => (
           <div
             key={b}
             className="absolute left-1/2 top-1/2 aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10"
@@ -68,25 +68,25 @@ export function GirisGorseli() {
         ))}
 
         <div className="absolute inset-0 motion-safe:animate-yorunge">
-          {KAVRAMLAR.map((k) => {
-            const rad = (k.aci * Math.PI) / 180
+          {CONCEPTS.map((k) => {
+            const radians = (k.angle * Math.PI) / 180
             return (
               <div
-                key={k.metin}
+                key={k.text}
                 className="absolute -translate-x-1/2 -translate-y-1/2"
-                style={{ left: `${50 + k.r * Math.cos(rad)}%`, top: `${50 + k.r * Math.sin(rad)}%` }}
+                style={{ left: `${50 + k.r * Math.cos(radians)}%`, top: `${50 + k.r * Math.sin(radians)}%` }}
               >
                 <span
                   className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-semibold backdrop-blur-md motion-safe:animate-yorunge-ters ${
-                    k.eksik
+                    k.missing
                       ? "border-white/15 bg-white/5 text-white/60"
                       : "border-white/25 bg-white/15 text-white"
                   }`}
                 >
                   <span
-                    className={`size-1.5 rounded-full ${k.eksik ? "bg-mercan" : "bg-[#4ade80]"}`}
+                    className={`size-1.5 rounded-full ${k.missing ? "bg-mercan" : "bg-[#4ade80]"}`}
                   />
-                  {k.metin}
+                  {k.text}
                 </span>
               </div>
             )
@@ -127,12 +127,12 @@ export function GirisGorseli() {
         <div className="max-w-sm rounded-kart border border-white/20 bg-white/10 p-5 text-white shadow-2xl backdrop-blur-xl">
           <p className="font-baslik text-sm font-extrabold tracking-tight">Uyarla'nın sözü</p>
           <ul className="mt-3 space-y-2 text-sm leading-relaxed text-white/85">
-            {SOZLER.map((soz) => (
-              <li key={soz} className="flex gap-2.5">
+            {QUOTES.map((quote) => (
+              <li key={quote} className="flex gap-2.5">
                 <svg viewBox="0 0 16 16" className="mt-1 size-3.5 shrink-0 text-[#4ade80]" fill="none" stroke="currentColor" strokeWidth="2.2">
                   <path d="M3 8.5l3.2 3L13 5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                {soz}
+                {quote}
               </li>
             ))}
           </ul>

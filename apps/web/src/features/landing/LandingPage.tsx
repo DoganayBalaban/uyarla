@@ -1,13 +1,13 @@
 import Link from "next/link"
-import { Foto } from "@/features/landing/components/Photo"
-import { Ikon, type IkonAdi } from "@/features/landing/components/Icon"
+import { Photo as Photo } from "@/features/landing/components/Photo"
+import { Icon as Icon, type IconName as IconName } from "@/features/landing/components/Icon"
 import {
-  DosyaCipleri,
-  GereksinimListesi,
-  HeroKontrol,
-  HeroUygulama,
-  OnceSonra,
-  UyariKarti,
+  FileChips as FileChips,
+  RequirementList as RequirementList,
+  HeroCheck as HeroCheck,
+  HeroApp as HeroApp,
+  BeforeAfter as BeforeAfter,
+  WarningCard as WarningCard,
 } from "@/features/landing/components/Mockups"
 import s from "@/features/landing/landing.module.css"
 
@@ -21,141 +21,141 @@ import s from "@/features/landing/landing.module.css"
  * rozetiyle gösteriliyor.
  */
 
-const ADIMLAR: { no: string; ikon: IkonAdi; baslik: string; metin: string }[] = [
+const STEPS: { number: string; icon: IconName; title: string; text: string }[] = [
   {
-    no: "01",
-    ikon: "yukle",
-    baslik: "CV'ni yükle",
-    metin: "PDF veya DOCX. Kayıt olmana gerek yok.",
+    number: "01",
+    icon: "upload",
+    title: "CV'ni yükle",
+    text: "PDF veya DOCX. Kayıt olmana gerek yok.",
   },
   {
-    no: "02",
-    ikon: "pano",
-    baslik: "İlanı yapıştır",
-    metin: "Başvurmak istediğin ilanın metnini olduğu gibi yapıştır.",
+    number: "02",
+    icon: "board",
+    title: "İlanı yapıştır",
+    text: "Başvurmak istediğin ilanın metnini olduğu gibi yapıştır.",
   },
   {
-    no: "03",
-    ikon: "skor",
-    baslik: "Skorunu gör, uyarla",
-    metin: "Uyumunu ve eksik anahtar kelimeleri gör. İstersen tek tıkla uyarla.",
+    number: "03",
+    icon: "score",
+    title: "Skorunu gör, uyarla",
+    text: "Uyumunu ve eksik anahtar kelimeleri gör. İstersen tek tıkla uyarla.",
   },
 ]
 
-const OZELLIKLER: {
-  etiket: string
-  baslik: string
-  metin: string
-  maddeler: string[]
-  gorsel: React.ReactNode
+const FEATURES: {
+  label: string
+  title: string
+  text: string
+  bullets: string[]
+  visual: React.ReactNode
 }[] = [
   {
-    etiket: "ATS uyum skoru",
-    baslik: "CV'nin ilana ne kadar uyduğunu gör.",
-    metin:
+    label: "ATS uyum skoru",
+    title: "CV'nin ilana ne kadar uyduğunu gör.",
+    text:
       "Uyarla ilanı gereksinimlerine ayırır ve her birini CV'nde arar. Eşleşen her gereksinimin yanında kanıtı durur, eksik olanlar açıkça listelenir.",
-    maddeler: [
+    bullets: [
       "Zorunlu ve tercih edilen gereksinimler ayrı",
       "Eş anlamlıları ve Türkçe–İngilizce karşılıkları tanır",
       "“CV'ni geliştir” yerine “şu 4 kelime eksik”",
     ],
-    gorsel: <GereksinimListesi />,
+    visual: <RequirementList />,
   },
   {
-    etiket: "Uyarlama",
-    baslik: "Aynı deneyim, ilanın diliyle.",
-    metin:
+    label: "Uyarlama",
+    title: "Aynı deneyim, ilanın diliyle.",
+    text:
       "Özetini, deneyim maddelerini ve beceri sıralamanı ilana göre yeniden yazar. Her değişikliği önce/sonra hâliyle görürsün.",
-    maddeler: [
+    bullets: [
       "Eklenen yeşil, çıkarılan üstü çizili",
       "Her maddenin kaynağı gösterilir",
       "Beğenmediğini eski hâline döndür",
     ],
-    gorsel: <OnceSonra />,
+    visual: <BeforeAfter />,
   },
   {
-    etiket: "Uydurma kontrolü",
-    baslik: "Olmayan bir deneyimi asla eklemez.",
-    metin:
+    label: "Uydurma kontrolü",
+    title: "Olmayan bir deneyimi asla eklemez.",
+    text:
       "Yeniden yazılan her madde üç kontrolden geçer. Anlamı kayan, yeni olgu ekleyen ya da ilandan kelime taşıyan madde işaretlenir ve kararı sana bırakılır.",
-    maddeler: [
+    bullets: [
       "İşaretli maddede gerekçe yazılı",
       "Son kararı sen verirsin",
       "Karar vermeden indirme açılmaz",
     ],
-    gorsel: <UyariKarti />,
+    visual: <WarningCard />,
   },
 ]
 
-const BENTO: { ikon: IkonAdi; baslik: string; metin: string; yakinda?: boolean; genis?: boolean }[] = [
+const BENTO_ITEMS: { icon: IconName; title: string; text: string; comingSoon?: boolean; wide?: boolean }[] = [
   {
-    ikon: "skor",
-    baslik: "ATS uyum skoru",
-    metin: "Rakam, durum etiketi ve gereksinim bazında döküm.",
-    genis: true,
+    icon: "score",
+    title: "ATS uyum skoru",
+    text: "Rakam, durum etiketi ve gereksinim bazında döküm.",
+    wide: true,
   },
-  { ikon: "anahtar", baslik: "Eksik anahtar kelimeler", metin: "İlanın aradığı ama CV'nde olmayan kavramlar." },
-  { ikon: "kalem", baslik: "Madde madde uyarlama", metin: "Özet, deneyim ve beceriler ilana göre." },
+  { icon: "key", title: "Eksik anahtar kelimeler", text: "İlanın aradığı ama CV'nde olmayan kavramlar." },
+  { icon: "pen", title: "Madde madde uyarlama", text: "Özet, deneyim ve beceriler ilana göre." },
   {
-    ikon: "kalkan",
-    baslik: "Uydurma kontrolü",
-    metin: "Anlamı kayan ya da yeni olgu ekleyen maddeyi yakalar, gerekçesini söyler.",
-    genis: true,
+    icon: "shield",
+    title: "Uydurma kontrolü",
+    text: "Anlamı kayan ya da yeni olgu ekleyen maddeyi yakalar, gerekçesini söyler.",
+    wide: true,
   },
-  { ikon: "belge", baslik: "PDF ve DOCX", metin: "ATS'nin okuyabildiği sade şablon." },
+  { icon: "doc", title: "PDF ve DOCX", text: "ATS'nin okuyabildiği sade şablon." },
   {
-    ikon: "mektup",
-    baslik: "Ön yazı",
-    metin: "İlana ve senin deneyimine özel ön yazı; uydurma kontrolünden geçer.",
-  },
-  {
-    ikon: "kolonlar",
-    baslik: "Başvuru panosu",
-    metin: "Her analiz bir kart: başvurdun mu, mülakat mı, teklif mi, tek yerde gör.",
-    genis: true,
+    icon: "mail",
+    title: "Ön yazı",
+    text: "İlana ve senin deneyimine özel ön yazı; uydurma kontrolünden geçer.",
   },
   {
-    ikon: "dunya",
-    baslik: "İngilizce CV",
-    metin: "Türkçe CV'nden ilana özel İngilizce CV.",
-    yakinda: true,
-    genis: true,
+    icon: "columns",
+    title: "Başvuru panosu",
+    text: "Her analiz bir kart: başvurdun mu, mülakat mı, teklif mi, tek yerde gör.",
+    wide: true,
+  },
+  {
+    icon: "globe",
+    title: "İngilizce CV",
+    text: "Türkçe CV'nden ilana özel İngilizce CV.",
+    comingSoon: true,
+    wide: true,
   },
 ]
 
-const PERSONALAR = [
+const PERSONAS = [
   {
     id: "foto-persona-1",
     alt: "Kampüs kafesinde dizüstüyle çalışan yeni mezun",
-    kim: "Yeni mezun",
-    soz: "Deneyimin az değil, doğru anlatılmamış.",
-    foto: "Kampüste ya da kafede dizüstüyle çalışan yeni mezun, doğal ışık",
+    who: "Yeni mezun",
+    quote: "Deneyimin az değil, doğru anlatılmamış.",
+    photo: "Kampüste ya da kafede dizüstüyle çalışan yeni mezun, doğal ışık",
   },
   {
     id: "foto-persona-2",
     alt: "Evde mutfak masasında dizüstünün yanında not alan bir kadın",
-    kim: "Kariyer değiştiren",
-    soz: "Eski işindeki becerileri yeni alanın diliyle anlat.",
-    foto: "Evden çalışan, not alan 30'lu yaşlarda biri, sıcak tonlar",
+    who: "Kariyer değiştiren",
+    quote: "Eski işindeki becerileri yeni alanın diliyle anlat.",
+    photo: "Evden çalışan, not alan 30'lu yaşlarda biri, sıcak tonlar",
   },
   {
     id: "foto-persona-3",
     alt: "Ortak çalışma alanında dizüstünde belge inceleyen deneyimli bir profesyonel",
-    kim: "Deneyimli profesyonel",
-    soz: "Az ama isabetli başvuru. Her biri ilana özel.",
-    foto: "Ofiste ya da ortak çalışma alanında deneyimli profesyonel, takım elbisesiz",
+    who: "Deneyimli profesyonel",
+    quote: "Az ama isabetli başvuru. Her biri ilana özel.",
+    photo: "Ofiste ya da ortak çalışma alanında deneyimli profesyonel, takım elbisesiz",
   },
   {
     id: "foto-persona-4",
     alt: "Pencere önünde dizüstünden görüntülü görüşme yapan genç bir profesyonel",
-    kim: "Yurt dışına başvuran",
-    soz: "Türkçe CV'nden ilana özel İngilizce CV.",
-    foto: "Pencere önünde video görüşmesi yapan genç profesyonel",
-    yakinda: true,
+    who: "Yurt dışına başvuran",
+    quote: "Türkçe CV'nden ilana özel İngilizce CV.",
+    photo: "Pencere önünde video görüşmesi yapan genç profesyonel",
+    comingSoon: true,
   },
 ]
 
-const SSS = [
+const FAQ = [
   {
     s: "ATS nedir?",
     c: "Aday takip sistemi. Birçok şirket başvuruları önce bu yazılımla süzer; CV'nde ilanın aradığı kavramlar yoksa bir insan görmeden elenebilir. Uyarla, CV'nin bu ilana göre ne kadar okunur ve eşleşir olduğunu gösterir.",
@@ -208,13 +208,13 @@ export function LandingPage() {
             </div>
             <ul className={s.guven}>
               <li>
-                <Ikon ad="check" boyut={16} /> Kayıt gerekmez
+                <Icon name="check" size={16} /> Kayıt gerekmez
               </li>
               <li>
-                <Ikon ad="check" boyut={16} /> CV'n izinsiz paylaşılmaz
+                <Icon name="check" size={16} /> CV'n izinsiz paylaşılmaz
               </li>
               <li>
-                <Ikon ad="check" boyut={16} /> Her değişikliği sen onaylarsın
+                <Icon name="check" size={16} /> Her değişikliği sen onaylarsın
               </li>
             </ul>
           </div>
@@ -222,9 +222,9 @@ export function LandingPage() {
           {/* Ürünün kendisi: analiz ekranı ve kenarından taşan uydurma kontrolü. */}
           <div className={`${s.kap} ${s.heroSahne}`} aria-hidden="true">
             <div className={s.heroSahneZemin} />
-            <HeroUygulama />
+            <HeroApp />
             <div className={s.heroKontrolYer}>
-              <HeroKontrol />
+              <HeroCheck />
             </div>
           </div>
         </section>
@@ -248,17 +248,17 @@ export function LandingPage() {
               <p className={s.bolumAlt}>Skorunu görmek tamamen ücretsiz.</p>
             </div>
             <ol className={s.adimlar}>
-              {ADIMLAR.map((a, i) => (
-                <li key={a.no} className={s.adim}>
+              {STEPS.map((a, i) => (
+                <li key={a.number} className={s.adim}>
                   <div className={s.adimUst}>
                     <span className={s.adimIkon}>
-                      <Ikon ad={a.ikon} boyut={22} />
+                      <Icon name={a.icon} size={22} />
                     </span>
-                    <span className={s.adimNo}>{a.no}</span>
+                    <span className={s.adimNo}>{a.number}</span>
                   </div>
-                  <h3 className={s.h3}>{a.baslik}</h3>
-                  <p className={s.adimMetin}>{a.metin}</p>
-                  {i < ADIMLAR.length - 1 && <span className={s.adimCizgi} aria-hidden="true" />}
+                  <h3 className={s.h3}>{a.title}</h3>
+                  <p className={s.adimMetin}>{a.text}</p>
+                  {i < STEPS.length - 1 && <span className={s.adimCizgi} aria-hidden="true" />}
                 </li>
               ))}
             </ol>
@@ -268,24 +268,24 @@ export function LandingPage() {
         {/* ——— Özellik blokları ——— */}
         <section id="ozellikler" className={`${s.bolum} ${s.bolumZemin}`}>
           <div className={s.kap}>
-            {OZELLIKLER.map((o, i) => (
-              <div key={o.etiket} className={`${s.ozellik} ${i % 2 === 1 ? s.ozellikTers : ""}`}>
+            {FEATURES.map((o, i) => (
+              <div key={o.label} className={`${s.ozellik} ${i % 2 === 1 ? s.ozellikTers : ""}`}>
                 <div className={s.ozellikMetin}>
-                  <span className={s.bolumEtiket}>{o.etiket}</span>
-                  <h2 className={s.h2}>{o.baslik}</h2>
-                  <p className={s.bolumAlt}>{o.metin}</p>
+                  <span className={s.bolumEtiket}>{o.label}</span>
+                  <h2 className={s.h2}>{o.title}</h2>
+                  <p className={s.bolumAlt}>{o.text}</p>
                   <ul className={s.tikListe}>
-                    {o.maddeler.map((m) => (
+                    {o.bullets.map((m) => (
                       <li key={m}>
                         <span className={s.tik}>
-                          <Ikon ad="check" boyut={14} />
+                          <Icon name="check" size={14} />
                         </span>
                         {m}
                       </li>
                     ))}
                   </ul>
                 </div>
-                <div className={s.ozellikGorsel}>{o.gorsel}</div>
+                <div className={s.ozellikGorsel}>{o.visual}</div>
               </div>
             ))}
 
@@ -297,14 +297,14 @@ export function LandingPage() {
                   Uyarlanmış CV'ni sade, tek sütunlu bir şablonla PDF veya DOCX olarak indir. Süs yok,
                   tablo yok; hem insan hem yazılım rahat okur.
                 </p>
-                <DosyaCipleri />
+                <FileChips />
               </div>
               <div className={s.ozellikGorsel}>
-                <Foto
+                <Photo
                   id="foto-cikti"
-                  dosya="cikti.png"
-                  oran="5 / 4"
-                  aciklama="Masada basılı CV ya da ekranda açık PDF; elde kahve, sade kompozisyon"
+                  file="cikti.png"
+                  ratio="5 / 4"
+                  description="Masada basılı CV ya da ekranda açık PDF; elde kahve, sade kompozisyon"
                   alt="Kafe masasında basılı bir CV, açık dizüstü ve bir fincan Türk kahvesi"
                   sizes="(max-width: 900px) 92vw, 560px"
                   className={s.ciktiFoto}
@@ -323,16 +323,16 @@ export function LandingPage() {
               <p className={s.bolumAlt}>Bugün skor ve uyarlama hazır. Sıradakiler yolda.</p>
             </div>
             <div className={s.bento}>
-              {BENTO.map((b) => (
-                <div key={b.baslik} className={`${s.bentoKart} ${b.genis ? s.bentoGenis : ""}`}>
+              {BENTO_ITEMS.map((b) => (
+                <div key={b.title} className={`${s.bentoKart} ${b.wide ? s.bentoGenis : ""}`}>
                   <div className={s.bentoUst}>
                     <span className={s.bentoIkon}>
-                      <Ikon ad={b.ikon} boyut={22} />
+                      <Icon name={b.icon} size={22} />
                     </span>
-                    {b.yakinda && <span className={s.yakinda}>Yakında</span>}
+                    {b.comingSoon && <span className={s.yakinda}>Yakında</span>}
                   </div>
-                  <h3 className={s.h3}>{b.baslik}</h3>
-                  <p className={s.bentoMetin}>{b.metin}</p>
+                  <h3 className={s.h3}>{b.title}</h3>
+                  <p className={s.bentoMetin}>{b.text}</p>
                 </div>
               ))}
             </div>
@@ -360,24 +360,24 @@ export function LandingPage() {
               <div className={s.ilkeler}>
                 {[
                   {
-                    ikon: "kalkan" as const,
+                    icon: "shield" as const,
                     b: "Olmayanı eklemeyiz",
                     m: "Deneyim, beceri veya sertifika uydurmayız. Abartıyı yakalayıp gösteririz.",
                   },
                   {
-                    ikon: "goz" as const,
+                    icon: "eye" as const,
                     b: "Her değişikliği gösteririz",
                     m: "Neyin değiştiğini ve neye dayandığını madde madde görürsün.",
                   },
                   {
-                    ikon: "check" as const,
+                    icon: "check" as const,
                     b: "Son söz senin",
                     m: "Metinler yapay zekâyla yeniden yazılır; hiçbiri onayın olmadan CV'ne girmez.",
                   },
                 ].map((i) => (
                   <div key={i.b} className={s.ilke}>
                     <span className={s.ilkeIkon}>
-                      <Ikon ad={i.ikon} boyut={20} />
+                      <Icon name={i.icon} size={20} />
                     </span>
                     <div>
                       <h3 className={s.ilkeBaslik}>{i.b}</h3>
@@ -398,21 +398,21 @@ export function LandingPage() {
               <h2 className={s.h2}>İlk işine de, bir sonraki adımına da.</h2>
             </div>
             <div className={s.personalar}>
-              {PERSONALAR.map((p) => (
+              {PERSONAS.map((p) => (
                 <figure key={p.id} className={s.persona}>
-                  {p.yakinda && <span className={`${s.yakinda} ${s.personaRozet}`}>Yakında</span>}
-                  <Foto
+                  {p.comingSoon && <span className={`${s.yakinda} ${s.personaRozet}`}>Yakında</span>}
+                  <Photo
                     id={p.id}
-                    dosya={`${p.id.replace("foto-", "")}.png`}
-                    oran="3 / 4"
-                    aciklama={p.foto}
+                    file={`${p.id.replace("foto-", "")}.png`}
+                    ratio="3 / 4"
+                    description={p.photo}
                     alt={p.alt}
                     sizes="(max-width: 640px) 92vw, (max-width: 1100px) 45vw, 280px"
                     className={s.personaFoto}
                   />
                   <figcaption className={s.personaAlt}>
-                    <span className={s.personaKim}>{p.kim}</span>
-                    <span className={s.personaSoz}>“{p.soz}”</span>
+                    <span className={s.personaKim}>{p.who}</span>
+                    <span className={s.personaSoz}>“{p.quote}”</span>
                   </figcaption>
                 </figure>
               ))}
@@ -431,12 +431,12 @@ export function LandingPage() {
               </p>
             </div>
             <div className={s.sss}>
-              {SSS.map((q) => (
+              {FAQ.map((q) => (
                 <details key={q.s} className={s.sssMadde}>
                   <summary>
                     {q.s}
                     <span className={s.sssArti} aria-hidden="true">
-                      <Ikon ad="arti" boyut={18} />
+                      <Icon name="plus" size={18} />
                     </span>
                   </summary>
                   <p>{q.c}</p>
@@ -456,14 +456,14 @@ export function LandingPage() {
                 <p>İlanı yapıştır, CV'nin ne kadar uyduğunu hemen gör. Kayıt gerekmez.</p>
                 <Link href="/analyze" className={`${s.btnBeyaz} ${s.btnBuyuk}`}>
                   Ücretsiz skorumu gör
-                  <Ikon ad="ok" boyut={18} />
+                  <Icon name="ok" size={18} />
                 </Link>
               </div>
-              <Foto
+              <Photo
                 id="foto-son-cagri"
-                dosya="son-cagri.png"
-                oran="1 / 1"
-                aciklama="Telefonda mülakat daveti e-postasını okuyup gülümseyen biri"
+                file="son-cagri.png"
+                ratio="1 / 1"
+                description="Telefonda mülakat daveti e-postasını okuyup gülümseyen biri"
                 alt="Telefonunda güzel bir haber okuyup gülümseyen genç biri"
                 sizes="(max-width: 900px) 80vw, 360px"
                 className={s.sonCagriFoto}

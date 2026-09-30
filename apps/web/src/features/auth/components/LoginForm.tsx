@@ -5,8 +5,8 @@ import { useEffect, useState } from "react"
 import { signIn } from "@/lib/authClient"
 import { suggestEmail, mailAppFor } from "@/features/auth/emailHints"
 import type { Provider } from "@/features/auth/providers"
-import { GirisGorseli } from "@/features/auth/components/LoginVisual"
-import { SosyalGiris, girisHataAdresi } from "@/features/auth/components/SocialLogin"
+import { LoginVisual as LoginVisual } from "@/features/auth/components/LoginVisual"
+import { SocialLogin as SocialLogin, girisHataAdresi } from "@/features/auth/components/SocialLogin"
 
 /**
  * Better Auth'un hata kodlarını Türkçe mesaja çeviriyor.
@@ -14,9 +14,9 @@ import { SosyalGiris, girisHataAdresi } from "@/features/auth/components/SocialL
  * Bilinmeyen kod için genel mesaj: kullanıcıya İngilizce bir hata kodu
  * göstermenin hiçbir faydası yok.
  */
-function hataMesaji(kod: string | null): string | null {
-  if (!kod) return null
-  if (/EXPIRED|INVALID/i.test(kod)) {
+function errorMessage(errorCode: string | null): string | null {
+  if (!errorCode) return null
+  if (/EXPIRED|INVALID/i.test(errorCode)) {
     return "Bu bağlantının süresi dolmuş. Yenisini gönderelim mi?"
   }
   return "Giriş yapılamadı. E-postanı tekrar girer misin?"
@@ -43,71 +43,71 @@ function Logo() {
  * Google/LinkedIn/GitHub. Aynı akış kayıt da yapıyor; ayrı bir "hesap
  * oluştur" ekranına gerek yok.
  */
-export function GirisFormu({
-  acikSaglayicilar,
-  donus,
+export function LoginForm({
+  enabledProviders,
+  returnTo,
 }: {
-  acikSaglayicilar: Provider[]
+  enabledProviders: Provider[]
   /** Girişten sonra gidilecek, doğrulanmış site içi adres. */
-  donus: string
+  returnTo: string
 }) {
   const [email, setEmail] = useState("")
-  const [durum, setDurum] = useState<"bos" | "gonderiliyor" | "gonderildi">("bos")
-  const [hata, setHata] = useState<string | null>(null)
-  const [kalan, setKalan] = useState(0)
-  const [yenidenGonderildi, setYenidenGonderildi] = useState(false)
+  const [state, setState] = useState<"idle" | "sending" | "sent">("idle")
+  const [loginError, setLoginError] = useState<string | null>(null)
+  const [remaining, setRemaining] = useState(0)
+  const [resent, setResent] = useState(false)
 
   // URL'deki hata yalnızca istemcide okunuyor; ilk çizimde okumak sunucu ile
   // istemci çıktısını ayrıştırıp hydration uyarısı veriyordu.
   useEffect(() => {
-    setHata(hataMesaji(new URLSearchParams(window.location.search).get("error")))
+    setLoginError(errorMessage(new URLSearchParams(window.location.search).get("error")))
   }, [])
 
   // Tekrar gönderme sayacı. 60 saniye, sunucudaki "dakikada 3 bağlantı"
   // sınırının (src/server/auth.ts) içinde kalıyor: ilk gönderim + dakikada bir tekrar.
   useEffect(() => {
-    if (kalan <= 0) return
-    const id = setTimeout(() => setKalan((k) => k - 1), 1000)
+    if (remaining <= 0) return
+    const id = setTimeout(() => setRemaining((k) => k - 1), 1000)
     return () => clearTimeout(id)
-  }, [kalan])
+  }, [remaining])
 
-  const oneri = durum === "bos" ? suggestEmail(email) : null
-  const uygulama = mailAppFor(email)
+  const suggestion = state === "idle" ? suggestEmail(email) : null
+  const mailApp = mailAppFor(email)
 
   /** Bağlantıyı gönderir; başarılıysa true. */
-  async function baglantiGonder(): Promise<boolean> {
+  async function sendLink(): Promise<boolean> {
     const { error } = await signIn.magicLink({
       email,
       // Kullanıcı girişe bir işin ortasından geldiyse (ör. uyarlama) oraya
       // dönüyor; değilse ana akışa.
-      callbackURL: donus,
-      errorCallbackURL: girisHataAdresi(donus),
+      callbackURL: returnTo,
+      errorCallbackURL: girisHataAdresi(returnTo),
     })
     if (error) {
-      setHata(
+      setLoginError(
         error.status === 429
           ? "Çok sık denedin. Bir dakika sonra tekrar gönderebilirsin."
           : "Bağlantıyı gönderemedik. Birazdan tekrar dener misin?",
       )
       return false
     }
-    setKalan(60)
+    setRemaining(60)
     return true
   }
 
-  async function gonder(event: React.FormEvent) {
+  async function submit(event: React.FormEvent) {
     event.preventDefault()
-    setHata(null)
-    setDurum("gonderiliyor")
-    const tamam = await baglantiGonder()
-    setYenidenGonderildi(false)
-    setDurum(tamam ? "gonderildi" : "bos")
+    setLoginError(null)
+    setState("sending")
+    const done = await sendLink()
+    setResent(false)
+    setState(done ? "sent" : "idle")
   }
 
-  async function tekrarGonder() {
-    setHata(null)
-    setYenidenGonderildi(false)
-    if (await baglantiGonder()) setYenidenGonderildi(true)
+  async function resend() {
+    setLoginError(null)
+    setResent(false)
+    if (await sendLink()) setResent(true)
   }
 
   return (
@@ -121,7 +121,7 @@ export function GirisFormu({
         </header>
 
         <main className="mx-auto flex w-full max-w-[26rem] flex-1 flex-col justify-center py-12">
-          {durum === "gonderildi" ? (
+          {state === "sent" ? (
             <div>
               <span className="grid size-14 place-items-center rounded-2xl bg-mavi/10 text-mavi dark:text-[#8ea2ff]">
                 <svg
@@ -148,29 +148,29 @@ export function GirisFormu({
               <p className="mt-2 text-sm text-gri">Gelmediyse spam klasörüne bak.</p>
 
               <div className="mt-8 space-y-3">
-                {uygulama && (
+                {mailApp && (
                   <a
-                    href={uygulama.url}
+                    href={mailApp.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-mavi px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(43_78_255/0.8)] transition hover:-translate-y-px hover:bg-[#2442e0]"
                   >
-                    {uygulama.action}
+                    {mailApp.action}
                     <span aria-hidden="true">↗</span>
                   </a>
                 )}
 
                 <button
                   type="button"
-                  onClick={() => void tekrarGonder()}
-                  disabled={kalan > 0}
+                  onClick={() => void resend()}
+                  disabled={remaining > 0}
                   className="w-full rounded-2xl border border-cizgi px-5 py-3.5 font-semibold text-metin transition-colors hover:bg-zemin disabled:cursor-not-allowed disabled:text-gri disabled:hover:bg-transparent dark:hover:bg-white/5"
                 >
-                  {kalan > 0 ? (
+                  {remaining > 0 ? (
                     <>
                       Tekrar gönder{" "}
                       <span className="tabular-nums">
-                        ({Math.floor(kalan / 60)}:{String(kalan % 60).padStart(2, "0")})
+                        ({Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")})
                       </span>
                     </>
                   ) : (
@@ -179,9 +179,9 @@ export function GirisFormu({
                 </button>
 
                 <p role="status" className="min-h-5 text-center text-sm">
-                  {hata ? (
-                    <span className="text-kehribar">{hata}</span>
-                  ) : yenidenGonderildi ? (
+                  {loginError ? (
+                    <span className="text-kehribar">{loginError}</span>
+                  ) : resent ? (
                     <span className="text-yesil">Yeni bağlantı gönderildi. En son geleni kullan.</span>
                   ) : null}
                 </p>
@@ -190,8 +190,8 @@ export function GirisFormu({
               <button
                 type="button"
                 onClick={() => {
-                  setHata(null)
-                  setDurum("bos")
+                  setLoginError(null)
+                  setState("idle")
                 }}
                 className="mt-2 w-full text-center text-sm font-medium text-gri underline-offset-4 hover:text-metin hover:underline"
               >
@@ -208,7 +208,7 @@ export function GirisFormu({
                 oluşur.
               </p>
 
-              <form onSubmit={gonder} className="mt-10">
+              <form onSubmit={submit} className="mt-10">
                 <label htmlFor="email" className="mb-2 block text-sm font-medium text-metin">
                   E-posta adresi
                 </label>
@@ -221,36 +221,36 @@ export function GirisFormu({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="aday@ornek.com"
-                  aria-invalid={hata ? true : undefined}
-                  aria-describedby={hata ? "giris-hata" : undefined}
+                  aria-invalid={loginError ? true : undefined}
+                  aria-describedby={loginError ? "giris-hata" : undefined}
                   className="w-full rounded-2xl border border-transparent bg-zemin px-5 py-4 dark:bg-white/5 text-base text-metin outline-none ring-mavi/25 transition placeholder:text-gri/80 focus:border-mavi focus:bg-white focus:ring-4 dark:focus:bg-white/10"
                 />
 
-                {oneri && (
+                {suggestion && (
                   <p className="mt-3 text-sm text-gri">
                     <button
                       type="button"
-                      onClick={() => setEmail(oneri)}
+                      onClick={() => setEmail(suggestion)}
                       className="font-semibold text-mavi underline-offset-4 hover:underline dark:text-[#8ea2ff]"
                     >
-                      {oneri}
+                      {suggestion}
                     </button>{" "}
                     mı demek istedin?
                   </p>
                 )}
 
-                {hata && (
+                {loginError && (
                   <p id="giris-hata" role="alert" className="mt-3 text-sm text-kehribar">
-                    {hata}
+                    {loginError}
                   </p>
                 )}
 
                 <button
                   type="submit"
-                  disabled={durum === "gonderiliyor"}
+                  disabled={state === "sending"}
                   className="group mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-mavi px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(43_78_255/0.8)] transition hover:-translate-y-px hover:bg-[#2442e0] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {durum === "gonderiliyor" ? (
+                  {state === "sending" ? (
                     <>
                       <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
                       Gönderiliyor…
@@ -272,7 +272,7 @@ export function GirisFormu({
                 <span className="h-px flex-1 bg-cizgi" />
               </div>
 
-              <SosyalGiris acik={acikSaglayicilar} donus={donus} />
+              <SocialLogin open={enabledProviders} returnTo={returnTo} />
 
               <ul className="mt-9 space-y-2.5 text-sm text-gri">
                 {[
@@ -316,7 +316,7 @@ export function GirisFormu({
 
       <div className="hidden p-4 lg:block lg:w-1/2">
         <div className="sticky top-4 h-[calc(100dvh-2rem)]">
-          <GirisGorseli />
+          <LoginVisual />
         </div>
       </div>
     </div>

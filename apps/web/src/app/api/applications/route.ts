@@ -19,10 +19,10 @@ export async function GET() {
       select: BOARD_SELECT,
     })
 
-    return NextResponse.json({ kartlar: satirlar.map(toBoardCard) })
+    return NextResponse.json({ cards: satirlar.map(toBoardCard) })
   } catch (error) {
-    const yanit = authErrorResponse(error)
-    if (yanit) return yanit
+    const reply = authErrorResponse(error)
+    if (reply) return reply
     console.error("[api/applications]", error)
     return NextResponse.json({ error: "Bir şeyler ters gitti." }, { status: 500 })
   }

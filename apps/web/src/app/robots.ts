@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { siteAdresi } from "@/lib/site"
+import { siteUrl as siteUrl } from "@/lib/site"
 
 /** Kullanıcıya özel ekranlar ve API taranmıyor; zaten oturum istiyorlar. */
 export default function robots(): MetadataRoute.Robots {
@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/", "/adapt/", "/account", "/applications", "/test"],
     },
-    sitemap: `${siteAdresi()}/sitemap.xml`,
+    sitemap: `${siteUrl()}/sitemap.xml`,
   }
 }
