@@ -4,10 +4,15 @@
  * Analiz yerel modelde dakikalar sürebiliyor ve kullanıcı bu sırada başka
  * sayfalara geçiyor. Kayıt localStorage'da tutuluyor ki sayfa değişse,
  * yenilense, hatta ikinci sekme açılsa bile sağ alttaki bildirim analizi
- * izlemeye devam etsin ve bitince haber versin.
+ * izlemeye devam etsin ve bitince haber versin. Kayıt bir zustand deposunda;
+ * localStorage'a kalıcılık katmanı yazıyor.
  *
  * Tek bir analiz izleniyor: yeni analiz eskisinin kaydının yerine geçer.
  */
+
+import { useEffect } from "react"
+import { create } from "zustand"
+import { persist, type PersistStorage } from "zustand/middleware"
 
 export type ActiveAnalysisStatus = "running" | "completed" | "failed"
 
@@ -25,8 +30,11 @@ export interface ActiveAnalysis {
 }
 
 const STORAGE_KEY = "uyarla:active-analysis"
-/** Aynı sekmedeki dinleyiciler için; `storage` olayı yalnızca diğer sekmelerde tetiklenir. */
-export const ACTIVE_ANALYSIS_EVENT = "uyarla:active-analysis"
+const STORE_VERSION = 1
+
+interface ActiveAnalysisState {
+  record: ActiveAnalysis | null
+}
 
 /**
  * Refaktör 1 (DOG-39) öncesi anahtar, alan adları ve aşama değerleri. Süren
@@ -49,42 +57,102 @@ const LEGACY_STAGES: Record<string, string> = {
   tamamlandi: "completed",
 }
 
-function upgradeLegacyRecord(): void {
-  const raw = window.localStorage.getItem(LEGACY_KEY)
+function upgradeLegacyRecord(storage: Storage): void {
+  const raw = storage.getItem(LEGACY_KEY)
   if (raw === null) return
-  window.localStorage.removeItem(LEGACY_KEY)
+  storage.removeItem(LEGACY_KEY)
   try {
     const old = JSON.parse(raw) as Record<string, unknown>
     const record = Object.fromEntries(Object.entries(old).map(([k, v]) => [LEGACY_FIELDS[k] ?? k, v]))
     if (typeof record.stage === "string") record.stage = LEGACY_STAGES[record.stage] ?? record.stage
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record))
+    storage.setItem(STORAGE_KEY, JSON.stringify(record))
   } catch {
     // Bozuk eski kayıt: taşınacak bir şey yok.
   }
 }
 
+function asRecord(value: unknown): ActiveAnalysis | null {
+  return typeof (value as ActiveAnalysis | null)?.jobId === "string" ? (value as ActiveAnalysis) : null
+}
+
+/**
+ * zustand'ın kalıcılık katmanı için localStorage sarmalayıcısı. Gizli pencere
+ * ya da engellenmiş depolamada hata yutuluyor: kayıt bellekte yaşıyor,
+ * bildirim sekmeler arasında çalışmıyor ama analiz sayfası çalışıyor.
+ *
+ * DOG-40 öncesi kayıt `{ state, version }` sarmalayıcısı olmadan, düz nesne
+ * olarak yazılıyordu; ikisi de okunuyor.
+ */
+const storage: PersistStorage<ActiveAnalysisState> = {
+  getItem(name) {
+    if (typeof window === "undefined") return null
+    try {
+      upgradeLegacyRecord(window.localStorage)
+      const raw = window.localStorage.getItem(name)
+      if (raw === null) return { state: { record: null }, version: STORE_VERSION }
+      const parsed = JSON.parse(raw) as { state?: { record?: unknown } } | null
+      const record = parsed && "state" in parsed ? parsed.state?.record : parsed
+      return { state: { record: asRecord(record) }, version: STORE_VERSION }
+    } catch {
+      return null
+    }
+  },
+  setItem(name, value) {
+    try {
+      window.localStorage.setItem(name, JSON.stringify(value))
+    } catch {
+      // bkz. yukarıdaki açıklama
+    }
+  },
+  removeItem(name) {
+    try {
+      window.localStorage.removeItem(name)
+    } catch {
+      // bkz. yukarıdaki açıklama
+    }
+  },
+}
+
+export const useActiveAnalysisStore = create<ActiveAnalysisState>()(
+  persist((): ActiveAnalysisState => ({ record: null }), {
+    name: STORAGE_KEY,
+    version: STORE_VERSION,
+    storage,
+    // Sunucu çizimiyle ilk istemci çizimi aynı olsun diye kayıt ilk efektte
+    // okunuyor (useActiveAnalysis); okunmadan önce sonucu boş.
+    skipHydration: true,
+  }),
+)
+
+/** Kaydı localStorage'dan yeniden okur; depolama eşzamanlı olduğu için hemen biter. */
+export function rehydrateActiveAnalysis(): void {
+  void useActiveAnalysisStore.persist.rehydrate()
+}
+
 export function readActiveAnalysis(): ActiveAnalysis | null {
-  try {
-    upgradeLegacyRecord()
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
-    const record = JSON.parse(raw) as ActiveAnalysis
-    return typeof record?.jobId === "string" ? record : null
-  } catch {
-    // Gizli pencere ya da engellenmiş depolama: bildirim çalışmaz, analiz
-    // sayfası yine çalışır.
-    return null
-  }
+  if (!useActiveAnalysisStore.persist.hasHydrated()) rehydrateActiveAnalysis()
+  return useActiveAnalysisStore.getState().record
+}
+
+/**
+ * Bileşenler için kayıt. Aynı sekmedeki değişiklikler depodan, diğer
+ * sekmelerdekiler `storage` olayıyla geliyor.
+ */
+export function useActiveAnalysis(): ActiveAnalysis | null {
+  const record = useActiveAnalysisStore((s) => s.record)
+  useEffect(() => {
+    rehydrateActiveAnalysis()
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY || event.key === null) rehydrateActiveAnalysis()
+    }
+    window.addEventListener("storage", onStorage)
+    return () => window.removeEventListener("storage", onStorage)
+  }, [])
+  return record
 }
 
 function write(record: ActiveAnalysis | null): void {
-  try {
-    if (record) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(record))
-    else window.localStorage.removeItem(STORAGE_KEY)
-  } catch {
-    // bkz. readActiveAnalysis
-  }
-  window.dispatchEvent(new Event(ACTIVE_ANALYSIS_EVENT))
+  useActiveAnalysisStore.setState({ record })
 }
 
 export function startActiveAnalysis(jobId: string): void {
@@ -125,9 +193,4 @@ export const STAGE_SHORT_LABEL: Record<string, string> = {
   reading_resume: "CV'ni okuyoruz",
   reading_posting: "İlanı okuyoruz",
   comparing: "İlanla karşılaştırıyoruz",
-}
-
-/** Sonucun kalıcı adresi (sayfa yenilense de açılır). */
-export function resultPath(analysisId: string): string {
-  return `/analyze?analiz=${encodeURIComponent(analysisId)}`
 }

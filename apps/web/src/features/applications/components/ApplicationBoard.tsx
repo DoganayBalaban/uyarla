@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import {
   ArrowRight,
@@ -15,8 +16,11 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { loginPath } from "@/lib/returnPath"
-import { resultPath } from "@/features/analysis/activeAnalysis"
+import { resultPath } from "@/features/analysis/paths"
+import { apiStatus } from "@/lib/api"
 import { PageHeader } from "@/components/layout/PageShell"
+import { startAdaptation } from "@/features/adaptation/api"
+import { useApplicationCards, useUpdateCard, type CardChange } from "@/features/applications/api"
 import {
   STAGES,
   STAGE_LABEL,
@@ -26,12 +30,6 @@ import {
   type Stage,
   type BoardCard,
 } from "@/features/applications/board"
-
-type LoadState =
-  | { state: "loading" }
-  | { state: "login" }
-  | { state: "error"; messageText: string }
-  | { state: "ready"; cards: BoardCard[] }
 
 /** Skor yalnızca renkle değil etiketle de (rehber §9.2). */
 function scoreLabel(scoreValue: number): { text: string; cls: string } {
@@ -55,56 +53,25 @@ const COLUMN_HINT: Partial<Record<Stage, string>> = {
 }
 
 export function ApplicationBoard() {
-  const [loadState, setLoadState] = useState<LoadState>({ state: "loading" })
+  const cardsQuery = useApplicationCards()
+  const updateCard = useUpdateCard()
   const [dropTarget, setDropTarget] = useState<Stage | null>(null)
   const reducedMotion = useReducedMotion() ?? false
 
-  useEffect(() => {
-    void (async () => {
-      const response = await fetch("/api/applications")
-      if (response.status === 401) return setLoadState({ state: "login" })
-      if (!response.ok) {
-        return setLoadState({ state: "error", messageText: "Panonu yükleyemedik. Sayfayı yenileyip tekrar dener misin?" })
-      }
-      const { cards } = (await response.json()) as { cards: BoardCard[] }
-      setLoadState({ state: "ready", cards })
-    })()
-  }, [])
-
-  /** İyimser güncelleme: kart hemen yer değiştiriyor, hata olursa geri alınıyor. */
-  async function refresh(analysisId: string, change: { stage?: Stage; note?: string }) {
-    if (loadState.state !== "ready") return
-    const previous = loadState.cards
-    setLoadState({
-      state: "ready",
-      cards: previous.map((k) =>
-        k.analysisId === analysisId
-          ? {
-              ...k,
-              ...(change.stage && { stage: change.stage, stageChangedAt: new Date().toISOString() }),
-              ...(change.note !== undefined && { noteText: change.note || null }),
-            }
-          : k,
-      ),
-    })
-    const response = await fetch(`/api/applications/${analysisId}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(change),
-    })
-    if (!response.ok) setLoadState({ state: "ready", cards: previous })
+  function refresh(analysisId: string, change: CardChange) {
+    updateCard.mutate({ analysisId, change })
   }
 
-  if (loadState.state === "loading") return <BoardSkeleton />
-  if (loadState.state === "error") {
+  if (cardsQuery.isPending) return <BoardSkeleton />
+  if (cardsQuery.isError && apiStatus(cardsQuery.error) !== 401) {
     return (
       <p role="alert" className="flex items-center gap-2 rounded-card border border-border bg-card p-5 text-brand-red dark:text-[#f87171]">
         <CircleAlert className="size-5 shrink-0" aria-hidden />
-        {loadState.messageText}
+        Panonu yükleyemedik. Sayfayı yenileyip tekrar dener misin?
       </p>
     )
   }
-  if (loadState.state === "login") {
+  if (cardsQuery.isError) {
     return (
       <div className="mx-auto max-w-md rounded-card border border-border bg-card p-8 text-center shadow-sm">
         <span className="mx-auto grid size-12 place-items-center rounded-full bg-brand-blue/10 text-brand-blue">
@@ -126,7 +93,7 @@ export function ApplicationBoard() {
     )
   }
 
-  const { cards } = loadState
+  const cards = cardsQuery.data
   const columns = groupByStage(cards)
   const appliedCount = cards.filter((k) => k.stage !== "saved").length
   const interviewCount = columns.interview.length + columns.offer.length
@@ -203,7 +170,7 @@ export function ApplicationBoard() {
                 setDropTarget(null)
                 const id = e.dataTransfer.getData(DRAG_TYPE)
                 const card = cards.find((k) => k.analysisId === id)
-                if (card && card.stage !== cardStage) void refresh(id, { stage: cardStage })
+                if (card && card.stage !== cardStage) refresh(id, { stage: cardStage })
               }}
               className={cn(
                 "flex flex-col rounded-card border bg-foreground/[0.025] p-2.5 transition-colors",
@@ -275,31 +242,27 @@ function BoardCardView({
   onUpdate,
 }: {
   card: BoardCard
-  onUpdate: (id: string, d: { stage?: Stage; note?: string }) => Promise<void>
+  onUpdate: (id: string, change: CardChange) => void
 }) {
   const [noteOpen, setNoteOpen] = useState(false)
   const [note, setNoteText] = useState(card.noteText ?? "")
   const [adapting, setAdapting] = useState(false)
+  const router = useRouter()
   const labelText = card.score === null ? null : scoreLabel(card.score)
 
   async function adapt() {
     setAdapting(true)
-    const response = await fetch("/api/adapt", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ analysisId: card.analysisId }),
-    })
-    const parsed = (await response.json()) as { adaptationId?: string }
-    if (response.ok && parsed.adaptationId) {
-      window.location.href = `/adapt/${parsed.adaptationId}`
-      return
+    try {
+      const { adaptationId } = await startAdaptation(card.analysisId)
+      router.push(`/adapt/${adaptationId}`)
+    } catch {
+      setAdapting(false)
     }
-    setAdapting(false)
   }
 
   function saveNote() {
     setNoteOpen(false)
-    if (note.trim() !== (card.noteText ?? "")) void onUpdate(card.analysisId, { note: note.trim() })
+    if (note.trim() !== (card.noteText ?? "")) onUpdate(card.analysisId, { note: note.trim() })
   }
 
   return (
@@ -369,7 +332,7 @@ function BoardCardView({
         <select
           id={`asama-${card.analysisId}`}
           value={card.stage}
-          onChange={(e) => void onUpdate(card.analysisId, { stage: e.target.value as Stage })}
+          onChange={(e) => onUpdate(card.analysisId, { stage: e.target.value as Stage })}
           className="rounded-button border border-border bg-card px-2 py-1 text-xs font-medium"
         >
           {STAGES.map((a) => (

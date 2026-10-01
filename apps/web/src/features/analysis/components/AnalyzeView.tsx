@@ -2,6 +2,8 @@
 
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   ArrowRight,
   FileCheck2,
@@ -20,13 +22,23 @@ import {
   updateActiveAnalysis,
   readActiveAnalysis,
   clearActiveAnalysis,
-  resultPath,
   handleResponse,
 } from "@/features/analysis/activeAnalysis"
+import { resultPath } from "@/features/analysis/paths"
 import { PageHeader } from "@/components/layout/PageShell"
 import { StageTimeline } from "@/features/analysis/components/StageTimeline"
 import { ResumeUpload } from "@/features/analysis/components/ResumeUpload"
-import { ScoreResult, type ScoreResultView } from "@/features/analysis/components/ScoreResult"
+import { ScoreResult } from "@/features/analysis/components/ScoreResult"
+import {
+  analysisQueryKey,
+  fetchPostingFromUrl,
+  getAnalysis,
+  startAnalysis,
+  useAnalysisJob,
+  type AnalysisResponse,
+} from "@/features/analysis/api"
+import { startAdaptation } from "@/features/adaptation/api"
+import { apiErrorBody, apiErrorMessage, apiStatus } from "@/lib/api"
 
 /** Marka rehberi §10.2'deki yükleme metinleri; aşama çizelgesinin satırları. */
 const STAGES = [
@@ -34,17 +46,6 @@ const STAGES = [
   { id: "reading_posting", title: "İlanı okuyoruz", description: "Gereksinimler ve aranan kavramlar çıkarılıyor." },
   { id: "comparing", title: "İlanla karşılaştırıyoruz", description: "Her gereksinim CV'nde kanıtıyla aranıyor." },
 ]
-
-interface AnalysisResponse {
-  status: "running" | "completed" | "failed"
-  stage?: string
-  analysisId?: string | null
-  durationMs?: number | null
-  tokenUsage?: number | null
-  modelId?: string | null
-  error?: string
-  result?: ScoreResultView | null
-}
 
 const inputClass =
   "w-full rounded-button border border-border bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted/70 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15"
@@ -64,6 +65,8 @@ function StepHeading({ number, heading, hint }: { number: number; heading: strin
 }
 
 export function AnalyzeView() {
+  const router = useRouter()
+  const queryClient = useQueryClient()
   const [state, setState] = useState<AnalysisResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -81,14 +84,9 @@ export function AnalyzeView() {
     if (!postingUrl.trim()) return
     setPostingState({ kind: "loading" })
     try {
-      const res = await fetch("/api/job-url", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url: postingUrl }),
-      })
-      const parsed = (await res.json()) as { text?: string; position?: string | null; error?: string }
-      if (!res.ok || !parsed.text) {
-        setPostingState({ kind: "error", text: parsed.error ?? "İlanı alamadık." })
+      const parsed = await fetchPostingFromUrl(postingUrl)
+      if (!parsed.text) {
+        setPostingState({ kind: "error", text: "İlanı alamadık." })
         return
       }
       if (postingBox.current) postingBox.current.value = parsed.text
@@ -96,8 +94,14 @@ export function AnalyzeView() {
         kind: "done",
         text: `${parsed.position ? `“${parsed.position}” ilanı` : "İlan metni"} aşağıya eklendi. Göndermeden önce göz atabilirsin.`,
       })
-    } catch {
-      setPostingState({ kind: "error", text: "Sunucuya ulaşamadık. Metni kopyalayıp yapıştırır mısın?" })
+    } catch (error) {
+      setPostingState({
+        kind: "error",
+        text:
+          apiStatus(error) === null
+            ? "Sunucuya ulaşamadık. Metni kopyalayıp yapıştırır mısın?"
+            : await apiErrorMessage(error, "İlanı alamadık."),
+      })
     }
   }
   const [resuming, setResuming] = useState(false)
@@ -130,58 +134,80 @@ export function AnalyzeView() {
     if (activeRecord?.status === "running") {
       setState({ status: "running", stage: activeRecord.stage })
       setBusy(true)
-      poll(activeRecord.jobId)
+      setPollJobId(activeRecord.jobId)
     } else if (activeRecord?.status === "completed" && activeRecord.analysisId && !activeRecord.seen) {
       void loadResult(activeRecord.analysisId)
     } else if (activeRecord?.status === "failed" && !activeRecord.seen) {
       setError(activeRecord.error ?? "Analiz tamamlanamadı.")
       clearActiveAnalysis()
     }
-    // uyarla ve poll her çizimde yeniden tanımlanıyor; efekt yalnızca ilk açılışta.
+    // adapt ve loadResult her çizimde yeniden tanımlanıyor; efekt yalnızca ilk açılışta.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Sayfadan ayrılınca yoklama duruyor; izlemeyi sağ alttaki bildirim devralıyor.
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  useEffect(() => () => {
-    if (pollRef.current) clearInterval(pollRef.current)
-  }, [])
+  // Süren analizin yoklaması. Sayfadan ayrılınca duruyor; izlemeyi aynı
+  // sorgu anahtarıyla sağ alttaki bildirim devralıyor.
+  const [pollJobId, setPollJobId] = useState<string | null>(null)
+  const job = useAnalysisJob(pollJobId, 1000)
+  const jobErrorStatus = apiStatus(job.error)
+  useEffect(() => {
+    if (!pollJobId) return
+    if (jobErrorStatus !== null) {
+      // İş artık yok (kuyruk temizlendi) ya da başkasına ait.
+      setPollJobId(null)
+      clearActiveAnalysis()
+      setState(null)
+      setError("Bu analizi artık bulamıyoruz. Yeni bir analiz başlatabilirsin.")
+      setBusy(false)
+      return
+    }
+    const body = job.data
+    if (!body) return
+    setState(body)
+    handleResponse(pollJobId, body)
+
+    if (body.status === "completed" || body.status === "failed") {
+      setPollJobId(null)
+      setBusy(false)
+      // Kullanıcı sonucu bu sayfada görüyor: bildirim gösterilmesin.
+      updateActiveAnalysis(pollJobId, { seen: true })
+      // Adres kalıcı sonuca dönüyor; yenilenirse sonuç kaybolmaz (K3).
+      if (body.status === "completed" && body.analysisId) {
+        window.history.replaceState(null, "", resultPath(body.analysisId))
+      }
+    }
+  }, [pollJobId, job.data, jobErrorStatus])
 
   async function loadResult(analysisId: string) {
     setState({ status: "running" })
     try {
-      const res = await fetch(`/api/analysis/${encodeURIComponent(analysisId)}`)
-      if (!res.ok) {
-        setState(null)
-        setError("Bu analizi bulamadık. Yeni bir analiz başlatabilirsin.")
-        return
-      }
-      const parsed = (await res.json()) as AnalysisResponse
+      const parsed = await queryClient.fetchQuery({
+        queryKey: analysisQueryKey(analysisId),
+        queryFn: () => getAnalysis(analysisId),
+      })
       setState(parsed)
       const activeRecord = readActiveAnalysis()
       if (activeRecord?.analysisId === analysisId) updateActiveAnalysis(activeRecord.jobId, { seen: true })
-    } catch {
+    } catch (error) {
       setState(null)
-      setError("Sonucu alamadık. Sayfayı yenileyip tekrar dener misin?")
+      setError(
+        apiStatus(error) === null
+          ? "Sonucu alamadık. Sayfayı yenileyip tekrar dener misin?"
+          : "Bu analizi bulamadık. Yeni bir analiz başlatabilirsin.",
+      )
     }
   }
 
   /** Uyarlamayı başlatır ve uyarlama ekranına geçer. */
   async function adapt(analysisId: string) {
     setBusy(true)
-    const res = await fetch("/api/adapt", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ analysisId }),
-    })
-    const parsed = (await res.json()) as {
-      adaptationId?: string
-      error?: string
-      code?: string
-    }
-    if (res.ok && parsed.adaptationId) {
-      window.location.href = `/adapt/${parsed.adaptationId}`
+    let parsed: { error?: string; code?: string }
+    try {
+      const { adaptationId } = await startAdaptation(analysisId)
+      router.push(`/adapt/${adaptationId}`)
       return
+    } catch (error) {
+      parsed = await apiErrorBody(error)
     }
     // Anonim kullanıcı uyarlama isteyince kayıt gerekiyor (spec §7). Hata
     // göstermek yerine doğrudan giriş ekranına alıyoruz: huninin tasarımı bu.
@@ -190,7 +216,7 @@ export function AnalyzeView() {
     // devam ediyor. Analiz kimliği kayıtta değişmiyor, yalnızca sahibi
     // anonim kullanıcıdan yeni hesaba geçiyor (src/server/claimAnonymousData.ts).
     if (parsed.code === "registration_required") {
-      window.location.href = loginPath(`/analyze?uyarla=${encodeURIComponent(analysisId)}`)
+      router.push(loginPath(`/analyze?uyarla=${encodeURIComponent(analysisId)}`))
       return
     }
     setError(parsed.error ?? "Uyarlama başlatılamadı.")
@@ -206,65 +232,24 @@ export function AnalyzeView() {
     setBusy(true)
 
     try {
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        body: new FormData(form),
-      })
-      const body = await response.json()
-
-      if (!response.ok) {
-        setError(body.error)
-        setBusy(false)
-        return
-      }
-      // Çizelge hemen görünsün; ilk yoklama bir saniye sonra geliyor. Kayıt,
-      // kullanıcı başka sayfaya geçerse sağ alttaki bildirimin izlemesi için.
-      startActiveAnalysis(body.jobId)
+      const { jobId } = await startAnalysis(new FormData(form))
+      // Çizelge hemen görünsün. Kayıt, kullanıcı başka sayfaya geçerse sağ
+      // alttaki bildirimin izlemesi için.
+      startActiveAnalysis(jobId)
       setState({ status: "running" })
-      poll(body.jobId)
-    } catch {
-      setError("Sunucuya ulaşamadık. Bağlantını kontrol edip tekrar dener misin?")
+      setPollJobId(jobId)
+    } catch (error) {
+      setError(
+        apiStatus(error) === null
+          ? "Sunucuya ulaşamadık. Bağlantını kontrol edip tekrar dener misin?"
+          : await apiErrorMessage(error, "Analiz başlatılamadı."),
+      )
       setBusy(false)
     }
   }
 
-  function poll(jobId: string) {
-    if (pollRef.current) clearInterval(pollRef.current)
-    const timer = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/analyze/${jobId}`)
-        const body: AnalysisResponse & { score?: number | null } = await response.json()
-        if (!response.ok) {
-          // İş artık yok (kuyruk temizlendi) ya da başkasına ait.
-          clearInterval(timer)
-          clearActiveAnalysis()
-          setState(null)
-          setError("Bu analizi artık bulamıyoruz. Yeni bir analiz başlatabilirsin.")
-          setBusy(false)
-          return
-        }
-        setState(body)
-        handleResponse(jobId, body)
-
-        if (body.status === "completed" || body.status === "failed") {
-          clearInterval(timer)
-          setBusy(false)
-          // Kullanıcı sonucu bu sayfada görüyor: bildirim gösterilmesin.
-          updateActiveAnalysis(jobId, { seen: true })
-          // Adres kalıcı sonuca dönüyor; yenilenirse sonuç kaybolmaz (K3).
-          if (body.status === "completed" && body.analysisId) {
-            window.history.replaceState(null, "", resultPath(body.analysisId))
-          }
-        }
-      } catch {
-        // Ağ kesintisi: bir sonraki turda tekrar denenir.
-      }
-    }, 1000)
-    pollRef.current = timer
-  }
-
   function startOver() {
-    if (pollRef.current) clearInterval(pollRef.current)
+    setPollJobId(null)
     clearActiveAnalysis()
     window.history.replaceState(null, "", "/analyze")
     setState(null)

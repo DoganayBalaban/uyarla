@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   Check,
   Copy,
@@ -12,61 +13,40 @@ import {
   TriangleAlert,
 } from "lucide-react"
 import type { CoverLetterRecord } from "@uyarla/core"
+import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/cn"
-
-// Tip core'dan: web kendi kopyasını tutarsa bir anahtar değiştiğinde
-// TypeScript uyarmıyor ve ekran sessizce boş kalıyor (DOG-39).
-export type CoverLetterView = CoverLetterRecord
+import { adaptationQueryKey, requestCoverLetter } from "@/features/adaptation/api"
+import type { AdaptationState } from "@/features/adaptation/types"
 
 /**
  * Uyarlama ekranındaki ön yazı bölümü.
  *
- * Kendi yoklamasını yapıyor: uyarlama ekranının yoklaması uyarlama bitince
- * duruyor, ön yazı ise sonradan istenen ayrı bir iş.
+ * Kayıt uyarlama sorgusundan geliyor (`letter`); o sorgu ön yazı sürerken
+ * yoklamaya devam ediyor. Yeni istek yanıtı aynı önbelleğe yazılıyor.
  */
 export function CoverLetterSection({
   adaptationId,
-  initialLetter,
+  letter: record,
 }: {
   adaptationId: string
-  initialLetter: CoverLetterView | null
+  letter: CoverLetterRecord | null
 }) {
-  const [record, setRecord] = useState<CoverLetterView | null>(initialLetter)
+  const queryClient = useQueryClient()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
-
-  const running = record?.status === "running"
-
-  useEffect(() => {
-    if (!running) return
-    let halted = false
-    void (async () => {
-      while (!halted) {
-        await new Promise((r) => setTimeout(r, 2000))
-        if (halted) return
-        const response = await fetch(`/api/adapt/${adaptationId}`)
-        if (!response.ok) return
-        const { coverLetter } = (await response.json()) as { coverLetter: CoverLetterView | null }
-        setRecord(coverLetter)
-        if (coverLetter?.status !== "running") return
-      }
-    })()
-    return () => {
-      halted = true
-    }
-  }, [running, adaptationId])
 
   async function create() {
     setErrorMessage(null)
     setCopied(false)
-    const response = await fetch(`/api/adapt/${adaptationId}/cover-letter`, { method: "POST" })
-    const body = (await response.json()) as { coverLetter?: CoverLetterView; error?: string }
-    if (!response.ok || !body.coverLetter) {
-      setErrorMessage(body.error ?? "Ön yazıyı başlatamadık. Birazdan tekrar dener misin?")
-      return
+    try {
+      const { coverLetter } = await requestCoverLetter(adaptationId)
+      queryClient.setQueryData<AdaptationState>(adaptationQueryKey(adaptationId), (d) => (d ? { ...d, coverLetter } : d))
+    } catch (error) {
+      setErrorMessage(await apiErrorMessage(error, "Ön yazıyı başlatamadık. Birazdan tekrar dener misin?"))
     }
-    setRecord(body.coverLetter)
   }
+
+  const running = record?.status === "running"
 
   const bodyText =
     record?.status === "done" ? record.paragraphs.map((p) => p.text).join("\n\n") : ""

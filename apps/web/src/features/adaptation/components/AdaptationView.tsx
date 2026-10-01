@@ -1,6 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import Link from "next/link"
 import { motion, useReducedMotion } from "motion/react"
 import {
@@ -16,9 +17,12 @@ import {
   TriangleAlert,
 } from "lucide-react"
 import { diffWords } from "@/features/adaptation/diff"
+import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/cn"
+import { adaptationQueryKey, decide, downloadAdaptation, useAdaptation } from "@/features/adaptation/api"
 import { deriveStageStates } from "@/features/analysis/stageStates"
-import { CoverLetterSection, type CoverLetterView } from "@/features/adaptation/components/CoverLetterSection"
+import { CoverLetterSection } from "@/features/adaptation/components/CoverLetterSection"
+import type { AdaptationState, Verification } from "@/features/adaptation/types"
 import { StageTimeline } from "@/features/analysis/components/StageTimeline"
 import { ScoreRing } from "@/features/analysis/components/ScoreRing"
 import { scoreStatus } from "@/lib/scoreStatus"
@@ -36,44 +40,6 @@ const STAGES = [
     description: "Her yeni cümleyi CV'ndeki gerçek bilgilerle karşılaştırıyoruz.",
   },
 ]
-
-interface Verification {
-  status: "ok" | "flagged"
-  issues: Array<{ kind: string; detail: string }>
-}
-
-interface Bullet {
-  id: string
-  original: string
-  rewritten: string
-  verification: Verification
-  /** İlanın terimine çevrilen ifade ve dayanağı; eski taslaklarda yok. */
-  alignments?: Array<{ term: string; basis: string }>
-  decision: "accepted" | "rejected" | "pending"
-}
-
-interface Draft {
-  summary: {
-    original: string | null
-    rewritten: string
-    verification: Verification
-    decision: string
-  }
-  bullets: Bullet[]
-  skillOrder: string[]
-  /** CV'nin maddelerinden beceri listesine eklenenler; eski taslaklarda yok. */
-  addedSkills?: string[]
-}
-
-interface AdaptationState {
-  status: "running" | "draft" | "ready" | "failed"
-  /** API şimdilik göndermiyor; gelirse çizelge onu izler. */
-  stage?: string | null
-  draft: Draft | null
-  scoreBefore: number | null
-  scoreAfter: number | null
-  coverLetter: CoverLetterView | null
-}
 
 function DiffText({ original, rewritten }: { original: string; rewritten: string }) {
   return (
@@ -162,64 +128,35 @@ function VerificationWarning({ v }: { v: Verification }) {
 
 export function AdaptationView({ id }: { id: string }) {
   const reducedMotion = useReducedMotion() ?? false
-  const [state, setState] = useState<AdaptationState | null>(null)
+  const queryClient = useQueryClient()
+  const { data: state } = useAdaptation(id)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [busy, setIsBusy] = useState(false)
 
-  const pollOnce = useCallback(async (): Promise<AdaptationState | null> => {
-    const response = await fetch(`/api/adapt/${id}`)
-    if (!response.ok) return null
-    const fresh = (await response.json()) as AdaptationState
-    setState(fresh)
-    return fresh
-  }, [id])
-
-  // Çalışırken yokluyor, bitince duruyor. Zamanlayıcı setState içinden değil
-  // bu döngüden yönetiliyor: durum güncelleyicisinin yan etkisi olması
-  // React'in çift çağırmasıyla iki döngü başlatırdı.
-  useEffect(() => {
-    let halted = false
-    void (async () => {
-      while (!halted) {
-        const last = await pollOnce()
-        if (!last || last.status !== "running") return
-        await new Promise((r) => setTimeout(r, 1500))
-      }
-    })()
-    return () => {
-      halted = true
-    }
-  }, [pollOnce])
-
   async function decisionValue(itemId: string, decision: "accepted" | "rejected") {
     setIsBusy(true)
-    const response = await fetch(`/api/adapt/${id}/decision`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ itemId, decision }),
-    })
-    if (response.ok) {
-      const parsed = (await response.json()) as Partial<AdaptationState>
-      setState((d) => (d ? { ...d, ...parsed } : d))
+    try {
+      const parsed = await decide(id, itemId, decision)
+      queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
+    } catch {
+      // Karar kaydedilemedi: madde olduğu gibi kalıyor, kullanıcı tekrar deneyebilir.
+    } finally {
+      setIsBusy(false)
     }
-    setIsBusy(false)
   }
 
   async function downloadFile(format: "pdf" | "docx") {
     setErrorMessage(null)
     setIsBusy(true)
     try {
-      const response = await fetch(`/api/adapt/${id}/download?format=${format}`)
-      if (!response.ok) {
-        setErrorMessage(((await response.json()) as { error?: string }).error ?? "İndirilemedi.")
-        return
-      }
-      const url = URL.createObjectURL(await response.blob())
+      const url = URL.createObjectURL(await downloadAdaptation(id, format))
       const a = document.createElement("a")
       a.href = url
       a.download = `uyarla-cv.${format}`
       a.click()
       URL.revokeObjectURL(url)
+    } catch (error) {
+      setErrorMessage(await apiErrorMessage(error, "İndirilemedi."))
     } finally {
       setIsBusy(false)
     }
@@ -455,7 +392,7 @@ export function AdaptationView({ id }: { id: string }) {
             </ol>
           </motion.section>
 
-          <CoverLetterSection adaptationId={id} initialLetter={state.coverLetter} />
+          <CoverLetterSection adaptationId={id} letter={state.coverLetter} />
         </div>
 
         {/* İndirme paneli: masaüstünde yapışkan. */}

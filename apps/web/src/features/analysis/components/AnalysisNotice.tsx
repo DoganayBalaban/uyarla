@@ -6,15 +6,17 @@ import { usePathname, useRouter } from "next/navigation"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { ArrowRight, BellRing, CircleAlert, CircleCheck, LoaderCircle, X } from "lucide-react"
 import {
-  ACTIVE_ANALYSIS_EVENT,
   STAGE_SHORT_LABEL,
   updateActiveAnalysis,
   readActiveAnalysis,
   clearActiveAnalysis,
-  resultPath,
   handleResponse,
+  useActiveAnalysis,
   type ActiveAnalysis,
 } from "@/features/analysis/activeAnalysis"
+import { resultPath } from "@/features/analysis/paths"
+import { useAnalysisJob } from "@/features/analysis/api"
+import { apiStatus } from "@/lib/api"
 import { scoreStatus } from "@/lib/scoreStatus"
 
 const POLL_MS = 3000
@@ -34,24 +36,14 @@ export function AnalysisNotice() {
   const pathname = usePathname()
   const router = useRouter()
   const reducedMotion = useReducedMotion() ?? false
-  const [record, setRecord] = useState<ActiveAnalysis | null>(null)
+  const record = useActiveAnalysis()
   const [notificationPermission, setPermission] = useState<NotificationPermission | "unsupported">("unsupported")
   const originalTitle = useRef<string | null>(null)
 
   const onAnalyzePage = pathname === "/analyze"
 
-  // Kayıt localStorage'da; aynı sekmedeki değişiklikler özel olayla, diğer
-  // sekmelerdekiler `storage` olayıyla geliyor.
   useEffect(() => {
-    const reload = () => setRecord(readActiveAnalysis())
-    reload()
     setPermission(typeof Notification === "undefined" ? "unsupported" : Notification.permission)
-    window.addEventListener(ACTIVE_ANALYSIS_EVENT, reload)
-    window.addEventListener("storage", reload)
-    return () => {
-      window.removeEventListener(ACTIVE_ANALYSIS_EVENT, reload)
-      window.removeEventListener("storage", reload)
-    }
   }, [])
 
   const finished = useCallback(
@@ -95,37 +87,23 @@ export function AnalysisNotice() {
 
   // Yoklama. Analiz sayfası kendi yoklamasını yapıyor; iki kez sormamak için
   // orada durmuş oluyoruz.
-  const jobId = record?.status === "running" ? record.jobId : null
+  const jobId = record?.status === "running" && !onAnalyzePage ? record.jobId : null
+  const job = useAnalysisJob(jobId, POLL_MS)
+  const errorStatus = apiStatus(job.error)
   useEffect(() => {
-    if (!jobId || onAnalyzePage) return
-    let stopped = false
-    const ask = async () => {
-      try {
-        const response = await fetch(`/api/analyze/${jobId}`)
-        if (response.status === 404 || response.status === 401) {
-          // İş bulunamıyor (kuyruk temizlendi ya da oturum değişti): izleme bitti.
-          clearActiveAnalysis()
-          return
-        }
-        const reply = (await response.json()) as Parameters<typeof handleResponse>[1]
-        if (stopped) return
-        handleResponse(jobId, reply)
-        if (reply.status === "completed" || reply.status === "failed") {
-          const last = readActiveAnalysis()
-          if (last) finished(last)
-          return
-        }
-      } catch {
-        // Ağ kesintisi: bir sonraki turda tekrar dene.
-      }
-      if (!stopped) timerRef = setTimeout(ask, POLL_MS)
+    if (!jobId) return
+    if (errorStatus === 404 || errorStatus === 401) {
+      // İş bulunamıyor (kuyruk temizlendi ya da oturum değişti): izleme bitti.
+      clearActiveAnalysis()
+      return
     }
-    let timerRef = setTimeout(ask, 500)
-    return () => {
-      stopped = true
-      clearTimeout(timerRef)
+    if (!job.data) return
+    handleResponse(jobId, job.data)
+    if (job.data.status === "completed" || job.data.status === "failed") {
+      const last = readActiveAnalysis()
+      if (last) finished(last)
     }
-  }, [jobId, onAnalyzePage, finished])
+  }, [jobId, job.data, errorStatus, finished])
 
   async function askPermission() {
     if (typeof Notification === "undefined") return
