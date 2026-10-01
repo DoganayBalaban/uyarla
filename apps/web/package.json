@@ -13,10 +13,12 @@
     "cleanup:anonymous": "dotenv -e ../../.env -- tsx scripts/cleanup-anonymous-users.ts"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.104.0",
     "@uyarla/core": "workspace:*",
     "@uyarla/db": "workspace:*",
     "@uyarla/fonts": "workspace:*",
     "@uyarla/worker": "workspace:*",
+    "axios": "^1.20.0",
     "better-auth": "^1.7.6",
     "bullmq": "^5.20.0",
     "clsx": "^2.1.1",
@@ -27,7 +29,8 @@
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "resend": "^6.29.0",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",

@@ -12,7 +12,9 @@ import {
   UserRound,
 } from "lucide-react"
 import { useSession } from "@/lib/authClient"
+import { apiErrorMessage } from "@/lib/api"
 import { loginPath } from "@/lib/returnPath"
+import { useDeleteAccount } from "@/features/account/api"
 import { PageHeader } from "@/components/layout/PageShell"
 
 /** Marka rehberi §10.2'deki veri silme onay metni, birebir. */
@@ -25,18 +27,18 @@ export function AccountView() {
   const [state, setState] = useState<"idle" | "confirm" | "deleting" | "deleted">("idle")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
+  const removeAccount = useDeleteAccount()
+
   async function deleteAccount() {
     setErrorMessage(null)
     setState("deleting")
-
-    const response = await fetch("/api/account", { method: "DELETE" })
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as { error?: string } | null
-      setErrorMessage(body?.error ?? "Hesabını silemedik. Birazdan tekrar dener misin?")
+    try {
+      await removeAccount.mutateAsync()
+      setState("deleted")
+    } catch (error) {
+      setErrorMessage(await apiErrorMessage(error, "Hesabını silemedik. Birazdan tekrar dener misin?"))
       setState("confirm")
-      return
     }
-    setState("deleted")
   }
 
   if (state === "deleted") {

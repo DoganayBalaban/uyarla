@@ -2,6 +2,7 @@ import "@/app/globals.css"
 import type { Metadata } from "next"
 import { AnalysisNotice } from "@/features/analysis/components/AnalysisNotice"
 import { Navbar } from "@/components/layout/Navbar"
+import { QueryProvider } from "@/components/providers/QueryProvider"
 import { siteUrl } from "@/lib/site"
 
 const TITLE = "uyarla · Her ilana, doğru CV."
@@ -37,11 +38,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        {/* Bütün sayfaların tek üst çubuğu; giriş ekranında kendini gizliyor. */}
-        <Navbar />
-        {children}
-        {/* Süren analizi her sayfada izleyen sağ alt bildirimi. */}
-        <AnalysisNotice />
+        <QueryProvider>
+          {/* Bütün sayfaların tek üst çubuğu; giriş ekranında kendini gizliyor. */}
+          <Navbar />
+          {children}
+          {/* Süren analizi her sayfada izleyen sağ alt bildirimi. */}
+          <AnalysisNotice />
+        </QueryProvider>
       </body>
     </html>
   )

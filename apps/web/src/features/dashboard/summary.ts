@@ -5,7 +5,7 @@
  * Yalnızca kullanıcının kendi verisinden sayım var: ortalama skor artışı
  * ya da "başarı oranı" gibi kanıtsız bir sayı yok (rehber §11).
  */
-import { resultPath } from "@/features/analysis/activeAnalysis"
+import { resultPath } from "@/features/analysis/paths"
 import { STAGES, type Stage, type BoardCard } from "@/features/applications/board"
 
 export type PendingKind = "decide" | "ready" | "adapt"

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ArrowRight, CircleCheck, FilePen, Inbox, ListChecks, Plus } from "lucide-react"
-import { resultPath } from "@/features/analysis/activeAnalysis"
+import { resultPath } from "@/features/analysis/paths"
 import { cn } from "@/lib/cn"
 import type { DashboardSummary, PendingItem, PendingKind } from "@/features/dashboard/summary"
 import { STAGES, STAGE_LABEL, STAGE_COLOR, type Stage } from "@/features/applications/board"
