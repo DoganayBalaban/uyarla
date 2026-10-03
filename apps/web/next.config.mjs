@@ -45,6 +45,12 @@ export default {
    */
   outputFileTracingIncludes: {
     "/api/adapt/[id]/download": ["../../packages/fonts/ttf/**"],
+    // Prisma sorgu motoru (.so.node) ve şeması da çalışma anında dosya
+    // sisteminden yükleniyor; @prisma/client paketlendiği için (aşağıya bak)
+    // izleme onları görmüyor ve üretimde "could not locate the Query Engine"
+    // ile düşülüyordu. Her rotaya ekleniyor: auth oturumu her sayfada DB'ye
+    // gidiyor.
+    "/**": ["../../node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/**"],
   },
 
   // core, db ve worker kaynak TypeScript olarak yayımlanıyor; Next'in
