@@ -47,6 +47,19 @@ describe("sendMagicLinkEmail", () => {
     expect(call.html).toContain("https://x/y")
   })
 
+  it("escapes the link in HTML and sends it verbatim in the text part", async () => {
+    process.env.RESEND_API_KEY = "re_test"
+    const send = vi.fn().mockResolvedValue({ data: { id: "1" }, error: null })
+    const url = "https://x/verify?token=abc&callbackURL=/dashboard"
+
+    await sendMagicLinkEmail({ email: "a@b.c", url }, { emails: { send } })
+
+    const call = send.mock.calls[0]![0]
+    expect(call.html).toContain("token=abc&amp;callbackURL=/dashboard")
+    expect(call.html).not.toContain("abc&callbackURL")
+    expect(call.text).toContain(url)
+  })
+
   it("throws when Resend returns an error", async () => {
     // Sessizce yutmak, kullanıcıyı gelmeyecek bir e-postayı beklemeye iter.
     process.env.RESEND_API_KEY = "re_test"
