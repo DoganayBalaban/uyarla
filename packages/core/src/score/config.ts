@@ -58,7 +58,10 @@ const ALL_EVIDENCE_KINDS: readonly Evidence["kind"][] = [
 export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   mustWeight: 2.0,
   niceWeight: 1.0,
-  semanticThreshold: 0.65,
+  // text-embedding-3-small ile ölçüldü (DOG-42). Eşik gömme modeline bağlı:
+  // BGE-M3'te 0,65 idi (K-40), OpenAI'da benzerlikler daha düşük çıkıyor ve
+  // 0,65 anlamsal katmanı tümüyle kapatıyordu.
+  semanticThreshold: 0.5,
   // Bütün türler: anlamsal katmanı soft'a daraltmak 10 çiftte isabeti
   // %91,1'den %85,7'ye düşürüyor (K-36).
   semanticTypes: ["skill", "experience", "education", "soft"],

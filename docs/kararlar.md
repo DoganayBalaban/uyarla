@@ -1797,3 +1797,37 @@ gelen import'ta uygulanmıyor — `pdfkit`, `docx`, `@prisma/client` ve
 `@uyarla/fonts` derleme çıktısında paketlenmiş hâlde duruyor; yalnızca
 `bullmq` ve `ioredis` (doğrudan `apps/web/lib`'den import ediliyorlar)
 gerçekten dışarıda kalıyor.
+
+
+## K-43 · Üretimde OpenAI; skor eşiği gömme modeline göre yeniden ölçüldü
+
+**Tarih:** 6 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** Dağıtım (DOG-42)
+
+**Karar:** Üretken model `gpt-4.1-mini`, gömme `text-embedding-3-small`.
+Sağlayıcılar `LLM_API_KEY` / `EMBEDDING_API_KEY` okuyor; boşsa yerel sunucu
+davranışı aynı. Anahtarlar ayrı: gömme, üretken modelin anahtarına düşmüyor
+(K-12).
+
+**Hata sınıflandırması:** Yerelde her hata "erişilemedi" demekti. Barındırılan
+API'de 401/400/404 kalıcı (`*_rejected`), `429 insufficient_quota` kalıcı
+(`*_quota_exceeded`), diğer 429 ve 5xx geçici. Yanlış anahtar ya da olmayan
+model artık üç deneme boyunca kullanıcıyı bekletmiyor.
+
+**Eşik taraması** (`pnpm eval:sweep`, 10 çift, text-embedding-3-small):
+
+| Eşik | İsabet | Kaçırma | Uydurma |
+|---|---|---|---|
+| 0,45 | %90,6 | 2 | 3 |
+| **0,50** | **%92,5** | **3** | **1** |
+| 0,65 | %88,7 | 6 | 0 |
+
+`semanticThreshold` 0,65 → 0,50. OpenAI gömmelerinde benzerlik BGE-M3'ten
+belirgin düşük; 0,65'te anlamsal katman hiç eşleşme üretmiyordu, bütün
+isabet kelime eşleşmesindendi. **Eşik gömme modeline bağlı bir değer:**
+gömme modeli değişirse tarama tekrarlanmalı.
+
+**Uyarlama** (`pnpm eval:adapt`, gpt-4.1-mini): hedefli 6 yazımın 5'i
+önerildi (%83), atılan tek yazım gerçek bir ilan terimi enjeksiyonu. Sapma
+kontrolü (`driftThreshold` 0,70) hiçbir yazımı atmadı. Örnek küçük; sapma
+eşiği BGE-M3 ile ayarlanmıştı (K-33) ve çeviri yazımlarında yeniden
+ölçülmeli.

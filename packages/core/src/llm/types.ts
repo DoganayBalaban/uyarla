@@ -27,6 +27,8 @@ export interface LlmConfig {
   baseUrl: string
   model: string
   timeoutMs: number
+  /** Barındırılan API (OpenAI) için; yerel sunucuda boş kalır. */
+  apiKey?: string
 }
 
 /**
@@ -40,5 +42,10 @@ export function llmConfigFromEnv(env: NodeJS.ProcessEnv = process.env): LlmConfi
   if (!baseUrl || !model) {
     throw new Error("LLM_BASE_URL ve LLM_MODEL ortam değişkenleri zorunlu")
   }
-  return { baseUrl, model, timeoutMs: Number(env.LLM_TIMEOUT_MS ?? 60000) }
+  return {
+    baseUrl,
+    model,
+    timeoutMs: Number(env.LLM_TIMEOUT_MS ?? 60000),
+    ...(env.LLM_API_KEY ? { apiKey: env.LLM_API_KEY } : {}),
+  }
 }

@@ -1,11 +1,14 @@
 import OpenAI from "openai"
 import { TransientError } from "../errors.js"
+import { classifyApiError } from "./apiError.js"
 import type { EmbeddingProvider } from "./types.js"
 
 export interface EmbeddingConfig {
   baseUrl: string
   model: string
   timeoutMs: number
+  /** Barındırılan API (OpenAI) için; yerel sunucuda boş kalır. */
+  apiKey?: string
 }
 
 /**
@@ -22,7 +25,13 @@ export function embeddingConfigFromEnv(
   const model = env.EMBEDDING_MODEL
   if (!baseUrl) throw new Error("EMBEDDING_BASE_URL ortam değişkeni zorunlu")
   if (!model) throw new Error("EMBEDDING_MODEL ortam değişkeni zorunlu")
-  return { baseUrl, model, timeoutMs: Number(env.LLM_TIMEOUT_MS ?? 60000) }
+  return {
+    baseUrl,
+    model,
+    timeoutMs: Number(env.LLM_TIMEOUT_MS ?? 60000),
+    // Üretken modelin anahtarına düşmüyor: ikisi farklı sağlayıcıda olabilir (K-12).
+    ...(env.EMBEDDING_API_KEY ? { apiKey: env.EMBEDDING_API_KEY } : {}),
+  }
 }
 
 /** Test edilebilirlik için daraltılmış istemci yüzeyi. */
@@ -35,7 +44,7 @@ export interface EmbeddingClient {
 }
 
 /**
- * OpenAI uyumlu embedding ucu. Ollama ve LM Studio aynı protokolü konuşuyor;
+ * OpenAI uyumlu embedding ucu. Ollama, LM Studio ve OpenAI aynı protokolü konuşuyor;
  * sınıf hangisine bağlandığını değil, ne konuştuğunu anlatıyor.
  */
 export class OpenAiCompatibleEmbeddingProvider implements EmbeddingProvider {
@@ -49,7 +58,7 @@ export class OpenAiCompatibleEmbeddingProvider implements EmbeddingProvider {
       client ??
       (new OpenAI({
         baseURL: cfg.baseUrl,
-        apiKey: "yerel", // yerel sunucular anahtar doğrulamıyor
+        apiKey: cfg.apiKey ?? "yerel", // yerel sunucular anahtar doğrulamıyor
         timeout: cfg.timeoutMs,
       }) as unknown as EmbeddingClient)
   }
@@ -64,10 +73,7 @@ export class OpenAiCompatibleEmbeddingProvider implements EmbeddingProvider {
         input: texts,
       })
     } catch (cause) {
-      throw new TransientError(
-        `Embedding çağrısı başarısız: ${(cause as Error).message}`,
-        "embedding_unreachable",
-      )
+      throw classifyApiError(cause, "Embedding çağrısı", "embedding")
     }
 
     // Sunucu sırayı garanti etmiyor; index alanına göre yerleştiriliyor.

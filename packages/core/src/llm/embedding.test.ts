@@ -102,6 +102,16 @@ describe("embeddingConfigFromEnv", () => {
     })
   })
 
+  it("reads its own API key, not the generative model's", () => {
+    const env = {
+      EMBEDDING_BASE_URL: "https://api.openai.com/v1",
+      EMBEDDING_MODEL: "text-embedding-3-small",
+      LLM_API_KEY: "sk-llm",
+    } as NodeJS.ProcessEnv
+    expect(embeddingConfigFromEnv(env).apiKey).toBeUndefined()
+    expect(embeddingConfigFromEnv({ ...env, EMBEDDING_API_KEY: "sk-emb" }).apiKey).toBe("sk-emb")
+  })
+
   it("errors when the model is undefined", () => {
     expect(() =>
       embeddingConfigFromEnv({ EMBEDDING_BASE_URL: "http://x/v1" } as NodeJS.ProcessEnv),

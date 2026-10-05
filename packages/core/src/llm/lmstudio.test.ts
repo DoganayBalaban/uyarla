@@ -99,6 +99,14 @@ describe("llmConfigFromEnv", () => {
     ).toEqual({ baseUrl: "http://x/v1", model: "m", timeoutMs: 5000 })
   })
 
+  it("reads the API key when set, for a hosted provider", () => {
+    expect(
+      llmConfigFromEnv({
+        LLM_BASE_URL: "https://api.openai.com/v1", LLM_MODEL: "m", LLM_API_KEY: "sk-test",
+      } as NodeJS.ProcessEnv),
+    ).toMatchObject({ apiKey: "sk-test" })
+  })
+
   it("errors when the model is undefined", () => {
     expect(() =>
       llmConfigFromEnv({ LLM_BASE_URL: "http://x/v1" } as NodeJS.ProcessEnv),
