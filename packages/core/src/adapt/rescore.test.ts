@@ -3,7 +3,7 @@ import type { EmbeddingProvider } from "../llm/types.js"
 import type { AdaptationDraft } from "../schemas/adaptation.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { rescore } from "./rescore.js"
+import { guardSummaryScore, rescore } from "./rescore.js"
 
 const resumeProfile: ResumeProfile = {
   fullName: "Test", headline: null, summary: null,
@@ -80,3 +80,45 @@ describe("rescore", () => {
     expect(embedding.embed).toHaveBeenCalledTimes(1)
   })
 })
+
+describe("guardSummaryScore", () => {
+  // Yerel deneme (6 Ekim 2026): terimleri koruyan özet bile cümleleri
+  // değiştirdiği için zayıf anlamsal eşleşmeleri kaybettirip skoru 47 → 45
+  // düşürüyordu. Kullanıcı kararı: düşürüyorsa özgün özet kalır.
+  const withSummary: ResumeProfile = { ...resumeProfile, summary: "React ile arayüz geliştiren yazılımcı." }
+  const summaryDraft = (rewritten: string): AdaptationDraft => ({
+    ...draftData,
+    bullets: [{ ...draftData.bullets[0]!, decision: "rejected" }],
+    summary: { original: withSummary.summary, rewritten, verification: { status: "ok", issues: [] }, decision: "accepted" },
+  })
+
+  it("keeps the original summary when the rewrite lowers the score", async () => {
+    const draft = summaryDraft("Arayüz geliştiren yazılımcı.")
+    const guarded = await guardSummaryScore({ profile: withSummary, posting: testPosting, draft }, embedding)
+    expect(guarded.draft.summary.rewritten).toBe(withSummary.summary)
+    expect(guarded.dropped!.withRewrite).toBeLessThan(guarded.dropped!.withOriginal)
+  })
+
+  it("keeps a rewrite that does not lower the score", async () => {
+    const draft = summaryDraft("React ile kullanıcı arayüzleri geliştiren yazılımcı.")
+    const guarded = await guardSummaryScore({ profile: withSummary, posting: testPosting, draft }, embedding)
+    expect(guarded.draft.summary.rewritten).toBe("React ile kullanıcı arayüzleri geliştiren yazılımcı.")
+    expect(guarded.dropped).toBeNull()
+  })
+
+  it("scores both versions from a single embedding call", async () => {
+    // OpenAI gömmeleri çağrıdan çağrıya ~1e-2 oynuyor; iki ayrı çağrı eşiğe
+    // yakın eşleşmeyi bir tarafta kazandırıp diğerinde kaybettirebilir.
+    const draft = summaryDraft("Arayüz geliştiren yazılımcı.")
+    await guardSummaryScore({ profile: withSummary, posting: testPosting, draft }, embedding)
+    expect(embedding.embed).toHaveBeenCalledTimes(1)
+  })
+
+  it("does nothing when the summary was not rewritten", async () => {
+    const draft = summaryDraft(withSummary.summary!)
+    const guarded = await guardSummaryScore({ profile: withSummary, posting: testPosting, draft }, embedding)
+    expect(guarded.draft).toBe(draft)
+    expect(embedding.embed).not.toHaveBeenCalled()
+  })
+})
+

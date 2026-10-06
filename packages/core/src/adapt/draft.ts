@@ -1,4 +1,5 @@
 import { cosineSimilarity } from "../llm/embedding.js"
+import { guardSummaryScore } from "./rescore.js"
 import { resumeLanguage } from "../normalize/language.js"
 import type { EmbeddingProvider, LlmProvider } from "../llm/types.js"
 import {
@@ -53,7 +54,7 @@ export interface Discard {
 }
 
 /** Yazımın neden atıldığı: bilgi kaybı, doğrulama uyarısı, uyumsuz değişiklik. */
-export type DiscardReason = "not_preserved" | "flagged" | "unaligned"
+export type DiscardReason = "not_preserved" | "flagged" | "unaligned" | "score_drop"
 
 const CLEAN: Verification = { status: "ok", issues: [] }
 
@@ -277,7 +278,18 @@ export async function buildAdaptationDraft(
     addedSkills: addedSkillList,
   })
 
+  // Özet yazımı skoru düşürüyorsa özgün özet kalıyor (kullanıcı kararı).
+  const guarded = await guardSummaryScore({ profile, posting, draft }, embedding)
+  if (guarded.dropped) {
+    input.onDiscard?.({
+      id: "summary",
+      reason: "score_drop",
+      detail: `skor ${guarded.dropped.withOriginal} → ${guarded.dropped.withRewrite}`,
+      rewritten: draft.summary.rewritten,
+    })
+  }
+
   const tokens =
     rewrites.reduce((totalSum, y) => totalSum + (y?.tokens ?? 0), 0) + (summaryText?.tokens ?? 0)
-  return { draft, tokens }
+  return { draft: guarded.draft, tokens }
 }
