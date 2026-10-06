@@ -15,10 +15,29 @@ import { PageHeader, PageShell } from "@/components/layout/PageShell"
  * analizlerin, yanda başvuruların nerede durduğu. Sayılar yalnızca
  * kullanıcının kendi verisinden (rehber §11).
  */
-export function DashboardView({ name, summary: summaryData }: { name: string | null; summary: DashboardSummary }) {
+export function DashboardView({
+  name,
+  targetRole,
+  summary: summaryData,
+}: {
+  name: string | null
+  targetRole: string | null
+  summary: DashboardSummary
+}) {
   // Ad yoksa ya da e-postanın kendisiyse selamda kullanılmıyor.
   const userName = name?.trim()
   const greeting = userName && !userName.includes("@") ? `Merhaba, ${userName.split(" ")[0]}.` : "Merhaba."
+
+  // Onboarding'de verilen hedef rol (DOG-50); başlığın altında ayrı satır.
+  const withTarget = (text: string) =>
+    targetRole ? (
+      <>
+        {text}
+        <span className="mt-1 block text-sm">Hedefin: {targetRole}</span>
+      </>
+    ) : (
+      text
+    )
 
   const newAnalysisButton = (
     <Link
@@ -33,7 +52,7 @@ export function DashboardView({ name, summary: summaryData }: { name: string | n
   if (summaryData.total === 0) {
     return (
       <PageShell width="wide">
-        <PageHeader title={greeting} description="Burası senin ana ekranın. İlk analizinden sonra dolmaya başlar." />
+        <PageHeader title={greeting} description={withTarget("Burası senin ana ekranın. İlk analizinden sonra dolmaya başlar.")} />
         <div className="rounded-card border border-dashed border-border bg-card p-10 text-center">
           <span className="mx-auto grid size-12 place-items-center rounded-full bg-brand-blue/10 text-brand-blue">
             <Inbox className="size-6" aria-hidden />
@@ -55,9 +74,9 @@ export function DashboardView({ name, summary: summaryData }: { name: string | n
     <PageShell width="wide">
       <PageHeader
         title={greeting}
-        description={
-          summaryData.pending.length > 0 ? "Kaldığın yerden devam et." : "Bekleyen bir işin yok. Yeni bir ilana bakalım mı?"
-        }
+        description={withTarget(
+          summaryData.pending.length > 0 ? "Kaldığın yerden devam et." : "Bekleyen bir işin yok. Yeni bir ilana bakalım mı?",
+        )}
         action={newAnalysisButton}
       />
 

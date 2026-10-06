@@ -16,6 +16,7 @@ import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { signOut, useSession } from "@/lib/authClient"
 import { cn } from "@/lib/cn"
+import { displayName } from "@/features/account/displayName"
 import { loginPath } from "@/lib/returnPath"
 import { CONTAINER } from "@/components/layout/PageShell"
 
@@ -113,7 +114,7 @@ export function Navbar() {
           {isPending ? (
             <span className="size-9" />
           ) : registered ? (
-            <AccountMenu userEmail={currentUser.email} isActive={path === "/account"} />
+            <AccountMenu userName={displayName(currentUser)} userEmail={currentUser.email} isActive={path === "/account"} />
           ) : (
             <>
               <Link
@@ -144,7 +145,7 @@ export function Navbar() {
  * ayarları silme akışının tek kapısı, "istediğin an silebilirsin" sözü
  * ulaşılamaz olursa tutulmamış olur.
  */
-function AccountMenu({ userEmail, isActive }: { userEmail: string; isActive: boolean }) {
+function AccountMenu({ userName, userEmail, isActive }: { userName: string; userEmail: string; isActive: boolean }) {
   const [open, setOpen] = useState(false)
   const wrapper = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -181,7 +182,7 @@ function AccountMenu({ userEmail, isActive }: { userEmail: string; isActive: boo
     items[(i + direction + items.length) % items.length]?.focus()
   }
 
-  const initial = (userEmail[0] ?? "?").toLocaleUpperCase("tr-TR")
+  const initial = (userName[0] ?? "?").toLocaleUpperCase("tr-TR")
   const item =
     "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-foreground no-underline outline-none hover:bg-background focus-visible:bg-background"
 
@@ -202,6 +203,8 @@ function AccountMenu({ userEmail, isActive }: { userEmail: string; isActive: boo
         <span className="grid size-8 place-items-center rounded-full bg-brand-blue font-heading text-sm font-extrabold text-white">
           {initial}
         </span>
+        {/* Ad (DOG-50); onboarding'i atlayanda e-posta. Dar ekranda yalnızca baş harf. */}
+        <span className="hidden max-w-40 truncate text-sm font-medium text-foreground sm:inline">{userName}</span>
         <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} aria-hidden />
       </button>
 
@@ -214,10 +217,14 @@ function AccountMenu({ userEmail, isActive }: { userEmail: string; isActive: boo
           className="absolute top-full right-0 mt-2 w-64 rounded-card border border-border bg-card p-1.5 shadow-lg shadow-black/10"
         >
           <div className="px-3 pt-2 pb-2.5">
-            <p className="m-0 text-xs text-muted">Giriş yapılan hesap</p>
-            <p className="m-0 mt-0.5 truncate text-sm font-semibold text-foreground" title={userEmail}>
-              {userEmail}
+            <p className="m-0 truncate text-sm font-semibold text-foreground" title={userName}>
+              {userName}
             </p>
+            {userName !== userEmail && (
+              <p className="m-0 mt-0.5 truncate text-xs text-muted" title={userEmail}>
+                {userEmail}
+              </p>
+            )}
           </div>
           <div className="my-1 h-px bg-border" role="separator" />
           <Link role="menuitem" tabIndex={-1} onClick={() => setOpen(false)} href="/account" className={item}>

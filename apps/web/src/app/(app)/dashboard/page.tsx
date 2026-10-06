@@ -14,6 +14,6 @@ export default async function DashboardPage() {
   const session = await getSession()
   // Anonim oturumun panosu yok; işleri kayıt olunca hesaba taşınıyor.
   if (!session || session.user.isAnonymous) redirect(loginPath("/dashboard"))
-  const { name, summary } = await getDashboardData(session.user.id)
-  return <DashboardView name={name} summary={summary} />
+  const { name, targetRole, summary } = await getDashboardData(session.user.id)
+  return <DashboardView name={name} targetRole={targetRole} summary={summary} />
 }
