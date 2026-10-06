@@ -117,3 +117,19 @@ describe("collectEvidence", () => {
     expect(evidenceList.filter((e) => e.kind === "bullet")).toHaveLength(0)
   })
 })
+
+describe("collectEvidence · blank fields", () => {
+  // Gerçek vaka: ayrıştırıcı cv-b'nin dillerine "" koydu; OpenAI gömme API'si
+  // boş girdiyi 400 ile reddetti ve analiz "sorun bizde" hatasıyla düştü.
+  it("never produces empty evidence text", () => {
+    const evidence = collectEvidence({
+      ...PROFILE,
+      skills: ["React", "", "  "],
+      languages: ["", "İngilizce"],
+      education: [{ school: "", degree: null, field: null, startDate: null, endDate: null }],
+    } as ResumeProfile)
+    expect(evidence.every((e) => e.text.trim().length > 0)).toBe(true)
+    expect(evidence.map((e) => e.text)).toContain("İngilizce")
+  })
+})
+
