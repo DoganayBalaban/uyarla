@@ -41,6 +41,7 @@ Bugün her analizde CV yeniden yükleniyor ve navbar'da e-posta görünüyor.
 | Alan | Tip | Not |
 |---|---|---|
 | `label` | `String?` | Kütüphanedeki ad; boşsa dosya adı gösterilir. En fazla 60 karakter. |
+| `fileName` | `String?` | Yüklenen dosyanın asıl adı; `filePath` depodaki yol olduğu için ayrıca tutuluyor. Etiket boşsa gösterilir. |
 | `savedAt` | `DateTime?` | Doluysa kütüphanede. Kaldırma yalnızca bunu temizler; eski analizler bozulmaz. |
 | `isDefault` | `Boolean @default(false)` | Kullanıcı başına en fazla bir; sunucu transaction'da korur. |
 

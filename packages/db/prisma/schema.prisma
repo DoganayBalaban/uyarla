@@ -21,16 +21,29 @@ model User {
   accounts      Account[]
   analyses      Analysis[]
   jobPostings   JobPosting[]
+
+  // Onboarding (DOG-50). Boşsa kayıtlı kullanıcıya onboarding gösterilir;
+  // tamamlanınca ya da atlanınca doluyor.
+  onboardedAt DateTime?
+  goal        Goal?
+  targetRole  String?
 }
 
 model Resume {
-  id        String          @id @default(cuid())
+  id        String       @id @default(cuid())
   userId    String
-  user      User            @relation(fields: [userId], references: [id])
+  user      User         @relation(fields: [userId], references: [id])
   filePath  String
-  rawText   String          @db.Text
-  status    ResumeStatus    @default(uploaded)
-  createdAt DateTime        @default(now())
+  rawText   String       @db.Text
+  status    ResumeStatus @default(uploaded)
+  createdAt DateTime     @default(now())
+
+  // CV kütüphanesi (DOG-50). savedAt doluysa kütüphanede; kaldırma yalnızca
+  // bunu temizler, bağlı analizler kalır.
+  label     String?
+  fileName  String?
+  savedAt   DateTime?
+  isDefault Boolean         @default(false)
   versions  ResumeVersion[]
 }
 
@@ -38,6 +51,13 @@ enum ResumeStatus {
   uploaded
   parsed
   failed
+}
+
+enum Goal {
+  career_change
+  first_job
+  promotion
+  exploring
 }
 
 model ResumeVersion {
