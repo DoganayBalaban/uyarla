@@ -1,45 +1,17 @@
 import { PermanentError } from "@uyarla/core"
-
-const MAX_FILE_BYTES = 10 * 1024 * 1024
-const MIN_JOB_TEXT_LENGTH = 50
-const ALLOWED_EXTENSIONS = ["pdf", "docx"]
+import { analysisFormSchema } from "@/features/analysis/schema"
+import { firstIssue } from "@/lib/validation"
 
 /**
- * Yükleme doğrulaması. Mesajlar doğrudan kullanıcıya gösteriliyor, bu yüzden
- * marka rehberi §6 tonunda: suçlamayan dil, sonraki adımı gösteren cümle.
+ * Yükleme doğrulaması. Kurallar ve mesajlar istemciyle ortak şemada
+ * (`features/analysis/schema.ts`); burada yalnızca ilk hata PermanentError'a
+ * çevriliyor, route onu `{ error, code }` olarak döndürüyor.
  */
-export function validateUpload(
-  file: { name: string; size: number },
-  jobText: string,
-): void {
-  const parts = file.name.toLowerCase().split(".")
-  const extension = parts.length > 1 ? parts.pop() : undefined
-
-  if (!extension || !ALLOWED_EXTENSIONS.includes(extension)) {
-    throw new PermanentError(
-      "Yalnızca PDF ve DOCX dosyalarını okuyabiliyoruz.",
-      "unsupported_format",
-    )
+export function validateUpload(file: unknown, jobText: string): { jobText: string } {
+  const parsed = analysisFormSchema.safeParse({ cv: file, jobText })
+  if (!parsed.success) {
+    const { message, code } = firstIssue(parsed.error)
+    throw new PermanentError(message, code)
   }
-
-  if (file.size === 0) {
-    throw new PermanentError(
-      "Dosyan boş görünüyor. Tekrar yüklemeyi dener misin?",
-      "empty_file",
-    )
-  }
-
-  if (file.size > MAX_FILE_BYTES) {
-    throw new PermanentError(
-      "Dosyan 10 MB'tan büyük. Daha küçük bir sürümünü yükler misin?",
-      "file_too_large",
-    )
-  }
-
-  if (jobText.trim().length < MIN_JOB_TEXT_LENGTH) {
-    throw new PermanentError(
-      "İlan metni çok kısa görünüyor. İlanın tamamını yapıştırır mısın?",
-      "job_text_too_short",
-    )
-  }
+  return { jobText: parsed.data.jobText }
 }

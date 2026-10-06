@@ -19,12 +19,11 @@ export async function POST(request: Request) {
   try {
     const form = await request.formData()
     const file = form.get("cv")
-    const jobText = String(form.get("jobText") ?? "")
-
+    const { jobText } = validateUpload(file, String(form.get("jobText") ?? ""))
+    // Şema dosya benzeri her nesneyi kabul ediyor; içeriği okumak için gerçek File gerek.
     if (!(file instanceof File)) {
-      throw new PermanentError("CV dosyası bulunamadı.", "missing_file")
+      throw new PermanentError("CV'ni seçer misin? PDF ya da DOCX olabilir.", "missing_file")
     }
-    validateUpload({ name: file.name, size: file.size }, jobText)
 
     const buffer = Buffer.from(await file.arrayBuffer())
     const store = fileStoreFromEnv()

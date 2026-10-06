@@ -1,7 +1,9 @@
 import { type Prisma, prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, ensureRegistered, getSession } from "@/server/authz"
-import { NOTE_MAX_LENGTH, BOARD_SELECT, isStage, toBoardCard } from "@/features/applications/board"
+import { BOARD_SELECT, toBoardCard } from "@/features/applications/board"
+import { applicationPatchSchema } from "@/features/applications/schema"
+import { firstIssue } from "@/lib/validation"
 
 export const runtime = "nodejs"
 
@@ -14,31 +16,19 @@ export async function PATCH(
   try {
     const session = ensureRegistered(await getSession())
 
-    const body = (await request.json().catch(() => ({}))) as { stage?: unknown; note?: unknown }
+    const parsed = applicationPatchSchema.safeParse(await request.json().catch(() => ({})))
+    if (!parsed.success) {
+      return NextResponse.json({ error: firstIssue(parsed.error).message }, { status: 400 })
+    }
+    const body = parsed.data
     const patchData: Prisma.AnalysisUpdateInput = {}
 
     if (body.stage !== undefined) {
-      if (!isStage(body.stage)) {
-        return NextResponse.json({ error: "Geçersiz aşama." }, { status: 400 })
-      }
       patchData.stage = body.stage
       patchData.stageChangedAt = new Date()
     }
     if (body.note !== undefined) {
-      if (body.note !== null && typeof body.note !== "string") {
-        return NextResponse.json({ error: "Geçersiz not." }, { status: 400 })
-      }
-      const trimmedNote = (body.note ?? "").trim()
-      if (trimmedNote.length > NOTE_MAX_LENGTH) {
-        return NextResponse.json(
-          { error: `Not en fazla ${NOTE_MAX_LENGTH} karakter olabilir.` },
-          { status: 400 },
-        )
-      }
-      patchData.note = trimmedNote || null
-    }
-    if (Object.keys(patchData).length === 0) {
-      return NextResponse.json({ error: "Güncellenecek bir şey yok." }, { status: 400 })
+      patchData.note = body.note || null
     }
 
     const existing = await prisma.analysis.findUnique({ where: { id }, select: { userId: true } })

@@ -1,5 +1,7 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
+import { jobUrlSchema } from "@/features/analysis/schema"
+import { firstIssue } from "@/lib/validation"
 import { authErrorResponse } from "@/server/authz"
 import { extractPostingText, isAllowedPath } from "@/server/jobPostingFromUrl"
 import { enforceRateLimit, redisStore } from "@/server/rateLimit"
@@ -23,12 +25,12 @@ const UNSUPPORTED =
  */
 export async function POST(request: Request) {
   try {
-    const { url: raw } = (await request.json().catch(() => ({}))) as { url?: unknown }
-    if (typeof raw !== "string" || !raw.trim()) {
-      return NextResponse.json({ error: "İlan bağlantısını yapıştır." }, { status: 400 })
+    const parsed = jobUrlSchema.safeParse(await request.json().catch(() => ({})))
+    if (!parsed.success) {
+      return NextResponse.json({ error: firstIssue(parsed.error).message }, { status: 400 })
     }
 
-    let url = isAllowedPath(raw)
+    let url = isAllowedPath(parsed.data.url)
     if (!url) return NextResponse.json({ error: UNSUPPORTED, code: "unsupported" }, { status: 400 })
 
     const requestHeaders = await headers()

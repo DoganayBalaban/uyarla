@@ -4,6 +4,8 @@ import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import {
   ArrowRight,
   FileCheck2,
@@ -37,6 +39,7 @@ import {
   useAnalysisJob,
   type AnalysisResponse,
 } from "@/features/analysis/api"
+import { analysisFormSchema, jobUrlSchema, type AnalysisFormValues } from "@/features/analysis/schema"
 import { startAdaptation } from "@/features/adaptation/api"
 import { apiErrorBody, apiErrorMessage, apiStatus } from "@/lib/api"
 
@@ -70,8 +73,20 @@ export function AnalyzeView() {
   const [state, setState] = useState<AnalysisResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const postingBox = useRef<HTMLTextAreaElement>(null)
-  const [postingUrl, setPostingUrl] = useState("")
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    getValues,
+    watch,
+    clearErrors,
+    formState: { errors },
+  } = useForm<AnalysisFormValues>({
+    resolver: zodResolver(analysisFormSchema),
+    defaultValues: { jobText: "", postingUrl: "" },
+  })
+  const resumeFile = watch("cv") as File | undefined
+  const postingUrl = watch("postingUrl") ?? ""
   const [postingState, setPostingState] = useState<
     { kind: "loading" } | { kind: "done"; text: string } | { kind: "error"; text: string } | null
   >(null)
@@ -81,15 +96,16 @@ export function AnalyzeView() {
    * kalıyor: çekilen metinde gereksiz kısım varsa kullanıcı silebilir.
    */
   async function fetchPosting() {
-    if (!postingUrl.trim()) return
+    const link = jobUrlSchema.safeParse({ url: getValues("postingUrl") })
+    if (!link.success) return
     setPostingState({ kind: "loading" })
     try {
-      const parsed = await fetchPostingFromUrl(postingUrl)
+      const parsed = await fetchPostingFromUrl(link.data.url)
       if (!parsed.text) {
         setPostingState({ kind: "error", text: "İlanı alamadık." })
         return
       }
-      if (postingBox.current) postingBox.current.value = parsed.text
+      setValue("jobText", parsed.text, { shouldValidate: true })
       setPostingState({
         kind: "done",
         text: `${parsed.position ? `“${parsed.position}” ilanı` : "İlan metni"} aşağıya eklendi. Göndermeden önce göz atabilirsin.`,
@@ -224,15 +240,18 @@ export function AnalyzeView() {
     setResuming(false)
   }
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const form = event.currentTarget
+  /** Şemadan geçmiş değerlerle çağrılıyor; sunucu aynı şemayla bir kez daha doğruluyor. */
+  async function onSubmit(values: AnalysisFormValues) {
     setError(null)
     setState(null)
     setBusy(true)
 
+    const body = new FormData()
+    body.append("cv", values.cv as File)
+    body.append("jobText", values.jobText)
+
     try {
-      const { jobId } = await startAnalysis(new FormData(form))
+      const { jobId } = await startAnalysis(body)
       // Çizelge hemen görünsün. Kayıt, kullanıcı başka sayfaya geçerse sağ
       // alttaki bildirimin izlemesi için.
       startActiveAnalysis(jobId)
@@ -318,9 +337,17 @@ export function AnalyzeView() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <form onSubmit={onSubmit} className="rounded-card border border-border bg-card p-5 shadow-sm sm:p-7">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="rounded-card border border-border bg-card p-5 shadow-sm sm:p-7">
           <StepHeading number={1} heading="CV'n" hint="Başvuracağın CV'nin güncel hâli." />
-          <ResumeUpload />
+          <ResumeUpload
+            value={resumeFile ?? null}
+            error={errors.cv?.message}
+            onChange={(file) => {
+              // Kaldırınca hata gösterilmesin; eksik dosyayı gönderimde şema söylüyor.
+              setValue("cv", file as File, { shouldValidate: file !== null })
+              if (!file) clearErrors("cv")
+            }}
+          />
 
           <div className="my-7 h-px bg-border" />
 
@@ -335,8 +362,7 @@ export function AnalyzeView() {
                 id="ilanUrl"
                 type="url"
                 inputMode="url"
-                value={postingUrl}
-                onChange={(e) => setPostingUrl(e.target.value)}
+                {...register("postingUrl")}
                 onKeyDown={(e) => {
                   // Enter formu (analizi) göndermesin; bağlantıyı getirsin.
                   if (e.key === "Enter") {
@@ -371,13 +397,18 @@ export function AnalyzeView() {
           </label>
           <textarea
             id="jobText"
-            name="jobText"
-            ref={postingBox}
+            {...register("jobText")}
             rows={10}
-            required
+            aria-invalid={errors.jobText ? true : undefined}
+            aria-describedby={errors.jobText ? "jobText-error" : undefined}
             placeholder="İlanın tamamını yapıştır — gereksinimler bölümü dahil. Bağlantıyı yukarıya yapıştırırsan buraya kendiliğinden gelir."
             className={`${inputClass} resize-y leading-relaxed`}
           />
+          {errors.jobText && (
+            <p id="jobText-error" role="alert" className="mt-2 text-sm text-brand-amber">
+              {errors.jobText.message}
+            </p>
+          )}
 
           <button
             type="submit"

@@ -13,6 +13,7 @@
     "cleanup:anonymous": "dotenv -e ../../.env -- tsx scripts/cleanup-anonymous-users.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
     "@tanstack/react-query": "^5.104.0",
     "@uyarla/core": "workspace:*",
     "@uyarla/db": "workspace:*",
@@ -28,8 +29,10 @@
     "next": "^15.0.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "react-hook-form": "^7.89.0",
     "resend": "^6.29.0",
     "tailwind-merge": "^3.7.0",
+    "zod": "^4.6.5",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
