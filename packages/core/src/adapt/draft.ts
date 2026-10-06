@@ -11,7 +11,7 @@ import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { conceptTexts, type ScoreResult } from "../score/score.js"
 import { DEFAULT_ALIGNMENT_CONFIG, verifyAlignments, type AlignmentConfig } from "../verify/alignment.js"
-import { preservesSource } from "../verify/preserve.js"
+import { preservesSource, summaryAnchors } from "../verify/preserve.js"
 import { verifyRewrite } from "../verify/verify.js"
 import { bulletId } from "./profile.js"
 import { rewriteBullets, rewriteSummary } from "./rewrite.js"
@@ -119,6 +119,8 @@ export async function buildAdaptationDraft(
           summary: profile.summary,
           posting,
           supportedTerms: supportedConceptTerms(posting, fullResumeText),
+          // Doğrulama da aynı listeyi istiyor (preservesSource bases).
+          keepTerms: summaryAnchors(profile.summary, profile.skills),
           language: lang,
         })
       : Promise.resolve(null),
@@ -228,11 +230,19 @@ export async function buildAdaptationDraft(
   // indirmeyi bloklamıyor, kullanıcının görmediği metni çıktıya koymaktansa
   // orijinal korunuyor.
   //
-  // Özgün özetteki sayıları (deneyim yılı) ve ilan kavramlarını kaybeden
-  // yazım da gösterilmiyor; özet olduğu gibi kalıyor.
+  // Özgün özetteki sayıları (deneyim yılı), ilan kavramlarını ve özette
+  // adı geçen becerileri kaybeden yazım da gösterilmiyor; özet olduğu gibi
+  // kalıyor.
   const summaryPreservation =
     profile.summary && summaryText
-      ? preservesSource({ rewritten: summaryText.data, source: profile.summary, posting })
+      ? preservesSource({
+          rewritten: summaryText.data,
+          source: profile.summary,
+          posting,
+          // Özgün özetin andığı beceriler de kalmalı; yoksa model özeti
+          // genelleştirip güçlü terimleri atabiliyor.
+          bases: summaryAnchors(profile.summary, profile.skills),
+        })
       : null
   const summaryPreserved = !!summaryPreservation?.ok
   if (summaryText && summaryPreservation && !summaryPreservation.ok) {

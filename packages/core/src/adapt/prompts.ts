@@ -59,6 +59,9 @@ geçen, ilanın da aradığı kavramlar verilecek.
 Kesin kurallar:
 - Özetteki deneyim yılını, unvanı ve alanı KORU; özetin ilk cümlesi adayın kim
   olduğunu söylemeye devam etsin.
+- "Korunacak terimler" satırındaki her terim yeni özette AYNEN geçmeli; hiçbirini
+  silme, genelleştirme ya da başka kelimeyle değiştirme. Özeti kısaltmak için
+  terim atma.
 - Yalnızca özette ve listede olan bilgileri kullan. Listede olmayan hiçbir
   teknoloji, deneyim yılı, unvan veya başarı yazma.
 - Ayrı bilgileri birbirine bağlama: "X yaparak Y sağladım" gibi CV'de olmayan
@@ -70,4 +73,4 @@ Kesin kurallar:
   "sonuç odaklı" (İngilizcede "passionate", "results-driven") gibi kalıp ve
   abartılı ifadeler kullanma.
 - Her cümle dil bilgisi açısından eksiksiz olsun.
-- En fazla üç cümle.`
+- En fazla üç cümle; korunacak terimler sığmıyorsa dört cümle olabilir.`

@@ -81,3 +81,16 @@ function verbStem(word: string): string | null {
 function nums(text: string): string[] {
   return text.match(/\d+(?:[.,]\d+)*/g) ?? []
 }
+
+/**
+ * Özet yazımında korunması gereken terimler: profilin becerilerinden özgün
+ * özette geçenler. `preservesSource`'a `bases` olarak veriliyor.
+ *
+ * Neden: ilan kavramı kontrolü yalnızca ilanın aradığı terimleri koruyor.
+ * gpt-4.1-mini özeti "genel" bir metne çevirip ilanın adıyla aramadığı
+ * ama anlamca eşleşen terimleri (RAG, MCP, tool calling…) atabiliyor; özet
+ * zayıflıyor ve gömme eşleşmesi düşüyor (6 Ekim 2026: skor 47 → 45).
+ */
+export function summaryAnchors(summary: string, skills: readonly string[]): string[] {
+  return [...new Set(skills.filter((skill) => skill.trim() && containsKeyword(summary, skill)))]
+}

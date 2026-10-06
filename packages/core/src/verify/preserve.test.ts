@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { JobPostingData } from "../schemas/job.js"
-import { preservesSource } from "./preserve.js"
+import { preservesSource, summaryAnchors } from "./preserve.js"
 
 const testPosting: JobPostingData = {
   position: "Frontend Geliştirici",
@@ -99,3 +99,41 @@ describe("preservesSource", () => {
     })
   })
 })
+
+describe("summaryAnchors", () => {
+  // Gerçek vaka (6 Ekim 2026, yerel deneme): gpt-4.1-mini özeti genelleştirip
+  // RAG, MCP, tool calling… terimlerini attı; skor 47 → 45 düştü.
+  const original =
+    "AI Engineer and Software Engineering graduate focused on production-grade LLM applications, RAG systems, AI agents, and full-stack AI products. Experienced in building enterprise assistants with retrieval, reranking, citations, tool calling, MCP integrations, evaluation, and privacy-aware AI workflows. Strong full-stack background with Python/FastAPI and React, with a focus on turning AI capabilities into reliable, usable products."
+  const genericRewrite =
+    "I am an AI Engineer with a background in Software Engineering and experience in developing AI assistants. I have worked extensively with software that includes embeddings, reranking, and REST APIs. My focus is on creating reliable AI products that integrate these technologies effectively."
+  const skills = ["LLMs", "AI Agents", "RAG", "MCP", "reranking", "evaluation", "tool calling", "Python", "FastAPI", "React", "Docker", "LangChain"]
+  const emptyPosting: JobPostingData = { position: "AI Engineer", company: null, seniority: null, language: "en", requirements: [] }
+
+  it("lists the profile skills that the original summary mentions", () => {
+    expect(summaryAnchors(original, skills)).toEqual(
+      expect.arrayContaining(["RAG", "MCP", "reranking", "evaluation", "tool calling", "Python", "FastAPI", "React"]),
+    )
+    expect(summaryAnchors(original, skills)).not.toContain("Docker")
+    expect(summaryAnchors(original, skills)).not.toContain("LangChain")
+  })
+
+  it("rejects a summary rewrite that drops the skills the original named", () => {
+    const result = preservesSource({
+      rewritten: genericRewrite,
+      source: original,
+      posting: emptyPosting,
+      bases: summaryAnchors(original, skills),
+    })
+    expect(result.ok).toBe(false)
+  })
+
+  it("accepts a rewrite that keeps them", () => {
+    const kept =
+      "AI Engineer building production-grade LLM applications, RAG systems and AI agents: retrieval, reranking, citations, tool calling, MCP integrations and evaluation, with Python/FastAPI and React."
+    expect(
+      preservesSource({ rewritten: kept, source: original, posting: emptyPosting, bases: summaryAnchors(original, skills) }).ok,
+    ).toBe(true)
+  })
+})
+
