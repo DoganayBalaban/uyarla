@@ -422,7 +422,7 @@ export function AnalyzeView() {
           <div className="flex gap-3 rounded-card border border-border bg-card/60 p-4 text-sm text-muted">
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-green dark:text-[#4ade80]" aria-hidden />
             <p className="m-0">
-              CV&apos;n izinsiz kimseyle paylaşılmaz.{" "}
+              CV&apos;n analiz için OpenAI&apos;a gönderilir; satılmaz, model eğitiminde kullanılmaz.{" "}
               <Link href="/privacy" className="font-medium text-foreground underline underline-offset-2">
                 KVKK metni
               </Link>
