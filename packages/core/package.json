@@ -29,6 +29,7 @@
     "vitest": "^2.1.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1146.0",
     "@uyarla/fonts": "workspace:*",
     "docx": "^9.7.2",
     "jszip": "^3.10.2",

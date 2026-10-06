@@ -2,6 +2,7 @@ import { mkdtemp, writeFile, access } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, it, expect, afterEach, beforeAll } from "vitest"
+import { LocalFileStore } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { deleteUsers, deletionOperations } from "@/server/deleteAccount"
 
@@ -99,7 +100,7 @@ describe("account deletion · real database", () => {
 
     expect(await exists(is.filePath)).toBe(true)
 
-    const result = await deleteUsers(prisma, [dbUser.id], storage)
+    const result = await deleteUsers(prisma, [dbUser.id], new LocalFileStore(storage))
 
     expect(result.deletedUsers).toBe(1)
     expect(result.files.deleted).toBe(1)
@@ -130,7 +131,7 @@ describe("account deletion · real database", () => {
     await makeJob(toDelete.id, "silinecek")
     const other = await makeJob(otherUser.id, "baskasi")
 
-    const result = await deleteUsers(prisma, [toDelete.id], storage)
+    const result = await deleteUsers(prisma, [toDelete.id], new LocalFileStore(storage))
     expect(result.deletedUsers).toBe(1)
 
     expect(await prisma.user.findUnique({ where: { id: otherUser.id } })).not.toBeNull()
@@ -164,7 +165,7 @@ describe("account deletion · real database", () => {
       data: { jobPostingId: is.posting.id },
     })
 
-    await expect(deleteUsers(prisma, [toDelete.id], storage)).rejects.toThrow()
+    await expect(deleteUsers(prisma, [toDelete.id], new LocalFileStore(storage))).rejects.toThrow()
 
     // Hiçbiri gitmemiş olmalı.
     expect(await prisma.adaptation.findUnique({ where: { id: is.adaptation.id } })).not.toBeNull()
@@ -194,7 +195,7 @@ describe("account deletion · real database", () => {
       data: { userId: dbUser.id, filePath: outsidePath, rawText: "metin" },
     })
 
-    const result = await deleteUsers(prisma, [dbUser.id], storage)
+    const result = await deleteUsers(prisma, [dbUser.id], new LocalFileStore(storage))
 
     expect(result.files.deleted).toBe(0)
     expect(result.files.skipped).toEqual([outsidePath])
@@ -204,7 +205,7 @@ describe("account deletion · real database", () => {
 
   it("does nothing for an empty list", async () => {
     const dbUser = await makeUser("dokunulmaz")
-    const result = await deleteUsers(prisma, [], storage)
+    const result = await deleteUsers(prisma, [], new LocalFileStore(storage))
     expect(result.deletedUsers).toBe(0)
     expect(await prisma.user.findUnique({ where: { id: dbUser.id } })).not.toBeNull()
   })

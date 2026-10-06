@@ -1,5 +1,4 @@
-import { unlink } from "node:fs/promises"
-import { relative, resolve, sep } from "node:path"
+import { fileStoreFromEnv, type FileStore } from "@uyarla/core"
 import type { prisma } from "@uyarla/db"
 
 /**
@@ -97,61 +96,25 @@ export function deletionOperations(prisma: Db, userIds: string[]): Operation[] {
   return DELETION_ORDER.map((tablo) => client[tablo].deleteMany(condition(tablo, ids)))
 }
 
-/**
- * Yol, depo dizininin ALTINDA mı.
- *
- * `Resume.filePath` veritabanından geliyor ve `unlink`'e doğrudan verilecek.
- * Bozuk ya da elle değiştirilmiş bir satırın depo dışındaki bir dosyayı
- * silmesini engelleyen tek şey bu kontrol.
- *
- * Düz `startsWith` yetmiyor: "/veri/storage-yedek" dizesi "/veri/storage" ile
- * başlıyor ama onun altında değil. `relative` ile bakmak bu tuzağı ve
- * ".." geçişlerini birlikte kapatıyor.
- */
-export function isInsideStorage(path: string, storageDir: string): boolean {
-  const storage = resolve(storageDir)
-  const target = resolve(path)
-  const diff = relative(storage, target)
-  return diff !== "" && !diff.startsWith("..") && !diff.startsWith(sep)
-}
-
-/** Varsayılan depo dizini; `LocalFileStore`'un kullandığı değerle aynı. */
-export function storageDir(): string {
-  return process.env.STORAGE_DIR ?? "./storage"
-}
-
 export interface FileDeletionResult {
   deleted: number
-  /** Depo dışında olduğu için dokunulmayan yollar. */
+  /** Depoya ait olmadığı için dokunulmayan başvurular. */
   skipped: string[]
 }
 
 /**
- * Verilen yolları diskten siler.
+ * Verilen dosyaları depodan siler.
  *
- * Eksik dosya hata değil: worker aynı kaydı okurken dosya elle silinmiş
- * olabilir ve bir hesap silme isteği bu yüzden başarısız olmamalı.
+ * `Resume.filePath` veritabanından geliyor; depo, kendine ait olmayan bir
+ * başvuruya dokunmuyor (yerel diskte depo dizini dışı, S3'te başka bucket ya
+ * da önek). Eksik dosya hata değil: hesap silme bu yüzden başarısız olmamalı.
  */
-export async function deleteFiles(
-  paths: string[],
-  storage = storageDir(),
-): Promise<FileDeletionResult> {
+export async function deleteFiles(paths: string[], store: FileStore): Promise<FileDeletionResult> {
   const result: FileDeletionResult = { deleted: 0, skipped: [] }
-
   for (const path of paths) {
-    if (!isInsideStorage(path, storage)) {
-      result.skipped.push(path)
-      continue
-    }
-    try {
-      await unlink(path)
-      result.deleted += 1
-    } catch (error) {
-      // ENOENT: dosya zaten yok, istenen sonuç sağlanmış sayılıyor.
-      if ((error as { code?: string }).code !== "ENOENT") throw error
-    }
+    if (await store.delete(path)) result.deleted += 1
+    else result.skipped.push(path)
   }
-
   return result
 }
 
@@ -168,7 +131,7 @@ export interface DeletionResult {
  *
  *   1. Dosya yolları OKUNUR — kayıtlar gidince yolu bulmanın yolu kalmıyor.
  *   2. Veritabanı TEK işlemde silinir — yarısı silinmiş hesap olmasın.
- *   3. Dosyalar diskten silinir — işlem DIŞINDA ve SONRA.
+ *   3. Dosyalar depodan silinir — işlem DIŞINDA ve SONRA.
  *
  * Üçüncü adımın işlem dışında olması bir uzlaşma: dosya silinip işlem geri
  * alınırsa kayıt dosyasız kalır (kullanıcı CV'sini göremez ama kaydı var).
@@ -178,7 +141,7 @@ export interface DeletionResult {
 export async function deleteUsers(
   prisma: Db,
   userIds: string[],
-  storage = storageDir(),
+  store: FileStore = fileStoreFromEnv(),
 ): Promise<DeletionResult> {
   const ids = [...new Set(userIds.filter((id) => id))]
   if (ids.length === 0) return { deletedUsers: 0, files: { deleted: 0, skipped: [] } }
@@ -194,7 +157,7 @@ export async function deleteUsers(
 
   const storedFile = await deleteFiles(
     resumes.map((resumeFile) => resumeFile.filePath),
-    storage,
+    store,
   )
 
   return { deletedUsers: dbUser, files: storedFile }
