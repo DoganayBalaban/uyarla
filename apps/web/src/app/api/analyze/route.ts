@@ -4,10 +4,11 @@ import { ANALYZE_JOB_OPTIONS } from "@uyarla/worker/queue"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { auth } from "@/server/auth"
-import { authErrorResponse, ensureSession, getSession } from "@/server/authz"
+import { authErrorResponse, ensureRegistered, ensureSession, getSession } from "@/server/authz"
 import { analyzeQueue } from "@/server/queue"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
-import { validateUpload } from "@/server/upload"
+import { createResume, findLibraryResume } from "@/server/resumeLibrary"
+import { validateJobText, validateUpload } from "@/server/upload"
 
 export const runtime = "nodejs"
 
@@ -18,35 +19,34 @@ export const runtime = "nodejs"
 export async function POST(request: Request) {
   try {
     const form = await request.formData()
+    const resumeIdField = form.get("resumeId")
+    const libraryResumeId = typeof resumeIdField === "string" && resumeIdField ? resumeIdField : null
     const file = form.get("cv")
-    const { jobText } = validateUpload(file, String(form.get("jobText") ?? ""))
-    // Şema dosya benzeri her nesneyi kabul ediyor; içeriği okumak için gerçek File gerek.
-    if (!(file instanceof File)) {
-      throw new PermanentError("CV'ni seçer misin? PDF ya da DOCX olabilir.", "missing_file")
+
+    // İki yol: kütüphanedeki CV (dosya yok) ya da yeni dosya. Doğrulama
+    // oturumdan önce: geçersiz istek için anonim kullanıcı açılmasın.
+    let jobText: string
+    if (libraryResumeId) {
+      jobText = validateJobText(String(form.get("jobText") ?? ""))
+    } else {
+      jobText = validateUpload(file, String(form.get("jobText") ?? "")).jobText
+      // Şema dosya benzeri her nesneyi kabul ediyor; içeriği okumak için gerçek File gerek.
+      if (!(file instanceof File)) {
+        throw new PermanentError("CV'ni seçer misin? PDF ya da DOCX olabilir.", "missing_file")
+      }
     }
-
-    const buffer = Buffer.from(await file.arrayBuffer())
-    const store = fileStoreFromEnv()
-    const filePath = await store.save(buffer, file.name)
-
-    // Metin çıkarma worker'da yapılıyor, burada değil (spec §4.2: route'ların
-    // tek işi doğrulama ve kuyruğa devretmek). Teknik zorunluluk da var:
-    // pdf-parse'ın kullandığı pdfjs Next'in sunucu katmanında yüklenemiyor.
-    // Okunamayan dosya kullanıcıya iş başarısız olduğunda bildiriliyor.
 
     // Oturum yoksa anonim aç. Sayfa yüklenince değil burada: her ziyaretçiye
     // kullanıcı kaydı açmanın anlamı yok, sadece iş üretenlere gerekiyor
-    // (spec §7).
+    // (spec §7). signInAnonymous'un kendi yanıtı kullanılıyor: getSession
+    // İSTEK başlıklarını okuyor ve yeni çerez ancak sonraki istekte görünür.
+    // Kayıtlı CV isteğinde anonim açılmıyor: kütüphane kayıtlıya açık.
     let session = await getSession()
-    if (!session) {
-      // signInAnonymous'un kendi yanıtı kullanılıyor. getSession'ı tekrar
-      // çağırmak işe yaramıyor: o İSTEK başlıklarını okuyor ve yeni çerez
-      // henüz orada değil — nextCookies onu YANITA yazıyor, yani ancak
-      // sonraki istekte görünür hâle geliyor.
+    if (!session && !libraryResumeId) {
       const fresh = await auth.api.signInAnonymous({ headers: await headers() })
       session = fresh?.user ? { user: { id: fresh.user.id, isAnonymous: true } } : null
     }
-    const { user } = ensureSession(session)
+    const { user } = libraryResumeId ? ensureRegistered(session) : ensureSession(session)
 
     // Pahalı uç: her çağrı ~60 saniyelik LLM işi başlatıyor (spec §9).
     await enforceRateLimit(
@@ -55,9 +55,28 @@ export async function POST(request: Request) {
       user.isAnonymous ? RATE_LIMITS.anonUser : RATE_LIMITS.registered,
     )
 
-    const resume = await prisma.resume.create({
-      data: { userId: user.id, filePath, rawText: "" },
-    })
+    let resumeId: string
+    let savedToLibrary: boolean | undefined
+    if (libraryResumeId) {
+      // Aynı Resume satırı: worker rawText önbelleğini kullanıyor, dosya
+      // yeniden okunmuyor. Başkasının ya da kaldırılmış CV 404 (K-35).
+      resumeId = (await findLibraryResume(prisma, user.id, libraryResumeId)).id
+    } else {
+      const upload = file as File
+      // Metin çıkarma worker'da yapılıyor, burada değil (spec §4.2): pdf-parse'ın
+      // kullandığı pdfjs Next'in sunucu katmanında yüklenemiyor. Okunamayan
+      // dosya kullanıcıya iş başarısız olduğunda bildiriliyor.
+      const filePath = await fileStoreFromEnv().save(Buffer.from(await upload.arrayBuffer()), upload.name)
+      const wantsSave = form.get("saveToLibrary") === "true" && !user.isAnonymous
+      const created = await createResume(prisma, {
+        userId: user.id,
+        filePath,
+        fileName: upload.name,
+        saveToLibrary: wantsSave,
+      })
+      resumeId = created.resumeId
+      if (wantsSave) savedToLibrary = created.savedToLibrary
+    }
 
     const posting = await prisma.jobPosting.create({
       data: { userId: user.id, rawText: jobText, requirements: [], language: "tr" },
@@ -65,11 +84,11 @@ export async function POST(request: Request) {
 
     const job = await analyzeQueue.add(
       "analyze",
-      { resumeId: resume.id, jobPostingId: posting.id, userId: user.id },
+      { resumeId, jobPostingId: posting.id, userId: user.id },
       ANALYZE_JOB_OPTIONS,
     )
 
-    return NextResponse.json({ jobId: job.id })
+    return NextResponse.json({ jobId: job.id, ...(savedToLibrary !== undefined ? { savedToLibrary } : {}) })
   } catch (error) {
     const authResponse = authErrorResponse(error)
     if (authResponse) return authResponse
