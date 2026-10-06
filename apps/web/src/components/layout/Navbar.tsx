@@ -51,7 +51,7 @@ export function Navbar() {
   const path = usePathname()
   const { data, isPending } = useSession()
 
-  if (path.startsWith("/login")) return null
+  if (path.startsWith("/login") || path.startsWith("/onboarding")) return null
 
   const currentUser = data?.user
   const registered =

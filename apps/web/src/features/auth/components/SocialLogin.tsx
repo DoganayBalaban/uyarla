@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { signIn } from "@/lib/authClient"
+import { onboardingPath } from "@/features/onboarding/gate"
 import { loginPath } from "@/lib/returnPath"
 import type { Provider } from "@/features/auth/providers"
 
@@ -69,7 +70,8 @@ export function SocialLogin({ open, returnTo }: { open: Provider[]; returnTo: st
     setPendingCount(s)
     const { error } = await signIn.social({
       provider: s,
-      callbackURL: returnTo,
+      // Önce onboarding kapısı; bitirmiş kullanıcı oradan doğrudan hedefe gidiyor.
+      callbackURL: onboardingPath(returnTo),
       errorCallbackURL: girisHataAdresi(returnTo),
     })
     // Başarılıysa tarayıcı sağlayıcıya yönleniyor; buraya yalnızca hata düşer.
