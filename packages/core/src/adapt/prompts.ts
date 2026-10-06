@@ -69,7 +69,10 @@ Kesin kurallar:
 - Sayıları DEĞİŞTİRME, SİLME.
 - Listedeki terimleri cümle içinde doğal yazımla kullan ("birim testleri").
 - Girdideki "Dil" satırında yazan dilde yaz; özeti ÇEVİRME.
-- Birinci tekil şahısla, sade ve akıcı yaz. "uzmanı olarak", "tutkulu",
+- Türkçe yazıyorsan birinci tekil şahısla yaz. İngilizce yazıyorsan CV
+  üslubunda öznesiz yaz ("AI Engineer with experience in…"); "I", "my", "me"
+  kullanma.
+- Sade ve akıcı yaz. "uzmanı olarak", "tutkulu",
   "sonuç odaklı" (İngilizcede "passionate", "results-driven") gibi kalıp ve
   abartılı ifadeler kullanma.
 - Her cümle dil bilgisi açısından eksiksiz olsun.
