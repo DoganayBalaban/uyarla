@@ -1,4 +1,4 @@
-import { LocalFileStore, PermanentError, extractText } from "@uyarla/core"
+import { PermanentError, extractText, fileStoreFromEnv } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import type { AnalysisStore } from "./types.js"
 
@@ -20,7 +20,7 @@ export const prismaStore: AnalysisStore = {
     if (!resume) throw new PermanentError("CV bulunamadı", "resume_not_found")
     if (resume.rawText.trim()) return resume.rawText
 
-    const store = new LocalFileStore(process.env.STORAGE_DIR ?? "./storage")
+    const store = fileStoreFromEnv()
     const buffer = await store.read(resume.filePath)
     const rawText = await extractText(buffer, resume.filePath)
 
@@ -31,7 +31,7 @@ export const prismaStore: AnalysisStore = {
   async getResumeFile(resumeId) {
     const resume = await prisma.resume.findUnique({ where: { id: resumeId } })
     if (!resume) throw new PermanentError("CV bulunamadı", "resume_not_found")
-    const store = new LocalFileStore(process.env.STORAGE_DIR ?? "./storage")
+    const store = fileStoreFromEnv()
     return { buffer: await store.read(resume.filePath), filename: resume.filePath }
   },
 

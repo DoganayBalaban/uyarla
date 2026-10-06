@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest"
-import { DELETION_ORDER, isInsideStorage, deletionOperations } from "@/server/deleteAccount"
+import { DELETION_ORDER, deletionOperations } from "@/server/deleteAccount"
 
 /** Hangi tabloya hangi `where` ile gidildiğini sırasıyla yakalayan sahte Prisma. */
 function fakePrisma() {
@@ -76,36 +76,5 @@ describe("deletionOperations", () => {
     deletionOperations(client as never, ["k1", "k1"])
     expect(callList).toHaveLength(DELETION_ORDER.length)
     expect(callList[0]?.where).toEqual({ analysis: { userId: { in: ["k1"] } } })
-  })
-})
-
-describe("isInsideStorage", () => {
-  it("accepts a path under the storage directory", () => {
-    expect(isInsideStorage("/veri/storage/abc.pdf", "/veri/storage")).toBe(true)
-    expect(isInsideStorage("/veri/storage/alt/abc.pdf", "/veri/storage")).toBe(true)
-  })
-
-  it("rejects a path outside storage", () => {
-    // `Resume.filePath` veritabanından geliyor; bozuk ya da kötü niyetli bir
-    // satır `unlink` ile rastgele bir dosyayı silmeye yol açmasın.
-    expect(isInsideStorage("/etc/passwd", "/veri/storage")).toBe(false)
-    expect(isInsideStorage("/veri/storage/../gizli.pdf", "/veri/storage")).toBe(false)
-  })
-
-  it("does not mistake a prefix match for a directory boundary", () => {
-    // "/veri/storage-yedek" dizesi "/veri/storage" ile başlıyor ama onun
-    // altında değil; düz `startsWith` bu tuzağa düşer.
-    expect(isInsideStorage("/veri/storage-yedek/abc.pdf", "/veri/storage")).toBe(false)
-  })
-
-  it("resolves a relative storage directory to an absolute path", () => {
-    // STORAGE_DIR öntanımlı olarak "./storage"; karşılaştırma mutlak yolla
-    // yapılmazsa hiçbir dosya silinemez.
-    const absolute = `${process.cwd()}/storage/abc.pdf`
-    expect(isInsideStorage(absolute, "./storage")).toBe(true)
-  })
-
-  it("does not treat the storage directory itself as a file", () => {
-    expect(isInsideStorage("/veri/storage", "/veri/storage")).toBe(false)
   })
 })
