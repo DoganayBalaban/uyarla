@@ -1,5 +1,6 @@
 import OpenAI from "openai"
 import { TransientError } from "../errors.js"
+import { classifyApiError } from "./apiError.js"
 import type { ExtractOptions, ExtractResult, LlmConfig, LlmProvider } from "./types.js"
 
 /** Test edilebilirlik için daraltılmış istemci yüzeyi. */
@@ -14,6 +15,10 @@ export interface ChatClient {
   }
 }
 
+/**
+ * OpenAI uyumlu sohbet ucu. Adı tarihsel: yerelde LM Studio'ya, üretimde
+ * OpenAI'a bağlanıyor; fark yalnızca adres, model ve anahtar (DOG-42).
+ */
 export class LmStudioProvider implements LlmProvider {
   private readonly client: ChatClient
 
@@ -25,7 +30,8 @@ export class LmStudioProvider implements LlmProvider {
       client ??
       (new OpenAI({
         baseURL: cfg.baseUrl,
-        apiKey: "lm-studio", // yerel sunucu anahtar doğrulamıyor
+        // Yerel sunucu anahtar doğrulamıyor ama SDK boş anahtarı reddediyor.
+        apiKey: cfg.apiKey ?? "lm-studio",
         timeout: cfg.timeoutMs,
       }) as unknown as ChatClient)
   }
@@ -48,10 +54,7 @@ export class LmStudioProvider implements LlmProvider {
         temperature: 0,
       })
     } catch (cause) {
-      throw new TransientError(
-        `LLM çağrısı başarısız: ${(cause as Error).message}`,
-        "llm_unreachable",
-      )
+      throw classifyApiError(cause, "LLM çağrısı", "llm")
     }
 
     const content = response.choices[0]?.message.content

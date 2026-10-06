@@ -1,0 +1,170 @@
+{
+  "model": "gpt-4.1-mini",
+  "metrics": [
+    {
+      "id": "cv-a__ilan-1",
+      "bulletCount": 9,
+      "sameLanguage": false,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "discards": [],
+      "scoreBefore": 41,
+      "scoreBullets": 41,
+      "scoreFull": 41,
+      "durationMs": 4662
+    },
+    {
+      "id": "cv-a__ilan-2",
+      "bulletCount": 9,
+      "sameLanguage": false,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "discards": [],
+      "scoreBefore": 28,
+      "scoreBullets": 28,
+      "scoreFull": 28,
+      "durationMs": 3414
+    },
+    {
+      "id": "cv-a__ilan-3",
+      "bulletCount": 9,
+      "sameLanguage": true,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [
+        "grounding"
+      ],
+      "discards": [],
+      "scoreBefore": 20,
+      "scoreBullets": 20,
+      "scoreFull": 20,
+      "durationMs": 3462
+    },
+    {
+      "id": "cv-a__ilan-5",
+      "bulletCount": 9,
+      "sameLanguage": true,
+      "rewrittenCount": 3,
+      "proposedCount": 3,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "discards": [],
+      "scoreBefore": 40,
+      "scoreBullets": 42,
+      "scoreFull": 42,
+      "durationMs": 3573
+    },
+    {
+      "id": "cv-b__ilan-1",
+      "bulletCount": 8,
+      "sameLanguage": false,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "discards": [],
+      "scoreBefore": 11,
+      "scoreBullets": 11,
+      "scoreFull": 11,
+      "durationMs": 3209
+    },
+    {
+      "id": "cv-b__ilan-3",
+      "bulletCount": 8,
+      "sameLanguage": true,
+      "rewrittenCount": 2,
+      "proposedCount": 1,
+      "discarded": {
+        "flagged": 1
+      },
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "discards": [
+        {
+          "id": "0-3",
+          "reason": "flagged",
+          "detail": "posting_term_injected: Bu maddede \"production software engineering\" geçiyor ama senin yazdığın hâlinde yok.",
+          "rewritten": "Cross-Functional Collaboration: Coordinate with product owners, developers, and QA teams during testing cycles to improve product stability and testing coverage in production software engineering.",
+          "original": "Cross-Functional Collaboration: Coordinate with product owners, developers, and QA teams during testing cycles to improve product stability and testing coverage."
+        }
+      ],
+      "scoreBefore": 1,
+      "scoreBullets": 3,
+      "scoreFull": 3,
+      "durationMs": 10056
+    },
+    {
+      "id": "cv-b__ilan-4",
+      "bulletCount": 8,
+      "sameLanguage": false,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": true,
+      "addedSkills": [],
+      "discards": [],
+      "scoreBefore": 6,
+      "scoreBullets": 6,
+      "scoreFull": 6,
+      "durationMs": 4100
+    },
+    {
+      "id": "cv-c__ilan-1",
+      "bulletCount": 11,
+      "sameLanguage": true,
+      "rewrittenCount": 1,
+      "proposedCount": 1,
+      "discarded": {},
+      "summaryAccepted": false,
+      "addedSkills": [],
+      "discards": [],
+      "scoreBefore": 14,
+      "scoreBullets": 21,
+      "scoreFull": 21,
+      "durationMs": 3863
+    },
+    {
+      "id": "cv-c__ilan-2",
+      "bulletCount": 11,
+      "sameLanguage": true,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": false,
+      "addedSkills": [],
+      "discards": [],
+      "scoreBefore": 15,
+      "scoreBullets": 15,
+      "scoreFull": 15,
+      "durationMs": 3481
+    },
+    {
+      "id": "cv-c__ilan-4",
+      "bulletCount": 11,
+      "sameLanguage": true,
+      "rewrittenCount": 0,
+      "proposedCount": 0,
+      "discarded": {},
+      "summaryAccepted": false,
+      "addedSkills": [],
+      "discards": [],
+      "scoreBefore": 6,
+      "scoreBullets": 6,
+      "scoreFull": 6,
+      "durationMs": 2722
+    }
+  ],
+  "discardsByReason": {
+    "flagged": 1
+  }
+}
