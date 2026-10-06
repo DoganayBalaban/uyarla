@@ -116,7 +116,7 @@ export function OnboardingFlow({ initialName, returnTo }: { initialName: string;
       {step === 1 && (
         <form onSubmit={submitName} noValidate className="mt-3">
           <h1 className="font-heading text-3xl font-extrabold tracking-tight">Sana nasıl hitap edelim?</h1>
-          <p className="mt-2 text-muted">Panoda ve menüde bu adı göreceksin.</p>
+          <p className="mt-2 text-muted">Önce seni biraz tanıyalım.</p>
           <label htmlFor="name" className="mt-8 mb-1.5 block text-sm font-medium">
             Adın
           </label>
