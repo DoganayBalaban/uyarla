@@ -18,15 +18,25 @@ export function classifyApiError(cause: unknown, label: string, codePrefix: stri
   const status = (cause as { status?: unknown })?.status
   const apiCode = (cause as { code?: unknown })?.code
 
+  // Kalıcı hatanın mesajı analiz ekranında gösteriliyor; teknik metin
+  // (durum kodu, anahtar ipucu) `cause`'da kalıyor, worker onu günlüğe yazıyor.
   if (status === 429 && apiCode === "insufficient_quota") {
-    return new PermanentError(message, `${codePrefix}_quota_exceeded`)
+    return new PermanentError(SERVICE_UNAVAILABLE, `${codePrefix}_quota_exceeded`, { cause })
   }
   if (typeof status === "number" && status >= 400 && status < 500 && !RETRYABLE.has(status)) {
-    return new PermanentError(message, `${codePrefix}_rejected`)
+    return new PermanentError(SERVICE_UNAVAILABLE, `${codePrefix}_rejected`, { cause })
   }
   if (status === 429) return new TransientError(message, `${codePrefix}_rate_limited`)
   return new TransientError(message, `${codePrefix}_unreachable`)
 }
+
+/**
+ * Servis tarafındaki kalıcı hatada kullanıcının göreceği metin. Sorun
+ * kullanıcının girdisinde değil bizde (anahtar, kota, şema); bekleyip tekrar
+ * denemesi çoğu zaman biz düzeltince işe yarar.
+ */
+export const SERVICE_UNAVAILABLE =
+  "Analizini şu an tamamlayamıyoruz; sorun bizde, dosyanda değil. Biraz sonra tekrar dener misin?"
 
 /** Zaman aşımı, çakışma ve oran sınırı: beklemek işe yarayabilir. */
 const RETRYABLE = new Set([408, 409, 429])

@@ -5,7 +5,7 @@ import {
   embeddingConfigFromEnv,
   llmConfigFromEnv,
 } from "@uyarla/core"
-import { Worker, UnrecoverableError } from "bullmq"
+import { Worker } from "bullmq"
 import IORedis from "ioredis"
 import { runAdaptation } from "./adapt-pipeline.js"
 import { ADAPT_QUEUE, type AdaptJobData } from "./adapt-queue.js"
@@ -14,6 +14,7 @@ import { COVER_LETTER_JOB, runCoverLetter } from "./cover-pipeline.js"
 import { runAnalysis } from "./pipeline.js"
 import { ANALYZE_QUEUE, type AnalyzeJobData } from "./queue.js"
 import { prismaStore } from "./store.js"
+import { toUnrecoverable } from "./unrecoverable.js"
 
 const connection = new IORedis(process.env.REDIS_URL ?? "redis://localhost:6379", {
   maxRetriesPerRequest: null,
@@ -45,7 +46,7 @@ const worker = new Worker<AnalyzeJobData, string>(
       // Kalıcı hatada tekrar denemek anlamsız: girdi hatalı, ikinci deneme de
       // aynı sonucu verir ve kullanıcıyı boşuna bekletir (spec §11).
       if (error instanceof PermanentError) {
-        throw new UnrecoverableError(error.message)
+        throw toUnrecoverable(error, "analyze")
       }
       throw error
     }
@@ -77,7 +78,7 @@ const adaptWorker = new Worker<AdaptJobData, void>(
             .saveCoverLetter(job.data.adaptationId, { status: "failed" })
             .catch(() => {})
         }
-        if (error instanceof PermanentError) throw new UnrecoverableError(error.message)
+        if (error instanceof PermanentError) throw toUnrecoverable(error, "adapt")
         throw error
       }
       return
@@ -94,7 +95,7 @@ const adaptWorker = new Worker<AdaptJobData, void>(
         { adaptationId: job.data.adaptationId },
       )
     } catch (error) {
-      if (error instanceof PermanentError) throw new UnrecoverableError(error.message)
+      if (error instanceof PermanentError) throw toUnrecoverable(error, "adapt")
       throw error
     }
   },

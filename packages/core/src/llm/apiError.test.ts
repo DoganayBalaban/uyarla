@@ -39,4 +39,19 @@ describe("classifyApiError", () => {
     expect(classifyApiError(apiError(503), "x", "llm")).toBeInstanceOf(TransientError)
     expect(classifyApiError(apiError(408), "x", "llm")).toBeInstanceOf(TransientError)
   })
+
+  it("gives a permanent error a message fit for the user", () => {
+    // Kalıcı hatanın metni analiz ekranında olduğu gibi gösteriliyor
+    // (analysisErrorMessage); "401 Incorrect API key" kullanıcıya çıkmamalı.
+    const cause = apiError(401)
+    const error = classifyApiError(cause, "LLM çağrısı", "llm")
+    expect(error.message).not.toMatch(/401|LLM|API/)
+    expect(error.message).toMatch(/tekrar/)
+    expect(error.cause).toBe(cause)
+  })
+
+  it("keeps the technical detail of a transient error in its message", () => {
+    // Geçici hatanın metni kullanıcıya gösterilmiyor, günlüğe yazılıyor.
+    expect(classifyApiError(apiError(503), "LLM çağrısı", "llm").message).toMatch(/LLM çağrısı başarısız: 503/)
+  })
 })
