@@ -16,6 +16,8 @@ import { apiErrorMessage } from "@/lib/api"
 import { loginPath } from "@/lib/returnPath"
 import { useDeleteAccount } from "@/features/account/api"
 import { PageHeader } from "@/components/layout/PageShell"
+import { ProfileSection } from "@/features/account/components/ProfileSection"
+import { ResumeLibrarySection } from "@/features/account/components/ResumeLibrarySection"
 
 /** Marka rehberi §10.2'deki veri silme onay metni, birebir. */
 const CONFIRM_TEXT = "CV'ni ve tüm başvurularını kalıcı olarak silmek istediğine emin misin?"
@@ -106,6 +108,14 @@ export function AccountView() {
             )}
           </div>
         </div>
+
+        {/* Profil ve CV kütüphanesi yalnızca kayıtlı kullanıcıda; uçlar anonime 401 döner. */}
+        {registered && (
+          <>
+            <ProfileSection />
+            <ResumeLibrarySection />
+          </>
+        )}
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Link
