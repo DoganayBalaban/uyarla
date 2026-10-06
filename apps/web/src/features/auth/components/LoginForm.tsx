@@ -9,6 +9,7 @@ import { suggestEmail, mailAppFor } from "@/features/auth/emailHints"
 import type { Provider } from "@/features/auth/providers"
 import { loginSchema, type LoginFormValues } from "@/features/auth/schema"
 import { LoginVisual } from "@/features/auth/components/LoginVisual"
+import { onboardingPath } from "@/features/onboarding/gate"
 import { SocialLogin, girisHataAdresi } from "@/features/auth/components/SocialLogin"
 
 /**
@@ -92,8 +93,9 @@ export function LoginForm({
     const { error } = await signIn.magicLink({
       email: address,
       // Kullanıcı girişe bir işin ortasından geldiyse (ör. uyarlama) oraya
-      // dönüyor; değilse ana akışa.
-      callbackURL: returnTo,
+      // dönüyor; değilse ana akışa. Önce onboarding kapısı: bitirmiş
+      // kullanıcıyı sunucu anında hedefe yolluyor.
+      callbackURL: onboardingPath(returnTo),
       errorCallbackURL: girisHataAdresi(returnTo),
     })
     if (error) {
