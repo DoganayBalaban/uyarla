@@ -32,7 +32,7 @@ import { StageTimeline } from "@/features/analysis/components/StageTimeline"
 import { ResumeUpload } from "@/features/analysis/components/ResumeUpload"
 import { ResumePicker } from "@/features/analysis/components/ResumePicker"
 import { resumesQueryKey, useLibrary } from "@/features/resumes/api"
-import { initialResumeId, isLibraryFull } from "@/features/resumes/library"
+import { isLibraryFull, preselectResumeId } from "@/features/resumes/library"
 import { LIBRARY_MAX } from "@/features/resumes/schema"
 import { useSession } from "@/lib/authClient"
 import { ScoreResult } from "@/features/analysis/components/ScoreResult"
@@ -102,13 +102,18 @@ export function AnalyzeView() {
   const selectedResumeId = watch("resumeId") ?? null
   const [libraryNote, setLibraryNote] = useState<string | null>(null)
 
-  // Kütüphane gelince varsayılan CV ön seçili; kullanıcı kendisi seçtiyse dokunma.
+  // Kütüphane gelince varsayılan CV ön seçili; kullanıcı seçtiyse ya da dosya
+  // yüklediyse dokunulmuyor (kurallar preselectResumeId'de, testli).
   const [pickedMode, setPickedMode] = useState(false)
   useEffect(() => {
-    if (pickedMode || resumes.length === 0) return
-    const initial = initialResumeId(resumes)
-    if (initial) setValue("resumeId", initial)
-  }, [resumes, pickedMode, setValue])
+    const next = preselectResumeId({
+      resumes,
+      current: getValues("resumeId"),
+      hasFile: getValues("cv") !== undefined,
+      picked: pickedMode,
+    })
+    if (next !== undefined) setValue("resumeId", next ?? undefined)
+  }, [resumes, pickedMode, getValues, setValue])
   const [postingState, setPostingState] = useState<
     { kind: "loading" } | { kind: "done"; text: string } | { kind: "error"; text: string } | null
   >(null)
@@ -293,9 +298,10 @@ export function AnalyzeView() {
       // Seçili CV başka sekmede kaldırılmış olabilir (K-35: 404).
       if (values.resumeId && apiStatus(error) === 404) {
         setError("Bu CV artık kütüphanende değil. Listeyi yeniledik; başka bir CV seçebilirsin.")
-        setPickedMode(false)
         setValue("resumeId", undefined)
+        // Önce liste yenilensin; yoksa ön seçim eski listeden kaldırılan CV'yi yeniden seçebilir.
         await queryClient.invalidateQueries({ queryKey: resumesQueryKey })
+        setPickedMode(false)
         setBusy(false)
         return
       }
@@ -309,6 +315,11 @@ export function AnalyzeView() {
   }
 
   function startOver() {
+    // Yeni analizde CV seçimi baştan: az önce kütüphaneye kaydedilen dosya
+    // artık bir kart olarak seçilebiliyor.
+    setValue("cv", undefined)
+    setValue("resumeId", undefined)
+    setPickedMode(false)
     setPollJobId(null)
     clearActiveAnalysis()
     window.history.replaceState(null, "", "/analyze")
@@ -402,6 +413,9 @@ export function AnalyzeView() {
                 value={resumeFile ?? null}
                 error={errors.cv?.message}
                 onChange={(file) => {
+                  // Dosya seçen kullanıcının seçimi korunuyor: kütüphane sonradan
+                  // yenilense de varsayılan CV dosyanın yerine geçmiyor.
+                  if (file) setPickedMode(true)
                   // Kaldırınca hata gösterilmesin; eksik dosyayı gönderimde şema söylüyor.
                   setValue("cv", (file ?? undefined) as File | undefined, { shouldValidate: file !== null })
                   if (!file) clearErrors("cv")

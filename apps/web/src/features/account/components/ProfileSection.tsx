@@ -46,6 +46,19 @@ export function ProfileSection() {
     }
   })
 
+  // Profil okunamadıysa boş form gösterilmiyor: kaydedilirse kayıtlı amaç ve
+  // hedef rol boş değerlerle silinirdi.
+  if (profile.isError) {
+    return (
+      <section className="rounded-card border border-border bg-card p-6">
+        <h2 className="m-0 text-lg">Profilin</h2>
+        <p role="alert" className="mt-2 text-sm text-brand-red">
+          Profilini yükleyemedik. Sayfayı yenileyip tekrar dener misin?
+        </p>
+      </section>
+    )
+  }
+
   return (
     <section className="rounded-card border border-border bg-card p-6">
       <h2 className="m-0 text-lg">Profilin</h2>
