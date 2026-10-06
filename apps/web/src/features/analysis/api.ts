@@ -27,9 +27,12 @@ export async function fetchPostingFromUrl(url: string): Promise<PostingFromUrl> 
   return (await api.post<PostingFromUrl>("/job-url", { url })).data
 }
 
-/** CV ve ilanı kuyruğa koyar; iş kimliği yoklamada kullanılıyor. */
-export async function startAnalysis(form: FormData): Promise<{ jobId: string }> {
-  return (await api.post<{ jobId: string }>("/analyze", form)).data
+/**
+ * CV ve ilanı kuyruğa koyar; iş kimliği yoklamada kullanılıyor.
+ * `savedToLibrary` yalnızca "kütüphaneme kaydet" istendiğinde geliyor.
+ */
+export async function startAnalysis(form: FormData): Promise<{ jobId: string; savedToLibrary?: boolean }> {
+  return (await api.post<{ jobId: string; savedToLibrary?: boolean }>("/analyze", form)).data
 }
 
 export async function getAnalysisJob(jobId: string): Promise<AnalysisResponse> {
