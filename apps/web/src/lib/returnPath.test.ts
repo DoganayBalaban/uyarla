@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { DEFAULT_RETURN_PATH, loginPath, safeReturnPath } from "@/lib/returnPath"
+import { DEFAULT_RETURN_PATH, loginPath, safeReturnPath, returnPathFromSearchParams } from "@/lib/returnPath"
 
 describe("safeReturnPath", () => {
   it.each([
@@ -36,5 +36,19 @@ describe("loginPath", () => {
 
   it("encodes the return path", () => {
     expect(loginPath("/analyze?uyarla=a1")).toBe("/login?donus=%2Fanalyze%3Fuyarla%3Da1")
+  })
+})
+
+describe("returnPathFromSearchParams", () => {
+  it("reads the Turkish ?donus= parameter that loginPath writes", () => {
+    const fromLink = new URL(`https://uyarla.local${loginPath("/analyze?uyarla=abc")}`)
+    const params = Object.fromEntries(fromLink.searchParams)
+    expect(returnPathFromSearchParams(params)).toBe("/analyze?uyarla=abc")
+  })
+
+  it("takes the first value and falls back to the default", () => {
+    expect(returnPathFromSearchParams({ donus: ["/dashboard", "/x"] })).toBe("/dashboard")
+    expect(returnPathFromSearchParams({})).toBe("/analyze")
+    expect(returnPathFromSearchParams({ donus: "https://kotu.site" })).toBe("/analyze")
   })
 })

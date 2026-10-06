@@ -38,3 +38,14 @@ export function loginPath(returnTo?: string): string {
   if (!returnTo || returnTo === DEFAULT_RETURN_PATH) return "/login"
   return `/login?donus=${encodeURIComponent(returnTo)}`
 }
+
+/**
+ * Giriş sayfasının arama parametrelerinden doğrulanmış dönüş adresi.
+ * Parametre adı `donus`: e-postalardaki ve kayıtlı bağlantılardaki adresler
+ * bu adla yaşıyor, İngilizceye çevrilmiyor (Refaktör 1'de `returnTo` olarak
+ * değiştirilmişti ve girişten sonra işe dönüş kırılmıştı).
+ */
+export function returnPathFromSearchParams(params: { donus?: string | string[] }): string {
+  const raw = Array.isArray(params.donus) ? params.donus[0] : params.donus
+  return safeReturnPath(raw)
+}

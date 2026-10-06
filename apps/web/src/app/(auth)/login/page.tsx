@@ -1,4 +1,4 @@
-import { safeReturnPath } from "@/lib/returnPath"
+import { returnPathFromSearchParams } from "@/lib/returnPath"
 import { enabledProviders } from "@/features/auth/providers"
 import { LoginForm } from "@/features/auth/components/LoginForm"
 
@@ -11,15 +11,14 @@ export const metadata = { title: "Giriş yap · uyarla" }
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ returnTo?: string | string[] }>
+  searchParams: Promise<{ donus?: string | string[] }>
 }) {
-  const { returnTo } = await searchParams
   // Dönüş adresi burada, sunucuda doğrulanıyor; forma yalnızca güvenli hâli
   // gidiyor (src/lib/returnPath.ts).
   return (
     <LoginForm
       enabledProviders={enabledProviders()}
-      returnTo={safeReturnPath(Array.isArray(returnTo) ? returnTo[0] : returnTo)}
+      returnTo={returnPathFromSearchParams(await searchParams)}
     />
   )
 }
