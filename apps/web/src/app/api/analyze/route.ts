@@ -1,4 +1,4 @@
-import { LocalFileStore, PermanentError } from "@uyarla/core"
+import { fileStoreFromEnv, PermanentError } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { ANALYZE_JOB_OPTIONS } from "@uyarla/worker/queue"
 import { headers } from "next/headers"
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     validateUpload({ name: file.name, size: file.size }, jobText)
 
     const buffer = Buffer.from(await file.arrayBuffer())
-    const store = new LocalFileStore(process.env.STORAGE_DIR ?? "./storage")
+    const store = fileStoreFromEnv()
     const filePath = await store.save(buffer, file.name)
 
     // Metin çıkarma worker'da yapılıyor, burada değil (spec §4.2: route'ların

@@ -48,7 +48,7 @@ async function main(): Promise<void> {
   // bozuk olabilir. Sessizce geçmek, diskte kişisel veri bırakmak olurdu.
   if (result.files.skipped.length > 0) {
     console.warn(
-      `[temizlik] ${result.files.skipped.length} dosya depo dizini dışında olduğu için atlandı:`,
+      `[temizlik] ${result.files.skipped.length} dosya depoya ait olmadığı için atlandı:`,
       result.files.skipped,
     )
   }
