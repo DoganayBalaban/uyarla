@@ -30,9 +30,28 @@ export function onboardingGate(input: {
   donus: string | undefined
 }): GateDecision {
   const target = safeTarget(input.donus)
-  if (!input.session) return { kind: "login", to: loginPath(onboardingPath(target)) }
+  // Hedefin kendisi: giriş formu callbackURL'i zaten onboardingPath ile sarıyor.
+  // İç içe sarılırsa ikinci sarmada /onboarding hedefi reddediliyor ve asıl
+  // hedef kayboluyordu.
+  if (!input.session) return { kind: "login", to: loginPath(target) }
   if (!needsOnboarding({ isAnonymous: input.session.isAnonymous, onboardedAt: input.onboardedAt })) {
     return { kind: "skip", to: target }
   }
   return { kind: "show", returnTo: target }
+}
+
+/**
+ * Onboarding kaydı düşünce "Şimdilik geç" bu oturum çerezini bırakıyor.
+ * Yoksa layout kullanıcıyı hemen geri yollar ve API düzelene kadar içeri
+ * giremez; spec §6 "bir sonraki açılışta yeniden çıkar" diyor. Süresiz
+ * çerez tarayıcı kapanınca siliniyor.
+ */
+export const ONBOARDING_DEFERRED_COOKIE = "onboarding_deferred"
+
+/** `(app)` layout'unun kararı: gerekiyorsa ve bu oturumda ertelenmediyse. */
+export function shouldRedirectToOnboarding(
+  user: { isAnonymous: boolean; onboardedAt: Date | null } | null,
+  deferred: boolean,
+): boolean {
+  return !deferred && needsOnboarding(user)
 }

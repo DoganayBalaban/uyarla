@@ -9,6 +9,7 @@ import { LoaderCircle } from "lucide-react"
 import { ResumeUpload } from "@/features/analysis/components/ResumeUpload"
 import { resumeFileSchema } from "@/features/analysis/schema"
 import { saveProfile, uploadLibraryResume } from "@/features/onboarding/api"
+import { ONBOARDING_DEFERRED_COOKIE } from "@/features/onboarding/gate"
 import { GOAL_OPTIONS } from "@/features/onboarding/goals"
 import { GOALS, nameSchema, TARGET_ROLE_MAX_LENGTH } from "@/features/onboarding/schema"
 import { labelSchema } from "@/features/resumes/schema"
@@ -61,7 +62,9 @@ export function OnboardingFlow({ initialName, returnTo }: { initialName: string;
     try {
       await saveProfile({ completeOnboarding: true })
     } catch {
-      // Bir sonraki açılışta onboarding yeniden çıkar; kullanıcı burada bekletilmiyor.
+      // Kayıt düştü: bu oturumda bir daha yönlendirilmesin (layout çereze
+      // bakıyor), bir sonraki açılışta onboarding yeniden çıkar (spec §6).
+      document.cookie = `${ONBOARDING_DEFERRED_COOKIE}=1; path=/; SameSite=Lax`
     }
     router.replace(returnTo)
   }
