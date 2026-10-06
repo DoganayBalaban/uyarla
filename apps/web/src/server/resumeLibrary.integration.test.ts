@@ -1,9 +1,14 @@
+import { access, mkdtemp, readdir } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
+import { LocalFileStore } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { AuthError } from "@/server/authz"
 import { deletionOperations } from "@/server/deleteAccount"
 import {
   LibraryFullError,
+  addFileToLibrary,
   createResume,
   findLibraryResume,
   listLibrary,
@@ -106,5 +111,62 @@ describe("resume library", () => {
     })
     expect(savedToLibrary).toBe(false)
     await expect(findLibraryResume(prisma, u.id, resumeId)).rejects.toMatchObject({ status: 404 })
+  })
+
+  it("keeps the limit and a single default under concurrent saves", async () => {
+    const u = await makeUser("lib-race")
+    const results = await Promise.allSettled(Array.from({ length: 8 }, (_, i) => save(u.id, `${i}.pdf`)))
+    expect(results.every((r) => r.status === "fulfilled")).toBe(true)
+    const rows = await listLibrary(prisma, u.id)
+    expect(rows).toHaveLength(5)
+    expect(rows.filter((r) => r.isDefault)).toHaveLength(1)
+  })
+
+  it("keeps a single default under concurrent make-default requests", async () => {
+    const u = await makeUser("lib-race2")
+    const ids: string[] = []
+    for (let i = 0; i < 4; i++) ids.push((await save(u.id, `${i}.pdf`)).resumeId)
+    await Promise.all(ids.slice(1).map((id) => updateLibraryResume(prisma, u.id, id, { isDefault: true })))
+    const rows = await listLibrary(prisma, u.id)
+    expect(rows.filter((r) => r.isDefault)).toHaveLength(1)
+  })
+
+  it("adds a file with its label in one step", async () => {
+    const u = await makeUser("lib-file")
+    const store = new LocalFileStore(await mkdtemp(join(tmpdir(), "uyarla-lib-")))
+    const resume = await addFileToLibrary(prisma, store, {
+      userId: u.id,
+      buffer: Buffer.from("pdf"),
+      fileName: "cv.pdf",
+      label: "Frontend CV",
+    })
+    expect(resume).toMatchObject({ label: "Frontend CV", fileName: "cv.pdf", isDefault: true })
+    const row = await prisma.resume.findUniqueOrThrow({ where: { id: resume.id } })
+    await expect(access(row.filePath)).resolves.toBeUndefined()
+  })
+
+  it("does not leave the stored file behind when the database write fails", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "uyarla-lib-"))
+    const store = new LocalFileStore(dir)
+    // Var olmayan kullanıcı: yabancı anahtar yazımı düşürüyor.
+    await expect(
+      addFileToLibrary(prisma, store, { userId: "yok", buffer: Buffer.from("pdf"), fileName: "cv.pdf", label: null }),
+    ).rejects.toThrow()
+    expect(await readdir(dir)).toEqual([])
+  })
+
+  it("rejects a full library before writing the file", async () => {
+    const u = await makeUser("lib-file-full")
+    for (let i = 0; i < 5; i++) await save(u.id, `${i}.pdf`)
+    const dir = await mkdtemp(join(tmpdir(), "uyarla-lib-"))
+    await expect(
+      addFileToLibrary(prisma, new LocalFileStore(dir), {
+        userId: u.id,
+        buffer: Buffer.from("pdf"),
+        fileName: "cv.pdf",
+        label: null,
+      }),
+    ).rejects.toBeInstanceOf(LibraryFullError)
+    expect(await readdir(dir)).toEqual([])
   })
 })
