@@ -30,6 +30,11 @@ import { resultPath } from "@/features/analysis/paths"
 import { PageHeader } from "@/components/layout/PageShell"
 import { StageTimeline } from "@/features/analysis/components/StageTimeline"
 import { ResumeUpload } from "@/features/analysis/components/ResumeUpload"
+import { ResumePicker } from "@/features/analysis/components/ResumePicker"
+import { resumesQueryKey, useLibrary } from "@/features/resumes/api"
+import { isLibraryFull, preselectResumeId } from "@/features/resumes/library"
+import { LIBRARY_MAX } from "@/features/resumes/schema"
+import { useSession } from "@/lib/authClient"
 import { ScoreResult } from "@/features/analysis/components/ScoreResult"
 import {
   analysisQueryKey,
@@ -39,7 +44,7 @@ import {
   useAnalysisJob,
   type AnalysisResponse,
 } from "@/features/analysis/api"
-import { analysisFormSchema, jobUrlSchema, type AnalysisFormValues } from "@/features/analysis/schema"
+import { analyzeFormSchema, jobUrlSchema, type AnalyzeFormValues } from "@/features/analysis/schema"
 import { startAdaptation } from "@/features/adaptation/api"
 import { apiErrorBody, apiErrorMessage, apiStatus } from "@/lib/api"
 
@@ -81,12 +86,34 @@ export function AnalyzeView() {
     watch,
     clearErrors,
     formState: { errors },
-  } = useForm<AnalysisFormValues>({
-    resolver: zodResolver(analysisFormSchema),
-    defaultValues: { jobText: "", postingUrl: "" },
+  } = useForm<AnalyzeFormValues>({
+    resolver: zodResolver(analyzeFormSchema),
+    defaultValues: { jobText: "", postingUrl: "", saveToLibrary: false },
   })
   const resumeFile = watch("cv") as File | undefined
   const postingUrl = watch("postingUrl") ?? ""
+
+  // Kayıtlı kullanıcının CV kütüphanesi (DOG-50). Anonimde istek gitmiyor.
+  const { data: sessionData } = useSession()
+  const registered = !!sessionData?.user && !(sessionData.user as { isAnonymous?: boolean | null }).isAnonymous
+  const library = useLibrary(registered)
+  const resumes = library.data ?? []
+  const libraryFull = isLibraryFull(resumes)
+  const selectedResumeId = watch("resumeId") ?? null
+  const [libraryNote, setLibraryNote] = useState<string | null>(null)
+
+  // Kütüphane gelince varsayılan CV ön seçili; kullanıcı seçtiyse ya da dosya
+  // yüklediyse dokunulmuyor (kurallar preselectResumeId'de, testli).
+  const [pickedMode, setPickedMode] = useState(false)
+  useEffect(() => {
+    const next = preselectResumeId({
+      resumes,
+      current: getValues("resumeId"),
+      hasFile: getValues("cv") !== undefined,
+      picked: pickedMode,
+    })
+    if (next !== undefined) setValue("resumeId", next ?? undefined)
+  }, [resumes, pickedMode, getValues, setValue])
   const [postingState, setPostingState] = useState<
     { kind: "loading" } | { kind: "done"; text: string } | { kind: "error"; text: string } | null
   >(null)
@@ -241,23 +268,43 @@ export function AnalyzeView() {
   }
 
   /** Şemadan geçmiş değerlerle çağrılıyor; sunucu aynı şemayla bir kez daha doğruluyor. */
-  async function onSubmit(values: AnalysisFormValues) {
+  async function onSubmit(values: AnalyzeFormValues) {
     setError(null)
     setState(null)
     setBusy(true)
+    setLibraryNote(null)
 
     const body = new FormData()
-    body.append("cv", values.cv as File)
+    if (values.resumeId) {
+      body.append("resumeId", values.resumeId)
+    } else {
+      body.append("cv", values.cv as File)
+      if (registered && values.saveToLibrary) body.append("saveToLibrary", "true")
+    }
     body.append("jobText", values.jobText)
 
     try {
-      const { jobId } = await startAnalysis(body)
+      const { jobId, savedToLibrary } = await startAnalysis(body)
+      if (savedToLibrary === false) {
+        setLibraryNote(`Kütüphanende ${LIBRARY_MAX} CV olduğu için bu dosyayı kaydetmedik; analiz yine başladı.`)
+      }
+      if (savedToLibrary) void queryClient.invalidateQueries({ queryKey: resumesQueryKey })
       // Çizelge hemen görünsün. Kayıt, kullanıcı başka sayfaya geçerse sağ
       // alttaki bildirimin izlemesi için.
       startActiveAnalysis(jobId)
       setState({ status: "running" })
       setPollJobId(jobId)
     } catch (error) {
+      // Seçili CV başka sekmede kaldırılmış olabilir (K-35: 404).
+      if (values.resumeId && apiStatus(error) === 404) {
+        setError("Bu CV artık kütüphanende değil. Listeyi yeniledik; başka bir CV seçebilirsin.")
+        setValue("resumeId", undefined)
+        // Önce liste yenilensin; yoksa ön seçim eski listeden kaldırılan CV'yi yeniden seçebilir.
+        await queryClient.invalidateQueries({ queryKey: resumesQueryKey })
+        setPickedMode(false)
+        setBusy(false)
+        return
+      }
       setError(
         apiStatus(error) === null
           ? "Sunucuya ulaşamadık. Bağlantını kontrol edip tekrar dener misin?"
@@ -268,6 +315,11 @@ export function AnalyzeView() {
   }
 
   function startOver() {
+    // Yeni analizde CV seçimi baştan: az önce kütüphaneye kaydedilen dosya
+    // artık bir kart olarak seçilebiliyor.
+    setValue("cv", undefined)
+    setValue("resumeId", undefined)
+    setPickedMode(false)
     setPollJobId(null)
     clearActiveAnalysis()
     window.history.replaceState(null, "", "/analyze")
@@ -310,6 +362,7 @@ export function AnalyzeView() {
   if (running) {
     return (
       <div className="mx-auto max-w-2xl">
+        {libraryNote && <p className="mb-4 text-sm text-muted">{libraryNote}</p>}
         <StageTimeline
           heading="Analizin hazırlanıyor"
           subtitle="Genelde bir dakika kadar sürüyor. Sayfadan ayrılma."
@@ -339,15 +392,51 @@ export function AnalyzeView() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="rounded-card border border-border bg-card p-5 shadow-sm sm:p-7">
           <StepHeading number={1} heading="CV'n" hint="Başvuracağın CV'nin güncel hâli." />
-          <ResumeUpload
-            value={resumeFile ?? null}
-            error={errors.cv?.message}
-            onChange={(file) => {
-              // Kaldırınca hata gösterilmesin; eksik dosyayı gönderimde şema söylüyor.
-              setValue("cv", file as File, { shouldValidate: file !== null })
-              if (!file) clearErrors("cv")
-            }}
-          />
+          {registered && resumes.length > 0 && (
+            <ResumePicker
+              resumes={resumes}
+              selectedId={selectedResumeId}
+              onSelect={(id) => {
+                setPickedMode(true)
+                setValue("resumeId", id, { shouldValidate: !!errors.cv })
+                setValue("cv", undefined)
+              }}
+              onUploadNew={() => {
+                setPickedMode(true)
+                setValue("resumeId", undefined)
+              }}
+            />
+          )}
+          {(!registered || resumes.length === 0 || selectedResumeId === null) && (
+            <div className={registered && resumes.length > 0 ? "mt-3" : undefined}>
+              <ResumeUpload
+                value={resumeFile ?? null}
+                error={errors.cv?.message}
+                onChange={(file) => {
+                  // Dosya seçen kullanıcının seçimi korunuyor: kütüphane sonradan
+                  // yenilense de varsayılan CV dosyanın yerine geçmiyor.
+                  if (file) setPickedMode(true)
+                  // Kaldırınca hata gösterilmesin; eksik dosyayı gönderimde şema söylüyor.
+                  setValue("cv", (file ?? undefined) as File | undefined, { shouldValidate: file !== null })
+                  if (!file) clearErrors("cv")
+                }}
+              />
+              {registered &&
+                (libraryFull ? (
+                  <p className="mt-2 text-sm text-muted">Kütüphanende {LIBRARY_MAX} CV var; bu dosya kaydedilmeyecek.</p>
+                ) : (
+                  <label className="mt-3 flex items-center gap-2 text-sm">
+                    <input type="checkbox" {...register("saveToLibrary")} className="size-4 accent-brand-blue" />
+                    Kütüphaneme kaydet, sonraki ilanlarda seçeyim
+                  </label>
+                ))}
+            </div>
+          )}
+          {registered && resumes.length > 0 && selectedResumeId !== null && errors.cv && (
+            <p role="alert" className="mt-2 text-sm text-brand-amber">
+              {errors.cv.message}
+            </p>
+          )}
 
           <div className="my-7 h-px bg-border" />
 

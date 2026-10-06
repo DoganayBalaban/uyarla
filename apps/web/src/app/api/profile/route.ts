@@ -3,9 +3,22 @@ import { NextResponse } from "next/server"
 import { profilePatchSchema } from "@/features/onboarding/schema"
 import { firstIssue } from "@/lib/validation"
 import { authErrorResponse, ensureRegistered, getSession } from "@/server/authz"
-import { updateProfile } from "@/server/profile"
+import { getProfile, updateProfile } from "@/server/profile"
 
 export const runtime = "nodejs"
+
+/** Hesabım sayfasının profil bölümü için. */
+export async function GET() {
+  try {
+    const { user } = ensureRegistered(await getSession())
+    return NextResponse.json({ profile: await getProfile(prisma, user.id) })
+  } catch (error) {
+    const reply = authErrorResponse(error)
+    if (reply) return reply
+    console.error("[api/profile]", error)
+    return NextResponse.json({ error: "Bir şeyler ters gitti." }, { status: 500 })
+  }
+}
 
 /** Ad, amaç, hedef rol; onboarding'i tamamlandı işaretler. Kimlik oturumdan. */
 export async function PATCH(request: Request) {

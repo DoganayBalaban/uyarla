@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { analysisFormSchema, jobUrlSchema } from "@/features/analysis/schema"
+import { analysisFormSchema, analyzeFormSchema, jobUrlSchema } from "@/features/analysis/schema"
 import { firstIssue } from "@/lib/validation"
 
 const POSTING = "Frontend Geliştirici aranıyor. React ve TypeScript bilgisi gereklidir."
@@ -35,5 +35,30 @@ describe("jobUrlSchema", () => {
       expect(parsed.success).toBe(false)
       if (!parsed.success) expect(firstIssue(parsed.error).message).toBe("İlan bağlantısını yapıştır.")
     }
+  })
+})
+
+describe("analyzeFormSchema", () => {
+  const cv = { name: "cv.pdf", size: 10 }
+
+  it("accepts either a library CV or a new file", () => {
+    expect(analyzeFormSchema.safeParse({ resumeId: "r1", jobText: POSTING, saveToLibrary: false }).success).toBe(true)
+    expect(analyzeFormSchema.safeParse({ cv, jobText: POSTING, saveToLibrary: true }).success).toBe(true)
+  })
+
+  it("asks for a CV when neither is given", () => {
+    const parsed = analyzeFormSchema.safeParse({ jobText: POSTING, saveToLibrary: false })
+    expect(parsed.success).toBe(false)
+    if (!parsed.success) expect(firstIssue(parsed.error).code).toBe("missing_file")
+  })
+
+  it("rejects both at once", () => {
+    expect(analyzeFormSchema.safeParse({ resumeId: "r1", cv, jobText: POSTING, saveToLibrary: false }).success).toBe(false)
+  })
+
+  it("still validates the file and the job text", () => {
+    const parsed = analyzeFormSchema.safeParse({ cv: { name: "cv.txt", size: 10 }, jobText: "kısa", saveToLibrary: false })
+    expect(parsed.success).toBe(false)
+    if (!parsed.success) expect(firstIssue(parsed.error).code).toBe("unsupported_format")
   })
 })
