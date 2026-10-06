@@ -182,7 +182,7 @@ const FAQ = [
   },
   {
     s: "CV'm güvende mi?",
-    c: "CV'n izinsiz kimseyle paylaşılmaz ve yalnızca sen görebilirsin. Başka bir kullanıcı senin analizine ya da uyarlamana erişemez.",
+    c: "CV'n yalnızca skorunu hesaplamak ve uyarlamak için işlenir; satılmaz, reklamda ya da model eğitiminde kullanılmaz. Analiz için metni OpenAI'ın dil modeline gönderilir. Başka bir kullanıcı senin analizine ya da uyarlamana erişemez; hesabını sildiğinde CV'n de silinir.",
   },
 ]
 
@@ -211,7 +211,7 @@ export function LandingPage() {
                 <Icon name="check" size={16} /> Kayıt gerekmez
               </li>
               <li>
-                <Icon name="check" size={16} /> CV'n izinsiz paylaşılmaz
+                <Icon name="check" size={16} /> CV'n satılmaz, eğitimde kullanılmaz
               </li>
               <li>
                 <Icon name="check" size={16} /> Her değişikliği sen onaylarsın

@@ -10,6 +10,6 @@ export const LEGAL = {
   dataController: "[Veri sorumlusu unvanı]",
   address: "[Adres]",
   contact: "[kvkk@alanadi.com]",
-  lastUpdated: "26 Eylül 2026",
+  lastUpdated: "6 Ekim 2026",
   draftData: true,
 } as const

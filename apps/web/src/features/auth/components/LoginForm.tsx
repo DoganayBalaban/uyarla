@@ -277,7 +277,7 @@ export function LoginForm({
               <ul className="mt-9 space-y-2.5 text-sm text-muted">
                 {[
                   "Skorunu görmek için hesap gerekmez",
-                  "CV'n izinsiz kimseyle paylaşılmaz",
+                  "CV'n satılmaz, model eğitiminde kullanılmaz",
                   "Yaptığın analizler hesabına taşınır",
                 ].map((m) => (
                   <li key={m} className="flex items-center gap-2.5">
