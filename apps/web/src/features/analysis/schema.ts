@@ -68,6 +68,34 @@ export const analysisFormSchema = z.object({
 
 export type AnalysisFormValues = z.input<typeof analysisFormSchema>
 
+/**
+ * İstemci analiz formu (DOG-50): kütüphanedeki CV (`resumeId`) ya da yeni
+ * dosya (`cv`), tam biri. Sunucu iki yolu ayrı doğruluyor (validateUpload /
+ * validateJobText); bu şema formun hangi yolda olduğunu söylüyor.
+ */
+export const analyzeFormSchema = z
+  .object({
+    resumeId: z.string().min(1).optional(),
+    cv: resumeFileSchema.optional(),
+    saveToLibrary: z.boolean(),
+    jobText: jobTextSchema,
+    postingUrl: z.string().optional(),
+  })
+  .superRefine((value, ctx) => {
+    const hasLibrary = value.resumeId !== undefined
+    const hasFile = value.cv !== undefined
+    if (hasLibrary === hasFile) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["cv"],
+        message: hasLibrary ? "Bir CV seç ya da yeni dosya yükle; ikisi birden olmaz." : "CV'ni seçer misin? PDF ya da DOCX olabilir.",
+        params: { code: hasLibrary ? "ambiguous_resume" : "missing_file" },
+      })
+    }
+  })
+
+export type AnalyzeFormValues = z.input<typeof analyzeFormSchema>
+
 /** `POST /api/job-url` gövdesi; analiz formundaki bağlantı alanı da bunu kullanıyor. */
 export const jobUrlSchema = z.object({
   url: z.string({ error: "İlan bağlantısını yapıştır." }).trim().min(1, "İlan bağlantısını yapıştır."),
