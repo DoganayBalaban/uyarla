@@ -33,7 +33,7 @@ function issue(message: string, code: string) {
   return { code: "custom" as const, message, params: { code } }
 }
 
-const resumeFileSchema = z.unknown().superRefine((value, ctx) => {
+export const resumeFileSchema = z.unknown().superRefine((value, ctx) => {
   if (!isFileLike(value)) {
     ctx.addIssue(issue("CV'ni seçer misin? PDF ya da DOCX olabilir.", "missing_file"))
     return
@@ -53,7 +53,7 @@ const resumeFileSchema = z.unknown().superRefine((value, ctx) => {
   }
 }) as z.ZodType<ResumeFileLike>
 
-const jobTextSchema = z.string().superRefine((value, ctx) => {
+export const jobTextSchema = z.string().superRefine((value, ctx) => {
   if (value.trim().length < MIN_JOB_TEXT_LENGTH) {
     ctx.addIssue(issue("İlan metni çok kısa görünüyor. İlanın tamamını yapıştırır mısın?", "job_text_too_short"))
   }

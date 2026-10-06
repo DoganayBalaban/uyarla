@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { PermanentError } from "@uyarla/core"
-import { validateUpload } from "./upload.js"
+import { validateJobText, validateResumeFile, validateUpload } from "./upload.js"
 
 const MB = 1024 * 1024
 const TEST_POSTING = "Frontend Geliştirici aranıyor. React ve TypeScript bilgisi gereklidir."
@@ -97,5 +97,24 @@ describe("validateUpload", () => {
 
   it("returns the job text for saving", () => {
     expect(validateUpload({ name: "cv.pdf", size: 100 }, TEST_POSTING).jobText).toBe(TEST_POSTING)
+  })
+})
+
+describe("validateResumeFile", () => {
+  it("checks only the file", () => {
+    expect(() => validateResumeFile({ name: "cv.pdf", size: 100 })).not.toThrow()
+    try {
+      validateResumeFile({ name: "cv.txt", size: 100 })
+      expect.unreachable()
+    } catch (error) {
+      expect((error as PermanentError).code).toBe("unsupported_format")
+    }
+  })
+})
+
+describe("validateJobText", () => {
+  it("returns the text or throws the short-text error", () => {
+    expect(validateJobText(TEST_POSTING)).toBe(TEST_POSTING)
+    expect(() => validateJobText("kısa")).toThrow(PermanentError)
   })
 })
