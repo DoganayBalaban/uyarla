@@ -76,4 +76,26 @@ describe("validateUpload", () => {
     }
     expect(codes.size).toBe(4)
   })
+
+  it("rejects a missing file with its own code", () => {
+    try {
+      validateUpload(null, TEST_POSTING)
+      expect.unreachable()
+    } catch (error) {
+      expect((error as PermanentError).code).toBe("missing_file")
+    }
+  })
+
+  it("reports the file error before the job text error", () => {
+    try {
+      validateUpload({ name: "cv.txt", size: 100 }, "kısa")
+      expect.unreachable()
+    } catch (error) {
+      expect((error as PermanentError).code).toBe("unsupported_format")
+    }
+  })
+
+  it("returns the job text for saving", () => {
+    expect(validateUpload({ name: "cv.pdf", size: 100 }, TEST_POSTING).jobText).toBe(TEST_POSTING)
+  })
 })

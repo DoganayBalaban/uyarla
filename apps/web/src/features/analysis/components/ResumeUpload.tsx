@@ -13,9 +13,9 @@ import { cn } from "@/lib/cn"
  * dropzone deseninden uyarlandı: kesik kenarlı bırakma alanı ve seçilen
  * dosyanın kartı. Tek dosya ve yalnızca PDF/DOCX.
  *
- * Asıl <input type="file" name="cv"> formun içinde kalıyor; sürüklenen dosya
- * DataTransfer ile ona yazılıyor. Böylece form gönderimi (FormData) ve
- * tarayıcının "zorunlu alan" doğrulaması olduğu gibi çalışıyor.
+ * Kontrollü bileşen: dosyayı react-hook-form tutuyor (`value`/`onChange`),
+ * doğrulama analiz şemasında (`features/analysis/schema.ts`). Seçilen ya da
+ * bırakılan her dosya forma iletiliyor; desteklenmeyen biçimi şema söylüyor.
  */
 
 const ACCEPT = [".pdf", ".docx"]
@@ -25,31 +25,29 @@ function sizePx(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
-export function ResumeUpload({ name = "cv" }: { name?: string }) {
+export function ResumeUpload({
+  value,
+  onChange,
+  error,
+}: {
+  value: File | null
+  onChange: (file: File | null) => void
+  error?: string
+}) {
   const inputValue = useRef<HTMLInputElement>(null)
-  const [file, setFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
-  const [error, setErrorMessage] = useState<string | null>(null)
+  // Geçersiz dosya da forma gidiyor ki şema hatasını göstersin; kart yalnızca
+  // hatasız dosyada çıkıyor.
+  const file = value && !error ? value : null
 
   function select(fresh: File | null) {
-    setErrorMessage(null)
     if (!fresh) return
-    const extension = `.${fresh.name.toLowerCase().split(".").pop()}`
-    if (!ACCEPT.includes(extension)) {
-      setErrorMessage("Yalnızca PDF ve DOCX dosyalarını okuyabiliyoruz.")
-      return
-    }
-    if (inputValue.current) {
-      const dt = new DataTransfer()
-      dt.items.add(fresh)
-      inputValue.current.files = dt.files
-    }
-    setFile(fresh)
+    onChange(fresh)
   }
 
   function remove() {
     if (inputValue.current) inputValue.current.value = ""
-    setFile(null)
+    onChange(null)
   }
 
   return (
@@ -84,10 +82,10 @@ export function ResumeUpload({ name = "cv" }: { name?: string }) {
         <input
           ref={inputValue}
           id="cv"
-          name={name}
           type="file"
           accept={ACCEPT.join(",")}
-          required
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "cv-error" : undefined}
           onChange={(e) => select(e.target.files?.[0] ?? null)}
           className="sr-only"
         />
@@ -120,7 +118,11 @@ export function ResumeUpload({ name = "cv" }: { name?: string }) {
         )}
       </AnimatePresence>
 
-      {error && <p className="mt-2 text-sm text-brand-amber">{error}</p>}
+      {error && (
+        <p id="cv-error" role="alert" className="mt-2 text-sm text-brand-amber">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

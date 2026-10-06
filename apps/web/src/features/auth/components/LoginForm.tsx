@@ -2,9 +2,12 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { signIn } from "@/lib/authClient"
 import { suggestEmail, mailAppFor } from "@/features/auth/emailHints"
 import type { Provider } from "@/features/auth/providers"
+import { loginSchema, type LoginFormValues } from "@/features/auth/schema"
 import { LoginVisual } from "@/features/auth/components/LoginVisual"
 import { SocialLogin, girisHataAdresi } from "@/features/auth/components/SocialLogin"
 
@@ -51,7 +54,17 @@ export function LoginForm({
   /** Girişten sonra gidilecek, doğrulanmış site içi adres. */
   returnTo: string
 }) {
-  const [email, setEmail] = useState("")
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "" },
+  })
+  const email = watch("email")
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle")
   const [loginError, setLoginError] = useState<string | null>(null)
   const [remaining, setRemaining] = useState(0)
@@ -75,9 +88,9 @@ export function LoginForm({
   const mailApp = mailAppFor(email)
 
   /** Bağlantıyı gönderir; başarılıysa true. */
-  async function sendLink(): Promise<boolean> {
+  async function sendLink(address: string): Promise<boolean> {
     const { error } = await signIn.magicLink({
-      email,
+      email: address,
       // Kullanıcı girişe bir işin ortasından geldiyse (ör. uyarlama) oraya
       // dönüyor; değilse ana akışa.
       callbackURL: returnTo,
@@ -95,11 +108,12 @@ export function LoginForm({
     return true
   }
 
-  async function submit(event: React.FormEvent) {
-    event.preventDefault()
+  async function submit(values: LoginFormValues) {
     setLoginError(null)
     setState("sending")
-    const done = await sendLink()
+    // Şema adresi kırpıyor; gönderilen ve ekranda gösterilen adres aynı olsun.
+    setValue("email", values.email)
+    const done = await sendLink(values.email)
     setResent(false)
     setState(done ? "sent" : "idle")
   }
@@ -107,7 +121,7 @@ export function LoginForm({
   async function resend() {
     setLoginError(null)
     setResent(false)
-    if (await sendLink()) setResent(true)
+    if (await sendLink(email)) setResent(true)
   }
 
   return (
@@ -208,21 +222,19 @@ export function LoginForm({
                 oluşur.
               </p>
 
-              <form onSubmit={submit} className="mt-10">
+              <form onSubmit={handleSubmit(submit)} noValidate className="mt-10">
                 <label htmlFor="email" className="mb-2 block text-sm font-medium text-foreground">
                   E-posta adresi
                 </label>
                 <input
                   id="email"
                   type="email"
-                  required
                   autoComplete="email"
                   autoFocus
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...register("email")}
                   placeholder="aday@ornek.com"
-                  aria-invalid={loginError ? true : undefined}
-                  aria-describedby={loginError ? "giris-hata" : undefined}
+                  aria-invalid={loginError || errors.email ? true : undefined}
+                  aria-describedby={loginError || errors.email ? "giris-hata" : undefined}
                   className="w-full rounded-2xl border border-transparent bg-background px-5 py-4 dark:bg-white/5 text-base text-foreground outline-none ring-brand-blue/25 transition placeholder:text-muted/80 focus:border-brand-blue focus:bg-white focus:ring-4 dark:focus:bg-white/10"
                 />
 
@@ -230,7 +242,7 @@ export function LoginForm({
                   <p className="mt-3 text-sm text-muted">
                     <button
                       type="button"
-                      onClick={() => setEmail(suggestion)}
+                      onClick={() => setValue("email", suggestion, { shouldValidate: !!errors.email })}
                       className="font-semibold text-brand-blue underline-offset-4 hover:underline dark:text-[#8ea2ff]"
                     >
                       {suggestion}
@@ -239,9 +251,9 @@ export function LoginForm({
                   </p>
                 )}
 
-                {loginError && (
+                {(errors.email || loginError) && (
                   <p id="giris-hata" role="alert" className="mt-3 text-sm text-brand-amber">
-                    {loginError}
+                    {errors.email?.message ?? loginError}
                   </p>
                 )}
 

@@ -2,6 +2,8 @@
 
 import Link from "next/link"
 import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import {
@@ -30,6 +32,7 @@ import {
   type Stage,
   type BoardCard,
 } from "@/features/applications/board"
+import { noteFormSchema, type NoteFormValues } from "@/features/applications/schema"
 
 /** Skor yalnızca renkle değil etiketle de (rehber §9.2). */
 function scoreLabel(scoreValue: number): { text: string; cls: string } {
@@ -245,7 +248,14 @@ function BoardCardView({
   onUpdate: (id: string, change: CardChange) => void
 }) {
   const [noteOpen, setNoteOpen] = useState(false)
-  const [note, setNoteText] = useState(card.noteText ?? "")
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<NoteFormValues>({
+    resolver: zodResolver(noteFormSchema),
+    values: { note: card.noteText ?? "" },
+  })
   const [adapting, setAdapting] = useState(false)
   const router = useRouter()
   const labelText = card.score === null ? null : scoreLabel(card.score)
@@ -260,10 +270,12 @@ function BoardCardView({
     }
   }
 
-  function saveNote() {
+  // Odak kutudan çıkınca kaydediliyor; şemadan geçmeyen not kutuyu açık
+  // bırakıp hatayı gösteriyor. Şema metni kırpıyor.
+  const saveNote = handleSubmit(({ note }) => {
     setNoteOpen(false)
-    if (note.trim() !== (card.noteText ?? "")) onUpdate(card.analysisId, { note: note.trim() })
-  }
+    if (note !== (card.noteText ?? "")) onUpdate(card.analysisId, { note })
+  })
 
   return (
     <article
@@ -306,16 +318,22 @@ function BoardCardView({
       </div>
 
       {noteOpen ? (
-        <textarea
-          autoFocus
-          value={note}
-          maxLength={NOTE_MAX_LENGTH}
-          onChange={(e) => setNoteText(e.target.value)}
-          onBlur={saveNote}
-          rows={3}
-          placeholder="Şirket, görüştüğün kişi, tarih…"
-          className="mt-3 w-full rounded-button border border-border bg-background p-2 text-sm dark:bg-white/5"
-        />
+        <>
+          <textarea
+            autoFocus
+            maxLength={NOTE_MAX_LENGTH}
+            {...register("note", { onBlur: () => void saveNote() })}
+            rows={3}
+            placeholder="Şirket, görüştüğün kişi, tarih…"
+            aria-invalid={errors.note ? true : undefined}
+            className="mt-3 w-full rounded-button border border-border bg-background p-2 text-sm dark:bg-white/5"
+          />
+          {errors.note && (
+            <p role="alert" className="mt-1 text-xs text-brand-amber">
+              {errors.note.message}
+            </p>
+          )}
+        </>
       ) : card.noteText ? (
         <button
           onClick={() => setNoteOpen(true)}

@@ -2,6 +2,8 @@ import { PermanentError } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { ADAPT_JOB_OPTIONS } from "@uyarla/worker/adapt-queue"
 import { NextResponse } from "next/server"
+import { adaptRequestSchema } from "@/features/adaptation/schema"
+import { firstIssue } from "@/lib/validation"
 import { adaptQueue } from "@/server/adaptQueue"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 import {
@@ -20,8 +22,9 @@ export const runtime = "nodejs"
  */
 export async function POST(request: Request) {
   try {
-    const { analysisId } = (await request.json()) as { analysisId?: string }
-    if (!analysisId) throw new PermanentError("Analiz kimliği gerekli.", "missing_analysis")
+    const parsed = adaptRequestSchema.safeParse(await request.json().catch(() => ({})))
+    if (!parsed.success) throw new PermanentError(firstIssue(parsed.error).message, "missing_analysis")
+    const { analysisId } = parsed.data
 
     // Kayıt kontrolü kaynağı ARAMADAN ÖNCE: aksi hâlde anonim kullanıcı
     // "bu analiz var" ile "yok" arasındaki farkı yanıt kodundan okuyabiliyor.

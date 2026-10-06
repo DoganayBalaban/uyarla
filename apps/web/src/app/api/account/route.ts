@@ -1,6 +1,7 @@
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, ensureSession, getSession } from "@/server/authz"
+import { deleteAccountBodySchema } from "@/features/account/schema"
 import { deleteUsers } from "@/server/deleteAccount"
 
 export const runtime = "nodejs"
@@ -47,7 +48,7 @@ export async function DELETE(request: Request) {
 }
 
 /**
- * Gövdeyi okur; gövde yoksa ya da JSON değilse null.
+ * Gövdeyi okur; gövde yoksa, JSON değilse ya da şemaya uymuyorsa null.
  *
  * DELETE isteklerinin gövdesi isteğe bağlı — arayüz hiç göndermiyor.
  * Bozuk gövde yüzünden silme isteğinin 500 dönmesi kullanıcıyı hesabıyla
@@ -57,7 +58,8 @@ async function readBody(request: Request): Promise<{ userId?: string } | null> {
   try {
     const bodyText = await request.text()
     if (!bodyText.trim()) return null
-    return JSON.parse(bodyText) as { userId?: string }
+    const parsed = deleteAccountBodySchema.safeParse(JSON.parse(bodyText))
+    return parsed.success ? parsed.data : null
   } catch {
     return null
   }
