@@ -1,3 +1,4 @@
+import { UyarlaLogo } from "@/components/brand/UyarlaMark"
 import { Icon } from "@/features/landing/components/Icon"
 import s from "@/features/landing/landing.module.css"
 
@@ -61,11 +62,7 @@ export function HeroApp() {
     <div className={s.appWindow}>
       <div className={s.appWindowTop}>
         <span className={s.appWindowLogo}>
-          <span className={s.logoMark} aria-hidden="true">
-            <span />
-            <span />
-          </span>
-          uyarla
+          <UyarlaLogo className={s.appWindowLogoImage} />
         </span>
         <span className={`${s.appWindowLink} ${s.appWindowLinkActive}`}>
           <Icon name="score" size={15} /> Yeni analiz

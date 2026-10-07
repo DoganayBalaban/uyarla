@@ -41,16 +41,16 @@ export function LoginVisual() {
       className="relative isolate h-full w-full overflow-hidden rounded-[28px] bg-brand-night"
     >
       {/* Zemin: mavinin iki tonu, köşede hafif mercan. */}
-      <div className="absolute inset-0 -z-20 bg-[radial-gradient(80%_60%_at_80%_10%,rgb(43_78_255/0.55),transparent_60%),radial-gradient(60%_50%_at_0%_100%,rgb(43_78_255/0.45),transparent_65%),radial-gradient(40%_30%_at_100%_100%,rgb(255_107_74/0.22),transparent_70%)]" />
+      <div className="absolute inset-0 -z-20 bg-[radial-gradient(80%_60%_at_80%_10%,rgb(47_75_224/0.55),transparent_60%),radial-gradient(60%_50%_at_0%_100%,rgb(47_75_224/0.45),transparent_65%),radial-gradient(40%_30%_at_100%_100%,rgb(255_107_74/0.22),transparent_70%)]" />
 
       {/* Kurdeleler. Her biri dikeyde açık kenar → doygun orta → koyu alt
           geçişiyle ipek hacmi veriyor; uçlar maskeyle eriyor. */}
       <div className="absolute inset-[-30%] -z-10 [mask-image:linear-gradient(to_right,transparent,#000_20%,#000_80%,transparent)]">
-        <div className="absolute left-[-10%] top-[14%] h-28 w-[130%] -rotate-30 rounded-full bg-[#8ea2ff]/50 blur-3xl motion-safe:animate-ribbon" />
-        <div className="absolute left-[-10%] top-[30%] h-44 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(199_208_255/0.9),rgb(43_78_255)_30%,rgb(27_42_143)_75%,rgb(15_23_42/0.6))] blur-[2px] motion-safe:animate-ribbon motion-safe:[animation-duration:18s]" />
+        <div className="absolute left-[-10%] top-[14%] h-28 w-[130%] -rotate-30 rounded-full bg-brand-blue-light/50 blur-3xl motion-safe:animate-ribbon" />
+        <div className="absolute left-[-10%] top-[30%] h-44 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(199_208_255/0.9),rgb(47_75_224)_30%,rgb(27_42_143)_75%,rgb(15_23_42/0.6))] blur-[2px] motion-safe:animate-ribbon motion-safe:[animation-duration:18s]" />
         <div className="absolute left-[-10%] top-[44%] h-1.5 w-[130%] -rotate-30 rounded-full bg-white/70 blur-[1px] motion-safe:animate-ribbon motion-safe:[animation-duration:11s]" />
-        <div className="absolute left-[-10%] top-[50%] h-36 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(230_234_255/0.85),rgb(91_115_255)_28%,rgb(43_78_255)_55%,rgb(255_107_74/0.55)_85%,transparent)] blur-[2px] motion-safe:animate-ribbon motion-safe:[animation-duration:22s]" />
-        <div className="absolute left-[-10%] top-[66%] h-24 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(199_208_255/0.6),rgb(43_78_255/0.8)_40%,rgb(15_23_42/0.4))] blur-[3px] motion-safe:animate-ribbon motion-safe:[animation-duration:16s]" />
+        <div className="absolute left-[-10%] top-[50%] h-36 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(230_234_255/0.85),rgb(91_115_255)_28%,rgb(47_75_224)_55%,rgb(255_107_74/0.55)_85%,transparent)] blur-[2px] motion-safe:animate-ribbon motion-safe:[animation-duration:22s]" />
+        <div className="absolute left-[-10%] top-[66%] h-24 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(199_208_255/0.6),rgb(47_75_224/0.8)_40%,rgb(15_23_42/0.4))] blur-[3px] motion-safe:animate-ribbon motion-safe:[animation-duration:16s]" />
         <div className="absolute left-[-10%] top-[80%] h-32 w-[130%] -rotate-30 rounded-full bg-brand-coral/25 blur-3xl motion-safe:animate-ribbon motion-safe:[animation-duration:20s]" />
       </div>
 
@@ -94,7 +94,7 @@ export function LoginVisual() {
         </div>
 
         {/* Merkez: skor halkası. */}
-        <div className="absolute left-1/2 top-1/2 grid size-[22%] min-w-24 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/10 shadow-[0_0_60px_rgb(43_78_255/0.6)] ring-1 ring-white/20 backdrop-blur-md">
+        <div className="absolute left-1/2 top-1/2 grid size-[22%] min-w-24 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/10 shadow-[0_0_60px_rgb(47_75_224/0.6)] ring-1 ring-white/20 backdrop-blur-md">
           <svg viewBox="0 0 100 100" className="absolute inset-0 size-full -rotate-90">
             <circle cx="50" cy="50" r="44" fill="none" stroke="rgb(255 255 255 / 0.15)" strokeWidth="6" />
             <circle

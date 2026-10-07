@@ -40,7 +40,7 @@ type ResumeStepOutput = z.output<typeof resumeStepSchema>
 const inputClass =
   "w-full rounded-button border border-border bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted/70 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15"
 const primaryButton =
-  "inline-flex items-center justify-center gap-2 rounded-button bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2442e0] disabled:cursor-not-allowed disabled:opacity-60"
+  "inline-flex items-center justify-center gap-2 rounded-button bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-blue-hover disabled:cursor-not-allowed disabled:opacity-60"
 const skipButton = "text-sm font-medium text-muted underline-offset-4 hover:text-foreground hover:underline"
 
 export function OnboardingFlow({ initialName, returnTo }: { initialName: string; returnTo: string }) {

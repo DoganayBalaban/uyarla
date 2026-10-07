@@ -15,7 +15,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
           placeItems: "center",
           fontFamily: "system-ui, -apple-system, sans-serif",
           background: "#f5f7ff",
-          color: "#0f172a",
+          color: "#111114",
           padding: "0 16px",
         }}
       >
@@ -28,7 +28,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
             type="button"
             onClick={reset}
             style={{
-              background: "#2b4eff",
+              background: "#2f4be0",
               color: "#fff",
               border: 0,
               borderRadius: 10,

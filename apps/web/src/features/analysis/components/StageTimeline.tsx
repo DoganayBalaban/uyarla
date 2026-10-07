@@ -24,7 +24,7 @@ export type { Stage as Asama, StageState as AsamaDurumu }
 
 const STATE_STYLE: Record<StageState, { label: string; textClass: string; bgClass: string }> = {
   pending: { label: "Sırada", textClass: "text-muted", bgClass: "bg-card border-border" },
-  active: { label: "Çalışıyor", textClass: "text-brand-blue dark:text-[#8ea2ff]", bgClass: "bg-brand-blue/10 border-brand-blue/50" },
+  active: { label: "Çalışıyor", textClass: "text-brand-blue dark:text-brand-blue-light", bgClass: "bg-brand-blue/10 border-brand-blue/50" },
   done: { label: "Tamam", textClass: "text-brand-green dark:text-[#4ade80]", bgClass: "bg-brand-green/10 border-brand-green/50" },
   error: { label: "Olmadı", textClass: "text-brand-red dark:text-[#f87171]", bgClass: "bg-brand-red/10 border-brand-red/50" },
 }

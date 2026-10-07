@@ -23,9 +23,15 @@
  * ayrışması demek olurdu.
  */
 @theme {
-  /* Sabit marka renkleri. */
-  --color-brand-blue: #2b4eff;
-  --color-brand-night: #0f172a;
+  /* Sabit marka renkleri. Palet "mürekkep + kobalt" (7 Ekim 2026): logo
+     tek renk siyah; metin ve logo mürekkep, tek vurgu kobalt. */
+  --color-brand-blue: #2f4be0;
+  --color-brand-blue-hover: #2238c2;
+  --color-brand-blue-soft: #eef1fe;
+  /* Koyu zeminde okunur kobalt (dark: varyantları). */
+  --color-brand-blue-light: #93a4ff;
+  --color-brand-ink: #111114;
+  --color-brand-night: #111114;
   --color-brand-ice: #f5f7ff;
   --color-brand-coral: #ff6b4a;
   --color-brand-green: #16a34a;
@@ -85,17 +91,21 @@
 :root {
   --brand-blue: var(--color-brand-blue);
   --brand-night: var(--color-brand-night);
+  --brand-ink: var(--color-brand-ink);
+  --brand-blue-hover: var(--color-brand-blue-hover);
+  --brand-blue-soft: var(--color-brand-blue-soft);
+  --brand-blue-light: var(--color-brand-blue-light);
   --brand-ice: var(--color-brand-ice);
   --brand-coral: var(--color-brand-coral);
   --brand-green: var(--color-brand-green);
   --brand-amber: var(--color-brand-amber);
   --brand-red: var(--color-brand-red);
 
-  --background: #ffffff;
-  --foreground: #000000;
+  --background: #fafaf9;
+  --foreground: #111114;
   --card: #ffffff;
-  --border: #e2e8f0;
-  --muted: #64748b;
+  --border: #e7e5e4;
+  --muted: #6b6b73;
 
   --button-radius: var(--radius-button);
   --card-radius: var(--radius-card);

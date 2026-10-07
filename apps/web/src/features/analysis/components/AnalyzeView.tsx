@@ -502,7 +502,7 @@ export function AnalyzeView() {
           <button
             type="submit"
             disabled={busy}
-            className="group mt-6 flex w-full items-center justify-center gap-2 rounded-button bg-brand-blue px-6 py-3.5 font-semibold text-white shadow-[0_10px_24px_-12px_rgb(43_78_255/0.8)] transition hover:-translate-y-px hover:bg-[#2442e0] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+            className="group mt-6 flex w-full items-center justify-center gap-2 rounded-button bg-brand-blue px-6 py-3.5 font-semibold text-white shadow-[0_10px_24px_-12px_rgb(47_75_224/0.8)] transition hover:-translate-y-px hover:bg-brand-blue-hover disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {busy ? (
               <>
@@ -528,7 +528,7 @@ export function AnalyzeView() {
                 { Icon: FileCheck2, b: "Biçim kontrolü", m: "ATS CV'ni doğru okuyabiliyor mu." },
               ].map(({ Icon, b, m }) => (
                 <li key={b} className="flex gap-3">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-button bg-brand-blue/10 text-brand-blue dark:text-[#8ea2ff]">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-button bg-brand-blue/10 text-brand-blue dark:text-brand-blue-light">
                     <Icon className="size-4" aria-hidden />
                   </span>
                   <span>

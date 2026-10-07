@@ -9,6 +9,7 @@ import { suggestEmail, mailAppFor } from "@/features/auth/emailHints"
 import type { Provider } from "@/features/auth/providers"
 import { loginSchema, type LoginFormValues } from "@/features/auth/schema"
 import { LoginVisual } from "@/features/auth/components/LoginVisual"
+import { Logo } from "@/components/layout/Logo"
 import { onboardingPath } from "@/features/onboarding/gate"
 import { SocialLogin, girisHataAdresi } from "@/features/auth/components/SocialLogin"
 
@@ -24,22 +25,6 @@ function errorMessage(errorCode: string | null): string | null {
     return "Bu bağlantının süresi dolmuş. Yenisini gönderelim mi?"
   }
   return "Giriş yapılamadı. E-postanı tekrar girer misin?"
-}
-
-function Logo() {
-  return (
-    <Link
-      href="/"
-      className="inline-flex items-center gap-2.5 font-heading text-xl font-extrabold tracking-tight text-foreground"
-    >
-      {/* Rehber §9.1: üst üste iki belge, biri hafif eğik. */}
-      <span aria-hidden="true" className="relative h-6 w-5">
-        <span className="absolute inset-0 -translate-x-0.5 -rotate-12 rounded-[5px] bg-brand-blue/30" />
-        <span className="absolute inset-0 rounded-[5px] bg-brand-blue" />
-      </span>
-      uyarla
-    </Link>
-  )
 }
 
 /**
@@ -139,7 +124,7 @@ export function LoginForm({
         <main className="mx-auto flex w-full max-w-[26rem] flex-1 flex-col justify-center py-12">
           {state === "sent" ? (
             <div>
-              <span className="grid size-14 place-items-center rounded-2xl bg-brand-blue/10 text-brand-blue dark:text-[#8ea2ff]">
+              <span className="grid size-14 place-items-center rounded-2xl bg-brand-blue/10 text-brand-blue dark:text-brand-blue-light">
                 <svg
                   viewBox="0 0 24 24"
                   className="size-7"
@@ -169,7 +154,7 @@ export function LoginForm({
                     href={mailApp.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(43_78_255/0.8)] transition hover:-translate-y-px hover:bg-[#2442e0]"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(47_75_224/0.8)] transition hover:-translate-y-px hover:bg-brand-blue-hover"
                   >
                     {mailApp.action}
                     <span aria-hidden="true">↗</span>
@@ -245,7 +230,7 @@ export function LoginForm({
                     <button
                       type="button"
                       onClick={() => setValue("email", suggestion, { shouldValidate: !!errors.email })}
-                      className="font-semibold text-brand-blue underline-offset-4 hover:underline dark:text-[#8ea2ff]"
+                      className="font-semibold text-brand-blue underline-offset-4 hover:underline dark:text-brand-blue-light"
                     >
                       {suggestion}
                     </button>{" "}
@@ -262,7 +247,7 @@ export function LoginForm({
                 <button
                   type="submit"
                   disabled={state === "sending"}
-                  className="group mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(43_78_255/0.8)] transition hover:-translate-y-px hover:bg-[#2442e0] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="group mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(47_75_224/0.8)] transition hover:-translate-y-px hover:bg-brand-blue-hover disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {state === "sending" ? (
                     <>

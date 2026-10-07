@@ -91,7 +91,7 @@ export function AccountView() {
       <PageHeader title="Hesap ayarları" description="Hesabın, verilerin ve onları silme seçeneğin." />
       <div className="space-y-6">
         <div className="flex items-center gap-4 rounded-card border border-border bg-card p-6 shadow-sm">
-          <span className="grid size-14 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#8ea2ff] to-brand-blue font-heading text-xl font-extrabold text-white">
+          <span className="grid size-14 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-blue-light to-brand-blue font-heading text-xl font-extrabold text-white">
             {registered ? initial : <UserRound className="size-6" aria-hidden />}
           </span>
           <div className="min-w-0">
