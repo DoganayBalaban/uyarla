@@ -5,11 +5,11 @@
 .page {
   --container-width: 1200px;
   --gutter: 24px;
-  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 12px 32px -12px rgb(15 23 42 / 0.12);
-  --shadow-floating: 0 2px 4px rgb(15 23 42 / 0.04), 0 24px 56px -16px rgb(15 23 42 / 0.22);
+  --shadow-card: 0 1px 2px rgb(17 17 20 / 0.04), 0 12px 32px -12px rgb(17 17 20 / 0.12);
+  --shadow-floating: 0 2px 4px rgb(17 17 20 / 0.04), 0 24px 56px -16px rgb(17 17 20 / 0.22);
   --blue-soft: color-mix(in srgb, var(--brand-blue) 9%, transparent);
   --surface: #ffffff;
-  --text-secondary: #475569;
+  --text-secondary: #4b4b52;
   /* Metin olarak mavi/durum renkleri: açıkta marka tonu, koyuda AA için açık ton. */
   --blue-text: var(--brand-blue);
   --red-text: var(--brand-red);
@@ -616,7 +616,7 @@
   position: relative;
   padding: 7.5rem 0;
   background: var(--brand-night);
-  color: #f1f5f9;
+  color: #f4f4f5;
   isolation: isolate;
   overflow: hidden;
 }
@@ -644,7 +644,7 @@
   align-items: center;
 }
 .sectionLabelDark {
-  color: #9db0ff;
+  color: var(--brand-blue-light);
 }
 .honestyTitle {
   font-size: clamp(2.25rem, 4.6vw, 3.75rem);
@@ -652,7 +652,7 @@
   line-height: 1.02;
 }
 .honestyLead {
-  color: #b6c2d6;
+  color: #c4c4cb;
   font-size: 1.125rem;
   line-height: 1.65;
   margin: 1.5rem 0 0;
@@ -690,7 +690,7 @@
 }
 .principleText {
   margin: 0.35rem 0 0;
-  color: #b6c2d6;
+  color: #c4c4cb;
   font-size: 0.9375rem;
 }
 
@@ -827,7 +827,7 @@
   z-index: -1;
   background:
     radial-gradient(34rem 20rem at 0% 0%, rgb(255 255 255 / 0.16), transparent 60%),
-    radial-gradient(30rem 22rem at 100% 100%, rgb(15 23 42 / 0.35), transparent 60%);
+    radial-gradient(30rem 22rem at 100% 100%, rgb(17 17 20 / 0.35), transparent 60%);
 }
 .finalCtaPattern::after {
   content: "";

@@ -231,7 +231,7 @@ function FailedNotice({ record, onClose }: { record: ActiveAnalysis; onClose: ()
         <Link
           href="/analyze"
           onClick={onClose}
-          className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue no-underline dark:text-[#8ea2ff]"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue no-underline dark:text-brand-blue-light"
         >
           Tekrar dene
           <ArrowRight className="size-3.5" aria-hidden />

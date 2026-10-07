@@ -385,7 +385,7 @@ export function AdaptationView({ id }: { id: string }) {
                   <span className="text-xs font-semibold text-muted tabular-nums">{i + 1}</span>
                   {b}
                   {added.has(b) && (
-                    <span className="text-[11px] font-semibold text-brand-blue dark:text-[#8ea2ff]">CV&apos;nden</span>
+                    <span className="text-[11px] font-semibold text-brand-blue dark:text-brand-blue-light">CV&apos;nden</span>
                   )}
                 </li>
               ))}

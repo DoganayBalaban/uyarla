@@ -54,21 +54,21 @@ function body(url: string): string {
         </tr>
         <tr>
           <td style="background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:36px 32px;font-family:${font};">
-            <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;font-weight:800;letter-spacing:-0.02em;color:#0f172a;">Giriş bağlantın hazır</h1>
+            <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;font-weight:800;letter-spacing:-0.02em;color:#111114;">Giriş bağlantın hazır</h1>
             <p style="margin:0 0 28px;font-size:15px;line-height:1.6;color:#334155;">Merhaba, aşağıdaki butona tıklayarak Uyarla'ya girebilirsin. Şifre yok, bağlantı yeterli.</p>
             <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
-                <td align="center" bgcolor="#2b4eff" style="border-radius:10px;">
+                <td align="center" bgcolor="#2f4be0" style="border-radius:10px;">
                   <a href="${href}" target="_blank" style="display:inline-block;padding:14px 28px;font-family:${font};font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:10px;">Uyarla'ya gir</a>
                 </td>
               </tr>
             </table>
-            <p style="margin:28px 0 0;font-size:13px;line-height:1.6;color:#64748b;">Bağlantı <strong style="color:#0f172a;">15 dakika</strong> geçerli ve tek kullanımlık.</p>
+            <p style="margin:28px 0 0;font-size:13px;line-height:1.6;color:#64748b;">Bağlantı <strong style="color:#111114;">15 dakika</strong> geçerli ve tek kullanımlık.</p>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;border-top:1px solid #e2e8f0;">
               <tr>
                 <td style="padding-top:20px;font-size:12px;line-height:1.6;color:#64748b;">
                   Buton çalışmıyorsa bu adresi tarayıcına yapıştır:<br>
-                  <a href="${href}" target="_blank" style="color:#2b4eff;word-break:break-all;">${href}</a>
+                  <a href="${href}" target="_blank" style="color:#2f4be0;word-break:break-all;">${href}</a>
                 </td>
               </tr>
             </table>

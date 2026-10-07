@@ -361,14 +361,14 @@ function BoardCardView({
         </select>
 
         {card.adaptation ? (
-          <Link href={`/adapt/${card.adaptation.id}`} className="text-sm font-semibold text-brand-blue dark:text-[#8ea2ff]">
+          <Link href={`/adapt/${card.adaptation.id}`} className="text-sm font-semibold text-brand-blue dark:text-brand-blue-light">
             Uyarlamayı aç
           </Link>
         ) : (
           <button
             onClick={() => void adapt()}
             disabled={adapting}
-            className="text-sm font-semibold text-brand-blue dark:text-[#8ea2ff] disabled:opacity-50"
+            className="text-sm font-semibold text-brand-blue dark:text-brand-blue-light disabled:opacity-50"
           >
             {adapting ? "Hazırlanıyor…" : "Uyarla"}
           </button>

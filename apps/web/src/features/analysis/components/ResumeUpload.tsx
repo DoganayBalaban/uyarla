@@ -72,11 +72,11 @@ export function ResumeUpload({
           file && "sr-only",
         )}
       >
-        <span className="grid size-11 place-items-center rounded-full bg-card text-brand-blue shadow-sm ring-1 ring-border transition-transform group-hover:-translate-y-0.5 dark:text-[#8ea2ff]">
+        <span className="grid size-11 place-items-center rounded-full bg-card text-brand-blue shadow-sm ring-1 ring-border transition-transform group-hover:-translate-y-0.5 dark:text-brand-blue-light">
           <UploadCloud className="size-5" aria-hidden />
         </span>
         <span className="font-semibold">
-          CV&apos;ni buraya bırak ya da <span className="text-brand-blue dark:text-[#8ea2ff]">seç</span>
+          CV&apos;ni buraya bırak ya da <span className="text-brand-blue dark:text-brand-blue-light">seç</span>
         </span>
         <span className="text-sm text-muted">PDF veya Word (DOCX) · en fazla 10 MB</span>
         <input
@@ -99,7 +99,7 @@ export function ResumeUpload({
             exit={{ opacity: 0, y: -6 }}
             className="flex items-center gap-3 rounded-card border border-border bg-card p-3.5 shadow-sm"
           >
-            <span className="grid size-10 shrink-0 place-items-center rounded-button bg-brand-blue/10 text-brand-blue dark:text-[#8ea2ff]">
+            <span className="grid size-10 shrink-0 place-items-center rounded-button bg-brand-blue/10 text-brand-blue dark:text-brand-blue-light">
               <FileText className="size-5" aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
