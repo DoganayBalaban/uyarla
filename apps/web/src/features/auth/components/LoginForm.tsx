@@ -9,6 +9,7 @@ import { suggestEmail, mailAppFor } from "@/features/auth/emailHints"
 import type { Provider } from "@/features/auth/providers"
 import { loginSchema, type LoginFormValues } from "@/features/auth/schema"
 import { LoginVisual } from "@/features/auth/components/LoginVisual"
+import { Logo } from "@/components/layout/Logo"
 import { onboardingPath } from "@/features/onboarding/gate"
 import { SocialLogin, girisHataAdresi } from "@/features/auth/components/SocialLogin"
 
@@ -24,22 +25,6 @@ function errorMessage(errorCode: string | null): string | null {
     return "Bu bağlantının süresi dolmuş. Yenisini gönderelim mi?"
   }
   return "Giriş yapılamadı. E-postanı tekrar girer misin?"
-}
-
-function Logo() {
-  return (
-    <Link
-      href="/"
-      className="inline-flex items-center gap-2.5 font-heading text-xl font-extrabold tracking-tight text-foreground"
-    >
-      {/* Rehber §9.1: üst üste iki belge, biri hafif eğik. */}
-      <span aria-hidden="true" className="relative h-6 w-5">
-        <span className="absolute inset-0 -translate-x-0.5 -rotate-12 rounded-[5px] bg-brand-blue/30" />
-        <span className="absolute inset-0 rounded-[5px] bg-brand-blue" />
-      </span>
-      uyarla
-    </Link>
-  )
 }
 
 /**

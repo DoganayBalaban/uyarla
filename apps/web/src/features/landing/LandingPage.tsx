@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { UyarlaLogo } from "@/components/brand/UyarlaMark"
 import { Photo } from "@/features/landing/components/Photo"
 import { Icon, type IconName } from "@/features/landing/components/Icon"
 import {
@@ -476,12 +477,8 @@ export function LandingPage() {
       <footer className={s.footer}>
         <div className={`${s.container} ${s.footerInner}`}>
           <div>
-            <Link href="/" className={s.logo}>
-              <span className={s.logoMark} aria-hidden="true">
-                <span />
-                <span />
-              </span>
-              uyarla
+            <Link href="/" className={s.logo} aria-label="uyarla ana sayfa">
+              <UyarlaLogo className={s.logoImage} />
             </Link>
             <p className={s.footerSlogan}>Her ilana, doğru CV.</p>
           </div>

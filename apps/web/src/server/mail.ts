@@ -1,4 +1,5 @@
 import { Resend } from "resend"
+import { siteUrl } from "@/lib/site"
 
 /** Test edilebilirlik için daraltılmış istemci yüzeyi. */
 export interface MailClient {
@@ -29,6 +30,8 @@ function escapeHtml(value: string): string {
  */
 function body(url: string): string {
   const href = escapeHtml(url)
+  // E-posta istemcilerinin çoğu SVG göstermiyor; logo PNG, site kökünden.
+  const logo = escapeHtml(`${siteUrl()}/brand/uyarla-logo.png`)
   const font = "Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
   return `<!doctype html>
 <html lang="tr">
@@ -46,12 +49,7 @@ function body(url: string): string {
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;">
         <tr>
           <td style="padding:0 4px 24px;font-family:${font};">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td style="width:18px;height:22px;background-color:#2b4eff;border-radius:5px;box-shadow:-3px 1px 0 #c3cdff;"></td>
-                <td style="padding-left:10px;font-size:20px;font-weight:800;letter-spacing:-0.02em;color:#0f172a;">uyarla</td>
-              </tr>
-            </table>
+            <img src="${logo}" width="131" height="28" alt="uyarla" style="display:block;border:0;outline:none;text-decoration:none;">
           </td>
         </tr>
         <tr>

@@ -156,24 +156,10 @@
   font-size: 1.375rem;
   letter-spacing: -0.03em;
 }
-/* Rehber §9.1 sembol fikri: üst üste iki belge, biri hafif eğik. */
-.logoMark {
-  position: relative;
-  width: 22px;
-  height: 26px;
-  flex: none;
-}
-.logoMark span {
-  position: absolute;
-  inset: 0;
-  border-radius: 5px;
-}
-.logoMark span:first-child {
-  background: color-mix(in srgb, var(--brand-blue) 28%, transparent);
-  transform: rotate(-12deg) translate(-3px, 1px);
-}
-.logoMark span:last-child {
-  background: var(--brand-blue);
+/* Marka logosu (components/brand/UyarlaMark). */
+.logoImage {
+  height: 28px;
+  width: auto;
 }
 
 /* ——— Hero ———
@@ -295,8 +281,9 @@
   font-size: 1rem;
   letter-spacing: -0.03em;
 }
-.appWindowLogo .logoMark {
-  transform: scale(0.75);
+.appWindowLogoImage {
+  height: 18px;
+  width: auto;
 }
 .appWindowLink {
   display: inline-flex;

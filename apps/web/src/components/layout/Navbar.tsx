@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from "react"
 import { signOut, useSession } from "@/lib/authClient"
 import { cn } from "@/lib/cn"
 import { displayName } from "@/features/account/displayName"
+import { Logo } from "@/components/layout/Logo"
 import { loginPath } from "@/lib/returnPath"
 import { CONTAINER } from "@/components/layout/PageShell"
 
@@ -62,18 +63,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/85 backdrop-blur-md">
       <div className={cn(CONTAINER, "flex h-16 max-w-[75rem] items-center gap-2")}>
-        <Link
-          href={registered ? "/dashboard" : "/"}
-          aria-label="uyarla ana sayfa"
-          className="mr-4 inline-flex items-center gap-2.5 font-heading text-xl font-extrabold tracking-tight text-foreground no-underline"
-        >
-          {/* Rehber §9.1: üst üste iki belge, biri hafif eğik. */}
-          <span aria-hidden className="relative h-6 w-5">
-            <span className="absolute inset-0 -translate-x-0.5 -rotate-12 rounded-[5px] bg-brand-blue/30" />
-            <span className="absolute inset-0 rounded-[5px] bg-brand-blue" />
-          </span>
-          uyarla
-        </Link>
+        <Logo href={registered ? "/dashboard" : "/"} className="mr-4" />
 
         <nav className="flex min-w-0 items-center gap-1" aria-label="Ana menü">
           {registered
