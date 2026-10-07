@@ -75,7 +75,10 @@ export function collectEvidence(profile: ResumeProfile): Evidence[] {
     evidence.push({ text: sentence, matchText: sentence, kind: "summary", sourceRef: null })
   }
 
-  return evidence
+  // Boş alanlar (ayrıştırıcının bıraktığı "" dil/beceri, boş okul) kanıt
+  // değil; üstelik OpenAI gömme API'si boş girdiyi 400 ile reddediyor ve
+  // analizin tamamı düşüyordu.
+  return evidence.filter((item) => item.text.trim().length > 0)
 }
 
 function summarySentences(summaryText: string | null): string[] {

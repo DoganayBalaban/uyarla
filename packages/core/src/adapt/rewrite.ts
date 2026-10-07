@@ -98,6 +98,8 @@ export async function rewriteSummary(
     posting: JobPostingData
     /** CV'de kelimesi geçen ilan kavramları (supportedConceptTerms). */
     supportedTerms: string[]
+    /** Özgün özetin andığı beceriler (summaryAnchors); yazımda kalmak zorunda. */
+    keepTerms?: string[]
     /** CV'nin dili; özet bu dilde kalır (K-39). Verilmezse Türkçe. */
     language?: Language
   },
@@ -106,6 +108,7 @@ export async function rewriteSummary(
     `Özet: ${input.summary}`,
     `Pozisyon: ${input.posting.position}`,
     `CV'de geçen ve ilanın aradığı kavramlar: ${input.supportedTerms.join(", ") || "—"}`,
+    `Korunacak terimler: ${input.keepTerms?.join(", ") || "—"}`,
     `Dil: ${LANGUAGE_NAME[input.language ?? "tr"]}`,
   ].join("\n")
 

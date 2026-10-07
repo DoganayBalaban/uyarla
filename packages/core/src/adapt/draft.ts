@@ -1,4 +1,5 @@
 import { cosineSimilarity } from "../llm/embedding.js"
+import { guardSummaryScore } from "./rescore.js"
 import { resumeLanguage } from "../normalize/language.js"
 import type { EmbeddingProvider, LlmProvider } from "../llm/types.js"
 import {
@@ -11,7 +12,7 @@ import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { conceptTexts, type ScoreResult } from "../score/score.js"
 import { DEFAULT_ALIGNMENT_CONFIG, verifyAlignments, type AlignmentConfig } from "../verify/alignment.js"
-import { preservesSource } from "../verify/preserve.js"
+import { preservesSource, summaryAnchors } from "../verify/preserve.js"
 import { verifyRewrite } from "../verify/verify.js"
 import { bulletId } from "./profile.js"
 import { rewriteBullets, rewriteSummary } from "./rewrite.js"
@@ -53,7 +54,7 @@ export interface Discard {
 }
 
 /** Yazımın neden atıldığı: bilgi kaybı, doğrulama uyarısı, uyumsuz değişiklik. */
-export type DiscardReason = "not_preserved" | "flagged" | "unaligned"
+export type DiscardReason = "not_preserved" | "flagged" | "unaligned" | "score_drop"
 
 const CLEAN: Verification = { status: "ok", issues: [] }
 
@@ -119,6 +120,8 @@ export async function buildAdaptationDraft(
           summary: profile.summary,
           posting,
           supportedTerms: supportedConceptTerms(posting, fullResumeText),
+          // Doğrulama da aynı listeyi istiyor (preservesSource bases).
+          keepTerms: summaryAnchors(profile.summary, profile.skills),
           language: lang,
         })
       : Promise.resolve(null),
@@ -228,11 +231,19 @@ export async function buildAdaptationDraft(
   // indirmeyi bloklamıyor, kullanıcının görmediği metni çıktıya koymaktansa
   // orijinal korunuyor.
   //
-  // Özgün özetteki sayıları (deneyim yılı) ve ilan kavramlarını kaybeden
-  // yazım da gösterilmiyor; özet olduğu gibi kalıyor.
+  // Özgün özetteki sayıları (deneyim yılı), ilan kavramlarını ve özette
+  // adı geçen becerileri kaybeden yazım da gösterilmiyor; özet olduğu gibi
+  // kalıyor.
   const summaryPreservation =
     profile.summary && summaryText
-      ? preservesSource({ rewritten: summaryText.data, source: profile.summary, posting })
+      ? preservesSource({
+          rewritten: summaryText.data,
+          source: profile.summary,
+          posting,
+          // Özgün özetin andığı beceriler de kalmalı; yoksa model özeti
+          // genelleştirip güçlü terimleri atabiliyor.
+          bases: summaryAnchors(profile.summary, profile.skills),
+        })
       : null
   const summaryPreserved = !!summaryPreservation?.ok
   if (summaryText && summaryPreservation && !summaryPreservation.ok) {
@@ -267,7 +278,18 @@ export async function buildAdaptationDraft(
     addedSkills: addedSkillList,
   })
 
+  // Özet yazımı skoru düşürüyorsa özgün özet kalıyor (kullanıcı kararı).
+  const guarded = await guardSummaryScore({ profile, posting, draft }, embedding)
+  if (guarded.dropped) {
+    input.onDiscard?.({
+      id: "summary",
+      reason: "score_drop",
+      detail: `skor ${guarded.dropped.withOriginal} → ${guarded.dropped.withRewrite}`,
+      rewritten: draft.summary.rewritten,
+    })
+  }
+
   const tokens =
     rewrites.reduce((totalSum, y) => totalSum + (y?.tokens ?? 0), 0) + (summaryText?.tokens ?? 0)
-  return { draft, tokens }
+  return { draft: guarded.draft, tokens }
 }
