@@ -19,8 +19,8 @@ export async function runCoverLetter(
   deps: CoverLetterDeps,
   input: { adaptationId: string },
 ): Promise<void> {
-  const { profile, posting } = await deps.store.getAdaptationContext(input.adaptationId)
-  const { data, tokens } = await generateCoverLetter(deps.llm, { profile, posting })
+  const { profile, posting, intent } = await deps.store.getAdaptationContext(input.adaptationId)
+  const { data, tokens } = await generateCoverLetter(deps.llm, { profile, posting, intent })
 
   await deps.store.saveCoverLetter(input.adaptationId, {
     status: "done",

@@ -56,9 +56,10 @@ export async function GET(
   // İletişim satırı: CV'de e-posta/telefon yoksa hesaptaki bilgi (DOG-58).
   const owner = await prisma.user.findUnique({
     where: { id: payload.ownerId! },
-    select: { email: true, phone: true, isAnonymous: true },
+    select: { email: true, phone: true, isAnonymous: true, goal: true },
   })
-  const baseModel = toDocumentModel(adapted)
+  // İlk işini arayanda eğitim deneyimden önce (DOG-55).
+  const baseModel = toDocumentModel(adapted, { educationFirst: owner?.goal === "first_job" })
   const model = {
     ...baseModel,
     contact: withContact(baseModel.contact, {

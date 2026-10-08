@@ -1,0 +1,1252 @@
+{
+  "model": "gpt-4.1-mini",
+  "totals": {
+    "amaçsız": {
+      "flagged": 6,
+      "issues": 9,
+      "paragraphs": 30,
+      "words": 1506
+    },
+    "kariyer değişikliği": {
+      "flagged": 4,
+      "issues": 6,
+      "paragraphs": 30,
+      "words": 1348
+    },
+    "ilk iş": {
+      "flagged": 5,
+      "issues": 6,
+      "paragraphs": 30,
+      "words": 1456
+    },
+    "terfi": {
+      "flagged": 6,
+      "issues": 9,
+      "paragraphs": 30,
+      "words": 1506
+    }
+  },
+  "letters": [
+    {
+      "pair": "cv-a__ilan-1",
+      "variant": "amaçsız",
+      "paragraphs": [
+        {
+          "text": "Monster Bilgisayar'da Yapay Zeka Mühendisi pozisyonu için başvuruda bulunmaktayım. Yazılım Mühendisliği mezunu olarak, üretim kalitesinde LLM uygulamaları ve yapay zeka tabanlı ürünler geliştirme alanındaki deneyimimle bu pozisyona ilgi duyuyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Telekom Şirketi'nde AI Engineer olarak, Python ve FastAPI kullanarak kurumsal AI asistanları ve RAG sistemleri geliştirdim. Ayrıca, REST API tasarımı, PostgreSQL ve NoSQL veri tabanları ile çalışma deneyimim bulunmakta. Docker ve React tabanlı arayüzler ile tam yığın çözümler ürettim. AI ajanları ve otonom karar mekanizmaları üzerine çalışmalarımda, tool calling ve MCP entegrasyonları gerçekleştirdim. Bu deneyimlerim, ilanınızda belirtilen gereksinimlerle doğrudan örtüşmektedir.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Otonom karar mekanizmaları\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Pozisyonun gerektirdiği teknik bilgi ve deneyime sahip olduğuma inanıyorum. Monster Bilgisayar'da yapay zeka projelerine katkı sağlamak ve detayları görüşmek üzere bir mülakat fırsatı yaratmanızı memnuniyetle beklerim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-1",
+      "variant": "kariyer değişikliği",
+      "paragraphs": [
+        {
+          "text": "Yapay Zeka Mühendisi pozisyonu için Monster Bilgisayar'a başvuruyorum. Yazılım Mühendisliği mezunu olarak, yapay zeka alanında kariyerimi ilerletmek ve bu alandaki bilgi ve deneyimlerimi uygulamak istiyorum. Pozisyonun gerektirdiği teknik beceriler ve yapay zeka uygulamalarına olan ilgim nedeniyle bu fırsat benim için çok değerli.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Telekom Şirketi'nde AI Engineer olarak, Python ve FastAPI kullanarak kurumsal yapay zeka asistanları ve LLM tabanlı iş akışları geliştirdim. RAG sistemleri, embedding, reranking, kaynak gösterme ve belge tabanlı erişim kontrolleri gibi konularda deneyim sahibiyim. Ayrıca Docker ve React tabanlı arayüzlerle tam yığın çözümler ürettim. Staj dönemimde ise React, FastAPI, PostgreSQL ve Docker kullanarak API geliştirme ve AI iş akış bileşenleri üzerinde çalıştım. Bu deneyimlerim, pozisyonun gerektirdiği Python, REST API, SQL, Docker ve generative AI yetkinlikleriyle örtüşmektedir.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"SQL\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Monster Bilgisayar'da yapay zeka mühendisliği alanında katkı sağlamak ve bilgi birikimimi geliştirmek için görüşme fırsatı bulmayı çok isterim. Deneyimlerimi ve projelerimi detaylıca paylaşmak için sabırsızlanıyorum. İlginiz için teşekkür ederim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-1",
+      "variant": "ilk iş",
+      "paragraphs": [
+        {
+          "text": "Yapay Zeka Mühendisi pozisyonu için Monster Bilgisayar'a başvurmaktan memnuniyet duyuyorum. Yazılım Mühendisliği alanında aldığım eğitim ve AI Engineer olarak geliştirdiğim projelerle, yapay zeka uygulamalarına olan ilgim ve yetkinliğim bu pozisyon için uygun bir temel oluşturuyor.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Telekom Şirketi'nde AI Engineer olarak, Python ve FastAPI kullanarak kurumsal AI asistanları ve LLM destekli iş akışları geliştirdim. RAG sistemleri, embeddingler, reranking ve kaynak gösterme gibi tekniklerle çalıştım. Ayrıca, React tabanlı arayüzler ve Docker gibi container teknolojileriyle deneyim kazandım. Staj dönemimde ise React, FastAPI, PostgreSQL ve Docker kullanarak tam yığın AI iş akışları geliştirdim. Bu deneyimlerim, Python, REST API, SQL ve Docker gibi pozisyonun gerektirdiği teknolojilere hakim olduğumu gösteriyor.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"SQL\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Monster Bilgisayar'da yapay zeka alanında kariyerime başlamak ve bilgi birikimimi geliştirmek için sabırsızlanıyorum. Deneyimlerimi ve projelerimi daha detaylı paylaşmak üzere bir görüşme fırsatı yaratmanızı memnuniyetle bekliyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-1",
+      "variant": "terfi",
+      "paragraphs": [
+        {
+          "text": "Monster Bilgisayar'da Yapay Zeka Mühendisi pozisyonu için başvuruda bulunmaktayım. Yazılım Mühendisliği mezunu olarak, üretim kalitesinde LLM uygulamaları ve yapay zeka tabanlı ürünler geliştirme alanındaki deneyimimle bu pozisyona ilgi duyuyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Telekom Şirketi'nde AI Engineer olarak, Python ve FastAPI kullanarak kurumsal AI asistanları ve RAG sistemleri geliştirdim. Ayrıca, REST API tasarımı, PostgreSQL ve NoSQL veri tabanları ile çalışma deneyimim bulunmakta. Docker ve React tabanlı arayüzler ile tam yığın çözümler ürettim. AI ajanları ve otonom karar mekanizmaları üzerine çalışmalarımda, tool calling ve MCP entegrasyonları gerçekleştirdim. Bu deneyimlerim, ilanınızda belirtilen gereksinimlerle doğrudan örtüşmektedir.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Otonom karar mekanizmaları\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Pozisyonun gerektirdiği teknik bilgi ve deneyime sahip olduğuma inanıyorum. Monster Bilgisayar'da yapay zeka projelerine katkı sağlamak ve detayları görüşmek üzere bir mülakat fırsatı yaratmanızı memnuniyetle beklerim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-2",
+      "variant": "amaçsız",
+      "paragraphs": [
+        {
+          "text": "Architecht firmasının Generative AI Engineer pozisyonu için başvuruda bulunmaktayım. Yazılım Mühendisliği alanında aldığım eğitim ve yapay zekâ, özellikle üretken yapay zekâ ve LLM tabanlı uygulamalar konusundaki deneyimimle bu pozisyona ilgi duyuyorum. Kariyerim boyunca, yapay zekâ destekli ürünlerin geliştirilmesi ve kurumsal çözümler üzerine odaklandım.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Yapay zekâ\" geçiyor ama CV'nde yok."
+              },
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Üretken yapay zekâ\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Bir Telekom Şirketi'nde AI Engineer olarak, Python ve FastAPI kullanarak kurumsal AI asistanları ve LLM destekli iş akışları geliştirdim. RAG sistemleri, embedding, reranking, kaynak gösterme ve belge tabanlı erişim kontrolleri gibi konularda deneyim sahibiyim. Ayrıca, Docker ve React tabanlı arayüzlerle tam yığın çözümler ürettim. Staj dönemimde ise React, ReactFlow ve FastAPI ile workflow arayüzleri ve REST API'ler geliştirdim. Bu deneyimlerim, üretken yapay zekâ projelerinde ileri seviye yazılım geliştirme ve sistem entegrasyonları konularında yetkinlik kazanmamı sağladı.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Yapay zekâ\" geçiyor ama CV'nde yok."
+              },
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Üretken yapay zekâ\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Pozisyonun gerektirdiği teknik bilgi ve deneyimlere uygun olarak, yapay zekâ uygulamalarını güvenlik ve gizlilik standartlarıyla entegre etme konusunda da tecrübeliyim. Bu nedenle, Architecht'te çalışarak katkı sağlamayı ve detayları görüşmek üzere bir mülakat fırsatı elde etmeyi çok isterim. İlginiz için teşekkür ederim.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Yapay zekâ\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-2",
+      "variant": "kariyer değişikliği",
+      "paragraphs": [
+        {
+          "text": "Generative AI Engineer pozisyonu için başvuruda bulunuyorum. Yazılım Mühendisliği mezunu olarak, yapay zekâ ve üretken yapay zekâ alanlarında deneyimimi bu pozisyonda değerlendirmek istiyorum. Bu alanda kariyerimi ilerletmek ve yeni teknolojilerle çalışmak benim için önemli bir motivasyon kaynağıdır.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Yapay zekâ\" geçiyor ama CV'nde yok."
+              },
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Üretken yapay zekâ\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Bir Telekom Şirketi'nde AI Engineer olarak, LLM tabanlı üretken yapay zekâ uygulamaları, RAG sistemleri ve AI agent geliştirme konularında çalıştım. Python ve FastAPI kullanarak kurumsal AI asistanları ve veri güvenliği önlemleri geliştirdim. Ayrıca, React tabanlı arayüzler ve Docker ile tam yığın çözümler ürettim. Staj dönemimde ise React, ReactFlow ve FastAPI ile workflow arayüzleri ve API servisleri geliştirdim. Bu deneyimlerim, üretken yapay zekâ projelerinde uygulamalı bilgi ve yazılım geliştirme becerilerimi desteklemektedir.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Yapay zekâ\" geçiyor ama CV'nde yok."
+              },
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Üretken yapay zekâ\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Pozisyonun gerektirdiği teknik bilgi ve deneyimlere uygun olarak, LLM, embedding, reranking, vektör arama ve güvenlik konularında çalışmalarıma devam etmek istiyorum. Kariyer değişikliği sürecimde, sahip olduğum teknik altyapı ve proje deneyimleriyle Architecht ekibine katkı sağlamayı hedefliyorum. Görüşme fırsatı verilirse, detayları paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-2",
+      "variant": "ilk iş",
+      "paragraphs": [
+        {
+          "text": "Architecht şirketinde Generative AI Engineer pozisyonu için başvuruda bulunmaktayım. Yazılım Mühendisliği alanında aldığım eğitim ve yapay zekâ, özellikle üretken yapay zekâ ve LLM tabanlı projelerdeki ilgim nedeniyle bu pozisyonun kariyer hedeflerimle uyumlu olduğunu düşünüyorum.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Yapay zekâ\" geçiyor ama CV'nde yok."
+              },
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Üretken yapay zekâ\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Bir Devlet Üniversitesi Yazılım Mühendisliği bölümünden mezun olduktan sonra, staj sürecimde React, FastAPI ve Docker kullanarak AI workflow bileşenleri geliştirdim. Ayrıca, Python ile REST API ve mikroservis mimarileri üzerine deneyim kazandım. Şu anda bir telekom şirketinde AI Engineer olarak, RAG sistemleri, embedding, reranking, vektör arama ve LLM tabanlı kurumsal asistanlar geliştirmekteyim. Bu süreçte veri güvenliği ve kişisel veri koruma konularında da uygulamalar yaptım. Bu deneyimlerimin, ilanınızda belirtilen teknik gereksinimlerle örtüştüğünü düşünüyorum.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"mikroservis mimarileri\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Pozisyonun gerektirdiği teknik bilgi ve becerilerimi geliştirmeye devam etmek ve katkı sağlamak için Architecht ekibiyle görüşmeyi çok isterim. Değerlendirme fırsatı için teşekkür eder, detayları görüşmek üzere iletişime geçmeyi umut ederim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-2",
+      "variant": "terfi",
+      "paragraphs": [
+        {
+          "text": "Architecht firmasının Generative AI Engineer pozisyonu için başvuruda bulunmaktayım. Yazılım Mühendisliği alanında aldığım eğitim ve yapay zekâ, özellikle üretken yapay zekâ ve LLM tabanlı uygulamalar konusundaki deneyimimle bu pozisyona ilgi duyuyorum. Kariyerim boyunca, yapay zekâ destekli ürünlerin geliştirilmesi ve kurumsal çözümler üzerine odaklandım.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Yapay zekâ\" geçiyor ama CV'nde yok."
+              },
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Üretken yapay zekâ\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Bir Telekom Şirketi'nde AI Engineer olarak, Python ve FastAPI kullanarak kurumsal AI asistanları ve LLM destekli iş akışları geliştirdim. RAG sistemleri, embedding, reranking, kaynak gösterme ve belge tabanlı erişim kontrolleri gibi konularda deneyim sahibiyim. Ayrıca, Docker ve React tabanlı arayüzlerle tam yığın çözümler ürettim. Staj dönemimde ise React, ReactFlow ve FastAPI ile workflow arayüzleri ve REST API'ler geliştirdim. Bu deneyimlerim, üretken yapay zekâ projelerinde ileri seviye yazılım geliştirme ve sistem entegrasyonları konularında yetkinlik kazanmamı sağladı.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Yapay zekâ\" geçiyor ama CV'nde yok."
+              },
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Üretken yapay zekâ\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Pozisyonun gerektirdiği teknik bilgi ve deneyimlere uygun olarak, yapay zekâ uygulamalarını güvenlik ve gizlilik standartlarıyla entegre etme konusunda da tecrübeliyim. Bu nedenle, Architecht'te çalışarak katkı sağlamayı ve detayları görüşmek üzere bir mülakat fırsatı elde etmeyi çok isterim. İlginiz için teşekkür ederim.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"Yapay zekâ\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-3",
+      "variant": "amaçsız",
+      "paragraphs": [
+        {
+          "text": "I am applying for the AI Engineer position at Hilbert because of my strong background in building production-grade LLM applications and enterprise AI assistants, which aligns well with your team's focus on real-world AI products. The opportunity to contribute to innovative AI systems in a fast-paced environment excites me, especially given my experience with full-stack AI development and complex workflows.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "In my current role at a telecommunications company, I develop enterprise AI assistants and LLM-powered workflows that include retrieval-augmented generation (RAG) pipelines with embeddings, reranking, and source grounding, directly matching your preference for deep RAG expertise. I have built agentic workflows with tool calling and MCP integrations, including Jira and Outlook capabilities, which corresponds to your requirements for experience with agent/orchestration frameworks beyond tutorials. Additionally, I implement privacy and security controls such as PII/KVKK masking and prompt-injection protection, ensuring robust and reliable AI products in production. My work with Python, FastAPI, React, Docker, and vector search technologies supports the development of scalable and maintainable AI services.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "I am eager to bring my hands-on experience and proactive approach to Hilbert, contributing to your AI engineering team with ownership and clear communication. I look forward to the possibility of discussing how my background and skills can support your mission and help navigate the challenges of evolving AI products. Thank you for considering my application.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-3",
+      "variant": "kariyer değişikliği",
+      "paragraphs": [
+        {
+          "text": "Hilbert şirketinde AI Engineer pozisyonu için başvuruda bulunuyorum. Yazılım mühendisliği alanındaki eğitimim ve AI mühendisliği deneyimimle, özellikle üretim ortamında çalışan LLM ve agent sistemleri geliştirme konusundaki ilgim ve yetkinliğim nedeniyle bu pozisyonun bana uygun olduğunu düşünüyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir telekom şirketinde AI Engineer olarak, üretim ortamında kullanılan enterprise AI asistanları ve LLM destekli iş akışları geliştirdim. RAG sistemleri, embedding, reranking, kaynak dayanaklılık ve belge değerlendirme gibi konularda deneyim sahibiyim. Ayrıca, Python, FastAPI, React ve Docker gibi teknolojilerle tam yığın çözümler ürettim. Kariyer değişikliği sürecindeyim ve önceki full-stack geliştirme stajımda React, FastAPI ve API geliştirme konularında pratik yaptım; bu da AI mühendisliği alanında sağlam bir temel oluşturmamı sağladı.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bu pozisyona katkı sağlamak ve Hilbert ekibinin bir parçası olmak için sabırsızlanıyorum. Deneyimlerimi ve yeteneklerimi daha detaylı paylaşmak üzere bir görüşme fırsatı yaratmanızı memnuniyetle beklerim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-3",
+      "variant": "ilk iş",
+      "paragraphs": [
+        {
+          "text": "I am applying for the AI Engineer position at Hilbert because I am eager to contribute to production-grade AI applications and grow my expertise in LLM and agent systems. With a background in software engineering and hands-on experience in full-stack AI product development, I am excited about the opportunity to work on innovative AI solutions in a dynamic environment.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "During my internship as a Full-Stack Developer, I built workflow interfaces using React and ReactFlow, and developed backend services with FastAPI and PostgreSQL, which aligns with your need for experience in APIs and services. My current role as an AI Engineer involves developing enterprise AI assistants and RAG pipelines with embeddings, reranking, and document retrieval, directly matching your requirements for production LLM systems. I have also worked on agentic workflows with tool calling and MCP integrations, gaining practical experience beyond tutorials. Additionally, I have implemented privacy controls and prompt-injection protections, demonstrating attention to production robustness and security.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "I am enthusiastic about the possibility to discuss how my skills and experiences can contribute to Hilbert's AI initiatives. I look forward to the opportunity for an interview to further explore how I can add value to your team and help build reliable AI products.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-3",
+      "variant": "terfi",
+      "paragraphs": [
+        {
+          "text": "I am applying for the AI Engineer position at Hilbert because of my strong background in building production-grade LLM applications and enterprise AI assistants, which aligns well with your team's focus on real-world AI products. The opportunity to contribute to innovative AI systems in a fast-paced environment excites me, especially given my experience with full-stack AI development and complex workflows.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "In my current role at a telecommunications company, I develop enterprise AI assistants and LLM-powered workflows that include retrieval-augmented generation (RAG) pipelines with embeddings, reranking, and source grounding, directly matching your preference for deep RAG expertise. I have built agentic workflows with tool calling and MCP integrations, including Jira and Outlook capabilities, which corresponds to your requirements for experience with agent/orchestration frameworks beyond tutorials. Additionally, I implement privacy and security controls such as PII/KVKK masking and prompt-injection protection, ensuring robust and reliable AI products in production. My work with Python, FastAPI, React, Docker, and vector search technologies supports the development of scalable and maintainable AI services.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "I am eager to bring my hands-on experience and proactive approach to Hilbert, contributing to your AI engineering team with ownership and clear communication. I look forward to the possibility of discussing how my background and skills can support your mission and help navigate the challenges of evolving AI products. Thank you for considering my application.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-5",
+      "variant": "amaçsız",
+      "paragraphs": [
+        {
+          "text": "I am applying for the AI/ML Engineer position at Şişecam, attracted by the opportunity to contribute to advanced AI solutions in a leading industrial company. With a Bachelor’s degree in Software Engineering and a focused career in AI engineering, I am eager to bring my expertise in production-grade LLM applications and RAG systems to your team.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "In my current role as an AI Engineer at a telecommunications company, I have developed enterprise AI assistants and LLM-powered workflows, including RAG pipelines with embeddings, reranking, source grounding, and document ingestion. I have hands-on experience with tool calling and MCP integrations, which aligns with your requirements for intelligent assistant development. My strong Python skills, including asynchronous programming and clean code practices, have been applied in building scalable AI products using FastAPI and React. Additionally, I have implemented privacy-aware workflows with PII/KVKK masking and prompt-injection protection, ensuring secure and reliable AI applications. My internship experience further complements this with backend and frontend development using React, FastAPI, and vector search technologies.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"intelligent assistant\" geçiyor ama CV'nde yok."
+              },
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"asynchronous programming\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "I am enthusiastic about the possibility of discussing how my background in AI engineering and full-stack development can support Şişecam’s AI initiatives. I look forward to the opportunity for an interview to explore how I can contribute to your innovative projects and help advance your AI capabilities.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-5",
+      "variant": "kariyer değişikliği",
+      "paragraphs": [
+        {
+          "text": "Şişecam'da AI/ML Engineer pozisyonu için başvuruda bulunmaktayım. Yazılım mühendisliği alanındaki eğitimim ve AI mühendisliği deneyimimle, özellikle üretim kalitesinde LLM uygulamaları geliştirme konusundaki ilgim ve yetkinliğim nedeniyle bu pozisyonun kariyerimde yeni bir yön olacağına inanıyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir telekom şirketinde AI Engineer olarak, RAG sistemleri, AI ajanları ve kurumsal asistanlar geliştirdim. Python ve FastAPI kullanarak, belge işleme, retrieval, reranking, tool calling ve MCP entegrasyonları gibi alanlarda deneyim kazandım. Ayrıca, gizlilik ve güvenlik önlemleri kapsamında PII/KVKK maskeleme ve prompt-injection koruması uyguladım. Staj dönemimde ise React tabanlı workflow arayüzleri ve backend servisleri geliştirdim, bu da full-stack AI ürünleri oluşturma becerilerimi pekiştirdi.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bu deneyimlerimle Şişecam'ın AI/ML projelerine katkı sağlayabileceğime inanıyorum. Görüşme fırsatı verilirse, yetkinliklerimi ve pozisyona uygunluğumu daha detaylı paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-5",
+      "variant": "ilk iş",
+      "paragraphs": [
+        {
+          "text": "I am applying for the AI/ML Engineer position at Şişecam, as I am eager to contribute to innovative AI projects and further develop my skills in production-grade LLM applications. My background in Software Engineering and focus on AI aligns well with the requirements of this role.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "During my internship as a Full-Stack Developer, I built AI workflow components using OpenAI APIs and developed backend services with FastAPI and PostgreSQL, which provided me with hands-on experience in building reliable AI systems. Additionally, my current work as an AI Engineer involves developing enterprise AI assistants and RAG pipelines with embeddings, reranking, and document ingestion, directly matching the production-grade LLM solutions and retrieval techniques you seek. I have also implemented privacy-aware workflows and tool calling integrations, demonstrating my ability to handle complex AI applications with security considerations.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"retrieval techniques\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "I am enthusiastic about the opportunity to bring my skills in Python, RAG architectures, and AI agent workflows to Şişecam. I look forward to the possibility of discussing how my background and passion for AI can contribute to your team’s success. Thank you for considering my application.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-a__ilan-5",
+      "variant": "terfi",
+      "paragraphs": [
+        {
+          "text": "I am applying for the AI/ML Engineer position at Şişecam, attracted by the opportunity to contribute to advanced AI solutions in a leading industrial company. With a Bachelor’s degree in Software Engineering and a focused career in AI engineering, I am eager to bring my expertise in production-grade LLM applications and RAG systems to your team.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "In my current role as an AI Engineer at a telecommunications company, I have developed enterprise AI assistants and LLM-powered workflows, including RAG pipelines with embeddings, reranking, source grounding, and document ingestion. I have hands-on experience with tool calling and MCP integrations, which aligns with your requirements for intelligent assistant development. My strong Python skills, including asynchronous programming and clean code practices, have been applied in building scalable AI products using FastAPI and React. Additionally, I have implemented privacy-aware workflows with PII/KVKK masking and prompt-injection protection, ensuring secure and reliable AI applications. My internship experience further complements this with backend and frontend development using React, FastAPI, and vector search technologies.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"intelligent assistant\" geçiyor ama CV'nde yok."
+              },
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"asynchronous programming\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "I am enthusiastic about the possibility of discussing how my background in AI engineering and full-stack development can support Şişecam’s AI initiatives. I look forward to the opportunity for an interview to explore how I can contribute to your innovative projects and help advance your AI capabilities.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-b__ilan-1",
+      "variant": "amaçsız",
+      "paragraphs": [
+        {
+          "text": "Monster Bilgisayar'da Yapay Zeka Mühendisi pozisyonu için başvuruda bulunmaktayım. Yazılım testi alanındaki deneyimim ve bilgisayar bilimleri alanındaki eğitimimle, yazılım geliştirme süreçlerine katkı sağlama isteğim nedeniyle bu pozisyon ilgimi çekti.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Veri Şirketi'nde Software Testing Engineer olarak manuel, entegrasyon ve API testleri gerçekleştirdim. Test senaryoları tasarlayarak ve uygulayarak yazılım kalitesinin artırılmasına destek oldum. Ayrıca, Selenium WebDriver, Java ve TestNG kullanarak otomasyon testleri geliştirdim. JIRA ve Postman ile hata takibi ve API doğrulama süreçlerinde aktif rol aldım. Bu deneyimlerim, yazılım geliştirme ve kalite süreçlerine katkı sağlama konusunda sağlam bir temel oluşturdu.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Pozisyon için gerekli olan deneyim ve teknolojilerle birebir örtüşmese de, sahip olduğum test mühendisliği deneyimi ve teknik becerilerimle ekibinize değer katabileceğime inanıyorum. Görüşme fırsatı verilirse, yetkinliklerimi ve pozisyona uygunluğumu detaylıca paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-b__ilan-1",
+      "variant": "kariyer değişikliği",
+      "paragraphs": [
+        {
+          "text": "Yapay Zeka Mühendisi pozisyonu için Monster Bilgisayar'a başvuruyorum. Yazılım testi alanındaki deneyimimi yapay zeka geliştirme alanına taşımak ve bu alanda kendimi geliştirmek istiyorum. Kariyer değişikliği sürecindeyim ve yeni teknolojiler öğrenmeye açık biriyim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Veri Şirketi'nde Software Testing Engineer olarak manuel ve entegrasyon testleri yaparak web uygulamalarının işlevselliğini ve sistem davranışını doğruladım. Test senaryolarını çoklu platformlarda uygulayarak iş gereksinimlerinin karşılanmasını sağladım. Ayrıca, Postman ve JIRA kullanarak API testleri ve hata takibi gerçekleştirdim. Yazılım geliştirme ekipleriyle yakın iş birliği içinde çalışarak ürün kararlılığını artırmaya katkıda bulundum. Bu deneyimlerim, yazılım geliştirme süreçlerine hakimiyetimi ve analitik düşünme becerilerimi güçlendirdi.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Yapay zeka mühendisliği alanında kariyer hedefim doğrultusunda, sahip olduğum test otomasyon ve API doğrulama becerilerimi kullanarak yeni teknolojilere hızla adapte olabileceğime inanıyorum. Monster Bilgisayar'da bu pozisyonda görev alarak katkı sağlamak ve yetkinliklerimi geliştirmek için görüşme fırsatı bulmayı çok isterim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-b__ilan-1",
+      "variant": "ilk iş",
+      "paragraphs": [
+        {
+          "text": "Yapay Zeka Mühendisi pozisyonu için açmış olduğunuz ilana başvurmak istiyorum. Bilgisayar ve Bilgi Bilimleri alanında aldığım eğitim ve yazılım test mühendisliği alanındaki staj ve iş deneyimlerimle teknoloji sektöründe kariyerime başlamak istiyorum. Bu pozisyonun bana yeni teknolojiler öğrenme ve uygulama fırsatı sunacağına inanıyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Veri Şirketi'nde yazılım test mühendisi olarak manuel ve entegrasyon testleri gerçekleştirdim, test senaryoları uyguladım ve hata takibi yaptım. Ayrıca, Selenium WebDriver, Java ve TestNG kullanarak otomasyon testleri geliştirdim. Stajım sırasında API testleri için Postman kullandım ve JIRA ile hata raporlaması yaptım. Bu deneyimlerim, yazılım geliştirme süreçlerine katkı sağlama ve kalite güvencesi konularında sağlam bir temel oluşturdu.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Pozisyonunuzda aranan deneyim ve teknolojilerle doğrudan eşleşmemekle birlikte, yazılım test mühendisliği alanındaki pratik deneyimlerim ve öğrenmeye olan isteğimle katkı sağlayabileceğime inanıyorum. Görüşme fırsatı verilirse, yeteneklerimi ve motivasyonumu daha detaylı paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-b__ilan-1",
+      "variant": "terfi",
+      "paragraphs": [
+        {
+          "text": "Monster Bilgisayar'da Yapay Zeka Mühendisi pozisyonu için başvuruda bulunmaktayım. Yazılım testi alanındaki deneyimim ve bilgisayar bilimleri alanındaki eğitimimle, yazılım geliştirme süreçlerine katkı sağlama isteğim nedeniyle bu pozisyon ilgimi çekti.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Veri Şirketi'nde Software Testing Engineer olarak manuel, entegrasyon ve API testleri gerçekleştirdim. Test senaryoları tasarlayarak ve uygulayarak yazılım kalitesinin artırılmasına destek oldum. Ayrıca, Selenium WebDriver, Java ve TestNG kullanarak otomasyon testleri geliştirdim. JIRA ve Postman ile hata takibi ve API doğrulama süreçlerinde aktif rol aldım. Bu deneyimlerim, yazılım geliştirme ve kalite süreçlerine katkı sağlama konusunda sağlam bir temel oluşturdu.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Pozisyon için gerekli olan deneyim ve teknolojilerle birebir örtüşmese de, sahip olduğum test mühendisliği deneyimi ve teknik becerilerimle ekibinize değer katabileceğime inanıyorum. Görüşme fırsatı verilirse, yetkinliklerimi ve pozisyona uygunluğumu detaylıca paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-b__ilan-3",
+      "variant": "amaçsız",
+      "paragraphs": [
+        {
+          "text": "I am writing to express my interest in the AI Engineer position at Hilbert. With a background as a Software Testing Engineer, I am eager to contribute my skills in software quality assurance and testing within dynamic and evolving environments.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "In my current role at Bir Veri Şirketi, I have gained hands-on experience in manual, integration, and API testing, validating web applications and internal systems to ensure functionality and release quality. I have collaborated closely with cross-functional teams including developers and product owners, which has strengthened my ability to communicate technical issues clearly and work effectively in Agile settings. Additionally, during my internship at Bir Yazılım Şirketi, I developed automation test scripts using Selenium WebDriver, Java, and TestNG, and performed API validation with Postman, which demonstrates my capability to handle complex software testing tasks and contribute to product stability.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "I am enthusiastic about the opportunity to bring my testing expertise and collaborative approach to Hilbert. I look forward to the possibility of discussing how my background aligns with your needs and how I can support your team in delivering high-quality AI products.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-b__ilan-3",
+      "variant": "kariyer değişikliği",
+      "paragraphs": [
+        {
+          "text": "I am applying for the AI Engineer position at Hilbert, motivated by my strong foundation in software testing and my desire to transition into AI engineering. My experience in ensuring software quality and collaborating within Agile teams has prepared me to contribute effectively to dynamic and evolving projects.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "In my current role as a Software Testing Engineer, I execute manual and integration testing for web applications, validate system behavior, and support release validation, which demonstrates my attention to detail and commitment to product stability. Additionally, my internship experience involved developing automation test scripts using Selenium WebDriver, Java, and TestNG, as well as conducting API testing with Postman and defect tracking with JIRA. These skills reflect my ability to work with complex software systems and ensure their reliability, which I believe will be valuable as I move into AI engineering.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "I am eager to bring my disciplined approach to quality assurance and my collaborative mindset to Hilbert's AI engineering team. I look forward to the opportunity to discuss how my background and skills can support your projects and contribute to your innovative environment.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-b__ilan-3",
+      "variant": "ilk iş",
+      "paragraphs": [
+        {
+          "text": "I am applying for the AI Engineer position at Hilbert because I am eager to start my professional career in software engineering and contribute to innovative projects. The opportunity to work in a dynamic environment where I can apply my skills in software testing and development excites me.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "During my internship and current role as a Software Testing Engineer, I have gained hands-on experience in manual, integration, and API testing, using tools such as Selenium WebDriver, Postman, and JIRA. I have developed automation test scripts with Java and TestNG, which improved testing efficiency and ensured software quality. My experience in defect tracking and collaborating with cross-functional teams aligns with the need for clear communication and ownership in fast-paced environments.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "I am enthusiastic about the possibility to discuss how my background in software testing and automation can support Hilbert's AI engineering goals. I look forward to the opportunity to contribute and grow within your team, and I am keen to participate in an interview to further explore this role.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-b__ilan-3",
+      "variant": "terfi",
+      "paragraphs": [
+        {
+          "text": "I am writing to express my interest in the AI Engineer position at Hilbert. With a background as a Software Testing Engineer, I am eager to contribute my skills in software quality assurance and testing within dynamic and evolving environments.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "In my current role at Bir Veri Şirketi, I have gained hands-on experience in manual, integration, and API testing, validating web applications and internal systems to ensure functionality and release quality. I have collaborated closely with cross-functional teams including developers and product owners, which has strengthened my ability to communicate technical issues clearly and work effectively in Agile settings. Additionally, during my internship at Bir Yazılım Şirketi, I developed automation test scripts using Selenium WebDriver, Java, and TestNG, and performed API validation with Postman, which demonstrates my capability to handle complex software testing tasks and contribute to product stability.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "I am enthusiastic about the opportunity to bring my testing expertise and collaborative approach to Hilbert. I look forward to the possibility of discussing how my background aligns with your needs and how I can support your team in delivering high-quality AI products.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-b__ilan-4",
+      "variant": "amaçsız",
+      "paragraphs": [
+        {
+          "text": "Protel'de AI/Yazılım Geliştirici pozisyonu için başvuruda bulunuyorum. Bilgisayar ve Bilgi Bilimleri alanında lisans eğitimim ve yazılım test mühendisliği deneyimimle, yazılım geliştirme süreçlerine katkı sağlama isteğim nedeniyle bu pozisyon ilgimi çekti.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Veri Şirketi'nde yazılım test mühendisi olarak manuel, entegrasyon ve API testleri gerçekleştirdim; test senaryoları tasarlayıp uygulayarak uygulama iş akışlarının doğruluğunu sağladım. Ayrıca, Selenium WebDriver, Java ve TestNG kullanarak otomasyon testleri geliştirdim ve JIRA ile hata takibi yaptım. Bu deneyimlerim, yazılım kalitesini artırma ve test süreçlerini iyileştirme konularında yetkinlik kazanmamı sağladı.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Pozisyon için gerekli olan yazılım geliştirme ve test süreçlerine hakimiyetimle Protel'e değer katabileceğime inanıyorum. Görüşme fırsatı verilirse, deneyimlerimi ve pozisyona uygunluğumu detaylıca paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-b__ilan-4",
+      "variant": "kariyer değişikliği",
+      "paragraphs": [
+        {
+          "text": "AI/Yazılım Geliştirici pozisyonu için başvuruda bulunuyorum. Yazılım testi alanındaki deneyimimi yapay zeka ve yazılım geliştirme alanına taşımak istiyorum. Bu pozisyonun, kariyerimde yeni bir yön çizmek için uygun olduğunu düşünüyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Veri Şirketi'nde Software Testing Engineer olarak manuel, entegrasyon ve API testleri gerçekleştirdim. Test senaryoları tasarlayıp uygulayarak yazılım kalitesinin artırılmasına katkı sağladım. Ayrıca, Selenium WebDriver, Java ve TestNG kullanarak otomasyon testleri geliştirdim. Bu deneyimlerim, yazılım geliştirme süreçlerinde kalite ve doğruluk sağlama becerilerimi güçlendirdi. Agile ortamda ekiplerle iş birliği yaparak ürün stabilitesini artırdım ve test döngülerini yönettim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Yapay zeka ve yazılım geliştirme alanında kariyerime yön vermek için bu pozisyonda görev almayı çok isterim. Deneyimlerimi ve öğrenme isteğimi Protel ekibine katmak için görüşme fırsatı sağlamanızı bekliyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-b__ilan-4",
+      "variant": "ilk iş",
+      "paragraphs": [
+        {
+          "text": "AI/Yazılım Geliştirici pozisyonu için başvuruda bulunmaktayım. Bilgisayar ve Bilgi Bilimleri alanında lisans eğitimimi tamamladım ve yazılım test mühendisliği alanında staj ve iş deneyimlerimle yazılım geliştirme süreçlerine hakimim. Bu pozisyon, kariyerime yazılım geliştirme alanında başlamak için uygun bir fırsat olarak ilgimi çekti.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Yazılım Şirketi'nde staj sürecimde Selenium WebDriver, Java ve TestNG kullanarak otomasyon testleri geliştirdim ve API testleri için Postman ile çalıştım. Ayrıca, test dokümantasyonu hazırlama ve hata takibi konularında deneyim kazandım. Şu anda çalıştığım Veri Şirketi'nde ise manuel ve entegrasyon testleri yaparak yazılım kalitesinin sağlanmasına katkıda bulunuyorum. Bu deneyimlerim, yazılım geliştirme ve test süreçlerine bütüncül bir bakış açısı kazandırdı.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Pozisyonun gerektirdiği AI ve LLM tabanlı uygulamalar konusunda doğrudan deneyimim olmamakla birlikte, yazılım test mühendisliği alanındaki teknik bilgi ve becerilerimi bu alana adapte etmeye istekliyim. Kariyerime bu alanda başlamak ve Protel bünyesinde katkı sağlamak için görüşme fırsatı yaratmanızı memnuniyetle beklerim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-b__ilan-4",
+      "variant": "terfi",
+      "paragraphs": [
+        {
+          "text": "Protel'de AI/Yazılım Geliştirici pozisyonu için başvuruda bulunuyorum. Bilgisayar ve Bilgi Bilimleri alanında lisans eğitimim ve yazılım test mühendisliği deneyimimle, yazılım geliştirme süreçlerine katkı sağlama isteğim nedeniyle bu pozisyon ilgimi çekti.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Veri Şirketi'nde yazılım test mühendisi olarak manuel, entegrasyon ve API testleri gerçekleştirdim; test senaryoları tasarlayıp uygulayarak uygulama iş akışlarının doğruluğunu sağladım. Ayrıca, Selenium WebDriver, Java ve TestNG kullanarak otomasyon testleri geliştirdim ve JIRA ile hata takibi yaptım. Bu deneyimlerim, yazılım kalitesini artırma ve test süreçlerini iyileştirme konularında yetkinlik kazanmamı sağladı.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Pozisyon için gerekli olan yazılım geliştirme ve test süreçlerine hakimiyetimle Protel'e değer katabileceğime inanıyorum. Görüşme fırsatı verilirse, deneyimlerimi ve pozisyona uygunluğumu detaylıca paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-c__ilan-1",
+      "variant": "amaçsız",
+      "paragraphs": [
+        {
+          "text": "Monster Bilgisayar'da Yapay Zeka Mühendisi / Yapay Zeka Geliştiricisi pozisyonu için başvuruda bulunuyorum. Yapay zeka alanındaki eğitim ve mentorluk deneyimlerimle, bu pozisyonda katkı sağlayabileceğime inanıyorum. Teknoloji Atölyesi'nde yapay zeka temelleri üzerine uygulamalı eğitimler vererek, öğrencilerin proje geliştirme süreçlerine teknik destek sağladım ve etkinlik tabanlı öğrenme modeli uyguladım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Yapay zeka alanındaki deneyimimin yanı sıra, Python programlama dili ve Git & GitHub kullanımı konusundaki becerilerimle yazılım geliştirme süreçlerine katkıda bulundum. Ayrıca, Bilgi Teknolojileri stajım sırasında Python, veri analizi ve teknik dokümantasyon süreçlerinde aktif rol aldım. Eğitim içeriklerini sürekli geliştirme ve proje yönetimi konularındaki deneyimlerim, takım çalışmalarında etkin rol almamı sağladı.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bu pozisyonda görev alarak, sahip olduğum yapay zeka ve yazılım geliştirme becerilerimi daha ileriye taşımak ve Monster Bilgisayar'a değer katmak istiyorum. Görüşme fırsatı verilirse, deneyimlerimi ve yetkinliklerimi daha detaylı paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-c__ilan-1",
+      "variant": "kariyer değişikliği",
+      "paragraphs": [
+        {
+          "text": "Yapay Zeka Mühendisi / Yapay Zeka Geliştiricisi pozisyonu için Monster Bilgisayar'a başvuruyorum. Kariyerimde eğitim alanında yapay zeka temelleri üzerine uygulamalı eğitimler vererek ve öğrencilerin proje geliştirme süreçlerine teknik destek sağlayarak deneyim kazandım. Bu alanda çalışmak ve katkı sağlamak amacıyla bu pozisyona ilgi duyuyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Eğitim Vakfı'nda yapay zeka eğitmeni olarak etkinlik tabanlı öğrenme modeli uyguladım ve öğrencilerin projelerine teknik destek verdim. Ayrıca Python programlama dili kullanarak Bilgi Teknolojileri stajımda veri analizi ve teknik dokümantasyon süreçlerine katkıda bulundum. Git & GitHub kullanımı ve temel Linux bilgimle yazılım geliştirme süreçlerine aşinayım. Yönetim Bilişim Sistemleri bölümünden mezun olmam da teknik altyapımı güçlendirmektedir.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bu pozisyonda edineceğim deneyimle kariyerimi yapay zeka mühendisliği alanında ilerletmek istiyorum. Görüşme fırsatı verilirse, sahip olduğum beceri ve deneyimleri daha detaylı paylaşmaktan memnuniyet duyarım. İlginiz için teşekkür ederim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-c__ilan-1",
+      "variant": "ilk iş",
+      "paragraphs": [
+        {
+          "text": "Yapay Zeka Mühendisi / Yapay Zeka Geliştiricisi pozisyonu için Monster Bilgisayar'a başvurmaktan büyük heyecan duyuyorum. Yönetim Bilişim Sistemleri bölümünden mezun olarak, yapay zeka alanında uygulamalı eğitimler verme ve proje geliştirme süreçlerine destek sağlama deneyimimle bu alanda kariyerime başlamak istiyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Eğitim Vakfı'nda yapay zeka eğitmeni olarak, yapay zeka temelleri üzerine uygulamalı eğitimler verdim ve öğrencilerin proje geliştirme süreçlerine teknik destek sağladım. Ayrıca Python programlama dili ve Git & GitHub kullanımı konusundaki becerilerim, yazılım geliştirme süreçlerine katkı sağlamamda önemli rol oynadı. Bilgi Teknolojileri stajımda Python ve veri analizi üzerine çalışmalar yaparak teknik dokümantasyon süreçlerine destek verdim. Bu deneyimlerim, yapay zeka ve yazılım geliştirme alanında temel bilgi ve becerilerimi pekiştirdi.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Monster Bilgisayar'da yapay zeka mühendisliği pozisyonunda çalışarak, sahip olduğum eğitim ve deneyimleri daha ileriye taşımak ve katkı sağlamak istiyorum. Görüşme fırsatı verilirse, yetkinliklerimi ve motivasyonumu daha detaylı paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-c__ilan-1",
+      "variant": "terfi",
+      "paragraphs": [
+        {
+          "text": "Monster Bilgisayar'da Yapay Zeka Mühendisi / Yapay Zeka Geliştiricisi pozisyonu için başvuruda bulunuyorum. Yapay zeka alanındaki eğitim ve mentorluk deneyimlerimle, bu pozisyonda katkı sağlayabileceğime inanıyorum. Teknoloji Atölyesi'nde yapay zeka temelleri üzerine uygulamalı eğitimler vererek, öğrencilerin proje geliştirme süreçlerine teknik destek sağladım ve etkinlik tabanlı öğrenme modeli uyguladım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Yapay zeka alanındaki deneyimimin yanı sıra, Python programlama dili ve Git & GitHub kullanımı konusundaki becerilerimle yazılım geliştirme süreçlerine katkıda bulundum. Ayrıca, Bilgi Teknolojileri stajım sırasında Python, veri analizi ve teknik dokümantasyon süreçlerinde aktif rol aldım. Eğitim içeriklerini sürekli geliştirme ve proje yönetimi konularındaki deneyimlerim, takım çalışmalarında etkin rol almamı sağladı.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bu pozisyonda görev alarak, sahip olduğum yapay zeka ve yazılım geliştirme becerilerimi daha ileriye taşımak ve Monster Bilgisayar'a değer katmak istiyorum. Görüşme fırsatı verilirse, deneyimlerimi ve yetkinliklerimi daha detaylı paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-c__ilan-2",
+      "variant": "amaçsız",
+      "paragraphs": [
+        {
+          "text": "Generative AI Engineer pozisyonu için Architecht şirketine başvurmak istiyorum. Yapay zeka alanında eğitimler vermek ve öğrencilerin proje geliştirme süreçlerine destek olmak gibi deneyimlerimle bu pozisyona ilgi duyuyorum. Teknoloji Atölyesi'nde yapay zeka temelleri üzerine uygulamalı eğitimler vermem, bu alandaki bilgi ve becerilerimi pekiştirmemi sağladı.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Eğitim Vakfı'nda yapay zeka eğitmeni olarak çalışırken, öğrencilerin proje geliştirme süreçlerine teknik destek sağladım ve etkinlik tabanlı öğrenme modeli uyguladım. Ayrıca Python programlama dili ile çeşitli uygulamalı çalışmalar gerçekleştirdim. Bilgi Teknolojileri stajımda Python, Excel ve diğer araçlarla veri analizi ve teknik dokümantasyon süreçlerine katkı sağladım. Bu deneyimlerim, yazılım geliştirme ve yapay zeka alanındaki yetkinliklerimi desteklemektedir.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Architecht'te Generative AI Engineer olarak görev almak ve sahip olduğum eğitimci ve teknik deneyimlerimi bu pozisyonda kullanmak isterim. Görüşme fırsatı verilirse, yeteneklerimi ve pozisyona katkılarımı daha detaylı paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-c__ilan-2",
+      "variant": "kariyer değişikliği",
+      "paragraphs": [
+        {
+          "text": "Generative AI Engineer pozisyonu için başvuruda bulunuyorum. Yapay zeka alanında eğitimler vererek ve öğrencilerin proje geliştirme süreçlerine destek olarak bu alanda kendimi geliştirdim. Kariyer değişikliği yaparak bu pozisyonda çalışmayı hedefliyorum ve sahip olduğum eğitim ve deneyimlerle katkı sağlayabileceğime inanıyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Eğitim Vakfı'nda yapay zeka eğitmeni olarak yapay zeka temelleri üzerine uygulamalı eğitimler verdim ve proje geliştirme süreçlerinde teknik destek sağladım. Ayrıca Python programlama dili kullanarak çeşitli uygulamalı çalışmalar gerçekleştirdim. Yönetim Bilişim Sistemleri bölümünden mezun olmam ve yazılım geliştirme becerilerim, bu pozisyonun gerektirdiği teknik altyapıya uygunluk sağlamaktadır.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bu pozisyonda görev almak ve yetkinliklerimi daha da geliştirmek için görüşme fırsatı talep ediyorum. Kariyer değişikliği sürecimde, sahip olduğum bilgi ve deneyimleri kullanarak şirketinize değer katmayı amaçlıyorum. İlginiz için teşekkür eder, olumlu geri dönüşlerinizi beklerim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-c__ilan-2",
+      "variant": "ilk iş",
+      "paragraphs": [
+        {
+          "text": "Generative AI Engineer pozisyonu için başvuruda bulunuyorum. Yapay zeka alanına olan ilgim ve eğitimlerim doğrultusunda, bu pozisyonda kendimi geliştirmek ve katkı sağlamak istiyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Eğitim Vakfı'nda yapay zeka eğitmeni olarak yapay zeka temelleri üzerine uygulamalı eğitimler verdim ve öğrencilerin proje geliştirme süreçlerine teknik destek sağladım. Ayrıca Python programlama dili kullanarak çeşitli uygulamalı çalışmalar gerçekleştirdim. Yönetim Bilişim Sistemleri bölümünde aldığım eğitim ve staj deneyimlerim, yazılım geliştirme ve proje yönetimi becerilerimi desteklemektedir.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bu pozisyonda görev almak ve yeteneklerimi daha ileri seviyeye taşımak için görüşme fırsatı yaratmanızı rica ederim. İlgilendiğiniz için teşekkür eder, sizinle tanışmayı sabırsızlıkla beklerim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-c__ilan-2",
+      "variant": "terfi",
+      "paragraphs": [
+        {
+          "text": "Generative AI Engineer pozisyonu için Architecht şirketine başvurmak istiyorum. Yapay zeka alanında eğitimler vermek ve öğrencilerin proje geliştirme süreçlerine destek olmak gibi deneyimlerimle bu pozisyona ilgi duyuyorum. Teknoloji Atölyesi'nde yapay zeka temelleri üzerine uygulamalı eğitimler vermem, bu alandaki bilgi ve becerilerimi pekiştirmemi sağladı.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Eğitim Vakfı'nda yapay zeka eğitmeni olarak çalışırken, öğrencilerin proje geliştirme süreçlerine teknik destek sağladım ve etkinlik tabanlı öğrenme modeli uyguladım. Ayrıca Python programlama dili ile çeşitli uygulamalı çalışmalar gerçekleştirdim. Bilgi Teknolojileri stajımda Python, Excel ve diğer araçlarla veri analizi ve teknik dokümantasyon süreçlerine katkı sağladım. Bu deneyimlerim, yazılım geliştirme ve yapay zeka alanındaki yetkinliklerimi desteklemektedir.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Architecht'te Generative AI Engineer olarak görev almak ve sahip olduğum eğitimci ve teknik deneyimlerimi bu pozisyonda kullanmak isterim. Görüşme fırsatı verilirse, yeteneklerimi ve pozisyona katkılarımı daha detaylı paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-c__ilan-4",
+      "variant": "amaçsız",
+      "paragraphs": [
+        {
+          "text": "Protel'de AI/Yazılım Geliştirici pozisyonu için başvuruda bulunuyorum. Yapay zeka alanında eğitimler vererek ve öğrencilerin proje geliştirme süreçlerine teknik destek sağlayarak bu alana olan ilgimi ve deneyimimi pekiştirdim. Bu pozisyonun, yapay zeka temelli uygulamalar geliştirme konusundaki bilgi ve becerilerimi kullanmak için uygun olduğunu düşünüyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Eğitim Vakfı'nda yapay zeka eğitmeni olarak, yapay zeka temelleri üzerine uygulamalı eğitimler verdim ve etkinlik tabanlı öğrenme modeli uyguladım. Ayrıca, Python programlama dili ve yapay zeka araçları kullanarak çeşitli projelerde yer aldım. Bilgi Teknolojileri stajımda Python, veri analizi ve teknik dokümantasyon süreçlerinde deneyim kazandım. Bu deneyimler, AI teknolojilerinin iş süreçlerine uygulanması ve proje geliştirme süreçlerinde katkı sağlamam açısından önemlidir.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"AI teknolojilerinin iş süreçlerine\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Protel'de çalışma fırsatı bulabilirsem, sahip olduğum eğitim ve deneyimlerle katkı sağlamayı hedefliyorum. Görüşme şansı verirseniz, yetkinliklerimi ve pozisyona uygunluğumu daha detaylı paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-c__ilan-4",
+      "variant": "kariyer değişikliği",
+      "paragraphs": [
+        {
+          "text": "AI/Yazılım Geliştirici pozisyonu için başvuruda bulunuyorum. Yönetim Bilişim Sistemleri alanındaki eğitimim ve yapay zeka eğitmenliği deneyimimle, bu alanda kariyerimi geliştirmek istiyorum. Protel gibi yenilikçi bir şirkette çalışma fırsatı benim için çok değerli.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Eğitim Vakfı'nda yapay zeka temelleri üzerine uygulamalı eğitimler verdim ve öğrencilerin proje geliştirme süreçlerine teknik destek sağladım. Bu deneyim, AI teknolojilerinin iş süreçlerine uygulanması ve problem çözme yeteneğimi geliştirmemde önemli oldu. Ayrıca Python ve Git & GitHub kullanarak çeşitli projelerde yer aldım, bu da yazılım geliştirme becerilerimi pekiştirdi. Stajyerlik dönemimde veri analizi ve teknik dokümantasyon süreçlerine katkı sağladım, bu da analitik düşünme yeteneğimi destekledi.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"AI teknolojilerinin iş süreçlerine\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Protel'de AI/Yazılım Geliştirici olarak görev almayı ve sahip olduğum eğitim ve deneyimleri şirketin projelerine katkı sağlamak için kullanmayı çok isterim. Görüşme fırsatı verilirse, yeteneklerimi ve motivasyonumu daha detaylı paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-c__ilan-4",
+      "variant": "ilk iş",
+      "paragraphs": [
+        {
+          "text": "AI/Yazılım Geliştirici pozisyonu için başvuruda bulunuyorum. Yönetim Bilişim Sistemleri bölümünden mezun olarak, yapay zeka ve yazılım geliştirme alanlarında edindiğim bilgi ve becerilerle bu alanda kariyerime başlamak istiyorum. Protel gibi yenilikçi bir şirkette çalışma fırsatı benim için çok değerli.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Eğitim Vakfı'nda yapay zeka eğitmeni olarak, yapay zeka temelleri üzerine uygulamalı eğitimler verdim ve öğrencilerin proje geliştirme süreçlerine teknik destek sağladım. Ayrıca, Python ve diğer yazılım araçları kullanarak staj dönemimde veri analizi ve teknik dokümantasyon süreçlerine katkıda bulundum. Bu deneyimlerim, AI teknolojilerinin iş süreçlerine uygulanması ve proje geliştirme konularında temel bir altyapı oluşturdu. İngilizce bilgim B1 seviyesinde olup, teknolojik gelişmeleri takip etmeye ve öğrenmeye devam ediyorum.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"AI teknolojilerinin iş süreçlerine\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Protel'de AI/Yazılım Geliştirici olarak görev almayı ve sahip olduğum eğitim ve deneyimleri daha ileriye taşımayı çok isterim. Görüşme fırsatı verilirse, yeteneklerimi ve motivasyonumu daha detaylı paylaşmaktan memnuniyet duyarım. İlginiz için teşekkür ederim.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    },
+    {
+      "pair": "cv-c__ilan-4",
+      "variant": "terfi",
+      "paragraphs": [
+        {
+          "text": "Protel'de AI/Yazılım Geliştirici pozisyonu için başvuruda bulunuyorum. Yapay zeka alanında eğitimler vererek ve öğrencilerin proje geliştirme süreçlerine teknik destek sağlayarak bu alana olan ilgimi ve deneyimimi pekiştirdim. Bu pozisyonun, yapay zeka temelli uygulamalar geliştirme konusundaki bilgi ve becerilerimi kullanmak için uygun olduğunu düşünüyorum.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        },
+        {
+          "text": "Bir Eğitim Vakfı'nda yapay zeka eğitmeni olarak, yapay zeka temelleri üzerine uygulamalı eğitimler verdim ve etkinlik tabanlı öğrenme modeli uyguladım. Ayrıca, Python programlama dili ve yapay zeka araçları kullanarak çeşitli projelerde yer aldım. Bilgi Teknolojileri stajımda Python, veri analizi ve teknik dokümantasyon süreçlerinde deneyim kazandım. Bu deneyimler, AI teknolojilerinin iş süreçlerine uygulanması ve proje geliştirme süreçlerinde katkı sağlamam açısından önemlidir.",
+          "verification": {
+            "status": "flagged",
+            "issues": [
+              {
+                "kind": "posting_term_injected",
+                "detail": "Bu paragrafta \"AI teknolojilerinin iş süreçlerine\" geçiyor ama CV'nde yok."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Protel'de çalışma fırsatı bulabilirsem, sahip olduğum eğitim ve deneyimlerle katkı sağlamayı hedefliyorum. Görüşme şansı verirseniz, yetkinliklerimi ve pozisyona uygunluğumu daha detaylı paylaşmaktan memnuniyet duyarım.",
+          "verification": {
+            "status": "ok",
+            "issues": []
+          }
+        }
+      ]
+    }
+  ]
+}
