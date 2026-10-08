@@ -145,7 +145,7 @@
   font-size: 1rem;
 }
 
-/* ——— Logo (altbilgi ve ürün penceresi) ——— */
+/* ——— Logo (altbilgi) ——— */
 
 .logo {
   display: inline-flex;
@@ -163,10 +163,9 @@
 }
 
 /* ——— Hero ———
-   Ortalanmış başlık, altında ürünün kendisi. Pencere buzdan maviye koyulaşan
-   bir zeminin üstünde duruyor ve alt kenarı zemine eriyor; uydurma kontrolü
-   kartı pencerenin sağ kenarından taşıyor. Sayfadaki tek kendiliğinden
-   hareket bu kartın gelişi. */
+   Duyuru rozeti, ortalanmış başlık ve eylemler; altında ürünün gerçek ekran
+   görüntüsü (uyarlama ekranı). Görüntünün arkasında kobalt ışıma var, alt
+   kenarı zemine eriyor. */
 
 .hero {
   position: relative;
@@ -181,6 +180,11 @@
 }
 
 .heroTitle {
+  /* Mürekkepten hafifçe açılan başlık (şablondaki gradyan metin). */
+  background: linear-gradient(to bottom, var(--foreground) 55%, #4b4b52);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   font-family: Geist, system-ui, sans-serif;
   font-weight: 800;
   font-size: clamp(2.9rem, 8vw, 6.25rem);
@@ -227,163 +231,84 @@
   color: var(--brand-green);
 }
 
-.heroStage {
-  position: relative;
-  margin-top: 4.5rem;
-  padding-inline: clamp(var(--gutter), 5vw, 4rem);
-}
-/* Pencerenin üst üçte birinden başlayıp aşağı doğru koyulaşan mavi zemin. */
-.heroStageBackdrop {
-  position: absolute;
-  inset: 22% var(--gutter) 0;
-  z-index: -1;
-  border-radius: 36px 36px 0 0;
-  background:
-    radial-gradient(70% 60% at 50% 100%, color-mix(in srgb, var(--brand-blue) 55%, transparent), transparent),
-    linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--brand-blue) 4%, var(--surface)),
-      color-mix(in srgb, var(--brand-blue) 30%, var(--surface)) 55%,
-      var(--brand-blue)
-    );
-}
-
-.appWindow {
-  max-height: 37rem;
-  overflow: hidden;
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-bottom: 0;
-  border-radius: 20px 20px 0 0;
-  box-shadow: var(--shadow-floating);
-  font-size: 0.875rem;
-  text-align: left;
-  mask-image: linear-gradient(to bottom, #000 78%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
-}
-
-.appWindowTop {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  height: 52px;
-  padding: 0 1.25rem;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-}
-.appWindowLogo {
+/* Duyuru rozeti: başlığın üstünde, yeni çıkan özelliğe bağlantı. */
+.heroBadge {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-right: 1rem;
-  font-family: Geist, system-ui, sans-serif;
-  font-weight: 800;
-  font-size: 1rem;
-  letter-spacing: -0.03em;
-}
-.appWindowLogoImage {
-  height: 18px;
-  width: auto;
-}
-.appWindowLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.7rem;
-  border-radius: 8px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--muted);
-}
-.appWindowLinkActive {
-  color: var(--blue-text);
-  background: var(--blue-soft);
-}
-
-.appWindowBody {
-  padding: 1.75rem;
-}
-.appWindowTitle {
-  font-family: Geist, system-ui, sans-serif;
-  font-weight: 800;
-  font-size: 1.375rem;
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-
-.appWindowGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
-  gap: 1rem;
-  margin-top: 1.25rem;
-}
-.appWindowCard {
-  background: var(--card);
+  margin-bottom: 1.75rem;
+  padding: 0.3rem 0.85rem 0.3rem 0.35rem;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1.1rem 1.2rem;
-}
-.appWindowWide {
-  grid-column: 1 / -1;
-}
-.appWindowCardTitle {
-  font-weight: 700;
-  margin: 0 0 0.75rem;
-}
-.appWindowScore {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.9rem;
-}
-
-.appWindowList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 0.55rem;
-}
-.appWindowList li {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-.appWindowList .statusMatched,
-.appWindowList .statusMissing {
-  width: 20px;
-  height: 20px;
-  margin: 0;
-}
-
-.appWindowBeforeAfter {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 0.75rem;
-}
-
-.heroCheckSlot {
-  position: absolute;
-  top: -1.75rem;
-  right: clamp(0px, 2vw, 1.5rem);
-  width: min(340px, 42%);
-  animation: checkEnter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.9s both;
-}
-.heroCheck {
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-secondary);
   font-size: 0.875rem;
-  text-align: left;
-  border-color: color-mix(in srgb, var(--brand-blue) 25%, var(--border));
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgb(17 17 20 / 0.04);
+  transition: border-color 0.2s, color 0.2s;
 }
-@keyframes checkEnter {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.97);
+.heroBadge:hover {
+  border-color: color-mix(in srgb, var(--brand-blue) 40%, var(--border));
+  color: var(--foreground);
+}
+@media (max-width: 560px) {
+  .heroBadgeMore {
+    display: none;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .heroCheckSlot {
-    animation: none;
-  }
+.heroBadgeTag {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--brand-blue-soft);
+  color: var(--brand-blue);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+/* Gerçek ekran görüntüsü; arkasında kobalt ışıma, altı zemine eriyor. */
+.heroShot {
+  position: relative;
+  max-width: 72rem;
+  margin-top: 4rem;
+}
+.heroGlow {
+  position: absolute;
+  inset: -12% 6% 30%;
+  z-index: -1;
+  background: radial-gradient(50% 55% at 50% 45%, color-mix(in srgb, var(--brand-blue) 38%, transparent), transparent 70%);
+  filter: blur(30px);
+}
+.heroFrame {
+  position: relative;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--brand-blue) 14%, var(--border));
+  border-radius: 18px;
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgb(17 17 20 / 0.04),
+    0 30px 80px -20px color-mix(in srgb, var(--brand-blue) 35%, transparent);
+  /* Alt kısım kenarı ve gölgesiyle birlikte zemine eriyor. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 98%);
+  mask-image: linear-gradient(to bottom, #000 62%, transparent 98%);
+}
+.heroFrameBar {
+  display: flex;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: #fbfbfa;
+}
+.heroFrameBar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e2e2e5;
+}
+.heroImage {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 /* ——— Sorun şeridi ——— */
@@ -1285,17 +1210,6 @@
   .finalCtaCard {
     grid-template-columns: minmax(0, 1fr);
   }
-  .appWindowGrid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-  .appWindowGrid > :nth-child(2) {
-    grid-row: span 2;
-  }
-  .heroCheckSlot {
-    top: -1.5rem;
-    right: var(--gutter);
-    width: min(300px, 46%);
-  }
   .feature {
     gap: 2.5rem;
   }
@@ -1341,39 +1255,6 @@
   }
   .heroActions > a {
     flex: 1 1 100%;
-  }
-  .heroStage {
-    margin-top: 3rem;
-    padding-inline: var(--gutter);
-  }
-  .heroStageBackdrop {
-    inset: 12% 0 0;
-    border-radius: 24px 24px 0 0;
-  }
-  .appWindow {
-    max-height: 30rem;
-  }
-  .appWindowTop .appWindowLink:not(.appWindowLinkActive) {
-    display: none;
-  }
-  .appWindowBody {
-    padding: 1.1rem;
-  }
-  .appWindowGrid,
-  .appWindowBeforeAfter {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .appWindowGrid > :nth-child(2) {
-    grid-row: auto;
-  }
-  /* Dar ekranda kart pencerenin eriyen alt kenarına biniyor. */
-  .heroCheckSlot {
-    position: relative;
-    top: auto;
-    right: auto;
-    width: auto;
-    margin: -7rem 0.5rem 0;
-    padding-bottom: 2rem;
   }
   .bento,
   .personas {

@@ -1,3 +1,5 @@
+import Image from "next/image"
+import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { UyarlaLogo } from "@/components/brand/UyarlaMark"
 import { Photo } from "@/features/landing/components/Photo"
@@ -5,8 +7,6 @@ import { Icon, type IconName } from "@/features/landing/components/Icon"
 import {
   FileChips,
   RequirementList,
-  HeroCheck,
-  HeroApp,
   BeforeAfter,
   WarningCard,
 } from "@/features/landing/components/Mockups"
@@ -194,6 +194,11 @@ export function LandingPage() {
         {/* ——— Hero ——— */}
         <section className={s.hero}>
           <div className={`${s.container} ${s.heroText}`}>
+            <Link href="/login" className={s.heroBadge}>
+              <span className={s.heroBadgeTag}>Yeni</span>
+              CV kütüphanesi<span className={s.heroBadgeMore}>: CV&apos;ni bir kez yükle, her ilanda seç</span>
+              <ArrowRight size={14} aria-hidden />
+            </Link>
             <h1 className={s.heroTitle}>Her ilana, doğru CV.</h1>
             <p className={s.heroLead}>
               İlanı yapıştır, CV'nin ne kadar uyduğunu gör ve tek tıkla ilana özel hâle getir.
@@ -220,13 +225,28 @@ export function LandingPage() {
             </ul>
           </div>
 
-          {/* Ürünün kendisi: analiz ekranı ve kenarından taşan uydurma kontrolü. */}
-          <div className={`${s.container} ${s.heroStage}`} aria-hidden="true">
-            <div className={s.heroStageBackdrop} />
-            <HeroApp />
-            <div className={s.heroCheckSlot}>
-              <HeroCheck />
-            </div>
+          {/* Ürünün kendisi: uyarlama ekranının gerçek görüntüsü (kurgusal demo
+              hesap, 8 Ekim 2026). Arkasında kobalt ışıma, altı zemine eriyor. */}
+          <div className={`${s.container} ${s.heroShot}`}>
+            <div className={s.heroGlow} aria-hidden="true" />
+            <figure className={s.heroFrame}>
+              <div className={s.heroFrameBar} aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
+              {/* unoptimized: görüntü zaten boyutlu ve sıkıştırılmış (3x WebP);
+                  Next'in yeniden sıkıştırması yazıları bulanıklaştırıyordu. */}
+              <Image
+                src="/landing/hero-adaptation-3x.webp"
+                alt="uyarla'nın uyarlama ekranı: skor 45'ten 64'e çıkmış, deneyim maddelerinin eski hâlinin üstü çizili ve yeni hâli vurgulu."
+                width={3615}
+                height={2640}
+                priority
+                unoptimized
+                className={s.heroImage}
+              />
+            </figure>
           </div>
         </section>
 
