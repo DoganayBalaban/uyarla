@@ -116,7 +116,7 @@ Bulgu, katmanın ne işe yaradığını da söylüyor: yumuşak beceriler değil
 tekrarlanabilsin diye. `soft` gereksinim içeren bir ilan eklendiğinde bu
 hipotez yeniden ölçülmeye değer.
 
-## 8 · İki sütunlu CV'lerde metin sırası bozuluyor
+## 8 · İki sütunlu CV'lerde metin sırası bozuluyor · KAPANDI (K-46, 9 Ekim 2026)
 
 **Ne:** `cv-c-yeni-mezun` iki sütunlu bir PDF ve metin çıkarımı sütunları iç
 içe geçiriyor. `HAKKIMDA` başlığının hemen ardından `PROFESYONEL DENEYİM`

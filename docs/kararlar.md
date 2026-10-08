@@ -1884,3 +1884,35 @@ seçimi aynı anda yararlanıyor.
 
 Bilinen sınır: kök bulma "zekayı", "zekanın" gibi çekimleri "zeka"ya
 indirmiyor; bu biçimler eşleşmiyor. Mevcut ek soymanın sınırı, yeni değil.
+
+## K-46 · İki sütunlu PDF sütun sütun okunuyor
+
+**Tarih:** 9 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** Belge okuma (DOG-31, birikmiş işler #8)
+
+**Sorun:** pdf-parse metni içerik akışının sırasıyla veriyor. Kenar sütunlu
+şablonda (cv-c) "HAKKIMDA" başlığının hemen ardından "PROFESYONEL DENEYİM"
+geliyordu. Hakkımda metni deneyim bloğuna düşüyor, özet boş kalıyordu.
+
+**Karar:** pdfjs-dist'ten (pdf-parse'ın kullandığı sürüm, 5.4.296) öğe
+konumları okunuyor (`documents/pdfLayout.ts`):
+
+1. Sayfa genişliğinin %15–85 aralığında hiçbir satırın kesmediği, en az
+   8 pt genişliğinde dikey bir boşluk aranıyor.
+2. Boşluğun iki yanında da en az 4 satır ve metnin en az %10'u olmalı.
+3. Koşullar sağlanırsa önce sol sütun, sonra sağ sütun yukarıdan aşağıya
+   okunuyor. Boşluğu kesen satırlar (ör. sayfa başlığı) bölge ayırıcı sayılıyor.
+4. Sütun bulunamayan sayfada pdf-parse'ın metni aynen kalıyor. Konum
+   okuması hata verirse de pdf-parse'ın metni kullanılıyor.
+
+**Ölçüm:**
+
+- 9 PDF'in 8'i tek sütunlu ve hepsinde çıktı karakteri karakterine aynı.
+  Bunlar: cv2, ornek-cv, iki demo CV, bir uyarlanmış indirme ve kendi
+  çizicimizle üretilen üç CV.
+- Değişen tek belge cv3 (iki sütunlu). gpt-4.1-mini çıkarımında:
+  - Özet: önce boş, sonra dolu.
+  - Deneyim: önce 4 iş, sonra 5. "Eğitmen / Mentor Bursiyeri" işi önceden
+    tümüyle kayboluyordu.
+
+**Sınır:** Yalnızca iki sütun. Üç sütunlu ya da sütunları sayfa ortasında
+değişen şablonlar ölçülmedi (birikmiş işler #5: CV biçim çeşitliliği).
