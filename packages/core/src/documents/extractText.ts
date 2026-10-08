@@ -1,5 +1,6 @@
 import mammoth from "mammoth"
 import { PermanentError } from "../errors.js"
+import { orderColumns, type TextItem } from "./pdfLayout.js"
 
 /**
  * Bu uzunluğun altındaki PDF metni, metin katmanı yok sayılır.
@@ -33,16 +34,26 @@ async function extractFromPdf(buffer: Buffer): Promise<string> {
   // her Next dosyası bu hatayı alır. Ayrıca pdfjs ağır bir bağımlılık;
   // yalnızca PDF işlenirken yüklenmesi doğru.
   const { PDFParse } = await import("pdf-parse")
-  const parser = new PDFParse({ data: buffer })
-  let text: string
+  // pdfjs veriyi işçiye aktarırken diziyi boşaltabiliyor; iki okuma ayrı kopya alıyor.
+  const parser = new PDFParse({ data: new Uint8Array(buffer) })
+  let pages: string[]
   try {
-    text = (await parser.getText()).text.trim()
+    pages = (await parser.getText()).pages.map((p) => p.text)
   } catch {
     throw new PermanentError(UNREADABLE_MESSAGE, "unreadable_file")
   } finally {
     // pdfjs arka planda çalışan bir görev tutuyor; bırakılmazsa süreç kapanmaz.
     await parser.destroy()
   }
+
+  // İki sütunlu sayfalar sütun sütun okunuyor (DOG-31); sütun bulunamayan
+  // sayfada pdf-parse'ın metni aynen kalıyor. Konum okuması patlarsa da öyle:
+  // sıra düzeltmesi bir iyileştirme, okumayı engellememeli.
+  const columnText = await readColumns(buffer).catch(() => [])
+  const text = pages
+    .map((pageText, i) => columnText[i] ?? pageText)
+    .join("\n\n")
+    .trim()
 
   if (text.length < SCANNED_PDF_THRESHOLD) {
     // Ayrı mesaj şart: "okuyamadık" diyen bir hata kullanıcıyı aynı dosyayı
@@ -55,6 +66,35 @@ async function extractFromPdf(buffer: Buffer): Promise<string> {
   }
 
   return text
+}
+
+/** Her sayfa için sütun sırasıyla metin; sütunsuz sayfada null. */
+async function readColumns(buffer: Buffer): Promise<Array<string | null>> {
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs")
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(buffer), isEvalSupported: false }).promise
+  try {
+    const result: Array<string | null> = []
+    for (let n = 1; n <= doc.numPages; n++) {
+      const page = await doc.getPage(n)
+      const [x0, , x1] = page.view as [number, number, number, number]
+      const content = await page.getTextContent()
+      const items: TextItem[] = []
+      for (const item of content.items) {
+        if (!("str" in item)) continue
+        items.push({
+          str: item.str,
+          x: item.transform[4] as number,
+          y: item.transform[5] as number,
+          width: item.width,
+          height: item.height,
+        })
+      }
+      result.push(orderColumns(items, x1 - x0))
+    }
+    return result
+  } finally {
+    await doc.destroy()
+  }
 }
 
 async function extractFromDocx(buffer: Buffer): Promise<string> {
