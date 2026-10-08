@@ -35,7 +35,15 @@ const HEADINGS: Record<Language, Record<"experience" | "education" | "skills" | 
   en: { experience: "EXPERIENCE", education: "EDUCATION", skills: "SKILLS", languages: "LANGUAGES", certifications: "CERTIFICATIONS" },
 }
 
-export function toDocumentModel(profile: ResumeProfile): DocumentModel {
+export interface DocumentOptions {
+  /**
+   * Eğitim deneyimden önce. İlk işini arayan kullanıcıda okulu ve projeleri
+   * deneyim listesinin altına gömmemek için (DOG-55).
+   */
+  educationFirst?: boolean
+}
+
+export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions = {}): DocumentModel {
   const sections: DocumentSection[] = []
   const b = HEADINGS[resumeLanguage(profile)]
 
@@ -60,6 +68,11 @@ export function toDocumentModel(profile: ResumeProfile): DocumentModel {
         lines: [],
       })),
     })
+  }
+
+  if (options.educationFirst) {
+    const education = sections.findIndex((s) => s.title === b.education)
+    if (education > 0) sections.unshift(...sections.splice(education, 1))
   }
 
   // Beceriler tek satırda virgülle: ATS tarayıcıları bu biçimi en güvenilir

@@ -11,7 +11,13 @@ export const prismaAdaptationStore: AdaptationStore = {
     const adaptation = await prisma.adaptation.findUnique({
       where: { id: adaptationId },
       include: {
-        analysis: { include: { resumeVersion: true, jobPosting: true } },
+        analysis: {
+          include: {
+            resumeVersion: true,
+            jobPosting: true,
+            user: { select: { goal: true, targetRole: true } },
+          },
+        },
       },
     })
 
@@ -36,6 +42,7 @@ export const prismaAdaptationStore: AdaptationStore = {
         requirements: analysis.jobPosting.requirements as never,
       },
       result: analysis.result as never,
+      intent: { goal: analysis.user.goal, targetRole: analysis.user.targetRole },
     }
   },
 

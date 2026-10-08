@@ -19,7 +19,8 @@
     "eval:coverage": "dotenv -e ../../.env -- tsx eval/coverage.ts",
     "eval:prepare": "dotenv -e ../../.env -- tsx eval/prepare.ts",
     "eval:segment": "dotenv -e ../../.env -- tsx eval/segment-compare.ts",
-    "eval:adapt": "dotenv -e ../../.env -- tsx eval/adapt.ts"
+    "eval:adapt": "dotenv -e ../../.env -- tsx eval/adapt.ts",
+    "eval:cover": "dotenv -e ../../.env -- tsx eval/cover.ts"
   },
   "devDependencies": {
     "@types/pdfkit": "^0.17.6",

@@ -55,6 +55,11 @@ describe("toDocumentModel", () => {
     ])
   })
 
+  it("puts education before experience for a first job search", () => {
+    const titles = toDocumentModel(resumeProfile, { educationFirst: true }).sections.map((s) => s.title)
+    expect(titles.slice(0, 2)).toEqual(["EĞİTİM", "DENEYİM"])
+  })
+
   it("keeps skill order", () => {
     const skill = toDocumentModel(resumeProfile).sections.find((s) => s.title === "BECERİLER")!
     expect(skill.entries[0]!.lines).toEqual(["React, TypeScript"])

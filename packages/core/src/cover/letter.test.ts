@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { LlmProvider } from "../llm/types.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { resumeFacts, generateCoverLetter, verifyCoverLetter } from "./letter.js"
+import { candidateLine, generateCoverLetter, resumeFacts, verifyCoverLetter } from "./letter.js"
 
 const TEST_PROFILE: ResumeProfile = {
   fullName: "Elif Yılmaz",
@@ -87,5 +87,46 @@ describe("generateCoverLetter", () => {
     // Model hem CV'yi hem ilanın gereksinimlerini görüyor.
     expect(seen).toContain("CV BİLGİLERİ")
     expect(seen).toContain("Zorunlu gereksinimler:\n- React deneyimi")
+  })
+})
+
+describe("candidateLine", () => {
+  it("describes a career change together with the target role", () => {
+    expect(candidateLine({ goal: "career_change", targetRole: "UX Tasarımcısı" })).toBe(
+      "Adayın durumu: Kariyer değiştiriyor. Hedeflediği rol: UX Tasarımcısı",
+    )
+  })
+
+  it("describes a first job search", () => {
+    expect(candidateLine({ goal: "first_job", targetRole: null })).toBe("Adayın durumu: İlk işini arıyor.")
+  })
+
+  it("returns null when the goal steers nothing", () => {
+    expect(candidateLine({ goal: "exploring", targetRole: "Analist" })).toBeNull()
+    expect(candidateLine({ goal: "promotion", targetRole: "Kıdemli Analist" })).toBeNull()
+    expect(candidateLine({ goal: null, targetRole: null })).toBeNull()
+    expect(candidateLine(undefined)).toBeNull()
+  })
+})
+
+describe("generateCoverLetter with an intent", () => {
+  async function inputFor(intent?: Parameters<typeof candidateLine>[0]) {
+    let seen = ""
+    const llm: LlmProvider = {
+      async extract<T>(opts: { input: string }) {
+        seen = opts.input
+        return { data: { paragraflar: ["Başvuruyorum."] } as T, tokens: 1 }
+      },
+    }
+    await generateCoverLetter(llm, { profile: TEST_PROFILE, posting: POSTING, intent })
+    return seen
+  }
+
+  it("gives the model the candidate's situation", async () => {
+    expect(await inputFor({ goal: "first_job", targetRole: null })).toContain("ADAYIN DURUMU\nAdayın durumu: İlk işini arıyor.")
+  })
+
+  it("leaves the input unchanged without an intent", async () => {
+    expect(await inputFor()).not.toContain("ADAYIN DURUMU")
   })
 })

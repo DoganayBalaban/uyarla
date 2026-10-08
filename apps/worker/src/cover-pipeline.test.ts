@@ -63,4 +63,26 @@ describe("runCoverLetter", () => {
     // CV'de olmayan ilan kavramı işaretleniyor.
     expect(record.paragraphs[1].verification.status).toBe("flagged")
   })
+
+  it("passes the user's goal to the model", async () => {
+    const extract = vi.fn(async (_opts: { input: string }) => ({ data: { paragraflar: ["Başvuruyorum."] } as never, tokens: 1 }))
+
+    await runCoverLetter(
+      {
+        llm: { extract } as unknown as LlmProvider,
+        store: {
+          getAdaptationContext: async () => ({
+            profile: testProfile,
+            posting: testPosting,
+            result: {} as never,
+            intent: { goal: "career_change", targetRole: "Veri Analisti" },
+          }),
+          saveCoverLetter: async () => {},
+        },
+      },
+      { adaptationId: "ad-1" },
+    )
+
+    expect(extract.mock.calls[0]![0].input).toContain("Adayın durumu: Kariyer değiştiriyor. Hedeflediği rol: Veri Analisti")
+  })
 })

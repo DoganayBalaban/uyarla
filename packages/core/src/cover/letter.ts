@@ -44,7 +44,47 @@ Biçim:
   olarak eşleştir.
 - 3. paragraf: kısa kapanış ve görüşme isteği.
 - Hitap ve imza YAZMA; yalnızca üç paragrafın metni.
-- İlan hangi dildeyse o dilde yaz. Türkçe ise resmi "siz" dili kullan.`
+- İlan hangi dildeyse o dilde yaz. Türkçe ise resmi "siz" dili kullan.
+
+"ADAYIN DURUMU" bölümü varsa vurguyu ona göre ayarla. Yukarıdaki kurallar
+yine geçerli: durum, CV'de olmayan bir şeyi yazmaya izin vermez.
+- Kariyer değiştiriyor: 1. paragrafta bu alana geçmek istediğini açıkça ve
+  kısaca söyle. 2. paragrafta önceki işlerinden bu pozisyonda da işe yarayacak
+  becerileri öne çıkar. Önceki alanı küçümseme.
+- İlk işini arıyor: 2. paragrafta projeleri, eğitimi ve stajları öne çıkar.
+  Deneyim azlığından özür dileme, ondan bahsetme.
+- Hedeflediği rol yalnızca adayın yönünü anlatır; adayı o unvanı zaten
+  taşıyormuş gibi yazma.`
+
+export type CareerGoal = "career_change" | "first_job" | "promotion" | "exploring"
+
+/** Onboarding'de toplanan amaç ve hedef rol (DOG-55). */
+export interface CandidateIntent {
+  goal?: CareerGoal | null
+  targetRole?: string | null
+}
+
+const GOAL_LINES: Record<CareerGoal, string | null> = {
+  career_change: "Kariyer değiştiriyor.",
+  first_job: "İlk işini arıyor.",
+  // eval:cover'da terfi satırı işaretli paragrafı 5/30'dan 8/30'a çıkardı:
+  // model "kapsamı öne çıkar" deyince ilanın CV'de olmayan terimlerine
+  // yaslanıyordu (8 Ekim 2026). Kanıtlanmış kazanç olmadan yazılmıyor.
+  promotion: null,
+  // "Bakınıyorum" vurgu değiştirmiyor; satır hiç yazılmıyor.
+  exploring: null,
+}
+
+/**
+ * Modele verilen "Adayın durumu" satırı; vurguyu değiştirmeyen durumda null.
+ * Hedef rol tek başına yazılmıyor: amaç yoksa neyi vurgulayacağı belirsiz.
+ */
+export function candidateLine(intent: CandidateIntent | undefined): string | null {
+  const goalLine = intent?.goal ? GOAL_LINES[intent.goal] : null
+  if (!goalLine) return null
+  const role = intent?.targetRole?.trim()
+  return `Adayın durumu: ${goalLine}${role ? ` Hedeflediği rol: ${role}` : ""}`
+}
 
 // Anahtar LLM ile yapılan sözleşmenin parçası (prompt gibi); Türkçe kalıyor.
 const CoverLetterSchema = z.object({ paragraflar: z.array(z.string()) })
@@ -130,14 +170,22 @@ export function verifyCoverLetter(
 
 export async function generateCoverLetter(
   llm: LlmProvider,
-  input: { profile: ResumeProfile; posting: JobPostingData },
+  input: { profile: ResumeProfile; posting: JobPostingData; intent?: CandidateIntent },
 ): Promise<ExtractResult<CoverLetter>> {
   const sourceText = resumeFacts(input.profile)
+  const situation = candidateLine(input.intent)
   const { data, tokens } = await llm.extract({
     prompt: COVER_LETTER_PROMPT,
     schemaName: "cover_letter",
     schema: coverLetterJsonSchema,
-    input: `CV BİLGİLERİ\n${sourceText}\n\nİŞ İLANI\n${postingSummary(input.posting)}`,
+    input: [
+      `CV BİLGİLERİ\n${sourceText}`,
+      `İŞ İLANI\n${postingSummary(input.posting)}`,
+      // Kontrolün kaynağına girmiyor: hedef rol CV'de olmayan bir olgu.
+      situation ? `ADAYIN DURUMU\n${situation}` : null,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
   })
 
   const paragraphs = CoverLetterSchema.parse(data)

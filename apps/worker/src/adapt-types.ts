@@ -1,5 +1,6 @@
 import type {
   AdaptationDraft,
+  CandidateIntent,
   EmbeddingProvider,
   JobPostingData,
   LlmProvider,
@@ -13,6 +14,8 @@ export interface AdaptationContext {
   profile: ResumeProfile
   posting: JobPostingData
   result: ScoreResult
+  /** Uyarlamanın sahibinin onboarding amacı; ön yazının vurgusu buna göre (DOG-55). */
+  intent?: CandidateIntent
 }
 
 /**
