@@ -1855,3 +1855,32 @@ anlamsal eşleşmeninki 0,241. Aradaki 0,036'lık boşluğa bir taban koymak
 tek CV'nin tek satırına göre ayar yapmak olur. Ayrıca beklentisi
 tanımlanmamış altı eşleşmeyi (0,108–0,175 arası) etkisi ölçülmeden düşürürdü.
 Set büyüyünce (birikmiş işler #4, #5) yeniden ölçülmeli.
+
+## K-45 · Çok kelimeli çapraz dilli karşılıklar sözlüğe girdi
+
+**Tarih:** 9 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** Normalleştirme (DOG-32, birikmiş işler #11)
+
+**Sorun:** `TITLE_SYNONYMS` kelime kelime eşliyor; "yapay zeka" ↔ "AI" gibi
+iki kelimenin tek kelimeye karşılık geldiği çiftler sığmıyordu. Ön yazı
+ilanın dilinde yazıldığı için (bkz. `COVER_LETTER_PROMPT`) İngilizce CV'nin
+sadık çevirisi uydurma sayılıyordu. eval:cover'da en sık iki uyarı
+"yapay zekâ" (19) ve "üretken yapay zekâ" (17) idi; CV'de "AI Engineer" ve
+"Generative AI" yazıyordu.
+
+**Karar:** `PHRASE_SYNONYMS` (kök dizisi → kanonik kök):
+`yapay zeka`/`artificial intelligence` → `ai`, `kimlik doğrulama` →
+`authentication`. Kelime sözlüğüne `üretken` → `generative`. Eşleme
+`normalizeTokens` içinde yapıldığı için skor, uydurma kontrolü ve hedef
+seçimi aynı anda yararlanıyor.
+
+**Ölçüm** (aynı model yanıtlarıyla, önce → sonra):
+
+| | Önce | Sonra |
+|---|---|---|
+| eval:coverage isabet | %92,9 | **%94,6** |
+| eval:coverage kaçırma / uydurma | 3 / 1 | **2 / 1** |
+| eval:cover sorun (amaçsız / kariyer / ilk iş) | 9 / 6 / 6 | **6 / 3 / 5** |
+| eval:adapt tam skor değişimi | +0,4 (artan 2) | **+0,7 (artan 3)**, düşen 0 |
+
+Bilinen sınır: kök bulma "zekayı", "zekanın" gibi çekimleri "zeka"ya
+indirmiyor; bu biçimler eşleşmiyor. Mevcut ek soymanın sınırı, yeni değil.
