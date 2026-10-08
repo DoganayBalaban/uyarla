@@ -7,7 +7,7 @@ Sıra önem değil kayıt sırası. Önceliklendirme her sprint başında yapıl
 
 ---
 
-## 1. Kalan 3 uydurma eşleşme — KISMEN KAPANDI (K-37)
+## 1. Kalan 3 uydurma eşleşme — KAPANDI (K-37, K-44)
 
 **Kaynak:** K-24, K-25 · değerlendirme taban çizgisi (25 Eylül 2026)
 
@@ -291,7 +291,15 @@ bağlantı kullanıldığında siliniyor, yani pencere küçük. Kapatmak için
 bulanık eşleşme istemedik. Bekleyen bağlantıları süresi geçince toplayan ayrı
 bir temizlik adımı doğru yol.
 
-## 15 · Kalan 2 uydurma: şemsiye beceri terimi · KISMEN (K-38)
+## 15 · Kalan 2 uydurma: şemsiye beceri terimi · KAPANDI (K-44, 9 Ekim 2026)
+
+**Kapanış:** OpenAI gömmeleriyle (K-43) `Yapay Zeka Araçları` uydurmaları
+oluşmuyor. Setteki tek uydurma artık `Proje Yönetimi` ↔ `kimlik ve erişim
+yönetimi`. Bu bir şemsiye terim değil, ortak baş ismin sözlüksel yakınlığı.
+Güven tabanı ölçüldü ama benimsenmedi: boşluk 0,036 ve tek vakaya ayar riski
+taşıyor (K-44). Set büyüyünce (#4, #5) yeniden ölçülecek.
+
+### Önceki durum
 
 **Güncelleme (28 Eylül 2026):** 3. seçenek (kavram özgüllüğü) uygulandı:
 özel adlarda anlamsal eşleşme kapalı. Uçtan uca testte "GraphQL" ↔

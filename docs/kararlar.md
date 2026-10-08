@@ -1831,3 +1831,27 @@ gömme modeli değişirse tarama tekrarlanmalı.
 kontrolü (`driftThreshold` 0,70) hiçbir yazımı atmadı. Örnek küçük; sapma
 eşiği BGE-M3 ile ayarlanmıştı (K-33) ve çeviri yazımlarında yeniden
 ölçülmeli.
+
+## K-44 · Şemsiye terim uydurmaları gömme değişikliğiyle kapandı; kalan uydurmaya kural yazılmadı
+
+**Tarih:** 9 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** Skor (DOG-27, birikmiş işler #1 ve #15)
+
+**Ölçüm** (`pnpm eval:coverage`, 10 çift, text-embedding-3-small, eşik 0,50):
+öntanımlı yapılandırmada isabet %92,9, kaçırma 3, uydurma **1**.
+
+- `Yapay Zeka Araçları` ↔ `Generative AI` / `Otonom karar mekanizmaları`
+  uydurmaları artık oluşmuyor. BGE-M3'e özgüydüler; OpenAI gömmeleriyle
+  (K-43) iki eşleşme de eşiğin altında kalıyor.
+- Kalan tek uydurma başka sınıftan: `cv-c__ilan-2` çiftinde `Proje Yönetimi`
+  (beceri satırı) ↔ `Kurumsal veri güvenliği, kimlik ve erişim yönetimi`.
+  Ortak bir baş ismin ("yönetimi") sözlüksel yakınlığı.
+
+**Şemsiye terim tespiti uygulanmadı.** Kalan uydurmanın kanıtı ilanın 48
+kavramından yalnızca 1'ine 0,50'nin üstünde yakın. Yani şemsiye terimin
+tersi: "her şeye yakın kanıt" kuralı bu vakayı yakalamazdı.
+
+**Güven tabanı uygulanmadı.** Uydurmanın katkısı 0,205; en düşük meşru
+anlamsal eşleşmeninki 0,241. Aradaki 0,036'lık boşluğa bir taban koymak
+tek CV'nin tek satırına göre ayar yapmak olur. Ayrıca beklentisi
+tanımlanmamış altı eşleşmeyi (0,108–0,175 arası) etkisi ölçülmeden düşürürdü.
+Set büyüyünce (birikmiş işler #4, #5) yeniden ölçülmeli.
