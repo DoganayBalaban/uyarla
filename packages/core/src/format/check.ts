@@ -30,13 +30,13 @@ export interface FormatReport {
   passed: string[]
 }
 
-const EMAIL = /[\w.+-]+@[\w-]+(\.[\w-]+)+/
+export const EMAIL = /[\w.+-]+@[\w-]+(\.[\w-]+)+/
 // +90 5xx…, 05xx…, (5xx) … Aday dizi en az 10 hane içermeli; ayrıca
 // "2016 - 2020" gibi iki yıldan oluşan bir tarih aralığı telefon sayılmıyor.
 const PHONE_CANDIDATE = /\+?\d[\d\s().-]{8,}\d/g
 const YEAR_RANGE = /^(19|20)\d{2}\D+(19|20)\d{2}$/
 
-function hasPhone(text: string): boolean {
+export function hasPhone(text: string): boolean {
   for (const [candidate] of text.matchAll(PHONE_CANDIDATE)) {
     const digitCount = candidate.replace(/\D/g, "").length
     if (digitCount >= 10 && digitCount <= 13 && !YEAR_RANGE.test(candidate.trim())) return true

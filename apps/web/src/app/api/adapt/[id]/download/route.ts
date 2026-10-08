@@ -1,4 +1,4 @@
-import { applyAdaptation, hasPendingDecisions, toDocumentModel } from "@uyarla/core"
+import { applyAdaptation, hasPendingDecisions, toDocumentModel, withContact } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { loadAdaptation } from "@/server/adaptationDecision"
@@ -53,7 +53,20 @@ export async function GET(
   })
   await prisma.adaptation.update({ where: { id }, data: { resumeVersionId: version.id } })
 
-  const model = toDocumentModel(adapted)
+  // İletişim satırı: CV'de e-posta/telefon yoksa hesaptaki bilgi (DOG-58).
+  const owner = await prisma.user.findUnique({
+    where: { id: payload.ownerId! },
+    select: { email: true, phone: true, isAnonymous: true },
+  })
+  const baseModel = toDocumentModel(adapted)
+  const model = {
+    ...baseModel,
+    contact: withContact(baseModel.contact, {
+      // Anonim oturumun e-postası yer tutucu; belgeye yazılmıyor.
+      email: owner && !owner.isAnonymous ? owner.email : null,
+      phone: owner?.phone ?? null,
+    }),
+  }
 
   // Tembel import: pdfkit ve docx ağır bağımlılıklar. Sprint 1'de pdf-parse'ın
   // Next sunucu katmanında üst seviyeden yüklenemediğini görmüştük; yalnızca
