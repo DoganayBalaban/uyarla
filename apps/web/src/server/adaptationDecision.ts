@@ -1,14 +1,17 @@
 import {
   AdaptationDraftSchema,
+  CachedEmbeddingProvider,
   OpenAiCompatibleEmbeddingProvider,
   embeddingConfigFromEnv,
   hasPendingDecisions,
+  redisVectorStore,
   rescore,
   type AdaptationDraft,
   type JobPostingData,
   type ResumeProfile,
 } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
+import { redis } from "@/server/redis"
 
 /**
  * Tek bir maddenin (ya da özetin) kararını değiştirir.
@@ -82,7 +85,9 @@ export async function loadAdaptation(id: string) {
  * Kabul edilen içerikten yeni skoru hesaplar; taslak yoksa null.
  *
  * Veritabanında saklanmıyor: her karar değişikliğinde bayatlar ve maliyeti
- * tek bir toplu gömme çağrısı — LLM yok (spec §10).
+ * tek bir toplu gömme çağrısı — LLM yok (spec §10). Gömmeler worker'la ortak
+ * önbellekten geliyor; değişmeyen kanıtlar analizdeki vektörünü koruyor ve
+ * sayfa her yüklendiğinde skor oynamıyor (DOG-57).
  */
 export async function computeScoreAfter(
   profile: ResumeProfile | null,
@@ -90,6 +95,11 @@ export async function computeScoreAfter(
   draft: AdaptationDraft | null,
 ): Promise<number | null> {
   if (!profile || !draft) return null
-  const embedding = new OpenAiCompatibleEmbeddingProvider(embeddingConfigFromEnv())
+  const config = embeddingConfigFromEnv()
+  const embedding = new CachedEmbeddingProvider(
+    new OpenAiCompatibleEmbeddingProvider(config),
+    redisVectorStore(redis),
+    config.model,
+  )
   return rescore({ profile, posting, draft }, embedding)
 }

@@ -1,9 +1,11 @@
 import {
+  CachedEmbeddingProvider,
   LmStudioProvider,
   OpenAiCompatibleEmbeddingProvider,
   PermanentError,
   embeddingConfigFromEnv,
   llmConfigFromEnv,
+  redisVectorStore,
 } from "@uyarla/core"
 import { Worker } from "bullmq"
 import IORedis from "ioredis"
@@ -22,7 +24,13 @@ const connection = new IORedis(process.env.REDIS_URL ?? "redis://localhost:6379"
 
 const llmConfig = llmConfigFromEnv()
 const llm = new LmStudioProvider(llmConfig)
-const embedding = new OpenAiCompatibleEmbeddingProvider(embeddingConfigFromEnv())
+const embeddingConfig = embeddingConfigFromEnv()
+// Önbellek web ile ortak: analizdeki vektörler uyarlama sonrası skorda da aynı kalıyor (DOG-57).
+const embedding = new CachedEmbeddingProvider(
+  new OpenAiCompatibleEmbeddingProvider(embeddingConfig),
+  redisVectorStore(connection),
+  embeddingConfig.model,
+)
 
 const worker = new Worker<AnalyzeJobData, string>(
   ANALYZE_QUEUE,
