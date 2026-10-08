@@ -203,3 +203,29 @@ describe("English plural suffix", () => {
     expect(containsKeyword("Stres testleri yaptım", "stres")).toBe(true)
   })
 })
+
+describe("cross-language phrases", () => {
+  // eval:cover: İngilizce CV'den Türkçe ilana yazılan ön yazıda "yapay zekâ"
+  // ve "üretken yapay zekâ" en sık uydurma uyarısıydı (DOG-32).
+  it("matches yapay zekâ to AI", () => {
+    expect(containsKeyword("AI Engineer with LLM experience", "Yapay zekâ")).toBe(true)
+    expect(containsKeyword("Yapay zeka alanında çalıştım", "AI")).toBe(true)
+  })
+
+  it("matches üretken yapay zekâ to Generative AI", () => {
+    expect(containsKeyword("Skills: Generative AI, RAG", "Üretken yapay zekâ")).toBe(true)
+  })
+
+  it("matches artificial intelligence to AI", () => {
+    expect(containsKeyword("BSc in Artificial Intelligence", "AI")).toBe(true)
+  })
+
+  it("matches kimlik doğrulama to authentication", () => {
+    expect(containsKeyword("authentication and app infrastructure with JWT", "kimlik doğrulama")).toBe(true)
+  })
+
+  it("does not match a lone word of the phrase", () => {
+    expect(containsKeyword("yapay çiçek tasarımı", "AI")).toBe(false)
+    expect(containsKeyword("kimlik kartı basımı", "authentication")).toBe(false)
+  })
+})

@@ -199,7 +199,7 @@ yanlış olan bir uyarı eklemek, K-32 sonrası artık hassas olan işaretleri
 oranı düşer; o zaman kontrol eklenebilir. Ya da prompt'a "kaynakta geçen
 teknoloji adlarının hepsini koru" kuralı eklenip ölçülebilir.
 
-## 11 · Çeviri, meşru kazanç yolu ama uydurma sanılıyor
+## 11 · Çeviri, meşru kazanç yolu ama uydurma sanılıyor · KAPANDI (K-45, 9 Ekim 2026)
 
 **Ne:** İngilizce bir CV Türkçe bir ilana uyarlandığında, sadık çeviri
 ilanın Türkçe terimini maddeye getiriyor ve skor **meşru olarak** artıyor.

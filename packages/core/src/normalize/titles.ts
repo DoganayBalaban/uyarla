@@ -58,6 +58,9 @@ export const TITLE_SYNONYMS: Record<string, string> = {
   mimarileri: "mimari",
   architecture: "mimari",
   architectures: "mimari",
+  // eval:cover: "Generative AI" yazan CV'nin Türkçe ön yazısı "üretken yapay
+  // zekâ" dediğinde uydurma uyarısı alıyordu (DOG-32).
+  üretken: "generative",
 
   // --- Teknoloji yazım varyantları ---
   // "next.js" gibi noktalı yazımlar normalizeText'te "next js" olur;
@@ -70,4 +73,22 @@ export const TITLE_SYNONYMS: Record<string, string> = {
   ts: "typescript",
   postgres: "postgresql",
   k8s: "kubernetes",
+}
+
+/**
+ * Çok kelimeli çapraz dilli karşılıklar: kelime dizisi → tek kanonik kök.
+ *
+ * `TITLE_SYNONYMS` kelime kelime eşliyor; "yapay zeka" ↔ "AI" gibi iki
+ * kelimenin bir kelimeye karşılık geldiği çiftler oraya sığmıyor. Aynı kural
+ * geçerli: her ekleme ölçülmüş bir kaçırmayı ya da yanlış uyarıyı kapatmalı.
+ */
+export const PHRASE_SYNONYMS: Record<string, string> = {
+  // eval:cover (8 Ekim 2026): İngilizce CV + Türkçe ilan ön yazılarında en
+  // sık iki uydurma uyarısı "yapay zekâ" (19) ve "üretken yapay zekâ" (17);
+  // CV'de "AI Engineer" ve "Generative AI" yazıyordu (DOG-32).
+  "yapay zeka": "ai",
+  "artificial intelligence": "ai",
+  // 26 Eylül uçtan uca testi: "authentication" maddesinin sadık çevirisi
+  // "kimlik doğrulama" uydurma sayılmıştı (birikmiş işler #11).
+  "kimlik doğrulama": "authentication",
 }

@@ -1,4 +1,4 @@
-import { TITLE_SYNONYMS } from "./titles.js"
+import { PHRASE_SYNONYMS, TITLE_SYNONYMS } from "./titles.js"
 
 /**
  * Ek soyulduktan sonra kökün inebileceği en kısa uzunluk.
@@ -144,11 +144,36 @@ export function normalizeToken(word: string): string {
   return stem
 }
 
+/**
+ * Çok kelimeli karşılıklar kök dizisi olarak tutuluyor: metin de köklere
+ * indikten sonra arandığı için "kimlik doğrulaması" da eşleşiyor. Uzun
+ * diziler önce deneniyor.
+ */
+const PHRASES = Object.entries(PHRASE_SYNONYMS)
+  .map(([phrase, canonical]) => ({
+    stems: normalizeText(phrase).split(" ").map(normalizeToken),
+    canonical: normalizeToken(canonical),
+  }))
+  .sort((a, b) => b.stems.length - a.stems.length)
+
 /** Metni normalleştirilmiş köklere ayırır. */
 export function normalizeTokens(text: string): string[] {
   const normalized = normalizeText(text)
   if (!normalized) return []
-  return normalized.split(" ").map(normalizeToken)
+  const stems = normalized.split(" ").map(normalizeToken)
+
+  const tokens: string[] = []
+  for (let i = 0; i < stems.length; ) {
+    const phrase = PHRASES.find((p) => p.stems.every((stem, j) => stems[i + j] === stem))
+    if (phrase) {
+      tokens.push(phrase.canonical)
+      i += phrase.stems.length
+    } else {
+      tokens.push(stems[i]!)
+      i++
+    }
+  }
+  return tokens
 }
 
 /**
