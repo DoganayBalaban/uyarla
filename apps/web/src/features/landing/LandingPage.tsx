@@ -235,13 +235,15 @@ export function LandingPage() {
                 <span />
                 <span />
               </div>
+              {/* unoptimized: görüntü zaten boyutlu ve sıkıştırılmış (3x WebP);
+                  Next'in yeniden sıkıştırması yazıları bulanıklaştırıyordu. */}
               <Image
-                src="/landing/hero-adaptation.webp"
-                alt="uyarla'nın uyarlama ekranı: skor 45'ten 53'e çıkmış, iki deneyim maddesinin eski hâlinin üstü çizili ve yeni hâli vurgulu."
-                width={2410}
-                height={1760}
+                src="/landing/hero-adaptation-3x.webp"
+                alt="uyarla'nın uyarlama ekranı: skor 45'ten 64'e çıkmış, deneyim maddelerinin eski hâlinin üstü çizili ve yeni hâli vurgulu."
+                width={3615}
+                height={2640}
                 priority
-                sizes="(max-width: 1200px) 100vw, 1100px"
+                unoptimized
                 className={s.heroImage}
               />
             </figure>
