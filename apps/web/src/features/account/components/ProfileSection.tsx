@@ -7,15 +7,18 @@ import { z } from "zod"
 import { LoaderCircle } from "lucide-react"
 import { useProfile, useSaveProfile } from "@/features/account/api"
 import { GOAL_OPTIONS } from "@/features/onboarding/goals"
-import { GOALS, nameSchema, TARGET_ROLE_MAX_LENGTH } from "@/features/onboarding/schema"
+import { GOALS, nameSchema, profilePatchSchema, TARGET_ROLE_MAX_LENGTH } from "@/features/onboarding/schema"
 import { apiErrorMessage } from "@/lib/api"
 
 const profileFormSchema = z.object({
   name: nameSchema,
   goal: z.enum(GOALS).or(z.literal("")),
   targetRole: z.string().trim().max(TARGET_ROLE_MAX_LENGTH, `Hedef rol en fazla ${TARGET_ROLE_MAX_LENGTH} karakter olabilir.`),
+  // Sunucu şemasıyla aynı kural; boş metin "telefon yok".
+  phone: profilePatchSchema.shape.phone.unwrap().unwrap().or(z.literal("")),
 })
 type ProfileForm = z.input<typeof profileFormSchema>
+type ProfileFormOutput = z.output<typeof profileFormSchema>
 
 const inputClass =
   "w-full rounded-button border border-border bg-background px-3.5 py-2.5 text-sm outline-none focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15"
@@ -25,21 +28,26 @@ export function ProfileSection() {
   const profile = useProfile(true)
   const save = useSaveProfile()
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null)
-  const { register, handleSubmit, reset, formState } = useForm<ProfileForm>({
+  const { register, handleSubmit, reset, formState } = useForm<ProfileForm, unknown, ProfileFormOutput>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: { name: "", goal: "", targetRole: "" },
+    defaultValues: { name: "", goal: "", targetRole: "", phone: "" },
   })
 
   useEffect(() => {
     if (profile.data) {
-      reset({ name: profile.data.name, goal: profile.data.goal ?? "", targetRole: profile.data.targetRole ?? "" })
+      reset({
+        name: profile.data.name,
+        goal: profile.data.goal ?? "",
+        targetRole: profile.data.targetRole ?? "",
+        phone: profile.data.phone ?? "",
+      })
     }
   }, [profile.data, reset])
 
   const onSubmit = handleSubmit(async (values) => {
     setMessage(null)
     try {
-      await save.mutateAsync({ name: values.name, goal: values.goal || null, targetRole: values.targetRole })
+      await save.mutateAsync({ name: values.name, goal: values.goal || null, targetRole: values.targetRole, phone: values.phone ?? "" })
       setMessage({ kind: "ok", text: "Kaydedildi." })
     } catch (error) {
       setMessage({ kind: "error", text: await apiErrorMessage(error, "Kaydedemedik. Tekrar dener misin?") })
@@ -81,6 +89,12 @@ export function ProfileSection() {
           <label htmlFor="profile-role" className="mb-1.5 block text-sm font-medium">Hedef rolün</label>
           <input id="profile-role" placeholder="Örneğin: Frontend geliştirici" {...register("targetRole")} className={inputClass} />
           {formState.errors.targetRole && <p role="alert" className="mt-1 text-sm text-brand-amber">{formState.errors.targetRole.message}</p>}
+        </div>
+        <div>
+          <label htmlFor="profile-phone" className="mb-1.5 block text-sm font-medium">Telefon</label>
+          <input id="profile-phone" type="tel" autoComplete="tel" placeholder="+90 555 000 00 00" {...register("phone")} className={inputClass} />
+          <p className="mt-1 text-xs text-muted">CV&apos;nde telefon yoksa indirdiğin CV&apos;ye bu yazılır. E-posta olarak hesabındaki adres kullanılır.</p>
+          {formState.errors.phone && <p role="alert" className="mt-1 text-sm text-brand-amber">{formState.errors.phone.message}</p>}
         </div>
         <div className="flex items-center gap-3">
           <button type="submit" disabled={save.isPending || profile.isPending} className="inline-flex items-center gap-2 rounded-button bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60">

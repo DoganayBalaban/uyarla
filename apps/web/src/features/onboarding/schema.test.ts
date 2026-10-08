@@ -33,3 +33,16 @@ describe("profilePatchSchema", () => {
     expect(errorOf({})).toBe("Güncellenecek bir şey yok.")
   })
 })
+
+describe("profilePatchSchema · phone", () => {
+  it("accepts common phone formats and clears an empty one", () => {
+    expect(profilePatchSchema.parse({ phone: " +90 (555) 000-00-00 " }).phone).toBe("+90 (555) 000-00-00")
+    expect(profilePatchSchema.parse({ phone: "  " }).phone).toBeNull()
+  })
+
+  it("rejects letters and too-short numbers", () => {
+    expect(errorOf({ phone: "beni ara" })).toBe("Telefon numarası geçerli görünmüyor.")
+    expect(errorOf({ phone: "12345" })).toBe("Telefon numarası geçerli görünmüyor.")
+  })
+})
+

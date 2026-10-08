@@ -1,8 +1,10 @@
 "use client"
 
-import { ChevronDown, CircleCheck, OctagonAlert, ScanText, TriangleAlert } from "lucide-react"
+import Link from "next/link"
+import { ChevronDown, CircleCheck, OctagonAlert, ScanText, TriangleAlert, Wand2 } from "lucide-react"
 import type { FormatReport } from "@uyarla/core"
 import { cn } from "@/lib/cn"
+import { fixHint } from "@/features/analysis/formatFixes"
 
 // Tipler core'dan: web kendi kopyasını tutarsa bir anahtar değiştiğinde
 // TypeScript uyarmıyor ve ekran sessizce boş kalıyor (DOG-39).
@@ -74,6 +76,23 @@ export function FormatReportCard({ report }: { report: FormatReportView }) {
                     {b.title}
                   </p>
                   <p className="m-0 mt-0.5 text-sm text-muted">{b.description}</p>
+                  {fixHint(b.code) && (
+                    <p
+                      className={cn(
+                        "m-0 mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium",
+                        fixHint(b.code)!.kind === "action" ? "text-foreground" : "text-brand-green dark:text-[#4ade80]",
+                      )}
+                    >
+                      <Wand2 className="size-3.5" aria-hidden />
+                      {fixHint(b.code)!.href ? (
+                        <Link href={fixHint(b.code)!.href!} className="underline underline-offset-2">
+                          {fixHint(b.code)!.text}
+                        </Link>
+                      ) : (
+                        fixHint(b.code)!.text
+                      )}
+                    </p>
+                  )}
                 </div>
                 <span
                   aria-hidden

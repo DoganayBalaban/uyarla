@@ -27,6 +27,8 @@ model User {
   onboardedAt DateTime?
   goal        Goal?
   targetRole  String?
+  // İndirilen CV'nin iletişim satırı için (DOG-58); boşsa eklenmiyor.
+  phone       String?
 }
 
 model Resume {

@@ -17,6 +17,7 @@ export interface ProfileView {
   email: string
   goal: Goal | null
   targetRole: string | null
+  phone: string | null
 }
 
 export const profileQueryKey = ["profile"] as const

@@ -24,11 +24,23 @@ const targetRoleSchema = z
   .max(TARGET_ROLE_MAX_LENGTH, `Hedef rol en fazla ${TARGET_ROLE_MAX_LENGTH} karakter olabilir.`)
   .transform((value) => value || null)
 
+/** Rakam, boşluk, +, (, ), - ; 10-15 hane. Boş metin "telefon yok". */
+const phoneSchema = z
+  .string({ error: "Telefon numarası geçerli görünmüyor." })
+  .trim()
+  .refine((value) => {
+    if (!value) return true
+    const digits = value.replace(/\D/g, "").length
+    return /^[\d\s()+-]+$/.test(value) && digits >= 10 && digits <= 15
+  }, "Telefon numarası geçerli görünmüyor.")
+  .transform((value) => value || null)
+
 export const profilePatchSchema = z
   .object({
     name: nameSchema.optional(),
     goal: z.enum(GOALS, { error: "Geçersiz amaç." }).nullable().optional(),
     targetRole: targetRoleSchema.nullable().optional(),
+    phone: phoneSchema.nullable().optional(),
     /** Onboarding bitti ya da atlandı. */
     completeOnboarding: z.literal(true).optional(),
   })
