@@ -8,6 +8,9 @@
   "scripts": {
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
+    "dev": "pnpm run \"/^dev:(web|worker)$/\"",
+    "dev:web": "pnpm --filter @uyarla/web exec dotenv -e ../../.env -- next dev -p 3001",
+    "dev:worker": "pnpm --filter @uyarla/worker exec -- tsx watch --env-file=../../.env src/index.ts",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down"
   },
