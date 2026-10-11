@@ -93,6 +93,40 @@ describe("segmentResume · edge cases", () => {
   })
 })
 
+describe("segmentResume · Europass and LinkedIn headings (DOG-60)", () => {
+  it("recognizes the Europass education and skills headings", () => {
+    const b = segmentResume(
+      "İŞ DENEYİMİ\nAtlas Lojistik\nEĞİTİM VE ÖĞRETİM\nLisans, İktisat\nKİŞİSEL BECERİLER\nMS Excel, Logo Tiger",
+    )
+    expect(b.educationBlock).toContain("İktisat")
+    expect(b.skillsBlock).toContain("Logo Tiger")
+    expect(b.experienceBlock).not.toContain("İktisat")
+  })
+
+  it("keeps a personal information heading out of the header block", () => {
+    // Europass: ad "KİŞİSEL BİLGİLER" başlığının altında; başlık ad sanılıyordu.
+    const b = segmentResume("KİŞİSEL BİLGİLER\nEce Yıldırım\nKadıköy, İstanbul\nİŞ DENEYİMİ\nAtlas Lojistik")
+    expect(b.headerBlock.split("\n")[0]).toBe("Ece Yıldırım")
+  })
+
+  it("splits a heading that shares a table row with its content", () => {
+    // Europass DOCX'te etiket ve içerik aynı tablo satırında: "KİŞİSEL BİLGİLER | Ece Yıldırım".
+    const b = segmentResume("KİŞİSEL BİLGİLER | Ece Yıldırım\nKadıköy\nEĞİTİM VE ÖĞRETİM | 2016 – 2020\nLisans, İktisat")
+    expect(b.headerBlock.split("\n")[0]).toBe("Ece Yıldırım")
+    expect(b.educationBlock).toContain("2016 – 2020")
+    expect(b.educationBlock).toContain("İktisat")
+  })
+
+  it("recognizes the LinkedIn Contact and Top Skills sections", () => {
+    const b = segmentResume(
+      "Contact\ndeniz@ornek.com\nTop Skills\nGoogle Ads\nLooker Studio\nSummary\nPerformans pazarlamacısıyım.",
+    )
+    expect(b.skillsBlock).toContain("Google Ads")
+    expect(b.headerBlock).toContain("deniz@ornek.com")
+    expect(b.headerBlock).not.toContain("Contact")
+  })
+})
+
 describe("stripLeadingHeading", () => {
   it("drops the leading section heading", () => {
     expect(stripLeadingHeading("PROFILE\n\nAI Engineer ve geliştirici")).toBe(

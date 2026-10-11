@@ -48,3 +48,45 @@ describe("extractText", () => {
     expect(text).toContain("Deneyim")
   })
 })
+
+describe("extractText · DOCX tables (DOG-60)", () => {
+  async function docxWithTable(rows: string[][][]): Promise<Buffer> {
+    const { Document, Packer, Paragraph, Table, TableCell, TableRow } = await import("docx")
+    const table = new Table({
+      rows: rows.map(
+        (r) =>
+          new TableRow({
+            children: r.map((paras) => new TableCell({ children: paras.map((t) => new Paragraph(t)) })),
+          }),
+      ),
+    })
+    return Packer.toBuffer(new Document({ sections: [{ children: [new Paragraph("YETKİNLİKLER"), table] }] }))
+  }
+
+  it("keeps a row of single-line cells on one line", async () => {
+    // Hücreler ayrı satıra düşünce "MS Office" etiket, "İleri" beceri sanılıyordu.
+    const text = await extractText(
+      await docxWithTable([
+        [["Alan"], ["Düzey"]],
+        [["MS Office (Excel, PowerPoint)"], ["İleri"]],
+        [["Salesforce CRM"], ["Orta"]],
+      ]),
+      "cv.docx",
+    )
+    expect(text).toContain("MS Office (Excel, PowerPoint) | İleri")
+    expect(text).toContain("Salesforce CRM | Orta")
+  })
+
+  it("leaves multi-paragraph cells on separate lines", async () => {
+    const text = await extractText(
+      await docxWithTable([[["2022 – Halen"], ["Genel Muhasebe Uzmanı", "Atlas Lojistik", "▪ Mizan kontrolü"]]]),
+      "cv.docx",
+    )
+    expect(text).toContain("Genel Muhasebe Uzmanı\nAtlas Lojistik\n▪ Mizan kontrolü")
+  })
+
+  it("drops empty cells from a row", async () => {
+    const text = await extractText(await docxWithTable([[["EĞİTİM VE ÖĞRETİM"], [""]]]), "cv.docx")
+    expect(text.split("\n")).toContain("EĞİTİM VE ÖĞRETİM")
+  })
+})

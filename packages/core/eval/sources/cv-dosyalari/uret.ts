@@ -134,13 +134,15 @@ const run = (text: string, opts: { bold?: boolean; size?: number } = {}) =>
   new TextRun({ text, font: FONT, bold: opts.bold, size: opts.size ?? 20 })
 const para = (text: string, opts: { bold?: boolean; size?: number } = {}) =>
   new Paragraph({ children: [run(text, opts)] })
-const NO_BORDER = {
+type Border = { style: (typeof BorderStyle)[keyof typeof BorderStyle]; size: number; color: string }
+type Borders = Record<"top" | "bottom" | "left" | "right", Border>
+const NO_BORDER: Borders = {
   top: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
   bottom: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
   left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
   right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
 }
-function cell(children: Paragraph[], width: number, borders = NO_BORDER) {
+function cell(children: Paragraph[], width: number, borders: Borders = NO_BORDER) {
   return new TableCell({ children, width: { size: width, type: WidthType.PERCENTAGE }, borders })
 }
 
@@ -193,7 +195,7 @@ async function europassDocx(): Promise<Buffer> {
 // --- cv-f · Tablolu Word şablonu ---------------------------------------------
 
 async function tableTemplateDocx(): Promise<Buffer> {
-  const bordered = {
+  const bordered: Borders = {
     top: { style: BorderStyle.SINGLE, size: 4, color: "999999" },
     bottom: { style: BorderStyle.SINGLE, size: 4, color: "999999" },
     left: { style: BorderStyle.SINGLE, size: 4, color: "999999" },

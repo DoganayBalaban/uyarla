@@ -1989,3 +1989,49 @@ değil:
   - Asıl beceriler kayboluyor.
 - **Başlıksız düz metin:** beklenenden iyi çalışıyor; geri çekilme yolu bu
   vakada sağlam.
+
+## K-49 · Europass, LinkedIn ve tablolu şablonlar bölümleniyor
+
+**Tarih:** 11 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** Belge okuma ve bölümleme (DOG-60)
+
+K-48'deki genişletilmiş setin bulduğu üç bozulmanın kök nedenleri ve
+düzeltmeleri:
+
+1. **Başlıklar.**
+   - Europass ("EĞİTİM VE ÖĞRETİM", "KİŞİSEL BECERİLER") ve LinkedIn
+     ("Top Skills") başlıkları desen listesine girdi.
+   - "Contact" ve "KİŞİSEL BİLGİLER" gibi iletişim başlıklarının içeriği
+     başlık bloğuna gidiyor ama başlık satırının kendisi gitmiyor; önceden ad
+     sanılıyordu.
+   - Bölümlemenin tanıdığı başlıklar beceri listesine de girmiyor.
+2. **Okuma sırası.** İki sütunlu PDF'te bir sütun ötekinin %60'ından darsa
+   kenar sütunu sayılıyor ve ana sütundan sonra okunuyor. LinkedIn
+   çıktısında ad ana sütunun başında; önce kenar sütunu okunduğunda ad
+   metnin ortasında kalıyordu.
+3. **DOCX tabloları.** Metin artık mammoth'un HTML çıktısından üretiliyor.
+   - Tek paragraflı hücrelerden oluşan satırlar `hücre | hücre` biçiminde
+     tek satıra iniyor; çok paragraflı hücreler satır satır kalıyor.
+   - Satır başındaki başlık ("KİŞİSEL BİLGİLER | Ece Yıldırım") bölümlemede
+     ayrılıyor.
+   - Tek başına düzey ifadeleri ("Orta", "İleri", "B2 (iyi)") ve `|` içeren
+     tablo başlıkları beceri sayılmıyor.
+
+**Ölçüm** (`pnpm eval`, 18 çift; yalnızca etkilenen üç CV yeniden çıkarıldı):
+
+| | Önce (K-48) | Sonra |
+|---|---|---|
+| İsabet | %84,8 | **%88,9** |
+| Kaçırma | 14 | **10** |
+| Uydurma | 1 | 1 |
+
+Çift bazında:
+
+- Europass muhasebeci: 0 → 19 puan.
+- Tablolu şablon: 17 → 29 puan; beklentilerin hepsi tutuyor.
+- İlk 10 çift değişmedi. Yeni başlık desenleri cv-a/b/c metinlerinin hiçbir
+  satırına uymuyor.
+
+**Kalan kaçırmalar bölümlemeden değil, kavram ayırmadan geliyor** (yeni iş):
+"ERP sistemleri (Logo vb.)" CV'deki "Logo Tiger"ı, "MS Office programlarını,
+özellikle Excel'i" CV'deki "Excel"i bulamıyor. Yazılım dışı ilanlarda
+gereksinimler daha uzun cümleler hâlinde yazılıyor (K-23).

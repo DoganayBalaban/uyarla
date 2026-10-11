@@ -1,4 +1,5 @@
 import { normalizeText } from "../normalize/turkish.js"
+import { sectionHeading } from "./segment.js"
 import type { SkillLines } from "../schemas/resume.js"
 
 /**
@@ -78,11 +79,28 @@ export function flattenSkillLines(data: SkillLines): string[] {
  * listeden düşüyor, indirilen CV'de de kayboluyordu (K-38). Cümle noktası
  * sonda ya da boşluktan önce durur.
  */
+/**
+ * Tek başına bir düzey ifadesi beceri değil: tablolu şablonlarda düzey ayrı
+ * sütunda duruyor ve beceri sanılıyordu (DOG-60).
+ */
+const LEVEL =
+  "(?:başlangıç|temel|orta|iyi|çok|ileri|uzman|seviye|düzey|beginner|basic|elementary|intermediate|good|advanced|expert|fluent|native|[abc][12])"
+// normalizeText parantezleri siliyor: "B2 (iyi)" → "b2 iyi".
+const PROFICIENCY = new RegExp(`^${LEVEL}(?:\\s+${LEVEL})*$`)
+
 function looksLikeTerm(text: string): boolean {
   const t = text.trim()
-  return t.length <= MAX_SKILL_LENGTH && !/\.(\s|$)/.test(t)
+  // " | " tablolu şablonun hücre ayırıcısı (DOG-60): "Alan | Düzey" bir
+  // tablo başlığı, beceri değil.
+  return (
+    t.length <= MAX_SKILL_LENGTH &&
+    !/\.(\s|$)/.test(t) &&
+    !t.includes(" | ") &&
+    !PROFICIENCY.test(normalizeText(t))
+  )
 }
 
 function isSectionHeading(text: string): boolean {
-  return SECTION_HEADING.test(normalizeText(text))
+  // Bölümlemenin tanıdığı her başlık da ("Top Skills", "KİŞİSEL BECERİLER") başlıktır.
+  return SECTION_HEADING.test(normalizeText(text)) || sectionHeading(text) !== null
 }

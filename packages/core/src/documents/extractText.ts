@@ -99,9 +99,53 @@ async function readColumns(buffer: Buffer): Promise<Array<string | null>> {
 
 async function extractFromDocx(buffer: Buffer): Promise<string> {
   try {
-    const { value } = await mammoth.extractRawText({ buffer })
-    return value.trim()
+    // Ham metin yerine HTML: tablo satırları ancak orada görünüyor (DOG-60).
+    const { value } = await mammoth.convertToHtml({ buffer })
+    return docxHtmlToText(value).trim()
   } catch {
     throw new PermanentError(UNREADABLE_MESSAGE, "unreadable_file")
   }
+}
+
+/**
+ * mammoth'un HTML çıktısını satırlara çevirir; tablo satırlarını korur.
+ *
+ * Ham metin her hücreyi ayrı satır veriyordu. Tablolu şablonlarda
+ * "MS Office | İleri" satırı ikiye bölününce beceri çıkarıcısı "MS Office"u
+ * etiket, "İleri"yi beceri sanıyordu. Hücreleri tek paragraf olan satır tek
+ * satıra birleşiyor; çok paragraflı hücreler (Europass'taki iş tanımı gibi)
+ * satır satır kalıyor.
+ */
+export function docxHtmlToText(html: string): string {
+  const withTables = html.replace(/<table>[\s\S]*?<\/table>/g, (table) => {
+    const lines: string[] = []
+    for (const [, row] of table.matchAll(/<tr>([\s\S]*?)<\/tr>/g)) {
+      const cells = [...row!.matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/g)]
+        .map(([, cell]) => paragraphs(cell!))
+        .filter((cell) => cell.length > 0)
+      if (cells.every((cell) => cell.length === 1)) {
+        if (cells.length) lines.push(cells.map((cell) => cell[0]).join(" | "))
+      } else {
+        for (const cell of cells) lines.push(...cell)
+      }
+    }
+    return lines.map((line) => `<p>${line}</p>`).join("")
+  })
+  return paragraphs(withTables).join("\n")
+}
+
+/** HTML parçasındaki boş olmayan paragraflar, düz metin olarak. */
+function paragraphs(html: string): string[] {
+  return html
+    .replace(/<br\s*\/?>/g, "\n")
+    .replace(/<\/(p|h[1-6]|li)>/g, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
 }

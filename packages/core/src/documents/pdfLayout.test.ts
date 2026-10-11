@@ -86,17 +86,20 @@ describe("orderColumns", () => {
       line("• Yapay zeka temelleri üzerine eğitimler verdim.", 155, 374),
     ]
 
+    // Ad ve özet ana sütunun başında; dar kenar sütunu sonra okunuyor
+    // (LinkedIn çıktısı, cv-c). Kenar sütunu önce okununca ad metnin ortasında
+    // kalıyor ve "Contact" ad sanılıyordu (DOG-60).
     expect(orderColumns(items, 595)!.split("\n")).toEqual([
-      "EĞİTİM",
-      "Kafkas Üniversitesi",
-      "BECERİLER",
-      "Python, Git",
-      "DİLLER",
       "HAKKIMDA",
       "Yönetim Bilişim Sistemleri mezunuyum, yazılım geliştiriyorum.",
       "PROFESYONEL DENEYİM",
       "YAPAY ZEKA EĞİTMENİ",
       "• Yapay zeka temelleri üzerine eğitimler verdim.",
+      "EĞİTİM",
+      "Kafkas Üniversitesi",
+      "BECERİLER",
+      "Python, Git",
+      "DİLLER",
     ])
   })
 
