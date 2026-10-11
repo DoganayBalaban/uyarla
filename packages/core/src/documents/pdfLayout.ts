@@ -23,6 +23,12 @@ const MIN_COLUMN_SHARE = 0.1
 const MIN_LINES_PER_COLUMN = 4
 /** Boşluk en az bu genişlikte boş kalmalı (pt). */
 const MIN_GUTTER_WIDTH = 8
+/**
+ * Bir sütun ötekinin bu oranından darsa kenar sütunudur ve sonra okunur.
+ * LinkedIn çıktısında ve kenar sütunlu şablonlarda ad ile özet ana sütunun
+ * başında; kenar sütunu önce okununca ad metnin ortasında kalıyordu (DOG-60).
+ */
+const SIDEBAR_RATIO = 0.6
 
 /**
  * İki sütunlu bir sayfanın metnini sütun sütun okur (DOG-31).
@@ -52,21 +58,25 @@ export function orderColumns(items: TextItem[], pageWidth: number): string | nul
         c.rightChars >= totalChars * MIN_COLUMN_SHARE,
     )
   if (!split) return null
-  const { spanning, leftLines, rightLines } = split
+  const { spanning } = split
+  const sidebarFirst = split.leftWidth < split.rightWidth * SIDEBAR_RATIO
+  const [firstLines, secondLines] = sidebarFirst
+    ? [split.rightLines, split.leftLines]
+    : [split.leftLines, split.rightLines]
 
   // Boşluğu kesen satırlar (sayfa başlığı gibi) bölgeleri ayırıyor: her
-  // satırın üstünde kalan sol ve sağ sütun önce okunuyor, sonra satırın kendisi.
+  // satırın üstünde kalan iki sütun önce okunuyor, sonra satırın kendisi.
   const out: string[] = []
-  let leftQueue = leftLines
-  let rightQueue = rightLines
+  let firstQueue = firstLines
+  let secondQueue = secondLines
   for (const band of toLines(spanning)) {
-    out.push(...leftQueue.filter((l) => l.y > band.y).map((l) => l.text))
-    out.push(...rightQueue.filter((l) => l.y > band.y).map((l) => l.text))
+    out.push(...firstQueue.filter((l) => l.y > band.y).map((l) => l.text))
+    out.push(...secondQueue.filter((l) => l.y > band.y).map((l) => l.text))
     out.push(band.text)
-    leftQueue = leftQueue.filter((l) => l.y <= band.y)
-    rightQueue = rightQueue.filter((l) => l.y <= band.y)
+    firstQueue = firstQueue.filter((l) => l.y <= band.y)
+    secondQueue = secondQueue.filter((l) => l.y <= band.y)
   }
-  out.push(...leftQueue.map((l) => l.text), ...rightQueue.map((l) => l.text))
+  out.push(...firstQueue.map((l) => l.text), ...secondQueue.map((l) => l.text))
   return out.join("\n")
 }
 
@@ -77,9 +87,17 @@ function splitAt(items: TextItem[], gutter: number) {
     spanning: items.filter((i) => crosses(i, gutter)),
     leftLines: toLines(left),
     rightLines: toLines(right),
+    leftWidth: extent(left),
+    rightWidth: extent(right),
     leftChars: left.reduce((n, i) => n + i.str.length, 0),
     rightChars: right.reduce((n, i) => n + i.str.length, 0),
   }
+}
+
+/** Öğelerin kapladığı yatay genişlik. */
+function extent(items: TextItem[]): number {
+  if (items.length === 0) return 0
+  return Math.max(...items.map((i) => i.x + i.width)) - Math.min(...items.map((i) => i.x))
 }
 
 function crosses(item: TextItem, x: number): boolean {

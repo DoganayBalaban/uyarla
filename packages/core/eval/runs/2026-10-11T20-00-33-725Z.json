@@ -1,0 +1,255 @@
+{
+  "model": "gpt-4.1-mini",
+  "config": {
+    "mustWeight": 2,
+    "niceWeight": 1,
+    "semanticThreshold": 0.5,
+    "semanticTypes": [
+      "skill",
+      "experience",
+      "education",
+      "soft"
+    ],
+    "evidenceKindsByType": {
+      "skill": [
+        "role",
+        "bullet",
+        "skill",
+        "education",
+        "language",
+        "summary"
+      ],
+      "experience": [
+        "role",
+        "bullet",
+        "summary"
+      ],
+      "education": [
+        "role",
+        "bullet",
+        "skill",
+        "education",
+        "language",
+        "summary"
+      ],
+      "soft": [
+        "role",
+        "bullet",
+        "skill",
+        "education",
+        "language",
+        "summary"
+      ]
+    },
+    "summaryWeight": 0.75
+  },
+  "totals": {
+    "hits": 88,
+    "misses": 10,
+    "fabrications": 1,
+    "notExtracted": 0,
+    "byKeyword": 19,
+    "bySemantic": 17
+  },
+  "accuracy": 0.8888888888888888,
+  "metrics": [
+    {
+      "id": "cv-a__ilan-1",
+      "hits": 5,
+      "misses": 2,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 33,
+      "durationMs": 562,
+      "byKeyword": 4,
+      "bySemantic": 0
+    },
+    {
+      "id": "cv-a__ilan-2",
+      "hits": 8,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 19,
+      "durationMs": 475,
+      "byKeyword": 4,
+      "bySemantic": 1
+    },
+    {
+      "id": "cv-a__ilan-3",
+      "hits": 6,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 11,
+      "durationMs": 493,
+      "byKeyword": 3,
+      "bySemantic": 0
+    },
+    {
+      "id": "cv-a__ilan-5",
+      "hits": 4,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 22,
+      "durationMs": 391,
+      "byKeyword": 2,
+      "bySemantic": 1
+    },
+    {
+      "id": "cv-b__ilan-1",
+      "hits": 6,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 12,
+      "durationMs": 280,
+      "byKeyword": 0,
+      "bySemantic": 1
+    },
+    {
+      "id": "cv-b__ilan-3",
+      "hits": 5,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 1,
+      "durationMs": 537,
+      "byKeyword": 0,
+      "bySemantic": 0
+    },
+    {
+      "id": "cv-b__ilan-4",
+      "hits": 4,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 4,
+      "durationMs": 304,
+      "byKeyword": 0,
+      "bySemantic": 0
+    },
+    {
+      "id": "cv-c__ilan-1",
+      "hits": 6,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 14,
+      "durationMs": 440,
+      "byKeyword": 1,
+      "bySemantic": 1
+    },
+    {
+      "id": "cv-c__ilan-2",
+      "hits": 4,
+      "misses": 0,
+      "fabrications": 1,
+      "notExtracted": 0,
+      "score": 9,
+      "durationMs": 381,
+      "byKeyword": 0,
+      "bySemantic": 2
+    },
+    {
+      "id": "cv-c__ilan-4",
+      "hits": 5,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 13,
+      "durationMs": 449,
+      "byKeyword": 0,
+      "bySemantic": 1
+    },
+    {
+      "id": "cv-d__ilan-6",
+      "hits": 4,
+      "misses": 4,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 24,
+      "durationMs": 401,
+      "byKeyword": 2,
+      "bySemantic": 0
+    },
+    {
+      "id": "cv-d__ilan-8",
+      "hits": 5,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 7,
+      "durationMs": 355,
+      "byKeyword": 0,
+      "bySemantic": 1
+    },
+    {
+      "id": "cv-e__ilan-7",
+      "hits": 2,
+      "misses": 2,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 19,
+      "durationMs": 290,
+      "byKeyword": 0,
+      "bySemantic": 2
+    },
+    {
+      "id": "cv-e__ilan-9",
+      "hits": 5,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 15,
+      "durationMs": 272,
+      "byKeyword": 0,
+      "bySemantic": 1
+    },
+    {
+      "id": "cv-f__ilan-6",
+      "hits": 5,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 0,
+      "durationMs": 295,
+      "byKeyword": 0,
+      "bySemantic": 0
+    },
+    {
+      "id": "cv-f__ilan-8",
+      "hits": 5,
+      "misses": 0,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 29,
+      "durationMs": 262,
+      "byKeyword": 0,
+      "bySemantic": 4
+    },
+    {
+      "id": "cv-g__ilan-7",
+      "hits": 3,
+      "misses": 1,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 17,
+      "durationMs": 429,
+      "byKeyword": 0,
+      "bySemantic": 0
+    },
+    {
+      "id": "cv-g__ilan-9",
+      "hits": 6,
+      "misses": 1,
+      "fabrications": 0,
+      "notExtracted": 0,
+      "score": 31,
+      "durationMs": 368,
+      "byKeyword": 3,
+      "bySemantic": 2
+    }
+  ]
+}

@@ -40,6 +40,9 @@ const PATTERNS: Array<[ResumeSection, RegExp]> = [
     /^(selected\s+)?(projects|projeler|seçilmiş projeler|kişisel projeler|project experience)$/,
   ],
   ["education", /^(education|eğitim|egitim|öğrenim|akademik geçmiş|eğitim bilgileri)$/],
+  // Europass (DOG-60): eğitim ve beceri başlıkları bu biçimde yazılıyor.
+  ["education", /^(eğitim ve öğretim|education and training)$/],
+  ["skills", /^(kişisel beceriler|personal skills|top skills)$/],
   [
     "skills",
     /^((core|technical|teknik|key|other)\s+)?(skills|competencies|beceriler|yetkinlikler|araçlar|tools)$/,
@@ -52,6 +55,15 @@ const PATTERNS: Array<[ResumeSection, RegExp]> = [
     /^(certifications?|certificates|sertifikalar|sertifikalar belgeler|belgeler|languages|diller|yabancı diller?)$/,
   ],
 ]
+
+/**
+ * İletişim bölümleri: içerikleri başlık bloğuna gidiyor, başlık satırı
+ * gitmiyor. Europass'ta ad "KİŞİSEL BİLGİLER", LinkedIn çıktısında e-posta
+ * "Contact" başlığının altında; başlık satırı bloğa girince ad sanılıyordu
+ * (DOG-60).
+ */
+const CONTACT =
+  /^(contact|contact information|iletişim|iletişim bilgileri|kişisel bilgiler|personal information)$/
 
 /** Tanınan ama dört bloğun hiçbirine ait olmayan bölümler. */
 const IGNORED =
@@ -74,15 +86,29 @@ export function segmentResume(rawText: string): ResumeSegments {
   let active: ResumeSection = "header"
   let headingFound = false
 
-  for (const lineItem of lineItems) {
-    const section = headingKind(lineItem)
-    if (section) {
-      active = section
+  for (const rawLine of lineItems) {
+    // Tablolu DOCX'te başlık ve içerik aynı satırda gelebiliyor (Europass:
+    // "KİŞİSEL BİLGİLER | Ece Yıldırım"). Başlık ayrılıp içerik kendi satırına
+    // iniyor (DOG-60).
+    const [first, ...rest] = rawLine.split(" | ")
+    const rowHeading = rest.length > 0 ? headingKind(first!) : null
+    const lineItem = rowHeading ? first! : rawLine
+    const remainder = rowHeading ? rest.join(" | ") : null
+
+    const section = rowHeading ?? headingKind(lineItem)
+    if (section === "header") {
+      active = "header"
       headingFound = true
+    } else {
+      if (section) {
+        active = section
+        headingFound = true
+      }
+      // Başlığın kendisi de bloğa giriyor: K-10'daki kayıp tam da başlıkların
+      // atılmasıydı ve çıkarıcılar bağlamdan yararlanıyor.
+      blockList[active].push(lineItem)
     }
-    // Başlığın kendisi de bloğa giriyor: K-10'daki kayıp tam da başlıkların
-    // atılmasıydı ve çıkarıcılar bağlamdan yararlanıyor.
-    blockList[active].push(lineItem)
+    if (remainder) blockList[active].push(remainder)
   }
 
   // Hiç başlık yoksa (tasarım ağırlıklı bazı CV'ler) bölemeyiz; her
@@ -140,6 +166,7 @@ function headingKind(lineItem: string): ResumeSection | null {
   const n = normalizeText(clean)
   if (!n) return null
   if (IGNORED.test(n)) return "ignore"
+  if (CONTACT.test(n)) return "header"
 
   for (const [section, pattern] of PATTERNS) {
     if (pattern.test(n)) return section

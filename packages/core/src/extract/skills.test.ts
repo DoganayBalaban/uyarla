@@ -49,6 +49,31 @@ describe("flattenSkillLines", () => {
     ).toEqual(["React"])
   })
 
+  it("does not treat Europass/LinkedIn headings or a table header row as skills", () => {
+    // DOG-60: başlık satırı ve tablonun "Alan | Düzey" başlığı beceri listesine giriyordu.
+    expect(
+      flattenSkillLines({
+        lines: [
+          { label: "Top Skills", items: [] },
+          { label: "KİŞİSEL BECERİLER", items: [] },
+          { label: "Alan | Düzey", items: [] },
+          { label: "Salesforce CRM", items: [] },
+        ],
+        languages: [], certifications: [],
+      }),
+    ).toEqual(["Salesforce CRM"])
+  })
+
+  it("does not treat a lone proficiency level as a skill", () => {
+    // Tablolu şablonun düzey sütunu: "Salesforce CRM | Orta" (DOG-60).
+    expect(
+      flattenSkillLines({
+        lines: [{ label: "Yetkinlikler", items: ["Salesforce CRM", "Orta", "İleri", "Advanced", "B2 (iyi)"] }],
+        languages: [], certifications: [],
+      }),
+    ).toEqual(["Salesforce CRM"])
+  })
+
   it("does not list the same skill twice", () => {
     expect(
       flattenSkillLines({
