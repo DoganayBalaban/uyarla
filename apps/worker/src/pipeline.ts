@@ -6,9 +6,10 @@ import {
   conceptTexts,
   extractJobPosting,
   extractResumeProfile,
+  resumeParserKey,
   score,
 } from "@uyarla/core"
-import type { FormatReport } from "@uyarla/core"
+import type { FormatReport, ResumeProfile } from "@uyarla/core"
 import type { AnalysisStore, PipelineDeps, PipelineInput } from "./types.js"
 
 /**
@@ -18,8 +19,9 @@ import type { AnalysisStore, PipelineDeps, PipelineInput } from "./types.js"
  * Aşamalar ayrı kuyruk işlerine bölünmüyor: veri akışı doğrusal ve tek
  * kullanıcının tek isteği; bölmek görünürlük kazandırmadan karmaşıklık ekler.
  *
- * Çağrılar sıralı (K-09). Paralelleştirme Görev 13'te eval verisiyle
- * yeniden değerlendirilecek.
+ * CV ve ilan aynı anda okunuyor (DOG-28). K-09'da yerel model tek istek
+ * işleyebildiği için sıralıydı; barındırılan modelde ikisi birbirini
+ * beklemiyor.
  */
 export async function runAnalysis(
   deps: PipelineDeps,
@@ -36,16 +38,21 @@ export async function runAnalysis(
 
   try {
     deps.onProgress?.("reading_resume")
-    const resumeText = await deps.store.getResumeText(input.resumeId)
-    const format = await formatReport(deps.store, input.resumeId, resumeText)
-    const profile = await extractResumeProfile(deps.llm, resumeText)
-    const resumeVersionId = await deps.store.saveResumeVersion(input.resumeId, profile.data)
-    await deps.store.attachResumeVersion(analysisId, resumeVersionId)
-
-    deps.onProgress?.("reading_posting")
-    const postingText = await deps.store.getJobPostingText(input.jobPostingId)
-    const posting = await extractJobPosting(deps.llm, postingText)
-    await deps.store.saveJobPostingData(input.jobPostingId, posting.data)
+    const readResume = async () => {
+      const resume = await readResumeProfile(deps, input.resumeId)
+      await deps.store.attachResumeVersion(analysisId, resume.versionId)
+      // İlan hâlâ okunuyorsa arayüz ikinci aşamayı göstersin.
+      deps.onProgress?.("reading_posting")
+      return resume
+    }
+    const readPosting = async () => {
+      const postingText = await deps.store.getJobPostingText(input.jobPostingId)
+      const extracted = await extractJobPosting(deps.llm, postingText)
+      await deps.store.saveJobPostingData(input.jobPostingId, extracted.data)
+      return extracted
+    }
+    const [resume, posting] = await Promise.all([readResume(), readPosting()])
+    const profile = { data: resume.profile, tokens: resume.tokens }
 
     deps.onProgress?.("comparing")
     const evidence = collectEvidence(profile.data)
@@ -68,7 +75,7 @@ export async function runAnalysis(
       analysisId,
       score: result.score,
       result,
-      format,
+      format: resume.format,
       durationMs: now() - startedAt,
       tokenUsage: profile.tokens + posting.tokens,
     })
@@ -85,6 +92,32 @@ export async function runAnalysis(
     }
     throw error
   }
+}
+
+/**
+ * CV'nin metni, biçim kontrolü ve ayrıştırılmış profili.
+ *
+ * Kütüphaneden seçilen CV aynı model ve prompt'larla daha önce ayrıştırıldıysa
+ * o profil kullanılıyor ve LLM çağrısı yapılmıyor (DOG-59). Böylece aynı CV
+ * farklı ilanlarda aynı profille puanlanıyor ve en pahalı aşama atlanıyor.
+ */
+async function readResumeProfile(
+  deps: PipelineDeps,
+  resumeId: string,
+): Promise<{ profile: ResumeProfile; versionId: string; tokens: number; format: FormatReport | null }> {
+  const resumeText = await deps.store.getResumeText(resumeId)
+  const parserKey = resumeParserKey(deps.modelId)
+
+  const parse = async () => {
+    const parsed = await deps.store.findParsedVersion(resumeId, parserKey)
+    if (parsed) return { profile: parsed.profile, versionId: parsed.id, tokens: 0 }
+    const extracted = await extractResumeProfile(deps.llm, resumeText)
+    const versionId = await deps.store.saveResumeVersion(resumeId, extracted.data, parserKey)
+    return { profile: extracted.data, versionId, tokens: extracted.tokens }
+  }
+  // Biçim kontrolü dosyayı depodan okuyor; ayrıştırmayı beklemesine gerek yok.
+  const [format, profile] = await Promise.all([formatReport(deps.store, resumeId, resumeText), parse()])
+  return { ...profile, format }
 }
 
 /**

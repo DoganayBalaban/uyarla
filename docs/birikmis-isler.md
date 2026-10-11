@@ -29,7 +29,7 @@ edilmedi.
 
 ---
 
-## 2. Süre: 30 saniye ölçütü açık
+## 2. Süre: 30 saniye ölçütü · KAPANDI (K-47, 11 Ekim 2026)
 
 **Kaynak:** K-09, K-16
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest"
-import { PermanentError, TransientError } from "@uyarla/core"
+import { PermanentError, TransientError, resumeParserKey } from "@uyarla/core"
 import { runAnalysis } from "./pipeline.js"
 import type { AnalysisStore, PipelineDeps, PipelineStage } from "./types.js"
 
@@ -25,6 +25,7 @@ function fakeStore(overrides: Partial<AnalysisStore> = {}): AnalysisStore {
     getResumeText: async () => "ham cv",
     getResumeFile: async () => ({ buffer: Buffer.from(""), filename: "cv.pdf" }),
     getJobPostingText: async () => "ham ilan",
+    findParsedVersion: async () => null,
     saveResumeVersion: async () => "rv-1",
     saveJobPostingData: async () => {},
     createAnalysis: async () => "an-1",
@@ -146,7 +147,11 @@ describe("runAnalysis · happy path", () => {
       fakeDeps({ store: fakeStore({ saveResumeVersion, attachResumeVersion }) }),
       INPUT,
     )
-    expect(saveResumeVersion).toHaveBeenCalledWith("r-1", expect.objectContaining({ skills: ["React"] }))
+    expect(saveResumeVersion).toHaveBeenCalledWith(
+      "r-1",
+      expect.objectContaining({ skills: ["React"] }),
+      resumeParserKey("test-model"),
+    )
     expect(attachResumeVersion).toHaveBeenCalledWith("an-1", "rv-9")
   })
 
@@ -162,6 +167,53 @@ describe("runAnalysis · happy path", () => {
     const embed = vi.fn().mockImplementation(async (texts: string[]) => texts.map(() => [1, 0]))
     await runAnalysis(fakeDeps({ embedding: { embed } }), INPUT)
     expect(embed).toHaveBeenCalledOnce()
+  })
+})
+
+describe("runAnalysis · saved resume (DOG-59)", () => {
+  it("reuses a profile parsed with the same key instead of calling the model", async () => {
+    const findParsedVersion = vi.fn().mockResolvedValue({ id: "rv-old", profile: PROFILE })
+    const saveResumeVersion = vi.fn()
+    const attachResumeVersion = vi.fn()
+    const completeAnalysis = vi.fn()
+    const llm = fakeLlm()
+
+    await runAnalysis(
+      fakeDeps({
+        llm,
+        store: fakeStore({ findParsedVersion, saveResumeVersion, attachResumeVersion, completeAnalysis }),
+      }),
+      INPUT,
+    )
+
+    expect(findParsedVersion).toHaveBeenCalledWith("r-1", resumeParserKey("test-model"))
+    expect(llm.calls.filter((c) => c.startsWith("resume_"))).toEqual([])
+    expect(saveResumeVersion).not.toHaveBeenCalled()
+    expect(attachResumeVersion).toHaveBeenCalledWith("an-1", "rv-old")
+    // Yalnızca ilan çağrısı.
+    expect(completeAnalysis.mock.calls[0]![0].tokenUsage).toBe(10)
+  })
+})
+
+describe("runAnalysis · timing (DOG-28)", () => {
+  it("reads the resume and the posting at the same time", async () => {
+    let inFlight = 0
+    let peak = 0
+    const base = fakeLlm()
+    const llm = {
+      async extract<T>(opts: { schemaName: string }) {
+        inFlight++
+        peak = Math.max(peak, inFlight)
+        await new Promise((r) => setTimeout(r, 5))
+        inFlight--
+        return base.extract<T>(opts)
+      },
+    }
+
+    await runAnalysis(fakeDeps({ llm }), INPUT)
+
+    // Üç CV bloğu ve ilan aynı anda.
+    expect(peak).toBe(4)
   })
 })
 
