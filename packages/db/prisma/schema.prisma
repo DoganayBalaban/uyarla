@@ -70,6 +70,11 @@ model ResumeVersion {
   source    ResumeVersionSource
   versionNo Int
   createdAt DateTime            @default(now())
+
+  // Ayrıştırılmış profili üreten model + prompt özeti (DOG-59). Aynı anahtarla
+  // üretilmiş "parsed" sürüm yeni analizde yeniden kullanılıyor; eski kayıtlarda
+  // boş ve yeniden kullanılmıyor.
+  parserKey String?
   analyses  Analysis[]
 
   // Bu sürümü üreten uyarlama(lar). Adlandırılmış ilişki: Adaptation hem

@@ -1916,3 +1916,31 @@ konumları okunuyor (`documents/pdfLayout.ts`):
 
 **Sınır:** Yalnızca iki sütun. Üç sütunlu ya da sütunları sayfa ortasında
 değişen şablonlar ölçülmedi (birikmiş işler #5: CV biçim çeşitliliği).
+
+## K-47 · Analiz paralel; kayıtlı CV'nin profili yeniden kullanılıyor
+
+**Tarih:** 11 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** Analiz hattı (DOG-28, DOG-59, birikmiş işler #2)
+
+**Karar:**
+
+1. **Paralel okuma.** CV ve ilan aynı anda okunuyor. CV'nin üç blok çağrısı
+   (deneyim, eğitim, beceri) ve biçim kontrolü de birbirini beklemiyor. K-09
+   yerel modelin aynı anda tek istek işleyebilmesine dayanıyordu; barındırılan
+   modelde bu kısıt yok.
+2. **Profilin yeniden kullanımı.** `ResumeVersion.parserKey` alanı eklendi.
+   Değeri model, blok prompt'ları, şemalar ve `RESUME_PARSER_REVISION`
+   üzerinden hesaplanan bir özet. Aynı anahtarla üretilmiş "parsed" sürüm
+   varsa CV yeniden ayrıştırılmıyor. Eski kayıtlarda alan boş; bu CV'ler bir
+   kez daha ayrıştırılıyor. Ayrıştırma kodunda yorumu değiştiren bir düzeltme
+   yapılırsa `RESUME_PARSER_REVISION` artırılmalı.
+
+**Ölçüm** (yerel worker, gpt-4.1-mini, aynı CV ve ilan, `Analysis.durationMs`):
+
+| | Önce | Sonra |
+|---|---|---|
+| Yeni yüklenen CV | 11,1 sn | 3,0–3,8 sn |
+| Kayıtlı CV, sonraki analizler | 6,8 sn | 2,0–2,2 sn |
+| Kayıtlı CV token | 2573 | 768 |
+
+Skor değişmedi (45). Aşama ölçümünde CV ayrıştırma ~4,7 sn, ilan ~2,2 sn
+sürüyordu. Spec §13'teki 30 saniye ölçütü üretim modeliyle sağlanıyor.

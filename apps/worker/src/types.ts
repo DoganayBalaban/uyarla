@@ -18,7 +18,12 @@ export interface AnalysisStore {
   /** Biçim kontrolü dosyanın kendisine bakıyor (DOCX iç yapısı). */
   getResumeFile(resumeId: string): Promise<{ buffer: Buffer; filename: string }>
   getJobPostingText(jobPostingId: string): Promise<string>
-  saveResumeVersion(resumeId: string, profile: ResumeProfile): Promise<string>
+  /** Aynı ayrıştırıcı anahtarıyla üretilmiş en son "parsed" sürüm (DOG-59). */
+  findParsedVersion(
+    resumeId: string,
+    parserKey: string,
+  ): Promise<{ id: string; profile: ResumeProfile } | null>
+  saveResumeVersion(resumeId: string, profile: ResumeProfile, parserKey: string): Promise<string>
   saveJobPostingData(jobPostingId: string, data: JobPostingData): Promise<void>
   createAnalysis(input: {
     jobPostingId: string

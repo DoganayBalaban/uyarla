@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { extractResumeProfile } from "./resume.js"
+import { extractResumeProfile, resumeParserKey } from "./resume.js"
 import type { ExtractOptions, LlmProvider } from "../llm/types.js"
 
 /** Şema adına göre önceden belirlenmiş yanıt döndüren sahte sağlayıcı. */
@@ -185,9 +185,40 @@ References available on request`
     expect(skill.input).not.toContain("Acme")
   })
 
+  it("runs the block calls concurrently", async () => {
+    // Üç blok birbirinden bağımsız; sıralı çağrı CV okumasını ~3 kat uzatıyordu (DOG-28).
+    let inFlight = 0
+    let peak = 0
+    const llm: LlmProvider = {
+      async extract<T>(opts: ExtractOptions) {
+        inFlight++
+        peak = Math.max(peak, inFlight)
+        await new Promise((r) => setTimeout(r, 5))
+        inFlight--
+        return { data: RESPONSES[opts.schemaName] as T, tokens: 10 }
+      },
+    }
+
+    const { tokens } = await extractResumeProfile(llm, CV)
+
+    expect(peak).toBe(3)
+    expect(tokens).toBe(30)
+  })
+
   it("takes the summary from code segmentation", async () => {
     const llm = fakeLlm(RESPONSES)
     const { data } = await extractResumeProfile(llm, CV)
     expect(data.summary).toContain("React ile arayüz geliştiriyorum")
+  })
+})
+
+describe("resumeParserKey", () => {
+  it("is stable for the same model", () => {
+    expect(resumeParserKey("gpt-4.1-mini")).toBe(resumeParserKey("gpt-4.1-mini"))
+  })
+
+  it("changes with the model", () => {
+    // Başka modelin ayrıştırdığı profil yeniden kullanılmamalı (DOG-59).
+    expect(resumeParserKey("gpt-4.1-mini")).not.toBe(resumeParserKey("gpt-4.1"))
   })
 })

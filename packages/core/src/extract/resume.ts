@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import type { ExtractResult, LlmProvider } from "../llm/types.js"
 import {
   EducationListSchema,
@@ -40,8 +41,9 @@ function flatten(lines: SkillLines) {
  * kısa ve odaklı çağrı. Küçük modellerde uzun tek çağrının kalitesi hızla
  * düşüyor.
  *
- * Çağrılar sıralı (K-09). Paralelleştirme Görev 13'te değerlendirme
- * setinin süre verisiyle yeniden ele alınacak.
+ * Blok çağrıları paralel (DOG-28). K-09'da yerel model aynı anda tek istek
+ * işleyebildiği için sıralıydı; barındırılan modelde üç blok birbirini
+ * beklemiyor ve CV okuması ~4,7 sn'den en uzun bloğun süresine iniyor.
  */
 export interface ExtractResumeOptions {
   /**
@@ -76,35 +78,33 @@ export async function extractResumeProfile(
   }
 
   // Boş bloklar için çağrı yapılmaz: hem süre hem gereksiz uydurma riski.
-  const experience = blocks.experienceBlock.trim()
-    ? await llm.extract({
-        prompt: EXPERIENCE_PROMPT,
-        schemaName: "resume_experience",
-        schema: experienceListJsonSchema,
-        input: blocks.experienceBlock,
-      })
-    : null
-  if (experience) tokens += experience.tokens
-
-  const education = blocks.educationBlock.trim()
-    ? await llm.extract({
-        prompt: EDUCATION_PROMPT,
-        schemaName: "resume_education",
-        schema: educationListJsonSchema,
-        input: blocks.educationBlock,
-      })
-    : null
-  if (education) tokens += education.tokens
-
-  const skills = blocks.skillsBlock.trim()
-    ? await llm.extract({
-        prompt: SKILLS_PROMPT,
-        schemaName: "resume_skills",
-        schema: skillLinesJsonSchema,
-        input: blocks.skillsBlock,
-      })
-    : null
-  if (skills) tokens += skills.tokens
+  const [experience, education, skills] = await Promise.all([
+    blocks.experienceBlock.trim()
+      ? llm.extract({
+          prompt: EXPERIENCE_PROMPT,
+          schemaName: "resume_experience",
+          schema: experienceListJsonSchema,
+          input: blocks.experienceBlock,
+        })
+      : null,
+    blocks.educationBlock.trim()
+      ? llm.extract({
+          prompt: EDUCATION_PROMPT,
+          schemaName: "resume_education",
+          schema: educationListJsonSchema,
+          input: blocks.educationBlock,
+        })
+      : null,
+    blocks.skillsBlock.trim()
+      ? llm.extract({
+          prompt: SKILLS_PROMPT,
+          schemaName: "resume_skills",
+          schema: skillLinesJsonSchema,
+          input: blocks.skillsBlock,
+        })
+      : null,
+  ])
+  for (const call of [experience, education, skills]) if (call) tokens += call.tokens
 
   // Ad ve başlık kodda çıkarılıyor, LLM'e sorulmuyor: deterministik bir iş
   // ve kırıldığında testler kırmızıya dönüyor (bkz. parseHeader).
@@ -121,4 +121,33 @@ export async function extractResumeProfile(
   })
 
   return { data: profile, tokens }
+}
+
+/**
+ * Ayrıştırma kodunda ya da prompt'larda yorum değiştiren bir düzeltme
+ * yapıldığında artırılır: eski profiller yeniden kullanılmaz, CV bir kez daha
+ * okunur (DOG-59). Prompt ve şema değişiklikleri anahtara kendiliğinden giriyor.
+ */
+const RESUME_PARSER_REVISION = 1
+
+/**
+ * Kayıtlı bir CV'nin ayrıştırılmış profili, aynı anahtarla üretildiyse yeniden
+ * kullanılıyor. Model, prompt ya da şema değişince anahtar da değişiyor.
+ */
+export function resumeParserKey(modelId: string): string {
+  return createHash("sha256")
+    .update(
+      JSON.stringify([
+        RESUME_PARSER_REVISION,
+        modelId,
+        EXPERIENCE_PROMPT,
+        EDUCATION_PROMPT,
+        SKILLS_PROMPT,
+        experienceListJsonSchema,
+        educationListJsonSchema,
+        skillLinesJsonSchema,
+      ]),
+    )
+    .digest("hex")
+    .slice(0, 16)
 }

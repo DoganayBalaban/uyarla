@@ -41,13 +41,23 @@ export const prismaStore: AnalysisStore = {
     return posting.rawText
   },
 
-  async saveResumeVersion(resumeId, profile) {
+  async findParsedVersion(resumeId, parserKey) {
+    const version = await prisma.resumeVersion.findFirst({
+      where: { resumeId, source: "parsed", parserKey },
+      orderBy: { versionNo: "desc" },
+      select: { id: true, profile: true },
+    })
+    return version ? { id: version.id, profile: version.profile as never } : null
+  },
+
+  async saveResumeVersion(resumeId, profile, parserKey) {
     const existing = await prisma.resumeVersion.count({ where: { resumeId } })
     const version = await prisma.resumeVersion.create({
       data: {
         resumeId,
         profile: profile as unknown as object,
         source: "parsed",
+        parserKey,
         versionNo: existing + 1,
       },
     })
