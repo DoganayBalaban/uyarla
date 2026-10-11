@@ -1,0 +1,43 @@
+{
+  "id": "cv-d__ilan-6",
+  "resumeId": "cv-d-pazarlama",
+  "postingId": "ilan-6",
+  "note": "LinkedIn PDF çıktısı (iki sütun, İngilizce başlıklar), performans pazarlamacısı × dijital pazarlama ilanı. Meta ve Google deneyimi gerçek ama ilanın yazımıyla değil ('Facebook ve Instagram reklam kampanyaları'); kaçırmayı yakalar. Soft gereksinimlerin ikisi maddelerde somut karşılık buluyor.",
+  "expectations": [
+    {
+      "match": "Meta Ads, Google Ads, LinkedIn Ads",
+      "shouldMatch": true
+    },
+    {
+      "match": "Türkiye ve yurt dışı pazarlarını",
+      "shouldMatch": true,
+      "evidenceContains": "Almanya ve Hollanda"
+    },
+    {
+      "match": "GA4, Google Tag Manager ve Looker Studio",
+      "shouldMatch": true
+    },
+    {
+      "match": "Trello, Asana veya Jira",
+      "shouldMatch": true,
+      "evidenceContains": "Trello"
+    },
+    {
+      "match": "İş takibi ve raporlama yönü",
+      "shouldMatch": true
+    },
+    {
+      "match": "diğer ekiplerle koordineli",
+      "shouldMatch": true,
+      "evidenceContains": "Kreatif ekiple"
+    },
+    {
+      "match": "AI araçlarını",
+      "shouldMatch": false
+    },
+    {
+      "match": "medikal estetik",
+      "shouldMatch": false
+    }
+  ]
+}

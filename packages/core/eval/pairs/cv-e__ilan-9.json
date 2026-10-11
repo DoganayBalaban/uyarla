@@ -1,0 +1,29 @@
+{
+  "id": "cv-e__ilan-9",
+  "resumeId": "cv-e-muhasebe",
+  "postingId": "ilan-9",
+  "note": "Muhasebeci CV'si, İK ilanı. Uyumsuz çift; yalnızca Excel ortak.",
+  "expectations": [
+    {
+      "match": "Perkotek",
+      "shouldMatch": false
+    },
+    {
+      "match": "İşe alım, oryantasyon",
+      "shouldMatch": false
+    },
+    {
+      "match": "4857 sayılı İş Kanunu",
+      "shouldMatch": false
+    },
+    {
+      "match": "Kariyer.net ve LinkedIn",
+      "shouldMatch": false
+    },
+    {
+      "match": "özellikle Excel'i",
+      "shouldMatch": true,
+      "evidenceContains": "Excel"
+    }
+  ]
+}

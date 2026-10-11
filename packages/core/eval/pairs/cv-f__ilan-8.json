@@ -1,0 +1,30 @@
+{
+  "id": "cv-f__ilan-8",
+  "resumeId": "cv-f-satis",
+  "postingId": "ilan-8",
+  "note": "Tablolu Word şablonu, iş makinesi satış mühendisi × iş makinesi satış danışmanı ilanı. Beceriler tablo hücrelerinde (etiket ve düzey ayrı sütunlarda).",
+  "expectations": [
+    {
+      "match": "Mühendislik bölümlerinden",
+      "shouldMatch": true,
+      "evidenceContains": "Makine Mühendisliği"
+    },
+    {
+      "match": "İyi derecede İngilizce",
+      "shouldMatch": true
+    },
+    {
+      "match": "Office Programlarını",
+      "shouldMatch": true,
+      "evidenceContains": "Office"
+    },
+    {
+      "match": "Aktif araç kullanabilen",
+      "shouldMatch": true
+    },
+    {
+      "match": "seyahat engeli olmayan",
+      "shouldMatch": false
+    }
+  ]
+}

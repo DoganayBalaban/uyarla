@@ -1,0 +1,40 @@
+{
+  "id": "cv-g__ilan-9",
+  "resumeId": "cv-g-ik",
+  "postingId": "ilan-9",
+  "note": "Başlıksız düz metin CV, otomotiv yan sanayinde İK uzmanı × fabrika İK ilanı. Tuzak: aday puantajı 'PDKS sistemi'nden yapıyor; Perkotek bir PDKS markası ama CV'de geçmiyor.",
+  "expectations": [
+    {
+      "match": "İnsan Kaynakları Yönetimi veya İktisadi",
+      "shouldMatch": true,
+      "evidenceContains": "Çalışma Ekonomisi"
+    },
+    {
+      "match": "insan kaynakları alanında en az 3-5 yıl",
+      "shouldMatch": true
+    },
+    {
+      "match": "Perkotek",
+      "shouldMatch": false
+    },
+    {
+      "match": "İşe alım, oryantasyon",
+      "shouldMatch": true
+    },
+    {
+      "match": "4857 sayılı İş Kanunu",
+      "shouldMatch": true,
+      "evidenceContains": "4857"
+    },
+    {
+      "match": "özellikle Excel'i",
+      "shouldMatch": true,
+      "evidenceContains": "Excel"
+    },
+    {
+      "match": "Kariyer.net ve LinkedIn",
+      "shouldMatch": true,
+      "evidenceContains": "Kariyer.net"
+    }
+  ]
+}
