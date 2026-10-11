@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { RETENTION_DAYS, staleAnonymousWhere, cutoffDate } from "@/server/cleanupAnonymousUsers"
+import { RETENTION_DAYS, staleAnonymousWhere, cutoffDate, expiredVerificationWhere } from "@/server/cleanupAnonymousUsers"
 
 const NOW = new Date("2026-09-27T12:00:00.000Z")
 
@@ -44,5 +44,13 @@ describe("staleAnonymousWhere", () => {
     expect(staleAnonymousWhere(NOW, 30).createdAt).toEqual({
       lt: new Date("2026-08-28T12:00:00.000Z"),
     })
+  })
+})
+
+describe("expiredVerificationWhere", () => {
+  it("matches only rows that expired before now", () => {
+    // DOG-33: magic link satırı 15 dakikada geçersiz oluyor; süresi dolmamış
+    // bağlantı bozulmasın diye `lt`.
+    expect(expiredVerificationWhere(NOW)).toEqual({ expiresAt: { lt: NOW } })
   })
 })

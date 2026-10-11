@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { describe, it, expect, afterEach, beforeAll } from "vitest"
 import { prisma } from "@uyarla/db"
 import { deletionOperations } from "@/server/deleteAccount"
-import { cleanupAnonymousUsers } from "@/server/cleanupAnonymousUsers"
+import { cleanupAnonymousUsers, cleanupExpiredVerifications } from "@/server/cleanupAnonymousUsers"
 
 const toClean: string[] = []
 let storage: string
@@ -168,5 +168,31 @@ describe("anonymous cleanup · real database", () => {
 
     expect(result.cutoff.toISOString()).toBe("2020-05-25T12:00:00.000Z")
     expect(await prisma.user.findUnique({ where: { id: tenDay.id } })).toBeNull()
+  })
+})
+
+describe("cleanupExpiredVerifications (DOG-33)", () => {
+  it("deletes expired rows, keeps live ones, and deletes nothing in dry run", async () => {
+    const tag = `test-${Date.now()}-${Math.random()}`
+    const minute = 60 * 1000
+    await prisma.verification.createMany({
+      data: [
+        { id: `${tag}-old`, identifier: tag, value: "{}", expiresAt: new Date(NOW.getTime() - minute) },
+        { id: `${tag}-live`, identifier: tag, value: "{}", expiresAt: new Date(NOW.getTime() + 15 * minute) },
+      ],
+    })
+    try {
+      const dry = await cleanupExpiredVerifications(prisma, { now: NOW, dryRun: true })
+      expect(dry.found).toBeGreaterThanOrEqual(1)
+      expect(dry.deleted).toBe(0)
+      expect(await prisma.verification.count({ where: { identifier: tag } })).toBe(2)
+
+      const result = await cleanupExpiredVerifications(prisma, { now: NOW })
+      expect(result.deleted).toBeGreaterThanOrEqual(1)
+      const left = await prisma.verification.findMany({ where: { identifier: tag }, select: { id: true } })
+      expect(left.map((v) => v.id)).toEqual([`${tag}-live`])
+    } finally {
+      await prisma.verification.deleteMany({ where: { identifier: tag } })
+    }
   })
 })

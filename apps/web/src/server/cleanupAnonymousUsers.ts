@@ -101,3 +101,32 @@ export async function cleanupAnonymousUsers(
   const result = await deleteUsers(prisma, ids)
   return { found: ids.length, cutoff: condition.createdAt.lt, ...result }
 }
+
+/**
+ * Süresi geçmiş doğrulama satırlarının koşulu (DOG-33).
+ *
+ * Magic link satırı e-postayı `value` alanında taşıyor ve kullanıcıya
+ * bağlanmıyor; hesap silme onu bulamıyor (K-36). Satır 15 dakikada geçersiz
+ * oluyor, süresi geçince saklamanın bir gerekçesi kalmıyor. `lt`: süresi tam
+ * şu an dolan bağlantıya dokunulmuyor.
+ */
+export function expiredVerificationWhere(nowDate: Date): { expiresAt: { lt: Date } } {
+  return { expiresAt: { lt: nowDate } }
+}
+
+export interface VerificationCleanupResult {
+  found: number
+  deleted: number
+}
+
+/** Süresi geçmiş doğrulama satırlarını siler; deneme kipinde yalnızca sayar. */
+export async function cleanupExpiredVerifications(
+  prisma: Db,
+  { now: nowDate = new Date(), dryRun = false }: Pick<CleanupOptions, "now" | "dryRun"> = {},
+): Promise<VerificationCleanupResult> {
+  const where = expiredVerificationWhere(nowDate)
+  const found = await prisma.verification.count({ where })
+  if (dryRun || found === 0) return { found, deleted: 0 }
+  const { count } = await prisma.verification.deleteMany({ where })
+  return { found, deleted: count }
+}

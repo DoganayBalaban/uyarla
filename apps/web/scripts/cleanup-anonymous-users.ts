@@ -1,8 +1,13 @@
 import { prisma } from "@uyarla/db"
-import { RETENTION_DAYS, cleanupAnonymousUsers } from "../src/server/cleanupAnonymousUsers"
+import {
+  RETENTION_DAYS,
+  cleanupAnonymousUsers,
+  cleanupExpiredVerifications,
+} from "../src/server/cleanupAnonymousUsers"
 
 /**
- * Anonim kullanıcı temizlik betiği.
+ * Anonim kullanıcı temizlik betiği. Süresi geçmiş doğrulama satırlarını da
+ * topluyor (DOG-33): ikisi aynı zamanlanmış göreve bağlanacak.
  *
  * Zamanlanmış görev altyapısı yok (K-02: worker ayrı bir sunucuda, Vercel'in
  * fonksiyonları sürekli çalışamıyor). Bu yüzden mantık `src/server/cleanupAnonymousUsers.ts`'te
@@ -30,11 +35,13 @@ async function main(): Promise<void> {
   }
 
   const result = await cleanupAnonymousUsers(prisma, { days, dryRun: !shouldDelete })
+  const verifications = await cleanupExpiredVerifications(prisma, { dryRun: !shouldDelete })
 
   const cutoffDay = result.cutoff.toISOString().slice(0, 10)
   if (!shouldDelete) {
     console.log(
-      `[temizlik] DENEME · ${cutoffDay} tarihinden eski ${result.found} anonim kullanıcı bulundu.`,
+      `[temizlik] DENEME · ${cutoffDay} tarihinden eski ${result.found} anonim kullanıcı, ` +
+        `süresi geçmiş ${verifications.found} doğrulama satırı bulundu.`,
     )
     console.log("[temizlik] Silmek için --delete ekle.")
     return
@@ -42,7 +49,7 @@ async function main(): Promise<void> {
 
   console.log(
     `[temizlik] ${cutoffDay} tarihinden eski ${result.deletedUsers} anonim kullanıcı silindi ` +
-      `(${result.files.deleted} CV dosyası).`,
+      `(${result.files.deleted} CV dosyası), süresi geçmiş ${verifications.deleted} doğrulama satırı silindi.`,
   )
   // Atlanan yol bir veri bütünlüğü işareti: depo dizini değişmiş ya da satır
   // bozuk olabilir. Sessizce geçmek, diskte kişisel veri bırakmak olurdu.
