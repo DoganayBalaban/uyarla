@@ -128,7 +128,8 @@ export async function extractResumeProfile(
  * yapıldığında artırılır: eski profiller yeniden kullanılmaz, CV bir kez daha
  * okunur (DOG-59). Prompt ve şema değişiklikleri anahtara kendiliğinden giriyor.
  */
-const RESUME_PARSER_REVISION = 1
+// 2: Europass, LinkedIn ve tablolu şablon bölümlemesi (DOG-60, K-49).
+const RESUME_PARSER_REVISION = 2
 
 /**
  * Kayıtlı bir CV'nin ayrıştırılmış profili, aynı anahtarla üretildiyse yeniden
