@@ -46,11 +46,25 @@ const GERUND =
 
 /** Başta duran ve kavrama ait olmayan kalıplar. */
 const FRONT_PADDING =
-  /^(en az\s+\d+\+?\s*yıl(lık)?\s+|at least\s+\d+\+?\s*years?\s+(of\s+)?|\d+\+?\s*yıl(lık)?\s+|\d+\+?\s*years?\s+(of\s+)?|hands on with\s+|experience (with|in)\s+|deneyim(i|li)?\s+|tercihen\s+|preferably\s+|good\s+|strong\s+|solid\s+|equivalent\s+|iyi derecede\s+|çok iyi( derecede)?\s+|ileri (düzey|seviye)(de)?\s+|orta (düzey|seviye)(de)?\s+|akıcı\s+|fluent\s+|proficient in\s+|good command of\s+|takım içinde\s+|ekip içinde\s+|profesyonel\s+|professional\s+|temel\s+|basic\s+)/i
+  /^(en az\s+\d+\+?\s*yıl(lık)?\s+|at least\s+\d+\+?\s*years?\s+(of\s+)?|\d+\+?\s*yıl(lık)?\s+|\d+\+?\s*years?\s+(of\s+)?|hands on with\s+|experience (with|in)\s+|deneyim(i|li)?\s+|tercihen\s+|preferably\s+|good\s+|strong\s+|solid\s+|equivalent\s+|iyi derecede\s+|çok iyi( derecede)?\s+|ileri (düzey|seviye)(de)?\s+|orta (düzey|seviye)(de)?\s+|akıcı\s+|fluent\s+|proficient in\s+|good command of\s+|takım içinde\s+|ekip içinde\s+|profesyonel\s+|professional\s+|temel\s+|basic\s+|özellikle\s+|especially\s+)/i
 
 /** Sonda duran ve kavrama ait olmayan kalıplar. */
 const BACK_PADDING =
-  /\s+(deneyim(i|e|leri|lerine)?|tecrübe(si|ye|leri)?|bilgi(si|sine|leri)?|bilgisi olan|süreç(i|e|leri|lerine|lerinde|lerini)?|süreci|teknoloji(si|leri|lerine)?|yetkinli(k|ği|kleri)|kullanım(ı)?|konu(sunda|larında|larına)|alan(ında|larında)|hakimiyet(i)?|hakim|sahibi|sahip|uzmanlığı|mezun(u|ları)?|bölüm(ü|ünden|lerinden)?|beceri(si|leri)|zorunludur|şarttır|gerekmektedir|beklenmektedir|aranmaktadır|tercih sebebidir|vb|vs|etc|gibi|experience|knowledge|skills?|frameworks?|technologies|tools?|proficiency|expertise|background|practices)$/i
+  /\s+(deneyim(i|e|ine|leri|lerine)?|program(ı|ını|ları|larını|larına)?|güçlü|kuvvetli|gelişmiş|yüksek|tecrübe(si|ye|leri)?|bilgi(si|sine|leri)?|bilgisi olan|süreç(i|e|leri|lerine|lerinde|lerini)?|süreci|teknoloji(si|leri|lerine)?|yetkinli(k|ği|kleri)|kullanım(ı)?|konu(sunda|larında|larına)|alan(ında|larında)|hakimiyet(i)?|hakim|sahibi|sahip|uzmanlığı|mezun(u|ları)?|bölüm(ü|ünden|lerinden)?|beceri(si|leri)|zorunludur|şarttır|gerekmektedir|beklenmektedir|aranmaktadır|tercih sebebidir|vb|vs|etc|gibi|experience|knowledge|skills?|frameworks?|technologies|tools?|proficiency|expertise|background|practices)$/i
+
+/**
+ * Sondaki sıfat-fiil ve ikinci tekil kişi ekli fiil adı: "Excel'i etkin
+ * kullanabilen", "bilgi sahibi olmanı", "kullanabilmeni". Yazılım dışı
+ * ilanlar gereksinimi okura hitap eden cümleyle yazıyor (DOG-61).
+ */
+const VERB_TAIL = /\s+\p{L}+(?:abilen|ebilen|abilecek|ebilecek|abilmeni|ebilmeni|manı|meni)$/u
+
+/** Cümle ortasındaki düzey ve kullanım dolguları: "orta seviyede", "aktif olarak". */
+const MID_PADDING =
+  /\s+(?:(?:orta|ileri|iyi|temel) (?:seviyede|düzeyde)|(?:aktif|etkin) (?:olarak|şekilde)|etkin)(?=\s|$)/giu
+
+/** Kesme işaretli ek: "Excel'i" → "Excel". */
+const APOSTROPHE_SUFFIX = /(\p{L})['’]\p{Ll}{1,5}(?=\s|$)/gu
 
 /** Başka kelimeden sonra gelen iş adları: "tasarım sistemi geliştirme" → "tasarım sistemi". */
 const BACKEND_WORK = /\s+(geliştirme|geliştirilmesi|oluşturma|yazma|kurma|kurulumu|çalışma|kullanma|yapma|tasarlama)$/i
@@ -262,11 +276,18 @@ function isGeneralEducation(text: string): boolean {
 }
 
 function cleanup(fragment: string): string {
-  let p = fragment.replace(/\s+/g, " ").trim()
+  let p = fragment
+    .replace(/\s+/g, " ")
+    .replace(APOSTROPHE_SUFFIX, "$1")
+    .replace(MID_PADDING, "")
+    .trim()
   // Dolgular birden çok katman olabiliyor: "at least 3 years of hands on with X"
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 6; i++) {
     const before = p
+    // Sondaki noktalama dolgunun tanınmasını engelliyordu: "Logo vb." (DOG-61).
+    p = p.replace(/[.,;:]+$/, "").trim()
     p = stripVerbs(p)
+    p = trimTrailing(p, VERB_TAIL).trim()
     p = trimTrailing(trimLeading(p, FRONT_PADDING), BACK_PADDING).trim()
     if (p.includes(" ")) {
       p = trimTrailing(trimTrailing(p, BACKEND_WORK), BACKEND_TOGETHER).trim()

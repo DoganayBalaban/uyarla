@@ -2035,3 +2035,52 @@ düzeltmeleri:
 "ERP sistemleri (Logo vb.)" CV'deki "Logo Tiger"ı, "MS Office programlarını,
 özellikle Excel'i" CV'deki "Excel"i bulamıyor. Yazılım dışı ilanlarda
 gereksinimler daha uzun cümleler hâlinde yazılıyor (K-23).
+
+## K-50 · Kavram ayırma yazılım dışı ilanların cümle kalıplarını tanıyor
+
+**Tarih:** 11 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** Kavram ayırma (DOG-61)
+
+**Sorun:** Yazılım dışı ilanlar gereksinimleri okura hitap eden cümlelerle
+yazıyor. Temizleme kuralları bu kalıpları tanımadığı için kavram olarak
+cümlenin tamamı aranıyordu:
+
+| Gereksinim | Önce | Sonra |
+|---|---|---|
+| MS Excel programını orta seviyede kullanabilmeni | cümlenin tamamı | MS Excel |
+| ERP sistemleri (Logo vb.) konusunda bilgi sahibi olmanı | "ERP sistemleri konusunda bilgi sahibi olmanı", eş anlamlı "Logo vb" | ERP sistemleri, eş anlamlı Logo |
+| MS Office programlarını, özellikle Excel'i etkin kullanabilen | "özellikle Excel'i etkin kullanabilen" | MS Office, Excel |
+| 3 yıl muhasebe deneyimine sahip olmanı | "muhasebe deneyimine sahip olmanı" | muhasebe |
+
+**Eklenen kurallar:**
+
+- Sondaki sıfat-fiil ve ikinci tekil kişi ekli fiil adı (`-abilen`,
+  `-abilecek`, `-manı/-meni`, `-abilmeni`).
+- Cümle ortasındaki düzey ve kullanım dolguları ("orta seviyede", "aktif
+  olarak", "etkin").
+- Kesme işaretli ek ("Excel'i" → "Excel").
+- Sondaki noktalama ("vb.").
+- Sonda "programı/programlarını", "güçlü", "kuvvetli", "gelişmiş", "yüksek";
+  başta "özellikle".
+
+"-ması/-mesi" bilerek dışarıda kaldı: "kod incelemesi" gibi adları kesiyordu.
+
+**Ölçüm:** Önbellekteki gereksinim metinleri sabit tutuldu. Kavramlar önce
+main'deki kodla, sonra yeni kodla yeniden hesaplandı; LLM çalıştırılmadı.
+
+| | main | Yeni |
+|---|---|---|
+| İsabet | %88,9 | **%91,9** |
+| Kaçırma | 10 | **7** |
+| Uydurma | 1 | 1 |
+
+- Europass muhasebeci (cv-e × ilan-7): 19 → 59 puan, beklentilerin hepsi
+  tutuyor.
+- Eski 10 çiftte yalnızca cv-c × ilan-2 değişti (15 → 18). "paydaş yönetimi
+  güçlü olmak" artık "paydaş yönetimi" kavramına iniyor ve CV'deki "Proje
+  Yönetimi" becerisiyle anlamsal olarak eşleşiyor. Bu, K-44'teki sınıfın (ortak
+  baş isim "yönetimi") ikinci örneği. Beklentisi tanımlı olmadığı için uydurma
+  sayısına yansımıyor. Set büyüdükçe bu sınıf birlikte ele alınmalı.
+
+**Not:** Önbellekteki kavramlar main'deki koddan da eskiydi (ör. "veya"
+seçenek birleştirmesi yoktu). Kavram kodu değiştiğinde önbellek
+yeniden hesaplanmalı; LLM çağrısı gerekmiyor.

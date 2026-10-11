@@ -163,3 +163,30 @@ describe("splitIntoConcepts · Turkish constructions", () => {
     ).not.toBe("Üniversite mezunu")
   })
 })
+
+describe("splitIntoConcepts · non-software postings (DOG-61)", () => {
+  // Yazılım dışı ilanların cümle kalıpları; kavram olarak cümlenin tamamı
+  // aranıyor ve hiçbir CV'de bulunmuyordu.
+  it("drops a second-person verbal noun and a level phrase", () => {
+    expect(termList("MS Excel programını orta seviyede kullanabilmeni")).toEqual(["MS Excel"])
+    expect(termList("3 yıl muhasebe deneyimine sahip olmanı")).toEqual(["muhasebe"])
+  })
+
+  it("keeps the example inside a parenthesis without 'vb.'", () => {
+    expect(splitIntoConcepts("ERP sistemleri (Logo vb.) konusunda bilgi sahibi olmanı")).toEqual([
+      { term: "ERP sistemleri", synonyms: ["Logo"] },
+    ])
+  })
+
+  it("drops a participle, an apostrophe suffix and soft qualifiers", () => {
+    expect(
+      termList("MS Office programlarını, özellikle Excel'i etkin kullanabilen, raporlama becerisi güçlü"),
+    ).toEqual(["MS Office", "Excel", "raporlama"])
+    expect(termList("Office Programlarını kullanabilen")).toEqual(["Office"])
+    expect(termList("Perkotek programını aktif olarak kullanabilen")).toEqual(["Perkotek"])
+  })
+
+  it("keeps 'aktif' when it is part of the requirement", () => {
+    expect(termList("Aktif araç kullanabilen")).toEqual(["Aktif araç"])
+  })
+})
