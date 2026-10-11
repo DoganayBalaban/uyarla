@@ -1,0 +1,27 @@
+{
+  "id": "cv-e__ilan-7",
+  "resumeId": "cv-e-muhasebe",
+  "postingId": "ilan-7",
+  "note": "Europass DOCX (etiket–içerik tablosu), genel muhasebe uzmanı × muhasebe ilanı. Neredeyse birebir uyum; Europass başlıkları ('EĞİTİM VE ÖĞRETİM', 'KİŞİSEL BECERİLER') bölümlemeyi sınar.",
+  "expectations": [
+    {
+      "match": "İktisat, İşletme, Maliye",
+      "shouldMatch": true,
+      "evidenceContains": "İktisat"
+    },
+    {
+      "match": "3 yıl muhasebe deneyimine",
+      "shouldMatch": true
+    },
+    {
+      "match": "MS Excel programını",
+      "shouldMatch": true,
+      "evidenceContains": "Excel"
+    },
+    {
+      "match": "ERP sistemleri (Logo",
+      "shouldMatch": true,
+      "evidenceContains": "Logo"
+    }
+  ]
+}

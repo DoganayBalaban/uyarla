@@ -1,0 +1,28 @@
+{
+  "id": "cv-f__ilan-6",
+  "resumeId": "cv-f-satis",
+  "postingId": "ilan-6",
+  "note": "Satış mühendisi CV'si, dijital pazarlama ilanı. Uyumsuz çift: uydurmayı yakalar ('Salesforce CRM' ≠ reklam araçları).",
+  "expectations": [
+    {
+      "match": "Meta Ads, Google Ads, LinkedIn Ads",
+      "shouldMatch": false
+    },
+    {
+      "match": "GA4, Google Tag Manager ve Looker Studio",
+      "shouldMatch": false
+    },
+    {
+      "match": "Trello, Asana veya Jira",
+      "shouldMatch": false
+    },
+    {
+      "match": "AI araçlarını",
+      "shouldMatch": false
+    },
+    {
+      "match": "Türkiye ve yurt dışı pazarlarını",
+      "shouldMatch": false
+    }
+  ]
+}

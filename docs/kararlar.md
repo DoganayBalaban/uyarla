@@ -1944,3 +1944,48 @@ değişen şablonlar ölçülmedi (birikmiş işler #5: CV biçim çeşitliliği
 
 Skor değişmedi (45). Aşama ölçümünde CV ayrıştırma ~4,7 sn, ilan ~2,2 sn
 sürüyordu. Spec §13'teki 30 saniye ölçütü üretim modeliyle sağlanıyor.
+
+## K-48 · Değerlendirme seti 18 çifte çıktı: yazılım dışı meslekler ve CV biçimleri
+
+**Tarih:** 11 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** Ölçüm (DOG-29, DOG-30, birikmiş işler #4 ve #5)
+
+**Eklenenler:**
+
+- **İlanlar:** LinkedIn'den Apify ile çekilen dört gerçek ilan: dijital pazarlama
+  (ilan-6), muhasebe (ilan-7), saha satış (ilan-8) ve İK (ilan-9). Üçü `soft`
+  türü gereksinim içeriyor; set ilk kez soft gereksinim ölçüyor.
+- **CV'ler:** dört sentetik CV, her biri farklı biçimde. Gerçek dosya olarak
+  üretilip (`eval/sources/cv-dosyalari/uret.ts`) ürünün `extractText` yolundan
+  geçirildi:
+  - cv-d: LinkedIn PDF çıktısı
+  - cv-e: Europass DOCX
+  - cv-f: tablolu Word şablonu
+  - cv-g: başlıksız düz metin
+- **Çiftler:** sekiz yeni çift, her CV için bir uyumlu, bir uyumsuz. Beklentiler
+  CV'lerin içeriğine göre yazıldı; yoruma açık gereksinimler (VUK bilgisi, B1
+  İngilizcenin "iyi derecede" sayılması gibi) beklentiye alınmadı.
+
+**Taban çizgisi** (`pnpm eval`, gpt-4.1-mini):
+
+| | 10 çift | 18 çift |
+|---|---|---|
+| İsabet | %94,6 | %84,8 |
+| Kaçırma | 2 | 14 |
+| Uydurma | 1 | 1 |
+
+**Bulgular:** Yeni kaçırmaların çoğu bölümlemeden geliyor, skor kurallarından
+değil:
+
+- **Europass:** ilana birebir uyan muhasebeci 0 puan aldı.
+  - "EĞİTİM VE ÖĞRETİM" ve "KİŞİSEL BECERİLER" başlıkları tanınmıyor; eğitim
+    ve beceriler boş kalıyor.
+  - Ad "KİŞİSEL BİLGİLER" olarak çıkıyor.
+- **LinkedIn PDF:**
+  - Ad "Contact" olarak çıkıyor.
+  - "Top Skills" başlığı tanınmıyor.
+- **Tablolu şablon:**
+  - Beceri olarak tablonun başlık ve düzey hücreleri okunuyor ("Alan",
+    "Düzey", "İleri").
+  - Asıl beceriler kayboluyor.
+- **Başlıksız düz metin:** beklenenden iyi çalışıyor; geri çekilme yolu bu
+  vakada sağlam.

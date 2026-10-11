@@ -1,15 +1,95 @@
 {
   "note": "Değerlendirme çiftleri. resumeId ve postingId değerleri sources/ altındaki dosya adlarıdır. Karışım bilinçli: iyi eşleşmesi beklenen çiftler kaçırmayı, kötü eşleşmesi beklenenler uydurmayı yakalar.",
   "pairs": [
-    { "resumeId": "cv-a-ai-engineer", "postingId": "ilan-1", "expectation": "yüksek" },
-    { "resumeId": "cv-a-ai-engineer", "postingId": "ilan-2", "expectation": "yüksek" },
-    { "resumeId": "cv-a-ai-engineer", "postingId": "ilan-3", "expectation": "orta" },
-    { "resumeId": "cv-a-ai-engineer", "postingId": "ilan-5", "expectation": "orta" },
-    { "resumeId": "cv-b-test-engineer", "postingId": "ilan-1", "expectation": "düşük" },
-    { "resumeId": "cv-b-test-engineer", "postingId": "ilan-3", "expectation": "düşük" },
-    { "resumeId": "cv-b-test-engineer", "postingId": "ilan-4", "expectation": "düşük" },
-    { "resumeId": "cv-c-yeni-mezun", "postingId": "ilan-1", "expectation": "düşük" },
-    { "resumeId": "cv-c-yeni-mezun", "postingId": "ilan-2", "expectation": "düşük" },
-    { "resumeId": "cv-c-yeni-mezun", "postingId": "ilan-4", "expectation": "orta" }
+    {
+      "resumeId": "cv-a-ai-engineer",
+      "postingId": "ilan-1",
+      "expectation": "yüksek"
+    },
+    {
+      "resumeId": "cv-a-ai-engineer",
+      "postingId": "ilan-2",
+      "expectation": "yüksek"
+    },
+    {
+      "resumeId": "cv-a-ai-engineer",
+      "postingId": "ilan-3",
+      "expectation": "orta"
+    },
+    {
+      "resumeId": "cv-a-ai-engineer",
+      "postingId": "ilan-5",
+      "expectation": "orta"
+    },
+    {
+      "resumeId": "cv-b-test-engineer",
+      "postingId": "ilan-1",
+      "expectation": "düşük"
+    },
+    {
+      "resumeId": "cv-b-test-engineer",
+      "postingId": "ilan-3",
+      "expectation": "düşük"
+    },
+    {
+      "resumeId": "cv-b-test-engineer",
+      "postingId": "ilan-4",
+      "expectation": "düşük"
+    },
+    {
+      "resumeId": "cv-c-yeni-mezun",
+      "postingId": "ilan-1",
+      "expectation": "düşük"
+    },
+    {
+      "resumeId": "cv-c-yeni-mezun",
+      "postingId": "ilan-2",
+      "expectation": "düşük"
+    },
+    {
+      "resumeId": "cv-c-yeni-mezun",
+      "postingId": "ilan-4",
+      "expectation": "orta"
+    },
+    {
+      "resumeId": "cv-d-pazarlama",
+      "postingId": "ilan-6",
+      "expectation": "yüksek"
+    },
+    {
+      "resumeId": "cv-d-pazarlama",
+      "postingId": "ilan-8",
+      "expectation": "düşük"
+    },
+    {
+      "resumeId": "cv-e-muhasebe",
+      "postingId": "ilan-7",
+      "expectation": "yüksek"
+    },
+    {
+      "resumeId": "cv-e-muhasebe",
+      "postingId": "ilan-9",
+      "expectation": "düşük"
+    },
+    {
+      "resumeId": "cv-f-satis",
+      "postingId": "ilan-8",
+      "expectation": "yüksek"
+    },
+    {
+      "resumeId": "cv-f-satis",
+      "postingId": "ilan-6",
+      "expectation": "düşük"
+    },
+    {
+      "resumeId": "cv-g-ik",
+      "postingId": "ilan-9",
+      "expectation": "yüksek"
+    },
+    {
+      "resumeId": "cv-g-ik",
+      "postingId": "ilan-7",
+      "expectation": "düşük"
+    }
   ]
 }

@@ -1,0 +1,25 @@
+{
+  "id": "cv-g__ilan-7",
+  "resumeId": "cv-g-ik",
+  "postingId": "ilan-7",
+  "note": "İK CV'si, muhasebe ilanı. Uyumsuz çift; yalnızca Excel ortak.",
+  "expectations": [
+    {
+      "match": "3 yıl muhasebe deneyimine",
+      "shouldMatch": false
+    },
+    {
+      "match": "VUK konusunda",
+      "shouldMatch": false
+    },
+    {
+      "match": "ERP sistemleri (Logo",
+      "shouldMatch": false
+    },
+    {
+      "match": "MS Excel programını",
+      "shouldMatch": true,
+      "evidenceContains": "Excel"
+    }
+  ]
+}

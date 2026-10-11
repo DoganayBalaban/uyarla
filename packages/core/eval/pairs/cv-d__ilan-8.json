@@ -1,0 +1,28 @@
+{
+  "id": "cv-d__ilan-8",
+  "resumeId": "cv-d-pazarlama",
+  "postingId": "ilan-8",
+  "note": "Pazarlamacı CV'si, saha satış ilanı. Uyumsuz çift: mühendislik, araç ve seyahat CV'de yok.",
+  "expectations": [
+    {
+      "match": "Mühendislik bölümlerinden",
+      "shouldMatch": false
+    },
+    {
+      "match": "İyi derecede İngilizce",
+      "shouldMatch": true
+    },
+    {
+      "match": "Aktif araç kullanabilen",
+      "shouldMatch": false
+    },
+    {
+      "match": "Office Programlarını",
+      "shouldMatch": false
+    },
+    {
+      "match": "seyahat engeli olmayan",
+      "shouldMatch": false
+    }
+  ]
+}
