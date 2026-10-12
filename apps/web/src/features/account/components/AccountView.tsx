@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 import {
   CircleCheck,
+  Download,
   LayoutGrid,
   LoaderCircle,
   Mail,
@@ -117,7 +118,7 @@ export function AccountView() {
           </>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
           <Link
             href="/applications"
             className="flex items-center gap-3 rounded-card border border-border bg-card p-4 text-sm no-underline transition hover:border-brand-blue/40"
@@ -142,6 +143,21 @@ export function AccountView() {
               <span className="block text-muted">KVKK aydınlatma metni</span>
             </span>
           </Link>
+          {/* KVKK md. 11 (DOG-63): bütün veri tek ZIP'te. Düz bağlantı: tarayıcı
+              indirmeyi kendisi yönetiyor, istemci kodu gerekmiyor. */}
+          <a
+            href="/api/account"
+            download
+            className="flex items-center gap-3 rounded-card border border-border bg-card p-4 text-sm no-underline transition hover:border-brand-blue/40"
+          >
+            <span className="grid size-9 shrink-0 place-items-center rounded-button bg-brand-blue/10 text-brand-blue">
+              <Download className="size-4" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold text-foreground">Verilerimi indir</span>
+              <span className="block text-muted">CV'lerin, analizlerin, uyarlamaların</span>
+            </span>
+          </a>
         </div>
 
         <section className="rounded-card border border-brand-red/30 bg-card p-6">

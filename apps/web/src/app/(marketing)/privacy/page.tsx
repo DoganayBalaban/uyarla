@@ -195,8 +195,13 @@ export default function PrivacyPage() {
           <li>Kanuna aykırı işleme nedeniyle zarara uğradıysan zararın giderilmesini istemek.</li>
         </ul>
         <p>
-          Başvurunu {LEGAL.contact} adresine iletebilirsin. En geç 30 gün içinde ücretsiz olarak
-          cevaplarız.
+          Bunların ikisini beklemeden kendin yapabilirsin: Hesabım sayfasındaki &quot;Verilerimi
+          indir&quot; ile bütün verini (CV dosyaların, analizlerin, uyarlamaların) tek bir dosya olarak
+          alırsın; &quot;Hesabımı ve verilerimi sil&quot; ile hepsini silersin.
+        </p>
+        <p>
+          Diğer başvurularını {LEGAL.contact} adresine iletebilirsin. En geç 30 gün içinde ücretsiz
+          olarak cevaplarız.
         </p>
       </section>
 
