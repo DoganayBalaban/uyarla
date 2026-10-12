@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/cn"
 import { FormatReportCard as FormatReport, type FormatReportView } from "@/features/analysis/components/FormatReport"
 import { ScoreRing } from "@/features/analysis/components/ScoreRing"
+import { isPartial, summarizeRequirements } from "@/features/analysis/requirementSummary"
 import { scoreStatus } from "@/lib/scoreStatus"
 
 export interface RequirementResult {
@@ -70,8 +71,9 @@ export function ScoreResult({
   const reducedMotion = useReducedMotion() ?? false
   const [activeFilter, setFilter] = useState<FilterBar>("all")
   const state = scoreStatus(result.score)
-  const satisfiedCount = result.requirements.filter((r) => r.status === "matched").length
-  const missing = result.requirements.length - satisfiedCount
+  const summary = summarizeRequirements(result.requirements)
+  const satisfiedCount = summary.matched
+  const missing = summary.total - satisfiedCount
   const visible = result.requirements.filter((r) =>
     activeFilter === "all" ? true : activeFilter === "missing" ? r.status === "missing" : r.status === "matched",
   )
@@ -105,6 +107,19 @@ export function ScoreResult({
               {result.requirements.length} gereksinimin{" "}
               <span className={state.textClass}>{satisfiedCount} tanesi</span> karşılanıyor
             </h1>
+            {/* Zorunlular ayrıca: işe alımcının ilk baktığı yer (DOG-66). Sayının
+                ardından ek getirmiyoruz; "5'i / 6'sı" sayıya göre değişiyor. */}
+            {(summary.mustTotal > 0 || summary.partial > 0) && (
+              <p className="mt-1.5 text-sm font-medium text-foreground">
+                {summary.mustTotal > 0 && (
+                  <>
+                    Zorunlu gereksinimler: {summary.mustMatched} / {summary.mustTotal} karşılanıyor
+                  </>
+                )}
+                {summary.mustTotal > 0 && summary.partial > 0 && " · "}
+                {summary.partial > 0 && <>{summary.partial} gereksinim kısmen karşılanıyor</>}
+              </p>
+            )}
             <p className="mt-2 text-sm text-muted">
               {missing > 0
                 ? "Uyarladığımızda eksikleri deneyiminin izin verdiği ölçüde kapatıyoruz; olmayan bir şeyi eklemiyoruz."
@@ -239,6 +254,7 @@ export function ScoreResult({
 function RequirementRow({ item }: { item: RequirementResult }) {
   const [open, setOpen] = useState(false)
   const done = item.status === "matched"
+  const partial = isPartial(item)
   const importanceLabel = IMPORTANCE_LABEL[item.requirement.importance] ?? item.requirement.importance
 
   return (
@@ -259,13 +275,18 @@ function RequirementRow({ item }: { item: RequirementResult }) {
           )}
         >
           {done ? <Check className="size-3" strokeWidth={3} aria-hidden /> : <X className="size-3" strokeWidth={3} aria-hidden />}
-          <span className="sr-only">{done ? "Karşılanıyor" : "Eksik"}</span>
+          <span className="sr-only">{partial ? "Kısmen karşılanıyor" : done ? "Karşılanıyor" : "Eksik"}</span>
         </span>
         <span className="min-w-0 flex-1">
           <span className="font-medium">{item.requirement.text}</span>
           <span className="ml-2 inline-block rounded-full bg-background px-2 py-0.5 align-middle text-[11px] font-semibold text-muted">
             {importanceLabel}
           </span>
+          {partial && (
+            <span className="ml-1.5 inline-block rounded-full bg-brand-amber/10 px-2 py-0.5 align-middle text-[11px] font-semibold text-brand-amber">
+              Kısmen
+            </span>
+          )}
         </span>
         {item.evidence && (
           <ChevronDown

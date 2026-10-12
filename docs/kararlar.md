@@ -2131,3 +2131,37 @@ tarayıcı hataları kaçabilir.
 **Açık:** `withSentryConfig` kullanılmadı, kaynak haritaları yüklenmiyor;
 tarayıcı hatalarının yığın izi küçültülmüş kodu gösterir. Gerekirse
 `SENTRY_AUTH_TOKEN` ile eklenir.
+
+## K-52 · Skor etiket eşikleri değerlendirme setine göre 20/30
+
+**Tarih:** 12 Ekim 2026 · **Durum:** Geçerli, K2'den sonra yeniden ayarlanacak · **Kapsam:** Skor sunumu (DOG-66)
+
+**Ölçüm:** 18 çiftin skoru, `pairs.json`'daki beklenen uyum düzeyiyle
+karşılaştırıldı:
+
+- Yüksek uyum beklenen 6 çift: 24–59.
+- Düşük uyum beklenen 9 çift: 0–18.
+- Orta beklenen 3 çift dağınık: 13, 18, 37.
+
+Skorlar düşük seyrediyor çünkü CV'nin lafzen karşılayamadığı soft
+gereksinimler ("iletişim becerisi güçlü" gibi) de paydada.
+
+| Eşik (Orta / Yüksek) | Beklenen etiketi alan çift |
+|---|---|
+| 40 / 70 (eski) | 9 / 18; yüksek beklenenlerin **hiçbiri** "Yüksek" değil, dördü kırmızı "Düşük" |
+| **20 / 30** | **14 / 18** |
+
+**Karar:** Düşük < 20, Orta 20–29, Yüksek ≥ 30. Skor sayısı değişmedi.
+
+**Başlığa eklenenler:**
+
+- "Zorunlu gereksinimler: X / Y karşılanıyor". Sayıdan sonra ek
+  getirilmiyor; "5'i / 6'sı / 3'ü" sayıya göre değişiyor.
+- Kısmen karşılanan gereksinim sayısı ve satırda "Kısmen" rozeti. Kısmen,
+  kelime eşleşmesinde kavramların yalnızca bir kısmının tutması demek
+  (`confidence` < 1, K-23). Anlamsal eşleşmede `confidence` benzerlik değeri
+  olduğu için oraya uygulanmıyor.
+
+**Bedel:** "32 · Yüksek uyum" ilk bakışta tuhaf durabilir. K2 testinde
+katılımcıların skoru nasıl okuduğu gözlenmeli; gerekirse ya eşikler ya da
+skorun kendisi (soft gereksinimlerin ağırlığı) yeniden ele alınır.
