@@ -13,10 +13,13 @@ import { runAdaptation } from "./adapt-pipeline.js"
 import { ADAPT_QUEUE, type AdaptJobData } from "./adapt-queue.js"
 import { prismaAdaptationStore } from "./adapt-store.js"
 import { COVER_LETTER_JOB, runCoverLetter } from "./cover-pipeline.js"
+import { initErrorTracking, reportJobFailure } from "./observability.js"
 import { runAnalysis } from "./pipeline.js"
 import { ANALYZE_QUEUE, type AnalyzeJobData } from "./queue.js"
 import { prismaStore } from "./store.js"
 import { toUnrecoverable } from "./unrecoverable.js"
+
+initErrorTracking()
 
 const connection = new IORedis(process.env.REDIS_URL ?? "redis://localhost:6379", {
   maxRetriesPerRequest: null,
@@ -64,6 +67,7 @@ const worker = new Worker<AnalyzeJobData, string>(
 
 worker.on("failed", (job, error) => {
   console.error(`[analyze] iş başarısız: ${job?.id ?? "?"} — ${error.message}`)
+  reportJobFailure(ANALYZE_QUEUE, job, error)
 })
 
 worker.on("completed", (job, analysisId) => {
@@ -114,6 +118,7 @@ const adaptWorker = new Worker<AdaptJobData, void>(
 
 adaptWorker.on("failed", (job, error) => {
   console.error(`[adapt] iş başarısız: ${job?.id ?? "?"} — ${error.message}`)
+  reportJobFailure(ADAPT_QUEUE, job, error)
 })
 
 adaptWorker.on("completed", (job) => {

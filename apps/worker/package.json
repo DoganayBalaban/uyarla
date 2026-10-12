@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@sentry/node": "^11.6.0",
     "@uyarla/core": "workspace:*",
     "@uyarla/db": "workspace:*",
     "bullmq": "^5.20.0",

@@ -2084,3 +2084,50 @@ main'deki kodla, sonra yeni kodla yeniden hesaplandı; LLM çalıştırılmadı.
 **Not:** Önbellekteki kavramlar main'deki koddan da eskiydi (ör. "veya"
 seçenek birleştirmesi yoktu). Kavram kodu değiştiğinde önbellek
 yeniden hesaplanmalı; LLM çağrısı gerekmiyor.
+
+## K-51 · Huni veritabanından, hata izleme Sentry'de
+
+**Tarih:** 12 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** Ölçüm (DOG-62)
+
+**Huni:** Ayrı bir olay izleme kurulmadı. Dört adımın hepsi zaten
+veritabanında kayıtlı:
+
+| Adım | Kaynak |
+|---|---|
+| Analiz | `Analysis.status = done` |
+| Kayıt | `User.isAnonymous` |
+| Uyarlama | `Adaptation` kaydı |
+| İndirme | `Adaptation.resumeVersionId` |
+
+Böylece üçüncü taraf bir veri işleyen eklenmiyor ve rapor geriye dönük
+çalışıyor. Sayım kişi bazında ve her adım önceki adımları geçmiş kişileri
+sayıyor, yani huni tekdüze azalıyor.
+
+Rapor iki yerden alınıyor:
+
+- `/admin` sayfası: yalnızca `ADMIN_EMAILS`'teki hesaplar görüyor;
+  başkasına sayfa yokmuş gibi 404.
+- `pnpm --filter @uyarla/web funnel --days N`.
+
+Vercel Analytics'in özel olayları ücretli planda olduğu için seçilmedi.
+
+**Hata izleme:** Web (sunucu ve tarayıcı) ve worker'da Sentry. DSN yoksa
+tamamen kapalı. Kişisel veri iki katmanda tutuluyor:
+
+1. SDK'nın `dataCollection` ayarı kullanıcı, çerez, başlık, gövde ve sorgu
+   parametresi toplamıyor.
+2. `scrubErrorEvent` (core) istek gövdesini siliyor; mesajlardaki e-posta ve
+   telefonu maskeliyor.
+
+Oturum kaydı (replay) kapalı; CV metni ekranda. Worker yalnızca denemeleri
+tükenmiş beklenmedik hataları bildiriyor. Kalıcı kullanıcı hataları
+(taranmış PDF gibi) bildirilmiyor.
+
+**Paket boyutu:** Sentry'nin tarayıcı paketi doğrudan yüklendiğinde her
+sayfanın ilk yükü 102 kB'tan 187 kB'a çıktı. SDK tembel yükleniyor
+(`lib/clientErrors.ts`) ve ilk yük 103 kB. Bedeli: SDK yüklenmeden önce olan
+tarayıcı hataları kaçabilir.
+
+**Açık:** `withSentryConfig` kullanılmadı, kaynak haritaları yüklenmiyor;
+tarayıcı hatalarının yığın izi küçültülmüş kodu gösterir. Gerekirse
+`SENTRY_AUTH_TOKEN` ile eklenir.
