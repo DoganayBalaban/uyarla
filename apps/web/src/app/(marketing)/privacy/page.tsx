@@ -8,7 +8,7 @@ export const metadata = { title: "KVKK aydınlatma metni · uyarla" }
  * bugün gerçekten işlediği verilere göre yazıldı (packages/db şeması,
  * src/server/auth.ts, src/server/mail.ts). Sağlayıcı listesi üretim topolojisinden
  * (K-02, Prod 1-6): web Vercel, worker ve Redis Railway, veritabanı Neon, dosya
- * Cloudflare R2, LLM ve gömme OpenAI, e-posta Resend. Yeni bir veri ya da hizmet
+ * Cloudflare R2, LLM ve gömme OpenAI, e-posta Resend, hata izleme Sentry (DOG-62). Yeni bir veri ya da hizmet
  * sağlayıcı eklenirse bu sayfa da güncellenmeli.
  */
 export default function PrivacyPage() {
@@ -124,6 +124,11 @@ export default function PrivacyPage() {
           <li>
             <strong>Resend (ABD), e-posta:</strong> giriş bağlantısını gönderir; yalnızca e-posta
             adresini görür.
+          </li>
+          <li>
+            <strong>Sentry, hata izleme:</strong> uygulamada bir hata olduğunda teknik hata kaydını
+            (hangi sayfada, hangi kod satırında) alır. CV metni, e-posta adresi, IP adresi ve çerezler bu
+            kayda eklenmez.
           </li>
           <li>
             <strong>Sosyal giriş:</strong> Google, LinkedIn veya GitHub ile giriş yaparsan ilgili

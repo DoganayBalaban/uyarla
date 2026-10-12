@@ -1,5 +1,6 @@
 "use client"
 
+import { reportClientError } from "@/lib/clientErrors"
 import Link from "next/link"
 import { useEffect } from "react"
 import { PageShell } from "@/components/layout/PageShell"
@@ -11,6 +12,8 @@ import { PageShell } from "@/components/layout/PageShell"
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error(error)
+    // Hata sınırı hatayı yutuyor; izlemeye elle bildiriliyor (DOG-62).
+    reportClientError(error)
   }, [error])
 
   return (

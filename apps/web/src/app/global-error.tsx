@@ -1,10 +1,17 @@
 "use client"
 
+import { reportClientError } from "@/lib/clientErrors"
+import { useEffect } from "react"
+
 /**
  * Kök yerleşimin kendisi patlarsa: globals.css ve fontlar yüklenmemiş
  * olabilir, o yüzden stiller satır içi ve bağımsız.
  */
-export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  // Kök yerleşim hatası Next'in sunucu kancasına düşmüyor; elle bildiriliyor (DOG-62).
+  useEffect(() => {
+    reportClientError(error)
+  }, [error])
   return (
     <html lang="tr">
       <body

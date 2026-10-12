@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./document/pdf": "./src/document/pdf.ts",
-    "./document/docx": "./src/document/docx.ts"
+    "./document/docx": "./src/document/docx.ts",
+    "./observability/scrub": "./src/observability/scrub.ts"
   },
   "scripts": {
     "test": "vitest run",

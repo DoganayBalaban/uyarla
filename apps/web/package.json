@@ -10,10 +10,12 @@
     "typecheck": "tsc --noEmit",
     "test:integration": "dotenv -e ../../.env -- vitest run --config vitest.integration.config.ts",
     "migrate:json-keys": "dotenv -e ../../.env -- tsx scripts/migrate-json-keys.ts",
-    "cleanup:anonymous": "dotenv -e ../../.env -- tsx scripts/cleanup-anonymous-users.ts"
+    "cleanup:anonymous": "dotenv -e ../../.env -- tsx scripts/cleanup-anonymous-users.ts",
+    "funnel": "dotenv -e ../../.env -- tsx scripts/funnel.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
+    "@sentry/nextjs": "^11.6.0",
     "@tanstack/react-query": "^5.104.0",
     "@uyarla/core": "workspace:*",
     "@uyarla/db": "workspace:*",
