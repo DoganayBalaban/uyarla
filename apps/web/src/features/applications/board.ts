@@ -37,6 +37,8 @@ export const NOTE_MAX_LENGTH = 500
 export interface BoardCard {
   analysisId: string
   position: string
+  /** İlan çıkarımının bulduğu şirket; eski kayıtlarda ve şirket yazmayan ilanlarda null. */
+  company: string | null
   score: number | null
   stage: Stage
   stageChangedAt: string | null
@@ -53,7 +55,7 @@ export const BOARD_SELECT = {
   stageChangedAt: true,
   note: true,
   createdAt: true,
-  jobPosting: { select: { position: true, rawText: true } },
+  jobPosting: { select: { position: true, company: true, rawText: true } },
   adaptation: { select: { id: true, status: true } },
 } as const
 
@@ -65,7 +67,7 @@ export interface BoardRow {
   stageChangedAt: Date | null
   note: string | null
   createdAt: Date
-  jobPosting: { position: string; rawText: string }
+  jobPosting: { position: string; company: string | null; rawText: string }
   adaptation: { id: string; status: string } | null
 }
 
@@ -83,6 +85,7 @@ export function toBoardCard(s: BoardRow): BoardCard {
   return {
     analysisId: s.id,
     position: positionName(s.jobPosting.position, s.jobPosting.rawText),
+    company: s.jobPosting.company?.trim() || null,
     score: s.score === null ? null : Math.round(s.score),
     stage: isStage(s.stage) ? s.stage : "saved",
     stageChangedAt: s.stageChangedAt?.toISOString() ?? null,

@@ -296,6 +296,8 @@ function BoardCardView({
           >
             {card.position}
           </Link>
+          {/* Aynı pozisyona farklı şirketlerden başvurular ayrılsın (DOG-64). */}
+          {card.company && <span className="mt-0.5 block text-xs font-normal text-muted">{card.company}</span>}
         </h3>
         <GripVertical
           className="mt-0.5 size-4 shrink-0 cursor-grab text-muted opacity-0 transition group-hover:opacity-100"

@@ -6,6 +6,7 @@ function card(suffix: Partial<BoardCard> = {}): BoardCard {
   return {
     analysisId: "a1",
     position: "Frontend Geliştirici",
+    company: null,
     score: 47,
     stage: "saved",
     stageChangedAt: null,

@@ -3,6 +3,7 @@ import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { loadAdaptation } from "@/server/adaptationDecision"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
+import { downloadFileName } from "@/features/adaptation/fileName"
 
 export const runtime = "nodejs"
 
@@ -83,7 +84,7 @@ export async function GET(
         format === "docx"
           ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           : "application/pdf",
-      "Content-Disposition": `attachment; filename="uyarla-cv.${format}"`,
+      "Content-Disposition": `attachment; filename="${downloadFileName(adapted.fullName, format)}"`,
     },
   })
 }

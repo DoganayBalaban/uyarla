@@ -99,7 +99,10 @@ model JobPosting {
 
   // Sprint 1'de ihtiyaç yoktu; Sprint 2'de özet yeniden yazımı pozisyon
   // adını istiyor (spec §6.1). Mevcut kayıtlar boş kalıyor.
-  position String @default("")
+  position String  @default("")
+  // İlan çıkarımının bulduğu şirket (DOG-64): panoda ve ön yazıda kullanılıyor.
+  // Eski kayıtlarda ve şirket yazmayan ilanlarda boş.
+  company  String?
 
   rawText      String     @db.Text
   requirements Json

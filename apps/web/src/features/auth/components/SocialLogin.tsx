@@ -5,6 +5,7 @@ import { signIn } from "@/lib/authClient"
 import { onboardingPath } from "@/features/onboarding/gate"
 import { loginPath } from "@/lib/returnPath"
 import type { Provider } from "@/features/auth/providers"
+import { cn } from "@/lib/cn"
 
 const LABEL: Record<Provider, string> = {
   google: "Google",
@@ -84,15 +85,31 @@ export function SocialLogin({ open, returnTo }: { open: Provider[]; returnTo: st
   return (
     <div>
       <div className="grid grid-cols-3 gap-3">
-        {(["google", "linkedin", "github"] as const).map((s) => (
+        {(["google", "linkedin", "github"] as const).map((s) => {
+          // Ayarlanmamış sağlayıcı soluk ve "yakında" etiketli (DOG-64): etkin
+          // görünüp tıklanınca "yakında" demek, kullanıcıyı boşuna denetiyordu.
+          // Tıklanabilir kalıyor ki açıklama mesajı ekran okuyucuya da ulaşsın.
+          const soon = !open.includes(s)
+          return (
           <button
             key={s}
             type="button"
             onClick={() => void login(s)}
             disabled={pendingCount !== null}
-            aria-label={`${LABEL[s]} ile devam et`}
-            className="flex items-center justify-center gap-2 rounded-2xl border border-border px-3 py-3.5 text-sm font-semibold text-foreground transition hover:-translate-y-px hover:border-foreground/25 hover:bg-background disabled:translate-y-0 disabled:opacity-60 dark:hover:bg-white/5"
+            aria-label={soon ? `${LABEL[s]} ile giriş yakında` : `${LABEL[s]} ile devam et`}
+            aria-disabled={soon || undefined}
+            className={cn(
+              "relative flex items-center justify-center gap-2 rounded-2xl border border-border px-3 py-3.5 text-sm font-semibold text-foreground transition disabled:translate-y-0 disabled:opacity-60",
+              soon
+                ? "cursor-not-allowed opacity-50"
+                : "hover:-translate-y-px hover:border-foreground/25 hover:bg-background dark:hover:bg-white/5",
+            )}
           >
+            {soon && (
+              <span className="absolute -top-2 right-2 rounded-full bg-background px-1.5 text-[10px] font-semibold text-muted ring-1 ring-border">
+                yakında
+              </span>
+            )}
             {pendingCount === s ? (
               <span className="size-5 animate-spin rounded-full border-2 border-border border-t-brand-blue" />
             ) : (
@@ -100,7 +117,8 @@ export function SocialLogin({ open, returnTo }: { open: Provider[]; returnTo: st
             )}
             <span className="hidden sm:inline">{LABEL[s]}</span>
           </button>
-        ))}
+          )
+        })}
       </div>
       {messageText && (
         <p role="status" className="mt-3 text-sm text-muted">
