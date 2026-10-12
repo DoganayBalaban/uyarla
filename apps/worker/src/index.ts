@@ -18,6 +18,7 @@ import { runAnalysis } from "./pipeline.js"
 import { ANALYZE_QUEUE, type AnalyzeJobData } from "./queue.js"
 import { prismaStore } from "./store.js"
 import { toUnrecoverable } from "./unrecoverable.js"
+import { workerOptions } from "./workerOptions.js"
 
 initErrorTracking()
 
@@ -62,7 +63,7 @@ const worker = new Worker<AnalyzeJobData, string>(
       throw error
     }
   },
-  { connection, concurrency: 2 },
+  workerOptions(connection, 2),
 )
 
 worker.on("failed", (job, error) => {
@@ -113,7 +114,7 @@ const adaptWorker = new Worker<AdaptJobData, void>(
   },
   // Eşzamanlılık 1: bir uyarlama zaten madde başına paralel çağrı yapıyor,
   // ikinci bir katman yerel modeli sıraya sokmaktan başka işe yaramaz (K-16).
-  { connection, concurrency: 1 },
+  workerOptions(connection, 1),
 )
 
 adaptWorker.on("failed", (job, error) => {

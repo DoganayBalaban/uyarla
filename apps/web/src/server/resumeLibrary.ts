@@ -2,6 +2,7 @@ import { type FileStore, PermanentError } from "@uyarla/core"
 import type { prisma } from "@uyarla/db"
 import { LIBRARY_MAX, type LibraryResume, type ResumePatch } from "@/features/resumes/schema"
 import { AuthError } from "@/server/authz"
+import { storeUploadedResume } from "@/server/storeUpload"
 
 type Db = typeof prisma
 /** Transaction istemcisi de yetiyor: yalnızca resume tablosu kullanılıyor. */
@@ -182,20 +183,15 @@ export async function addFileToLibrary(
 ): Promise<LibraryResume> {
   if (!canSave(await countLibrary(db, input.userId))) throw new LibraryFullError()
 
-  const filePath = await store.save(input.buffer, input.fileName)
-  let resumeId: string
-  try {
-    ;({ resumeId } = await createResume(db, {
+  const { resumeId } = await storeUploadedResume(store, input.buffer, input.fileName, (filePath) =>
+    createResume(db, {
       userId: input.userId,
       filePath,
       fileName: input.fileName,
       saveToLibrary: "required",
       label: input.label,
-    }))
-  } catch (error) {
-    await store.delete(filePath).catch(() => false)
-    throw error
-  }
+    }),
+  )
 
   const row = await db.resume.findUniqueOrThrow({ where: { id: resumeId }, select: LIBRARY_SELECT })
   return toLibraryResume(row)
