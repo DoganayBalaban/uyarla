@@ -9,7 +9,7 @@ function row(suffix: Partial<BoardRow> = {}): BoardRow {
     stageChangedAt: null,
     note: null,
     createdAt: new Date("2026-09-20T10:00:00Z"),
-    jobPosting: { position: "Frontend Geliştirici", rawText: "ilan" },
+    jobPosting: { position: "Frontend Geliştirici", company: null, rawText: "ilan" },
     adaptation: null,
     ...suffix,
   }
@@ -45,5 +45,17 @@ describe("board", () => {
     expect(s.applied.map((k) => k.analysisId)).toEqual(["yeni", "eski"])
     expect(s.saved).toHaveLength(1)
     expect(s.offer).toEqual([])
+  })
+})
+
+describe("toBoardCard · company (DOG-64)", () => {
+  it("carries the company extracted from the posting", () => {
+    const card = toBoardCard(row({ jobPosting: { position: "Muhasebe Uzmanı", company: " Mimeda ", rawText: "ilan" } }))
+    expect(card.company).toBe("Mimeda")
+  })
+
+  it("leaves the company empty when the posting has none", () => {
+    expect(toBoardCard(row()).company).toBeNull()
+    expect(toBoardCard(row({ jobPosting: { position: "X", company: "  ", rawText: "ilan" } })).company).toBeNull()
   })
 })

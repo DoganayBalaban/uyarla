@@ -70,6 +70,7 @@ export const prismaStore: AnalysisStore = {
       where: { id: jobPostingId },
       data: {
         position: data.position,
+        company: data.company,
         requirements: data.requirements as unknown as object,
         language: data.language,
         seniority: data.seniority,

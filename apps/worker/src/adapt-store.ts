@@ -36,7 +36,7 @@ export const prismaAdaptationStore: AdaptationStore = {
       profile: analysis.resumeVersion.profile as never,
       posting: {
         position: analysis.jobPosting.position,
-        company: null,
+        company: analysis.jobPosting.company,
         seniority: analysis.jobPosting.seniority as never,
         language: analysis.jobPosting.language as never,
         requirements: analysis.jobPosting.requirements as never,

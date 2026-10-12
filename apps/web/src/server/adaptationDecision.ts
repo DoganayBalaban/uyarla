@@ -56,7 +56,7 @@ export async function loadAdaptation(id: string) {
   const profile = (analysis.resumeVersion?.profile ?? null) as ResumeProfile | null
   const posting: JobPostingData = {
     position: analysis.jobPosting.position,
-    company: null,
+    company: analysis.jobPosting.company,
     seniority: analysis.jobPosting.seniority as never,
     language: analysis.jobPosting.language as never,
     requirements: analysis.jobPosting.requirements as never,
