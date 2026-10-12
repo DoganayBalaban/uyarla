@@ -146,7 +146,7 @@ export function AccountView() {
           {/* KVKK md. 11 (DOG-63): bütün veri tek ZIP'te. Düz bağlantı: tarayıcı
               indirmeyi kendisi yönetiyor, istemci kodu gerekmiyor. */}
           <a
-            href="/api/account/export"
+            href="/api/account"
             download
             className="flex items-center gap-3 rounded-card border border-border bg-card p-4 text-sm no-underline transition hover:border-brand-blue/40"
           >

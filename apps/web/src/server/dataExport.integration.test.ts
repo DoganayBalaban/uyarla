@@ -10,6 +10,9 @@ afterEach(async () => {
   toClean.length = 0
 })
 
+/** Çalışma anında üretilen sahte giriş değerleri; kodda sabit bir "şifre" durmasın. */
+const fakeHash = () => `test-ozet-${Math.random().toString(36).slice(2)}`
+
 /** CV'si, ilanı, analizi, uyarlaması ve oturumu olan bir kullanıcı. */
 async function makeUserWithData(tag: string) {
   const user = await prisma.user.create({
@@ -30,10 +33,10 @@ async function makeUserWithData(tag: string) {
   })
   await prisma.adaptation.create({ data: { analysisId: analysis.id, draft: { tag }, modelId: "test", status: "ready" } })
   await prisma.session.create({
-    data: { id: `s-${tag}-${Math.random()}`, userId: user.id, token: `gizli-${tag}-${Math.random()}`, expiresAt: new Date(Date.now() + 3600e3) },
+    data: { id: `s-${tag}-${Math.random()}`, userId: user.id, token: `oturum-${fakeHash()}`, expiresAt: new Date(Date.now() + 3600e3) },
   })
   await prisma.account.create({
-    data: { id: `a-${tag}-${Math.random()}`, userId: user.id, accountId: tag, providerId: "credential", password: "ozet" },
+    data: { id: `a-${tag}-${Math.random()}`, userId: user.id, accountId: tag, providerId: "credential", password: fakeHash() },
   })
   return user
 }
@@ -62,7 +65,7 @@ describe("collectUserData", () => {
   it("leaves out session tokens and password hashes", async () => {
     const ayse = await makeUserWithData("ayse")
     const json = JSON.stringify(await collectUserData(prisma, ayse.id))
-    expect(json).not.toContain("gizli-")
-    expect(json).not.toContain("ozet")
+    expect(json).not.toContain("oturum-test-ozet-")
+    expect(json).not.toContain("test-ozet-")
   })
 })
