@@ -8,6 +8,7 @@ import { authErrorResponse, ensureRegistered, ensureSession, getSession } from "
 import { analyzeQueue } from "@/server/queue"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 import { createResume, findLibraryResume } from "@/server/resumeLibrary"
+import { storeUploadedResume } from "@/server/storeUpload"
 import { validateJobText, validateUpload } from "@/server/upload"
 
 export const runtime = "nodejs"
@@ -66,14 +67,14 @@ export async function POST(request: Request) {
       // Metin çıkarma worker'da yapılıyor, burada değil (spec §4.2): pdf-parse'ın
       // kullandığı pdfjs Next'in sunucu katmanında yüklenemiyor. Okunamayan
       // dosya kullanıcıya iş başarısız olduğunda bildiriliyor.
-      const filePath = await fileStoreFromEnv().save(Buffer.from(await upload.arrayBuffer()), upload.name)
       const wantsSave = form.get("saveToLibrary") === "true" && !user.isAnonymous
-      const created = await createResume(prisma, {
-        userId: user.id,
-        filePath,
-        fileName: upload.name,
-        saveToLibrary: wantsSave,
-      })
+      const created = await storeUploadedResume(
+        fileStoreFromEnv(),
+        Buffer.from(await upload.arrayBuffer()),
+        upload.name,
+        (filePath) =>
+          createResume(prisma, { userId: user.id, filePath, fileName: upload.name, saveToLibrary: wantsSave }),
+      )
       resumeId = created.resumeId
       if (wantsSave) savedToLibrary = created.savedToLibrary
     }
