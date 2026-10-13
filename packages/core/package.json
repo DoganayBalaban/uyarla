@@ -21,7 +21,8 @@
     "eval:prepare": "dotenv -e ../../.env -- tsx eval/prepare.ts",
     "eval:segment": "dotenv -e ../../.env -- tsx eval/segment-compare.ts",
     "eval:adapt": "dotenv -e ../../.env -- tsx eval/adapt.ts",
-    "eval:cover": "dotenv -e ../../.env -- tsx eval/cover.ts"
+    "eval:cover": "dotenv -e ../../.env -- tsx eval/cover.ts",
+    "eval:jobs": "dotenv -e ../../.env -- tsx eval/jobs.ts"
   },
   "devDependencies": {
     "@types/pdfkit": "^0.17.6",
