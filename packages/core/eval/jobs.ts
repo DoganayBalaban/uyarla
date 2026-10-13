@@ -25,8 +25,9 @@ import { cacheDir } from "./types.js"
  * anahtarı toplam 500 istekle sınırlı, ölçüm tekrarlanırken harcanmamalı.
  *
  * Gerekli ortam değişkenleri (biri yoksa o kaynak atlanıyor):
- *   JOOBLE_API_KEY, JOOBLE_API_URL (öntanımlı https://jooble.org/api/)
- *   CAREERJET_API_KEY, CAREERJET_LOCALE (öntanımlı tr_TR)
+ *   JOOBLE_API_KEY, JOOBLE_API_URL (öntanımlı https://tr.jooble.org/api/; Türkiye anahtarı yalnızca bu adreste geçerli)
+ *   CAREERJET_API_KEY, CAREERJET_LOCALE (öntanımlı tr_TR),
+ *   CAREERJET_PAGE_URL (sonuçların gösterildiği sayfa, Referer olarak gider)
  *
  * Kullanım:
  *   pnpm eval:jobs              önbellekten, eksikleri sorgula
@@ -58,10 +59,14 @@ async function cached(
 async function main() {
   const refresh = process.argv.includes("--refresh")
   const jooble = process.env.JOOBLE_API_KEY
-    ? { apiKey: process.env.JOOBLE_API_KEY, baseUrl: process.env.JOOBLE_API_URL ?? "https://jooble.org/api/" }
+    ? { apiKey: process.env.JOOBLE_API_KEY, baseUrl: process.env.JOOBLE_API_URL ?? "https://tr.jooble.org/api/" }
     : null
   const careerjet = process.env.CAREERJET_API_KEY
-    ? { apiKey: process.env.CAREERJET_API_KEY, locale: process.env.CAREERJET_LOCALE ?? "tr_TR" }
+    ? {
+        apiKey: process.env.CAREERJET_API_KEY,
+        locale: process.env.CAREERJET_LOCALE ?? "tr_TR",
+        pageUrl: process.env.CAREERJET_PAGE_URL ?? "https://uyarla.vercel.app/dashboard",
+      }
     : null
   if (!jooble && !careerjet) {
     console.error("[eval:jobs] JOOBLE_API_KEY ya da CAREERJET_API_KEY gerekli (.env.example'a bak).")

@@ -78,7 +78,7 @@ describe("searchCareerjet", () => {
     })
 
     const r = await searchCareerjet(
-      { apiKey: "anahtar", locale: "tr_TR", fetch: fn },
+      { apiKey: "anahtar", locale: "tr_TR", pageUrl: "https://uyarla.vercel.app/dashboard", fetch: fn },
       { keywords: "satış danışmanı", location: "İstanbul" },
       { ip: "1.2.3.4", userAgent: "Mozilla/5.0" },
     )
@@ -88,6 +88,10 @@ describe("searchCareerjet", () => {
     expect(url.searchParams.get("locale_code")).toBe("tr_TR")
     expect(url.searchParams.get("user_ip")).toBe("1.2.3.4")
     expect(url.searchParams.get("user_agent")).toBe("Mozilla/5.0")
+    // Varsayılan özet 120 karakter; sıralama için daha uzun isteniyor.
+    expect(url.searchParams.get("fragment_size")).toBe("400")
+    // Sonuçların gösterildiği sayfa; yoksa "Undeclared referrer" ile 403.
+    expect((calls[0]!.init!.headers as Record<string, string>).Referer).toBe("https://uyarla.vercel.app/dashboard")
     expect((calls[0]!.init!.headers as Record<string, string>).Authorization).toBe(
       `Basic ${Buffer.from("anahtar:").toString("base64")}`,
     )
@@ -107,7 +111,7 @@ describe("searchCareerjet", () => {
     // Belirsiz konumda Careerjet ilan yerine konum listesi döndürüyor.
     const { fn } = fakeFetch({ type: "LOCATIONS", locations: ["İstanbul", "İstanbul Anadolu"] })
     const r = await searchCareerjet(
-      { apiKey: "k", locale: "tr_TR", fetch: fn },
+      { apiKey: "k", locale: "tr_TR", pageUrl: "https://uyarla.vercel.app/dashboard", fetch: fn },
       { keywords: "x", location: "ist" },
       { ip: "1.2.3.4", userAgent: "ua" },
     )

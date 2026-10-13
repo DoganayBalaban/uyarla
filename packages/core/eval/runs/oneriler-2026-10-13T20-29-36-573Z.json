@@ -1,0 +1,1166 @@
+[
+  {
+    "cv": "cv-a-ai-engineer",
+    "query": {
+      "keywords": "AI Engineer",
+      "location": "Türkiye"
+    },
+    "sources": [
+      {
+        "name": "jooble",
+        "total": 1295,
+        "returned": 20
+      },
+      {
+        "name": "careerjet",
+        "total": 289,
+        "returned": 20
+      }
+    ],
+    "avgSnippet": 224,
+    "origins": [
+      [
+        "epam.com",
+        20
+      ],
+      [
+        "?",
+        20
+      ]
+    ],
+    "top": [
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Senior AI Engineer with RAG and Agentic architectures",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...We are looking for a Senior AI Engineer to design and deliver LLM-powered applications and agentic systems that solve real problems for our users and teams. You'll work across the full applied-AI stack — from retrieval-augmented generation (RAG) pipelines and prompt...",
+        "url": "https://tr.jooble.org/jdp/3520616895119877071",
+        "postedAt": "2026-09-29T19:21:48.5965924+00:00",
+        "similarity": 0.7483314805875517,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Senior AI Solution Engineer",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...We are looking for a Senior AI Engineer to design, build, and scale our next-generation AI and Large Language Model (LLM) applications. In this role, you will lead the technical development of advanced AI workflows, work directly with clients to turn their ideas into...",
+        "url": "https://tr.jooble.org/jdp/-8871536877124383103",
+        "postedAt": "2026-10-08T19:21:33.9475962+00:00",
+        "similarity": 0.6453739362654064,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Senior Data Engineer, AI",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...We are seeking a Senior Data Engineer to architect, develop, and operationalize enterprise-grade AI agents, multi-agent workflows, and AI/ML solutions leveraging Python, Azure AI Foundry, Semantic Kernel / Microsoft Agent Framework, LangGraph, LangChain, AutoGen, and...",
+        "url": "https://tr.jooble.org/jdp/3074711379625986690",
+        "postedAt": "2026-09-29T19:22:05.8731736+00:00",
+        "similarity": 0.6418495144737169,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Senior/Lead/Chief AI Engineer",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...tricky system, tracking down a stubborn bug, or shipping something people actually use. AI has made you more ambitious about what you can build. At EPAM, we’re looking for engineers who love the craft and know how to use AI to move faster. You’ll solve real client...",
+        "url": "https://tr.jooble.org/jdp/-6170024636613794356",
+        "postedAt": "2026-10-09T11:20:25.0493240+00:00",
+        "similarity": 0.626893019552558,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Senior AI Engineer/ A2A, Databricks, MCP",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...We are seeking a Senior AI Engineer to join an enterprise AI platform engineering initiative delivering a Databricks-native, MCP-first platform with a Hub & Spoke governance model, enabling independent spoke teams to build and deploy AI agents across GCP and Azure environments...",
+        "url": "https://tr.jooble.org/jdp/5812472288269561854",
+        "postedAt": "2026-09-29T00:00:00.0000000",
+        "similarity": 0.620171927668169,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Senior AI Engineer, Databricks, ML, Spark ML",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...We are seeking a Senior AI Engineer to build, test, and deploy ML and GenAI components for asset onboarding, industrial diagnostics, and device analytics on Databricks. The specialist will develop predictive models, anomaly-detection algorithms, RAG pipelines, document...",
+        "url": "https://tr.jooble.org/jdp/6391402096425897783",
+        "postedAt": "2026-09-29T00:00:00.0000000",
+        "similarity": 0.6090762276727884,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Senior AI Engineer with AWS and Databricks",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...We are looking for a hands-on Senior AI Engineer with strong production experience on AWS and Databricks to design, build, deploy, and support AI/ML solutions across the full software development lifecycle. The ideal candidate has successfully delivered enterprise-grade...",
+        "url": "https://tr.jooble.org/jdp/4298696768331035570",
+        "postedAt": "2026-09-29T19:20:54.7185384+00:00",
+        "similarity": 0.601612683839714,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Lead AI Engineer",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...We are looking for a skilled, innovation-driven Lead AI Engineer to join our team and spearhead the development of cutting-edge Generative AI solutions. If you're passionate about artificial intelligence and adept at building systems that deliver measurable business...",
+        "url": "https://tr.jooble.org/jdp/-8137150170041197495",
+        "postedAt": "2026-09-29T19:21:05.9963411+00:00",
+        "similarity": 0.5977893575977039,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Lead AI Engineer with Machine Learning",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...We are seeking a Lead AI Engineer to join a cutting-edge team building computers designed specifically for AI. Our customer brings together experts in computer architecture, ASIC design, advanced systems, and neural network compilers to build the next generation of computing...",
+        "url": "https://tr.jooble.org/jdp/-2344811374526132321",
+        "postedAt": "2026-09-29T00:00:00.0000000",
+        "similarity": 0.5958050782808211,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Senior AI Engineer/ Agentic SDKs and Workflows",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...We are seeking a Senior AI Engineer specialized in Agentic SDKs and Workflows to join a strategic initiative building an Agentic intelligence platform for data insights and planning decisions related to charging site planning, utilization, and optimization. This role...",
+        "url": "https://tr.jooble.org/jdp/7455418141767312403",
+        "postedAt": "2026-09-29T00:00:00.0000000",
+        "similarity": 0.5908844517557374,
+        "ilgili": null
+      }
+    ]
+  },
+  {
+    "cv": "cv-b-test-engineer",
+    "query": {
+      "keywords": "Software Testing Engineer",
+      "location": "Türkiye"
+    },
+    "sources": [
+      {
+        "name": "jooble",
+        "total": 757,
+        "returned": 20
+      },
+      {
+        "name": "careerjet",
+        "total": 41,
+        "returned": 20
+      }
+    ],
+    "avgSnippet": 265,
+    "origins": [
+      [
+        "epam.com",
+        20
+      ],
+      [
+        "?",
+        20
+      ]
+    ],
+    "top": [
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Senior Software Engineer",
+        "company": "Johnson Electric",
+        "location": "İzmir",
+        "snippet": "testing, CI/CD, observability, logging, and production troubleshooting. Strong problem-solving skills across software... implementation, deployment, monitoring, and production support. Use AI-assisted development tools to accelerate coding, testing",
+        "url": "https://jobviewtrack.com/v2/Ko27vpgafl0fRY36quVWabX7IrG701x51KAn6133RiY7RsGhZmEgV8YcXmgrpdk6SkO8Y24E4lKn7GT93GFWEN2UsEMk_3lav7-aPAElifwgGuREgmIr5BgOdbAUUeC9HwfmuoAM3U61Ip-qBtvk0oT7pQaUPEmGwYnVQHLoCvAOdnbUUhS5mwTsAtk1ZJkJ5yDHQgoxKRboR7ylWl3RH_a4EZbKQXlMeb_r0PIdA44",
+        "postedAt": "Sat, 03 Oct 2026 07:17:19 GMT",
+        "similarity": 0.6115112636698335,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Senior AQA Engineer",
+        "company": "Logifuture",
+        "location": "Ankara",
+        "snippet": "We are looking for a highly skilled Senior Automation QA Engineer with a strong focus on API testing and performance.... Requirements Minimum of 5 years in Software Automation, with a proven track record of testing complex distributed systems. Deep",
+        "url": "https://jobviewtrack.com/v2/z3NF0AA2nI0tFIrGBisRKMzxCGGwHcwzf9nedAlTwWHWpRhA2Ee185Wc6-TzMu7gECi_uy74UBjtqiBb9kZddBasJ0VTeEf_un_DowEsNZP_qPYE3mc_gup8_7ZCFvp7rzJgZdGQLBfNmAFHMCy2lgm0oseBbZRhQaoT6ZCDKmlgv2JEBJWIp5VmMgW27s6f7K-BarbxUWzP4YCrMSlYni54HBzQtYjRRWkZ-6KpLS0",
+        "postedAt": "Fri, 25 Sep 2026 22:57:28 GMT",
+        "similarity": 0.6109205501381246,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Senior AI Test Automation Engineer",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...We are looking for a hands-on Senior AI Test Automation Engineer to design, build, and maintain automated testing solutions while applying modern AI and agentic engineering practices to the QA lifecycle. This is an engineering-first role combining strong test automation...",
+        "url": "https://tr.jooble.org/jdp/-993887208670363877",
+        "postedAt": "2026-10-13T00:00:00.0000000",
+        "similarity": 0.5843225468142601,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Senior Application Software Engineer",
+        "company": "Bosch",
+        "location": "Manisa",
+        "snippet": "of modern software development techniques and methodologies. Hands-on experience with software debugging and testing. Strong... to improve quality of life all across the globe. Welcome to Bosch. Job Description Developing control software based",
+        "url": "https://jobviewtrack.com/v2/DOB6JEy4y4H5q_lXTOM34fdIvK8VDRHaKFd0hcXhm3G5-IBPFOS8VEKuquPjKiNecNQEbRlu5rOZ37IxU4NdkxB6Thzii5cCd6ckVXCd_bm8XEiLzUuzEU6IeYmIGHoa1obNa-OyXTHPLIVVoOKrZW8AdoWYcrAUSiCfCB8hZqomehhhcybYKCVdKJ23nj-Ryj9cR5LoSHj1dhVSnWEhNJ8vUs0pW2J-nX8P9RVDBKI",
+        "postedAt": "Wed, 07 Oct 2026 22:29:19 GMT",
+        "similarity": 0.559794464198191,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Software Engineer",
+        "company": "Iyzico",
+        "location": "İstanbul",
+        "snippet": "BSc degree in Computer Science or related degree, Min. 2 year of software development experience, Experience in the.... Experience in software engineering best practices for the full software development life cycle, including agile development",
+        "url": "https://jobviewtrack.com/v2/pwqRjMrlSWsYHP7sST78cTck28PSEK3JHS42mTaxAnmjj4lU2UzUhItmow6X8fa7MTpQc51-kfOn-4iQQndEAxqOjJI1ANEG3LRW4B6tmWg00z6kOnyUqpY6gZGVzSQ-nebg7-2c4hDSVjtq5-byOYCVwtZopAUv45YwGVqs1azSoU8IEu4ONXv6x49ZFHDZRlEyQH8mG1QZSFWKCTBIXR2wqEjypnupIUEVhraLbXw",
+        "postedAt": "Fri, 02 Oct 2026 02:34:52 GMT",
+        "similarity": 0.5578965537783491,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Lead Software Engineer, Oracle",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...We are seeking a Lead Software Engineer, Oracle to join our technical team and drive the design... ...code solutions with fully supportive unit tests, in accordance with project standards... ...demonstrating clear understanding Experience in test/verification protocols as part of full...",
+        "url": "https://tr.jooble.org/jdp/-1151268389266988708",
+        "postedAt": "2026-09-29T00:00:00.0000000",
+        "similarity": 0.546877750171569,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "epam.com",
+        "title": "Lead Python QA Automation Engineer",
+        "company": "EPAM Systems",
+        "location": "Türkiye",
+        "snippet": "...We are looking for a Lead QA Automation Engineer with strong Python expertise and hands-on experience... ...team. In this role, you will combine advanced test automation skills with a modern approach to AI-assisted software quality engineering, taking ownership of QA initiatives...",
+        "url": "https://tr.jooble.org/jdp/-7816828964027719890",
+        "postedAt": "2026-10-13T11:22:09.1160950+00:00",
+        "similarity": 0.5315836172525377,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Staff Software Engineer",
+        "company": "Digital Zone",
+        "location": "Türkiye",
+        "snippet": "drift . Set code quality, testing and review standards for your teams, including the conventions that make AI-assisted... What you'll bring 8+ years building and operating production software, with a track record of owning architecture that spans",
+        "url": "https://jobviewtrack.com/v2/5beXgpI8SPv2jAjU2JDeF4vBf6QB9ONtu8ZsPlz0bXNSFsMfP7F4KMQvj-KkhJlswjW8ShtphJwGYVTRlH1-IEWcnaDjCzMmdYjRSG2OAgBewP8M8oMqZy6uFiMhh4lSsmQSwn2xVOB-VQG7sIl6_xW10zl08Bp2ILJO32C-AKOtnYRlB9soSogi5qo10FTwYD-RnkGJVneOP1faGrFHclNdWyQblgUrTUeuSQXPAPw",
+        "postedAt": "Sun, 16 Aug 2026 22:07:14 GMT",
+        "similarity": 0.5236207736222876,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Staff Compliance Engineer - Test and Certification",
+        "company": "Stryker",
+        "location": "Kayseri",
+        "snippet": ", including electrical safety, EMC, environmental, and recurring safety testing. Partner with Electrical, Mechanical, Software...Work Flexibility: Hybrid or Onsite As a Staff Compliance Engineer - Test and Certification, you will play a key",
+        "url": "https://jobviewtrack.com/v2/oPjpewebsvUfUw3ba1oLETRgl4vp8k8qK_uamsWFz_5rQexVJydtRKtWEVIyEiFAP_yyBXTthhEqbf0wOfW2xMOc4m8gBGsMjdlHLarxhxTK1o3D1IyH-JVXpYdwKDdh4N5NzMAZxem3D_KPoLkB8ZcssEaAyoDDr1glm2jJdcwPHlGndd6VWStG6yB4nV_rOkrg2MV-NTXUxcj1bDrJa3vXvnPZYeJpx2jKA7zTGzE",
+        "postedAt": "Wed, 07 Oct 2026 00:18:52 GMT",
+        "similarity": 0.5203709457320123,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Software Installation Engineer",
+        "company": "Varian Medical Systems",
+        "location": "Türkiye",
+        "snippet": "contributions. We are looking for a Software Installation Engineer who is enthusiastic, curious, and motivated—whether... world‑class training, take ownership of installation, testing, and handover of life‑impacting software solutions. Work",
+        "url": "https://jobviewtrack.com/v2/IKBOEM2CL4jh439jXKE8dDqnKpqOAHm-cMi830ga172CHQVBmVKvnBlNzJkWIICj9tY9HKF0t8r5WNlluHN5aSGnG008cM7RXmPUdOKv10th4CIa6g0TPt8Zyxp4GdBwWAf6w6lGVEAEAMnmRCts7HLtF_3K964acSZfM5IYyK1JlGcRvF3KfcCDZ-mKa4lciOWv6YnO1tuQ92EPwTebc0n0y_s47qtxBjIAXPlGnJ0",
+        "postedAt": "Wed, 30 Sep 2026 22:12:41 GMT",
+        "similarity": 0.5168910909300833,
+        "ilgili": null
+      }
+    ]
+  },
+  {
+    "cv": "cv-c-yeni-mezun",
+    "query": {
+      "keywords": "YAPAY ZEKA EĞİTMENİ",
+      "location": "Türkiye"
+    },
+    "sources": [
+      {
+        "name": "jooble",
+        "total": 53,
+        "returned": 20
+      },
+      {
+        "name": "careerjet",
+        "total": 0,
+        "returned": 0
+      }
+    ],
+    "avgSnippet": 263,
+    "origins": [
+      [
+        "yenibiris.com",
+        7
+      ],
+      [
+        "elemanonline.com.tr",
+        5
+      ],
+      [
+        "secretcv.com",
+        3
+      ],
+      [
+        "sporkariyerim.com.tr",
+        1
+      ],
+      [
+        "workable.com",
+        1
+      ],
+      [
+        "isbul.net",
+        1
+      ],
+      [
+        "boards.greenhouse.io",
+        1
+      ],
+      [
+        "talentlyft.com",
+        1
+      ]
+    ],
+    "top": [
+      {
+        "source": "jooble",
+        "origin": "yenibiris.com",
+        "title": "Yapay Zeka Strateji Danışmanı",
+        "company": "Şirket Bilgileri Gizli",
+        "location": "İstanbul Anadolu",
+        "snippet": "...İŞ TANIMI Şirketimiz, yapay zeka teknolojilerini iş süreçlerine entegre ederek rekabet avantajı yaratmayı hedefleyen, yenilikçi ve büyüme odaklı bir kurumdur. Kurumsal YZ dönüşüm yolculuğumuzu şekillendirecek, teknoloji ile iş hedeflerini bir araya getirebilecek deneyimli...",
+        "url": "https://tr.jooble.org/jdp/-5643884710493472515",
+        "postedAt": "2026-09-10T00:00:00.0000000",
+        "similarity": 0.6457971056352942,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "yenibiris.com",
+        "title": "Yapay Zeka Yazılım Mühendisi",
+        "company": "AKINSOFT",
+        "location": "Konya",
+        "snippet": "...ilgili bölümlerinden mezun, *Bayesian sınıflandırmaları, SVM, LDA , Gaussian dağılımları vb. *Algoritmalarda bilgi sahibi, *Yapay zeka konusundaki algoritma ve uygulamaları takip eden, *Yazılım literatürünü takip edecek seviyede ingilizce bilen, *Konya ilinde...",
+        "url": "https://tr.jooble.org/jdp/-3290631348050514456",
+        "postedAt": "2026-05-06T00:00:00.0000000",
+        "similarity": 0.638474400518522,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "isbul.net",
+        "title": "Genel Başvuru",
+        "company": "BİREBİN ŞANS OYUNLARI A.Ş.",
+        "location": "İstanbul, Şişli",
+        "snippet": "...deneyimli ya da bu alanlarda kariyer yapmaya istekli, Kendi uzmanlık alanındaki güncel teknolojileri, dijital trendleri ve yapay zeka destekli araçları yakından takip eden, Analitik düşünme becerisine sahip, veri ve sonuç odaklı çalışmayı benimseyen,...",
+        "url": "https://tr.jooble.org/jdp/4783251464710507195",
+        "postedAt": "2026-09-26T13:04:20.0500000",
+        "similarity": 0.6324845935622325,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "elemanonline.com.tr",
+        "title": "Sosyal Medya & Yapay Zeka Uzmanı",
+        "company": "Yılmaz İletişim Tic",
+        "location": "Hatay, İskenderun",
+        "snippet": "*Özellikle yapay zeka konusunda bilgili ve deneyimli, *E-ticaret sitesinin içerik yönetimi ve iş akış süreçlerinin yönetilmesi, *Hedef kitleye uygun, online iletişim ve pazarlama stratejilerinin belirlenmesi, *Dijital pazarlama süreçlerinin içerisin de etkin rol oynamak...",
+        "url": "https://tr.jooble.org/jdp/-8483170970245588413",
+        "postedAt": "2026-09-29T18:06:34.6568938+00:00",
+        "similarity": 0.5674015140110054,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "secretcv.com",
+        "title": "Veri Giriş Elemanı Ve Raporlama",
+        "company": "MD KALIP MAKİNE",
+        "location": "İstanbul, Büyükçekmece",
+        "snippet": "...mükemmellik çalışmalarına veri odaklı destek verilmesi, Rutin veri analizi ve raporlama süreçlerini hızlandırmak adına güncel yapay zeka (AI) araçlarının araştırılması ve iş akışlarına entegre edilmesi. İstenen Yetenek ve Uzmanlıklar Üniversitelerin...",
+        "url": "https://tr.jooble.org/jdp/-2232000810502177236",
+        "postedAt": "2026-08-31T16:14:13.5570000",
+        "similarity": 0.5587244088316898,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "elemanonline.com.tr",
+        "title": "Grafik Tasarım & Yapay Zekâ Görsel Uzmanı",
+        "company": "Ssilhoutte E-ticaret",
+        "location": "Kayseri, Kocasinan",
+        "snippet": "E-ticaret alanında faaliyet gösteren firmamız bünyesinde tam zamanlı çalışacak Grafik Tasarım ve Yapay Zekâ Görsel Uzmanı arıyoruz. İş Tanımı Yapay zekâ araçları kullanarak ürün görselleri ve konsept görseller hazırlamak, Adobe Photoshop ile görsel düzenleme ve tasarım...",
+        "url": "https://tr.jooble.org/jdp/8827605090618686618",
+        "postedAt": "2026-10-02T18:06:34.5346183+00:00",
+        "similarity": 0.5423900595974839,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "boards.greenhouse.io",
+        "title": "Senior Art Director",
+        "company": "OLIVER Agency",
+        "location": "İstanbul",
+        "snippet": "...iletişimi ve kampanya deneyimi bulunan. Dijital platformlara, sosyal medya kültürüne ve güncel yaratıcı trendlere hakim. Çeşitli yapay zeka araçlarını yaratıcı süreçlerinde etkin kullanabilen. Fikir geliştirme kadar uygulama kalitesine de önem veren, detaycı ve...",
+        "url": "https://tr.jooble.org/jdp/-391124378813570260",
+        "postedAt": "2026-09-30T07:24:56.7186380+00:00",
+        "similarity": 0.5399573803054534,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "elemanonline.com.tr",
+        "title": "Dijital Pazarlama & Sosyal Medya Uzmanı",
+        "company": "Bakac Store",
+        "location": "İzmir, Bornova",
+        "snippet": "...sahip \"sosyal medya uzmanı\" aramaktayız; Tercihen üniversitelerin iletişim fakültelerinden veya halkla ilişkiler bölümünden mezun; Yapay zeka araçları uzman derecesinde kullanabilen. Adobe premiere pro, photoshop ve after effects kullanabilen; Video ve fotoğraf çekimi...",
+        "url": "https://tr.jooble.org/jdp/6018104049067785774",
+        "postedAt": "2026-09-24T18:06:26.3443984+00:00",
+        "similarity": 0.535255359173889,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "elemanonline.com.tr",
+        "title": "Satış Pazarlama Personeli",
+        "company": "Klc Yazılım",
+        "location": "İstanbul, Beşiktaş",
+        "snippet": "KLC Yazılım olarak yapay zeka, otomasyon ve SaaS alanında geliştirdiğimiz yenilikçi yazılım ürünlerinin satış süreçlerinde görev alacak ekip arkadaşları arıyoruz. Görev Tanımı * Potansiyel müşterilerle iletişime geçerek ürünlerimizin tanıtımını yapmak. * Telefon ve online...",
+        "url": "https://tr.jooble.org/jdp/-2112514009503795604",
+        "postedAt": "2026-09-26T10:06:39.5059218+00:00",
+        "similarity": 0.5189988025393575,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "yenibiris.com",
+        "title": "Rehber Öğretmen",
+        "company": "Maksimum Vip Akademi",
+        "location": "İzmir",
+        "snippet": "...öğrenci takip sistemlerini kullanabilmek Ders programı, etüt planı ve rehberlik takvimlerini sistemli şekilde oluşturabilmek Yapay zeka destekli eğitim teknolojilerine açık olmak Bu yalnızca bir iş ilanı değildir. Bu; aynı vizyona inanan, binlerce öğrencinin...",
+        "url": "https://tr.jooble.org/jdp/6882913077587476083",
+        "postedAt": "2026-10-08T00:00:00.0000000",
+        "similarity": 0.5175656973791848,
+        "ilgili": null
+      }
+    ]
+  },
+  {
+    "cv": "cv-d-pazarlama",
+    "query": {
+      "keywords": "Performance Marketing Specialist",
+      "location": "Türkiye"
+    },
+    "sources": [
+      {
+        "name": "jooble",
+        "total": 1418,
+        "returned": 20
+      },
+      {
+        "name": "careerjet",
+        "total": 28,
+        "returned": 20
+      }
+    ],
+    "avgSnippet": 261,
+    "origins": [
+      [
+        "?",
+        20
+      ],
+      [
+        "epam.com",
+        9
+      ],
+      [
+        "jobs.lever.co",
+        5
+      ],
+      [
+        "jazzhr.com",
+        2
+      ],
+      [
+        "pyjamahr.com",
+        1
+      ],
+      [
+        "comeet.co",
+        1
+      ],
+      [
+        "workable.com",
+        1
+      ],
+      [
+        "jooble",
+        1
+      ]
+    ],
+    "top": [
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Jr. Digital Marketing Specialist",
+        "company": "obilet.com",
+        "location": "İstanbul",
+        "snippet": "in performance marketing channels (Google Ads, Criteo, Facebook Business Manager etc.) Creative and data-driven mindset Fluency... will include: Basic understanding of Google Ads, SEO, Facebook Ads, etc. Basic understanding of different digital marketing",
+        "url": "https://jobviewtrack.com/v2/inA9npmWR0lO_USNOInmFrHA9b7jr6lHP1p1KspqUNlAIiNor7DKfyHRKDlJSaN8JqAdGR3NRUULr052oWlJ0D19eI3dwMj_UoHqKHDYsXGJoojDFFe_3xFwrWVOzwfPcE7NRGTIKJg4oKU5bUC2pZPEylKlAJ0sps2vyZ_AuTNFOHRDZBIpYiAfGbg7bXK01l_2Jqd_hbY9BQJNhwsZSAQOvGjwDWQE9dvgv6-pCHk",
+        "postedAt": "Wed, 12 Aug 2026 02:09:17 GMT",
+        "similarity": 0.5445965609495069,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "jazzhr.com",
+        "title": "Performance Marketing Manager - Display Channels",
+        "company": "Armut Teknoloji AS",
+        "location": "İstanbul",
+        "snippet": "...operate across 14 countries in the EMEA region, with a significant market presence in Italy, Turkey, Romania, Spain, and the UK. With a... ..., or a related field; ~2+ years of hands-on experience in performance marketing, digital marketing, or user acquisition; ~...",
+        "url": "https://tr.jooble.org/jdp/-6581019293249625031",
+        "postedAt": "2026-09-21T00:00:00.0000000",
+        "similarity": 0.5392874197943066,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "workable.com",
+        "title": "Go-to-Market (GTM) & Sales Specialist (HealthCare)",
+        "company": "Datasurgery Yazılım ve Danışmanlık",
+        "location": "İstanbul",
+        "snippet": "...ölçeklenmesini birlikte şekillendirecek bir ekip arkadaşı arıyoruz. Sorumluluklar Türkiye ve hedef global pazarlar için Go-to-Market stratejisinin oluşturulmasına ve uygulanmasına katkı sağlamak, Hastane, klinik, görüntüleme merkezi ve potansiyel kurumsal...",
+        "url": "https://tr.jooble.org/jdp/-59909950892378772",
+        "postedAt": "2026-09-30T08:07:09.9800000",
+        "similarity": 0.5143162950550643,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Performance Marketing Specialist",
+        "company": "clickzone",
+        "location": "İstanbul",
+        "snippet": ". They offer a comprehensive suite of services, including performance marketing, SEO, growth marketing, and data analytics. By leveraging advanced... Marketing Specialist to enhance the effectiveness of our digital marketing strategies and continuously improve campaign",
+        "url": "https://jobviewtrack.com/v2/qskL4Z9qE_V0leoR8ubJUiZb9rKpSCk7cUBwtlEVJ_AnPtzbFcqNlOBlL3m0_igSAiquSTnNGW4C9nVNY0xL53NnPzsdpQ_JZotsDI0JpW5gGiyiK8mOJsBhiL0MX9gScyAsGFxjcf-kznGamgCOUyqg1YhVOExMumaNo0URQhxIZ4VG8eZiFNHnL9QEH9pbkxjpB9IWhXQpkbAnmbpsWRVUWw-ffth7dbYMiysX0uo",
+        "postedAt": "Wed, 30 Sep 2026 22:39:34 GMT",
+        "similarity": 0.4974108202114656,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "jazzhr.com",
+        "title": "AI-First Marketing Operator",
+        "company": "Storm Ideas",
+        "location": "Türkiye",
+        "snippet": "...contract Fully remote working from anywhere in Turkey! ✨ A marketing and authority role with AI agents, skills and automation at the... ...opportunity to shape how an AI-native agency shows up in the market High-end, fast computer and all the latest software, AI tools...",
+        "url": "https://tr.jooble.org/jdp/5337381387801099865",
+        "postedAt": "2026-08-17T00:00:00.0000000",
+        "similarity": 0.47687313861339226,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Advanced Specialist, Geo Marketing",
+        "company": "Pearson",
+        "location": "İstanbul",
+        "snippet": "Job Category: Go To Market Job Description: Geo Advanced Role specialist for Türkiye: The Advanced Specialist..., Geo Marketing will lead the development and execution of market-focused initiatives across the PTE and Institutional",
+        "url": "https://jobviewtrack.com/v2/pXFVY0Z9R2_GC3ZUWVInX6NfyOQn5HhLBgux0doNa_EmfBeEt6krr82hkQvwuNckeMM_6vyZ6biv5UJjEweOuxfxQEyEg5xq0IB3o7PNMLM-_i-BnnxF2YirFXsTkO10JiExyqTnocE22ffw-uEYkARhoAB7epkLQM1f8WCN-Wqz_QGeOLYEg_ZSbEbb2CZzR9rqmQpmhoIneTM0_rBoIX6pbpH6Q2-cq9OcjolZpPw",
+        "postedAt": "Fri, 02 Oct 2026 01:35:25 GMT",
+        "similarity": 0.47182255440059545,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "comeet.co",
+        "title": "Creative Team Lead (AI & Performance Marketing)",
+        "company": "CapsLock",
+        "location": "Evden çalışmak",
+        "snippet": "...CapsLock is a global IT marketing company that pioneers unique, scalable customer acquisition solutions for B2C clients. We solve complex... ...produces static ad creatives, photorealistic AI visuals for performance campaigns across paid media channels, and source assets for...",
+        "url": "https://tr.jooble.org/jdp/-5022846778899418370",
+        "postedAt": "2026-10-12T16:31:13.9682459+00:00",
+        "similarity": 0.4630166091257559,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Trade Marketing & E-Commerce Specialist, Hair Professional",
+        "company": "Henkel",
+        "location": "Ümraniye, İstanbul",
+        "snippet": "marketing initiatives by providing commercial insights and monitoring traffic, engagement, and sales performance What makes...About this Position This position is responsible for supporting commercial growth across trade marketing and e-commerce",
+        "url": "https://jobviewtrack.com/v2/4YMu6DdtB105jRmxwkxHyJz4KA0Gm-UqqwEy-q78o76hEbUdJ7kDsYV0QyyyKCYfffqfcfRqHxcuio-B7IogCfy0_YVxqN3gRRsveawjg_JT_bzdqxJNl-AGlvBVHaLqZqtpMCsgInHzOa6n3vH3h84o9WQvkyh62__BG0XUyw6Az-1-SlkaZXRcQcU_9Xm4LZzM5MNb_6_VT260uQMDTXmtO83Rl21Kq9szOLO5eW8",
+        "postedAt": "Tue, 28 Jul 2026 22:03:02 GMT",
+        "similarity": 0.45606453608581804,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "jobs.lever.co",
+        "title": "AI Engineer, Performance Marketing",
+        "company": "dreamgames",
+        "location": "İstanbul",
+        "snippet": "...We are looking for a passionate AI Engineer to join our performance marketing team. As an AI Engineer, you will build generative AI pipelines and agentic systems for creative production: creative ideation, image and video generation, automated creative pipelines, and the...",
+        "url": "https://tr.jooble.org/jdp/-7031289937253177050",
+        "postedAt": "2026-07-20T13:27:28.5533653+00:00",
+        "similarity": 0.4457688206506915,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Strategic Pricing Specialist",
+        "company": "Linde",
+        "location": "Gebze, Kocaeli",
+        "snippet": "segments Partner with Sales, Marketing, Finance, and Operations teams to improve pricing performance, enhance value capture...Linde Gas A.Ş. Strategic Pricing Specialist Gebze, Türkiye | req25094 What you will enjoy doing Develop",
+        "url": "https://jobviewtrack.com/v2/uNNlWYC_nqbwp_mQdEfQ_Y05vRK4CbC9AwP5SsRk39BxZg0yg6SRVzIVqB96YunvpuIUZcg3Hl3ldp7UZlLrdQDAXsLN0KBcNRrmY5o4m1oQ9xDW2X2dmBqaE91_p76SfEIBTbiBf8QGWGTgXI7vjhhF7H6HqDa77GG1evzoAAa49d7yGLY5wu_TdxZ2rmy2fOgBDyzbYe_t5IO8A2agvx3wgLQUM74Mz5FXXuWJL64",
+        "postedAt": "Thu, 01 Oct 2026 01:34:59 GMT",
+        "similarity": 0.43981708316314605,
+        "ilgili": null
+      }
+    ]
+  },
+  {
+    "cv": "cv-e-muhasebe",
+    "query": {
+      "keywords": "Genel Muhasebe Uzmanı",
+      "location": "Türkiye"
+    },
+    "sources": [
+      {
+        "name": "jooble",
+        "total": 4895,
+        "returned": 20
+      },
+      {
+        "name": "careerjet",
+        "total": 62,
+        "returned": 20
+      }
+    ],
+    "avgSnippet": 247,
+    "origins": [
+      [
+        "?",
+        20
+      ],
+      [
+        "yenibiris.com",
+        8
+      ],
+      [
+        "elemanonline.com.tr",
+        6
+      ],
+      [
+        "secretcv.com",
+        4
+      ],
+      [
+        "isbul.net",
+        1
+      ],
+      [
+        "workable.com",
+        1
+      ]
+    ],
+    "top": [
+      {
+        "source": "jooble",
+        "origin": "elemanonline.com.tr",
+        "title": "Genel Muhasebe Yardımcısı",
+        "company": "Rtur Turizm",
+        "location": "İstanbul, Bayrampaşa",
+        "snippet": "-Muhasebe alanında en az 5 yıl tecrübeli -Ms Office programlarını etkin kullanabilen, (tercihen LUCA-MİKRO VB).programlarına hakim, -Raporlama analiz ve maliyet hesaplamalarına hakim, -Tüm Masraf Kalemlerinin kontrolünü yapacak, -Muhasebe alt yapısı olan, Vergi dairesi...",
+        "url": "https://tr.jooble.org/jdp/2755996654903569000",
+        "postedAt": "2026-09-29T18:06:34.6705509+00:00",
+        "similarity": 0.6682974547103282,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "yenibiris.com",
+        "title": "Muhasebe Uzman Yardımcısı",
+        "company": "RT ENERJİ",
+        "location": "Antalya",
+        "snippet": "...İŞ TANIMI • Günlük muhasebe kayıtlarının mevzuata uygun şekilde tutulması, • E-fatura, e-arşiv, e-defter süreçlerinin yönetilmesi,... ...hazırlanmasına destek verilmesi ,• Ticaret sicil işlemleri, genel kurul, imza sirküleri, yetki belgeleri gibi resmi süreçlerin takibi...",
+        "url": "https://tr.jooble.org/jdp/5545333292659471615",
+        "postedAt": "2026-09-27T00:00:00.0000000",
+        "similarity": 0.6332011448399758,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Muhasebe Uzmanı",
+        "company": "Rona Aydinlatma",
+        "location": "Arnavutköy, İstanbul",
+        "snippet": "üzere, muhasebe süreçlerine hâkim ve Logo ERP programını aktif olarak kullanabilen Muhasebe Uzmanı arıyoruz. ARANAN... NİTELİKLER Üniversitelerin Muhasebe, Maliye, İşletme, İktisat, Finans veya ilgili bölümlerinden mezun, Genel muhasebe",
+        "url": "https://jobviewtrack.com/v2/v0vKLIsAfhPlNDY7k7vzZKe1CZr9SCQ2UbEA8KflqKVv_3IPaLDDbAs0UVhmdQY7V2PfEs_jdbml7NxncIBg75JSkC2QAD53LtU4rKH68F85HBuJB0iyWVArdcij9Po9DhDn0yBh8rR1pYruIhx1XHaJOMeKvI-piEUH390jIfMJJozMpZOF0-rIQO-S48yHhAbM-FSPKaqAsnr95Gx8fe9LPDkisHmEsTfAncPxaUQ",
+        "postedAt": "Tue, 06 Oct 2026 22:18:56 GMT",
+        "similarity": 0.6250730233575562,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "elemanonline.com.tr",
+        "title": "Genel Muhasebe Elemanı",
+        "company": "Soyak İlaç Depolama Hiz.dış Tic.ltd.şti",
+        "location": "İstanbul Avrupa",
+        "snippet": "Genel Nitelikler; Üniversitelerin ilgili bölümlerinden mezun, En az 5, en fazla 10 yıl Genel Muhasebe süreçlerine hakim, İşyerinde çalışma koşullarına uyum sağlayabilme, MS Office programlarını etkin bir şekilde kullanabilme, Analitik düşünme ve problem çözme yeteneği...",
+        "url": "https://tr.jooble.org/jdp/-2405018326208129005",
+        "postedAt": "2026-09-28T10:06:31.9986976+00:00",
+        "similarity": 0.6057845478859101,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Genel Muhasebe Sorumlusu / Uzmanı",
+        "company": "Kale Gida",
+        "location": "Çanakkale",
+        "snippet": "Muhasebe_Sorumluluk ve Yetkiler Entegratörden gelen faturaların indirip yetkili kişilere dağıtımını yapmak... şekilde saklanması Bütçe Tablo Analizi İş Profili Üniversitelerin ilgili bölümünden mezun ya da muhasebe tecrübesi",
+        "url": "https://jobviewtrack.com/v2/xrUGZRUr9hScMBwba111QebNKv9Ex5LaiwI3EpASH2NSF-73VFnRYk1B4jFfj-qxuPHuJgtXtOnOB5LY5SaRAcG8wSYvcoTuzSo6RtAqXIKJ0y2I-AEkJo55LJkDaHu1JsJqAFTlSnIEYhIg7VRGc9jgDRxLk8vwlQlGyoTOWXnGSwfkDIA43IfKgnLkv2sHaNABHRjUZRBs73RhLdVgn1Jsqbht7kmRAjQGn-uA0z4",
+        "postedAt": "Thu, 01 Oct 2026 22:40:22 GMT",
+        "similarity": 0.6036050562183025,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Muhasebe Uzmanı",
+        "company": "Gi Group",
+        "location": "Antalya",
+        "snippet": "lideri iş ortağımız için ''Genel Muhasebe Uzmanı'' arayışımız bulunmaktadır. İşin Tanımı Yasal mevzuatlara uygun... Bilimler Fakültesi bölümlerinden mezun Tercihen hızlı tüketim malları sektöründe, Genel Muhasebe, Vergi Mevzuatı",
+        "url": "https://jobviewtrack.com/v2/0bnp_H9d29fC9dZVa9z3BtezhJHdZUebVQP4p31Lk_9z7L6pYAMSbZVbZeKSAHFB2TQiFXBxhSVfZb2FuSGlnKhVPvShgBA13Vlb-L6WHoQev0BH2e4OPzfw9kibo0K_IZ4wOgfViUbGzcQLWBxXgUsFZqdCw6bfz6VwNh8BQn6lXKwnMn8LB6ZjQ3ZSSyHUAXzE6XkQRGS5I1Dex1fgut35LllkL4bkby8jtovsos8",
+        "postedAt": "Fri, 09 Oct 2026 22:02:38 GMT",
+        "similarity": 0.6004897307268439,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "elemanonline.com.tr",
+        "title": "Muhasebe Uzmanı",
+        "company": "Lider Aktif Trafik Müşavirliği",
+        "location": "İstanbul Anadolu",
+        "snippet": "Ofis programlarını kullanabilen Tekdüzen muhasebe planına hakim , Zirve programını kullanabilen, Muhasebe kayıtlarını yönetebilecek, Banka veri girişlerine hakim, Tercihen ümraniye , çekmeköy, Sancaktepe çevresinde ikamet eden takım arkadaşı arıyoruz",
+        "url": "https://tr.jooble.org/jdp/-2826646899342543345",
+        "postedAt": "2026-10-02T10:06:44.9939716+00:00",
+        "similarity": 0.5983103021018258,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Genel Muhasebe Uzmanı",
+        "company": "Mad Denetim Ve Smmm Ltd Sti",
+        "location": "Kadıköy, İstanbul",
+        "snippet": "İş Tanımı: Büyüyen ve gelişen organizasyonumuz bünyesinde, genel muhasebe ve vergi süreçlerinin yasal mevzuata..., tekdüzen hesap planına ve şirket prosedürlerine uygun şekilde yürütülmesinden sorumlu olacak \"Muhasebe Uzmanı\" arayışımız",
+        "url": "https://jobviewtrack.com/v2/-FqOVFXd3IiKdosTKUaBLW85xJw4N6BOGGEJkl4x2EBAiqhlBPw8m4mCyeOMt_np-Xtmmmh_Jn6j5H4qcBcdk1H9pgYfcINQsr-cjD_yPKQRIa1pvwXV8yAxemUHuAiChuM1NwbDAFgPjTjEvhcFDfrpgT6tZsoG3tNXAfgTRveTQAIugNVkXw-Ajp-OE9b05ytZ_IEEjLIowi5d7VjDfZ_Z5Uyk0VvhvR5k7h4iAHU",
+        "postedAt": "Wed, 07 Oct 2026 22:08:01 GMT",
+        "similarity": 0.5812221796040669,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Muhasebe Uzmanı",
+        "company": null,
+        "location": "Keçiören, Ankara - Sincan, Ankara",
+        "snippet": "çalışabilecek Genel muhasebe süreçlerine ve Tek Düzen Hesap Planına Hâkim Takım çalışmasına yatkın, analitik düşünen ve iletişim... Meslek Deneyim Muhasebe Uzmanı Yıl Öğrenim ve Kişisel Bilgiler Öğrenim En Az Öğrenim Seviyesi : Önlisans En Fazla",
+        "url": "https://jobviewtrack.com/v2/8nAKhgzEp1uDvsm7RMZK29gG2ToBikjc_-O6K_0l_MRKgFHXDwR2Etdfurv54ukYeshxTLTCG9vAcynIwWVsMP2p6343s1mMy_t5N2u-yLVXe_jU_bpxbVsf08m1NA0BD7GZ29Kb6mmTrEINSc2Ls208q2zyb45tUu0K9JvIBdlDW4mDmWW29seOCHuux_MFwHcVIRJ9p5Nt_t2dqd5FM8xPPTGq66-bGYzvbBtiVvo",
+        "postedAt": "Sun, 11 Oct 2026 22:34:46 GMT",
+        "similarity": 0.5766409263816282,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "GENEL MUHASEBE UZMANI",
+        "company": "TURKER LOJ.TAS.TURIZM VE DESTEK HIZ.SAN VE TIC A.S",
+        "location": "İstanbul Anadolu Yakası",
+        "snippet": "hizmetleri sunan firmamızda ; Finans Birimimize bağlı çalışacak \"Genel Muhasebe Uzmanı\" arıyoruz. İş Tanımı Siber Muhasebe... vb.) mezun. Genel muhasebe alanında en az 3-5 yıl deneyimli. Siber Yazılım (Muhasebe/Finans) programını çok",
+        "url": "https://jobviewtrack.com/v2/IsYh7gqFfeAqPat_n2AUK5e3TTI10O9iq0QyKlw2a2gnisTZxE24N6icJJf1KTRmIoL_JqK4uKv8U8Nj7Gn2cHql-Eobj6FXZF-Dq_oi9yYxCY6WHA9Zx1iiqHGmH_GnGPidBgVaJUkz51lwA_8P17kKtYpxJCNfSfYa3uQILAB9qvMm5gpBR79PPJ68X-ORhXzcB8y6I1Fsc7j2DqMZ2EAT9oYPBN8IpD2MD-1d00o",
+        "postedAt": "Mon, 05 Oct 2026 22:30:08 GMT",
+        "similarity": 0.5730616482850189,
+        "ilgili": null
+      }
+    ]
+  },
+  {
+    "cv": "cv-f-satis",
+    "query": {
+      "keywords": "Saha Satış Mühendisi",
+      "location": "Türkiye"
+    },
+    "sources": [
+      {
+        "name": "jooble",
+        "total": 1758,
+        "returned": 20
+      },
+      {
+        "name": "careerjet",
+        "total": 11,
+        "returned": 11
+      }
+    ],
+    "avgSnippet": 252,
+    "origins": [
+      [
+        "?",
+        11
+      ],
+      [
+        "yenibiris.com",
+        10
+      ],
+      [
+        "jooble",
+        3
+      ],
+      [
+        "secretcv.com",
+        2
+      ],
+      [
+        "zoho.com",
+        1
+      ],
+      [
+        "randstad.com.tr",
+        1
+      ],
+      [
+        "zfjobs.jobs.net",
+        1
+      ],
+      [
+        "elemanonline.com.tr",
+        1
+      ],
+      [
+        "unisbul.com",
+        1
+      ]
+    ],
+    "top": [
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Satış Mühendisi",
+        "company": "Grafton",
+        "location": "Darıca, Kocaeli",
+        "snippet": "sağlar. Endüstriyel kodlama sektöründe üretim yapan iş ortağımız için 'Satış Mühendisi' arıyoruz. Görev Tanımı... Endüstriyel Kodlama ve Markalama Makineleri için yurt içi satış ve bayi ağının geliştirilmesi, Marmara genelinde bayi",
+        "url": "https://jobviewtrack.com/v2/V4H_gSoDnDhgtcj-gs4Jjh-Cwyi_M0rlFExWhVC3el_Nu4Afg1JDPMxWp7PUkbsP3CsOm1eCUdZ2d56aN4bV2E7STlui45EUs2KzGN2-0He6hTdzHdnzS6QRUm7InoXQlM66SMzwAM6hBsGtNfKxVBshUMU7sA8doWdyeLDk7dNZGRQlsVDPxDWAdgwyuY_dVODBjH5RLrLXrTcPm6il0YbkpRsur2s5c8smlTS_xzc",
+        "postedAt": "Sat, 10 Oct 2026 06:12:52 GMT",
+        "similarity": 0.6866582425705168,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "satış mühendisi",
+        "company": "Randstad",
+        "location": "İstanbul Anadolu Yakası - İstanbul Avrupa Yakası",
+        "snippet": "\"Satış Mühendisi\" rolünde arayışımız bulunmaktadır. Dinamik ve agile bir satış ekibinin parçası olarak yeni ürün satışı... deneyimli, Yeni müşteri kazanımı ve saha satış tarafında güçlü, Müteahhit, proje firmaları, mimari ofisler veya teknik satın",
+        "url": "https://jobviewtrack.com/v2/b-AZ8SnkfRf4lzb-kCTYtiPp0TSnKXkX9CYJgO3MezJjhVdfVjsFJZ8S6ilF2Kg2xlpUBw6u-kzRszoEiEEGNvEqSshyW9MKq3_s1hcPdPQG3vuzuH7Hv-NE3_I5LKIWSutkeHe8Z7pN8OKiuwj9UGl7_G8nFe14c3Y_pGNVX4iIcSv2o5yHZKwPozsDuSdi-YPswDMhyfFxJQHthuajOmVAmpT7V659oea6BrGZGfc",
+        "postedAt": "Mon, 07 Sep 2026 22:33:04 GMT",
+        "similarity": 0.6845759299781173,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "elemanonline.com.tr",
+        "title": "Satış Mühendisi",
+        "company": "Kasko Demirçelik Makine",
+        "location": "İstanbul, Beylikdüzü",
+        "snippet": "Tecrübeli Satış mühendisine ihtiyacımız var. Kendi alanında en az 5 yıl iş tecrübesine sahip olmalı, Edvenced seviyesinde ingilizce bilen, Beylikdüzü ve civarı daha çok tercihimizdir.",
+        "url": "https://tr.jooble.org/jdp/469266485653569028",
+        "postedAt": "2026-10-05T18:06:35.6079976+00:00",
+        "similarity": 0.6738082510275395,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "zoho.com",
+        "title": "1115.03 Saha Satış Mühendisi",
+        "company": "Astera Insan Kaynakları",
+        "location": "Ankara",
+        "snippet": "...Saha Satış Mühendisi (Field Sales Engineer) Görev ve Sorumluluklar Ankara ve çevre illerde yeni müşteri kazanımını yönetmek; hedef firma listesi oluşturarak yoğun ve düzenli bir saha temposu yürütmek KOBİ'lerde kısa döngülü lisans satışlarını, kurumsal müşterilerde...",
+        "url": "https://tr.jooble.org/jdp/1401048337847021238",
+        "postedAt": "2026-09-23T00:00:00.0000000",
+        "similarity": 0.6711798968137488,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Teknik Satış Mühendisi",
+        "company": "Adecco",
+        "location": "Çorlu, Tekirdağ",
+        "snippet": "\"Teknik Satış Mühendisi\" rolü için arayışımız bulunmaktadır. Aranan Nitelikler Üniversitelerin tercihen Makine, Mekatronik... güçlü, aktif saha satışını benimseyen, Teknik çözümleri müşterinin operasyonel ve finansal kazanımlarıyla",
+        "url": "https://jobviewtrack.com/v2/k83SFEvdMI0cWjiZjAQ0DK6qOk0RK7fw9CtOPDqs9rOhNRL-OiUOR0VKRAiymfLKAMtf2Isf8R8Vi0VZmt46NWWobsj9ql6Sz4q3sKWzZmMFl8z50TFHfZuJxFyUzXRqIfLIK7ar0gj5DQz1J49x9S8cJ-Fyql9ETUN2s_O-x7Mzjr9a63PrxZY-lbBi4PA04ZKUk_ADfTUxU4QgjA6PUoMkwjiw4CpKFv32OHUHlcM",
+        "postedAt": "Fri, 09 Oct 2026 22:08:28 GMT",
+        "similarity": 0.6694428068937287,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Proje Satış Mühendisi",
+        "company": "Marc Corporate Solutions",
+        "location": "Yenimahalle, Ankara",
+        "snippet": "faaliyet gösteren iş ortağımızın Endüstriyel Proje Satış ekibine katılmak üzere Proje Satış Mühendisi arıyoruz. Farklı... ihtiyaçlarını, saha koşullarını ve proje dinamiklerini değerlendirerek satış sürecine katkı sağlamak, HES işletmeleri",
+        "url": "https://jobviewtrack.com/v2/14wBM8qKTmLkRqhK-RgJUzi5j_irBNuMgezNlbP0jai97KBndJYp62Uw7sIg1c0DHs4CnYMaXadtNJxicysZVBfhhTOrCYHGurnNdC5p-T9-skaxbeT2NNjHgXAUlVrKgHklMoqvj6UJEgH3R7Nj1N6MtQFY8CxoN68ZoAii7lE_8AdywxmiBTusuSM_SHkHKndaDVrn2pI95xFcpm4HWalxWtijxRgd_lsBakOssuw",
+        "postedAt": "Sat, 03 Oct 2026 07:34:06 GMT",
+        "similarity": 0.6512487424793224,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Satış Mühendisi",
+        "company": "Marc Corporate Solutions",
+        "location": "Yenimahalle, Ankara",
+        "snippet": "alanlarında faaliyet gösteren iş ortağımızın büyüyen satış organizasyonuna katılmak üzere Satış Mühendisi arıyoruz... geliştirilmesi ve satış süreçlerinin yürütülmesi beklenmektedir. 🎯Görev ve Sorumluluklar Mevcut ve potansiyel müşterilere",
+        "url": "https://jobviewtrack.com/v2/n9gCm1FmOATLkdONQJvGX4SeB_VWR-no8XF8TvE-2ZXW9BYryNOpb4rYu9Fa2eotIcil4kGi8AgcRxBEm-bkUdgXAq1UrA-CO7IstNKiTOnGpGmOWOAJXjeV50piez1QmR_m6k83zZo-NwUU8B0XgyoQpilCmVIV9FU13IdQDxjSXRzVdOT8qcwCWbdtMuHgpqId8RtyySwNdBzhMa_tKVBlQSCMKkqTbRcPG5NlXE8",
+        "postedAt": "Sat, 03 Oct 2026 06:05:58 GMT",
+        "similarity": 0.6442345957932356,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Elektrik Mühendisi",
+        "company": null,
+        "location": "Bilecik",
+        "snippet": "okunması. Gerektiğinde satış temsilcisiyle beraber saha keşfi ve müşteri ile teknik toplantıların yapılması. Şartnameye uygun... elektrik malzemelerin araştırılması ve projenin maliyet çalışması yapılarak satış birimine destek olunması. Sipariş edilen",
+        "url": "https://jobviewtrack.com/v2/LhEr24K5T8KvmgHrvFgsja7J49MNDgKY2GKtMOupVJb2VtVV7dFP61lmY0BkoieraSxPP8Sebx5MgWWBO1FBUQLdPsf8w9t236XIuRfsyQHjJrV8CCV1RhCqek7PyaMbXc_YOv4j6YvVEYJkk3uzk1O6F3bqCt8I5uktBvTav7pcHdx714guFc5MsxiizT75JZ8oiFKur77TBelUhgDmkScF83TOW8G4q1FSNHsfTO0",
+        "postedAt": "Sun, 11 Oct 2026 22:47:14 GMT",
+        "similarity": 0.6277641591713753,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "secretcv.com",
+        "title": "Saha Satış Uzmanı",
+        "company": "GÜNEYNET İLETİŞİM HİZMETLERİ TİC.LTD.ŞTİ",
+        "location": "İstanbul, Ataşehir",
+        "snippet": "GÜNEYNET İLETİŞİM HİZMETLERİ TİC.LTD.ŞTİ - Saha Satış Uzmanı İş Açıklaması Turkcell Saha Satış Danışmanı Arıyoruz! Hedef odaklı çalışmayı seviyor, iletişim gücüne güveniyor ve yüksek kazanç elde etmek istiyorsan...",
+        "url": "https://tr.jooble.org/jdp/8751471941347156022",
+        "postedAt": "2026-10-08T13:11:10.3753489+00:00",
+        "similarity": 0.6189365982427092,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "Binek Servis Ağı - Saha Mühendisi",
+        "company": "ZF",
+        "location": "İstanbul",
+        "snippet": "lokasyonumuz için bir Binek Servis Ağı - Saha Mühendisi arıyoruz. Ekip ve rol hakkında: Satış sonrası hizmetler departmanı...Req ID 83164 | Istanbul, Türkiye, ZF Services Türk San. ve Tic. A.Ş. Binek Servis Ağı - Saha Mühendisi Sultanbeyli",
+        "url": "https://jobviewtrack.com/v2/kDThM2p0q5eYpt36XDoXoNfCGY6Jx5ZBAvCaNJJ6GAK-UkEDqn-9__suQoWSSyDKIGlvDYl47UGd13e2o8rhtc4oBCSJiHP6KZ2VlxlHTvr0kbLiZXKAlSAvUmjkbAilqEPVnmZxcItYiQ665iOgUtk_HsWdW5oV1EF0_Hmx_mEGWTTYhCsqs0aFtqgc8uBYV6fE7w5sjbKkbhyeEWHjXP8gh9DspwVlrHSyGJ91BoM",
+        "postedAt": "Mon, 05 Oct 2026 22:17:26 GMT",
+        "similarity": 0.5953218157367173,
+        "ilgili": null
+      }
+    ]
+  },
+  {
+    "cv": "cv-g-ik",
+    "query": {
+      "keywords": "İnsan Kaynakları Uzmanı",
+      "location": "Türkiye"
+    },
+    "sources": [
+      {
+        "name": "jooble",
+        "total": 1035,
+        "returned": 20
+      },
+      {
+        "name": "careerjet",
+        "total": 60,
+        "returned": 20
+      }
+    ],
+    "avgSnippet": 243,
+    "origins": [
+      [
+        "?",
+        20
+      ],
+      [
+        "yenibiris.com",
+        13
+      ],
+      [
+        "secretcv.com",
+        6
+      ],
+      [
+        "elemanonline.com.tr",
+        1
+      ]
+    ],
+    "top": [
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "İnsan Kaynakları Uzmanı",
+        "company": "Esra Helvaci Tekstil",
+        "location": "Başakşehir, İstanbul",
+        "snippet": "gösteren öncü bir firmadır. Şirketimizin büyüyen yapısı doğrultusunda İnsan Kaynakları departmanımızda görevlendirilmek üzere... saatlerine uygun. - İnsan Kaynakları alanında 1-2 yıl deneyime sahip. - Ön Lisans, Lisans veya Yüksek Lisans mezunu",
+        "url": "https://jobviewtrack.com/v2/VRqGHkdAPrh-qe8N8tugxv5z0VKFBzzi68q0a7Jfo83zsv7lmP3Nc0F7WY8q3ECNCJMpoIMrcAnGu_2pBKqHR_V129e9jP51QqFBT5-qAL7wn7lK5WtBCwRudcbs-O-wLNtdqF45Z__V8eLlzFh1-YtxFp-Fr_UYrdN6BYfZvL9PXvsi7H3ihm-uPPiPxPGECYlfHmnoi2sySuAPg_m8YElpMUrMJpFGs_rdZOB1f3U",
+        "postedAt": "Wed, 30 Sep 2026 22:51:06 GMT",
+        "similarity": 0.6647333031546899,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "İnsan Kaynakları Uzmanı",
+        "company": "Maca Kahvecilik Gida",
+        "location": "Pendik, İstanbul",
+        "snippet": "ve işe alım süreçlerini yönetecek tam zamanlı çalışan deneyimli bir İnsan Kaynakları Uzmanı arıyoruz. Aranan Nitelikler...: Minimum 3 yıl İnsan Kaynakları deneyimi, Daha önce İK Uzmanı / İK Yöneticisi pozisyonunda görev almış olmak (şarttır",
+        "url": "https://jobviewtrack.com/v2/fL61eUIij5POBZ4uO5qSTiTPfI-ppB9J_gaoHME4TurEhIi8BnijTXHTg8ksPY_4uiwaQvdR65cvdn_Eg3KeJeKed_uv75SNXUs96r5t7h3p3I4-I_v2YD5qsgAsr0ABCfkkKt__0VaD8Zrh2tDAu07q2lm0K8GwluQVz7yOf0r8StOmeorxAQit7Yr1YTMEha6xj6z6NZ2--QUi_KKfJWBbbYpLGBNua4X9JL27sZE",
+        "postedAt": "Fri, 25 Sep 2026 22:04:31 GMT",
+        "similarity": 0.6592052006944256,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "secretcv.com",
+        "title": "İnsan Kaynakları Uzmanı",
+        "company": "Boğaziçi Beton Sanayi ve Ticaret A.Ş",
+        "location": "İstanbul Avrupa",
+        "snippet": "Boğaziçi Beton Sanayi ve Ticaret A.Ş - İnsan Kaynakları Uzmanı İş Açıklaması Personelin özlük dosyalarının oluşturulması,güncellenmesi ve arşivlenmesi, İşe giriş, işten çıkış işlemleri, SGK bildirimleri, İŞKUR...",
+        "url": "https://tr.jooble.org/jdp/1698912254741090080",
+        "postedAt": "2026-10-10T12:53:17.7812603+00:00",
+        "similarity": 0.6563418608483693,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "yenibiris.com",
+        "title": "İnsan Kaynakları Uzmanı",
+        "company": "Bahçeşehir Koleji",
+        "location": "Muğla",
+        "snippet": "...İŞ TANIMI Bodrum Bahçeşehir Koleji olarak, tüm insan kaynakları süreçlerinden sorumlu olacak bir İnsan Kaynakları Uzmanı arıyoruz. GÖREV VE SORUMLULUKLAR: İşe alım ve işten çıkış süreçlerinin takibi ve kanunlara uygun yapılmasının sağlanması, Personel özlük...",
+        "url": "https://tr.jooble.org/jdp/7843250640318035655",
+        "postedAt": "2026-09-09T18:36:39.8030000",
+        "similarity": 0.6543839171087601,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "İnsan Kaynakları Uzmanı",
+        "company": "Bvs Group",
+        "location": "Şişli, İstanbul",
+        "snippet": ", insan odaklı ve dinamik bir İnsan Kaynakları Uzmanı arıyoruz. Görev Tanımı Şirket içi personel ihtiyaçlarını analiz etmek... doğrultusunda, tüm insan kaynakları süreçlerini (işe alım, özlük işleri, eğitim ve çalışan memnuniyeti) profesyonelce yürütecek",
+        "url": "https://jobviewtrack.com/v2/o_-uY82PJThjrYckZL_0WNKgRrPHZunDAtUk51dMqXkNTe01dTHrMTnfkxULG6sjInN_SrZ4_jduc7DsbmDINbpV1WvO3rq2HFHpQV4S6dbMVIpLY3jSp4M5zRw5N-rCE6xlae1O8jpH9o05cecifUbINMz6k4HzZmUG5yp1WKR-IDMZL1k6y96tTL1MXqfB2eELB5K7rgf2EVi5-U-9ixxWthQEYtK2fcVxypk82Wo",
+        "postedAt": "Wed, 07 Oct 2026 22:21:15 GMT",
+        "similarity": 0.6514185956552951,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "İnsan Kaynakları Uzmanı (Yöneticisi)",
+        "company": null,
+        "location": "Haliliye, Şanlıurfa",
+        "snippet": "Kaynakları Uzmanı (Yöneticisi) Yıl Öğrenim ve Kişisel Bilgiler Öğrenim En Az Öğrenim Seviyesi : Önlisans En Fazla Öğrenim... programlarını kullanabilmek, Düzenli, sorumluluk sahibi ve çözüm odaklı olmak Meslek Bilgileri Meslek Deneyim İnsan",
+        "url": "https://jobviewtrack.com/v2/WirN_JK_Gq_I7XySbw1ROYp3NM5IYqufYnRxkWjNon-RCmx3CnyUprIugp4X6RxdxKqFNJwFZw8tKZPO7aoszEkCz4l8XsFC1_-JQO4pu_r-i_XA5Lsb5XThheVzNwuwGEFxznAx3ibt8JTqCXWgrALetOLSVq2Yx-6zBsNgCogsy-Ln-vctPCmILzeqgkktDRhvGYJxrB1PdUTNmoHUzc8QaGniKvhfmphvvK9w8Bs",
+        "postedAt": "Sun, 11 Oct 2026 22:26:17 GMT",
+        "similarity": 0.6499386912420719,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "İnsan Kaynakları Uzmanı",
+        "company": "OZTAS INSAAT VE TICARET A.S.",
+        "location": "Ankara",
+        "snippet": "edebilecek “İnsan Kaynakları Uzmanı” arayışımız bulunmaktadır. İşe alım süreçlerini planlamak ve yürütmek Çalışanların... Üniversitelerin ilgili lisans bölümlerinden mezun Tercihen İnsan Kaynakları deneyimi İşe alım, eğitim ve performans yönetimi",
+        "url": "https://jobviewtrack.com/v2/IOqLg_oZ2qXeZqQgghMx0RMm4L39nVXjHuIkT3sPA1epPEdNiq9mYhgwbjMFv3WyfoRQbxkqUm9Kc7OMAHb4AZy72iPWIx_y25ZteoUHGm-QD-nCTfxEjLCFUfe77DQiSVlEzA84mvd3d1jK-HKKAbIL5pY2A9VgQmJMjSljTO8UDXbAl94G4Y6Ub9xFuc2wyXh7VipsOz25nuWF25AtIdqctPdMHQvZR_x5WqB-IC4",
+        "postedAt": "Thu, 01 Oct 2026 22:24:16 GMT",
+        "similarity": 0.6493053955459908,
+        "ilgili": null
+      },
+      {
+        "source": "careerjet",
+        "origin": null,
+        "title": "İnsan Kaynakları Uzmanı",
+        "company": "ISS TESIS YONETIM HIZMETLERI A.S.",
+        "location": "İzmit, Kocaeli",
+        "snippet": ", İ.İ.B.F İnsan Kaynakları Yönetimi vb. bölümlerinden mezun, Tercihen insan kaynaklarının tüm fonksiyonlarında, (İşe alım..., performans, kariyer planlama vb.) en az 3 yıl deneyim sahibi, Tercihen hizmet sektöründe insan kaynakları süreçlerinde deneyimi",
+        "url": "https://jobviewtrack.com/v2/ddJQa2053wQdkDW--Au7WF2XUtr1XYlqKGPihc5X-WFa1mAc5nKM6sbp4ZjSoWt6h9Zzkhr5MWlj-DM7y2ggcORY1lXJjGdy1JS4Zffhh4lyzjlupD2VEkR3S2VjRtzU_qmcTthvardXxqP-66tuenSpiDtx0mG_BvgyZ6XoOoGTdLCMq5OA-I-Rs0BUfGQiTVMr49vZqupN1KuX8NgIgu3J9j0smLEmpcBIvoXwuYY",
+        "postedAt": "Thu, 17 Sep 2026 23:40:20 GMT",
+        "similarity": 0.6484861304661564,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "yenibiris.com",
+        "title": "İnsan Kaynakları Uzmanı",
+        "company": "ÖZTAŞ İNŞAAT VE TİCARET A.Ş.",
+        "location": "Ankara",
+        "snippet": "...Ankara’da faaliyet gösteren şirketimizin bünyesinde görevlendirilmek üzere, Şirketimizi kurumsal şekilde temsil edebilecek “İnsan Kaynakları Uzmanı” arayışımız bulunmaktadır. İşe alım süreçlerini planlamak ve yürütmek Çalışanların oryantasyon ve adaptasyon...",
+        "url": "https://tr.jooble.org/jdp/2731518770552914019",
+        "postedAt": "2026-10-01T00:00:00.0000000",
+        "similarity": 0.6484639009051487,
+        "ilgili": null
+      },
+      {
+        "source": "jooble",
+        "origin": "yenibiris.com",
+        "title": "İnsan Kaynakları Uzmanı",
+        "company": "RY GÜLTEKS TEKSTİL SAN.TİC.LTD.ŞTİ.",
+        "location": "İstanbul",
+        "snippet": "...İŞ TANIMI İnsan Kaynakları süreçlerimizi uçtan uca yönetebilecek, personel yönetimi konusunda sorumluluk sahibi ve süreç takibi güçlü bir ekip arkadaşı arıyoruz. ARANAN NITELIKLER İnsan Kaynakları alanında deneyimli, Luca Bordro programını aktif olarak kullanabilen...",
+        "url": "https://tr.jooble.org/jdp/4313165057317414702",
+        "postedAt": "2026-08-31T00:00:00.0000000",
+        "similarity": 0.6445047231929977,
+        "ilgili": null
+      }
+    ]
+  }
+]

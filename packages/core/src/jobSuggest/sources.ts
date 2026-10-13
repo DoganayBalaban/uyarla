@@ -9,7 +9,9 @@
  *              500 istekle sınırlı (ömür boyu); ürün içi kullanım ortaklık ister.
  *   Careerjet  GET https://search.api.careerjet.net/v4/query, Basic auth.
  *              Her istekte aramayı yapan gerçek kullanıcının IP'si ve
- *              tarayıcısı zorunlu (KVKK: yeni bir aktarım).
+ *              tarayıcısı zorunlu (KVKK: yeni bir aktarım). Anahtar yalnızca
+ *              panelde bildirilen sunucu IP'lerinden kabul ediliyor ve
+ *              sonuçların gösterildiği sayfa `Referer` olarak gönderilmeli.
  *
  * İkisi de ilanın yalnızca kısa bir özetini veriyor; tam metin "analiz et"
  * adımında bağlantıdan çekiliyor.
@@ -88,6 +90,8 @@ export async function searchJooble(cfg: JoobleConfig, query: JobQuery, page = 1)
 export interface CareerjetConfig {
   apiKey: string
   locale: string
+  /** Sonuçların gösterildiği sayfa; `Referer` olarak gidiyor, yoksa 403. */
+  pageUrl: string
   fetch?: Fetch
 }
 
@@ -111,11 +115,16 @@ export async function searchCareerjet(
     page_size: "20",
     offset: String(offset),
     sort: "relevance",
+    // Varsayılan özet 120 karakter; CV'ye benzerlik sıralaması için kısa kalıyordu.
+    fragment_size: "400",
     user_ip: visitor.ip,
     user_agent: visitor.userAgent,
   }).toString()
   const response = await (cfg.fetch ?? fetch)(url, {
-    headers: { Authorization: `Basic ${Buffer.from(`${cfg.apiKey}:`).toString("base64")}` },
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${cfg.apiKey}:`).toString("base64")}`,
+      Referer: cfg.pageUrl,
+    },
   })
   if (!response.ok) throw new Error(`Careerjet isteği başarısız: ${response.status}`)
   const data = (await response.json()) as { type?: string; hits?: number; jobs?: Array<Record<string, unknown>> }
@@ -125,6 +134,7 @@ export async function searchCareerjet(
     total: data.hits ?? 0,
     jobs: (data.jobs ?? []).map((j) => ({
       source: "careerjet" as const,
+      // v4 iş kaydında kaynak site yok; bağlantı jobviewtrack yönlendirmesi.
       origin: orNull(j.site),
       title: plain(j.title),
       company: orNull(j.company),
