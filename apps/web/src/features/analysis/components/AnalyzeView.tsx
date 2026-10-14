@@ -27,6 +27,12 @@ import {
   handleResponse,
 } from "@/features/analysis/activeAnalysis"
 import { resultPath } from "@/features/analysis/paths"
+import {
+  createAutoSubmitGate,
+  readExtensionHandoff,
+  shouldAutoSubmit,
+  type ExtensionHandoff,
+} from "@/features/analysis/extensionHandoff"
 import { PageHeader } from "@/components/layout/PageShell"
 import { StageTimeline } from "@/features/analysis/components/StageTimeline"
 import { ResumeUpload } from "@/features/analysis/components/ResumeUpload"
@@ -114,6 +120,29 @@ export function AnalyzeView() {
     })
     if (next !== undefined) setValue("resumeId", next ?? undefined)
   }, [resumes, pickedMode, getValues, setValue])
+
+  // Tarayıcı eklentisinden gelen ilan (DOG-70): formu doldur, # kısmını sil.
+  const [handoff, setHandoff] = useState<ExtensionHandoff | null>(null)
+  const autoSubmitGate = useRef(createAutoSubmitGate())
+  useEffect(() => {
+    const incoming = readExtensionHandoff(window.location.hash, window.location.search)
+    if (!incoming) return
+    setValue("jobText", incoming.jobText, { shouldValidate: true })
+    if (incoming.sourceUrl) setValue("postingUrl", incoming.sourceUrl)
+    // Geri tuşunda ya da yenilemede form yeniden dolmasın.
+    window.history.replaceState(null, "", window.location.pathname + window.location.search)
+    setHandoff(incoming)
+  }, [setValue])
+
+  // Kayıtlı ve varsayılan CV'si ön seçili kullanıcıda analiz bir kez kendiliğinden başlar.
+  useEffect(() => {
+    if (!handoff || busy) return
+    if (!shouldAutoSubmit({ registered, resumeId: selectedResumeId ?? undefined, jobText: handoff.jobText })) return
+    if (!autoSubmitGate.current()) return
+    void handleSubmit(onSubmit)()
+    // onSubmit her çizimde yeniden tanımlanıyor; kapı tek gönderimi garanti ediyor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handoff, registered, selectedResumeId, busy, handleSubmit])
   const [postingState, setPostingState] = useState<
     { kind: "loading" } | { kind: "done"; text: string } | { kind: "error"; text: string } | null
   >(null)
