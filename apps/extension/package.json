@@ -1,0 +1,24 @@
+{
+  "name": "@uyarla/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch",
+    "icons": "node scripts/icons.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@uyarla/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.300",
+    "esbuild": "^0.28.2",
+    "jszip": "^3.10.2",
+    "sharp": "^0.35.4",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
