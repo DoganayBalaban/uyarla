@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./document/pdf": "./src/document/pdf.ts",
     "./document/docx": "./src/document/docx.ts",
-    "./observability/scrub": "./src/observability/scrub.ts"
+    "./observability/scrub": "./src/observability/scrub.ts",
+    "./jobPosting/extract": "./src/jobPosting/extract.ts"
   },
   "scripts": {
     "test": "vitest run",
