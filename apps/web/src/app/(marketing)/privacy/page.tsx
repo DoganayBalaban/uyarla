@@ -131,6 +131,10 @@ export default function PrivacyPage() {
             kayda eklenmez.
           </li>
           <li>
+            <strong>Tarayıcı eklentisi:</strong> yalnızca sen tıkladığında açık sayfadaki ilan metnini
+            uyarla&apos;ya aktarır; başka bir veri toplamaz, kendi başına hiçbir sunucuya bağlanmaz.
+          </li>
+          <li>
             <strong>Sosyal giriş:</strong> Google, LinkedIn veya GitHub ile giriş yaparsan ilgili
             sağlayıcı.
           </li>
