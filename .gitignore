@@ -34,3 +34,7 @@ packages/core/eval/inceleme.md
 
 # Ajan worktree'leri — geçici, depoya girmez.
 .claude/
+
+# Tarayıcı eklentisi build çıktısı
+apps/extension/dist/
+apps/extension/*.zip
