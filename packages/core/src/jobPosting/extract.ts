@@ -20,6 +20,29 @@ const ENTITIES: Record<string, string> = {
   mdash: "—",
   hellip: "…",
   bull: "•",
+  // Türkçe ilan sayfalarında (yenibiris) harfler adlandırılmış karakterle
+  // geliyor; büyük/küçük harf ayrı anahtar.
+  uuml: "ü",
+  Uuml: "Ü",
+  ouml: "ö",
+  Ouml: "Ö",
+  ccedil: "ç",
+  Ccedil: "Ç",
+  scedil: "ş",
+  Scedil: "Ş",
+  gbreve: "ğ",
+  Gbreve: "Ğ",
+  imath: "ı",
+  Idot: "İ",
+  acirc: "â",
+  Acirc: "Â",
+  icirc: "î",
+  ucirc: "û",
+  eacute: "é",
+  euro: "€",
+  laquo: "«",
+  raquo: "»",
+  middot: "·",
 }
 
 function decodeEntities(text: string): string {
@@ -28,7 +51,7 @@ function decodeEntities(text: string): string {
       const code = userName[1]?.toLowerCase() === "x" ? parseInt(userName.slice(2), 16) : parseInt(userName.slice(1), 10)
       return Number.isFinite(code) && code > 0 && code < 0x110000 ? String.fromCodePoint(code) : full
     }
-    return ENTITIES[userName.toLowerCase()] ?? full
+    return ENTITIES[userName] ?? ENTITIES[userName.toLowerCase()] ?? full
   })
 }
 
@@ -90,9 +113,14 @@ function jsonLdPosting(html: string): ExtractedPosting | null {
     if (!posting || typeof posting.description !== "string") continue
 
     const position = typeof posting.title === "string" ? decodeEntities(posting.title).trim() : null
-    const org = posting.hiringOrganization as { name?: unknown } | undefined
-    const company = typeof org?.name === "string" ? decodeEntities(org.name).trim() : null
-    const descriptionText = htmlToText(posting.description)
+    // Şirket çoğunlukla { name } nesnesi; yenibiris düz metin veriyor.
+    const org = posting.hiringOrganization as { name?: unknown } | string | undefined
+    const orgName = typeof org === "string" ? org : org?.name
+    const company = typeof orgName === "string" ? decodeEntities(orgName).trim() || null : null
+    // LinkedIn açıklamayı kodlanmış HTML olarak veriyor ("&lt;p&gt;"): etiketler
+    // ancak çözüldükten sonra temizlenebiliyor.
+    const description = /&lt;\/?[a-z]/i.test(posting.description) ? decodeEntities(posting.description) : posting.description
+    const descriptionText = htmlToText(description)
     const titleText = [position, company].filter(Boolean).join(" — ")
     return {
       text: titleText ? `${titleText}\n\n${descriptionText}` : descriptionText,
@@ -117,6 +145,11 @@ interface SiteRule {
   ending: RegExp[]
   /** <title>'dan pozisyon adını temizler. */
   titleText?: (raw: string) => string
+  /**
+   * JSON-LD açıklaması kısaltılmış: ilan sayfa gövdesinden okunuyor. Pozisyon
+   * ve şirket yine JSON-LD'den.
+   */
+  preferPage?: boolean
 }
 
 const COMMON_ENDINGS = [/^Benzer İlanlar$/i, /^Bu İlanla Birlikte Görüntülenenler$/i]
@@ -128,6 +161,13 @@ const SITE_RULES: SiteRule[] = [
     ending: [/^İşverenlerin/i, /^Şirket Hakkında$/i, /^Bu Pozisyon İçin Sık Paylaşılan Maaşlar$/i],
     // "Dija & Co Sosyal Medya Uzmanı İş İlanı - 26.09.2026"
     titleText: (raw) => raw.replace(/\s*İş İlanı\s*-.*$/i, "").trim(),
+  },
+  {
+    // JSON-LD açıklaması ~600 karakterde kelime ortasında kesiliyor (Ekim 2026).
+    domain: "yenibiris.com",
+    startedAt: /^İş Tanımı$/i,
+    ending: [/^Özet Bilgiler$/i],
+    preferPage: true,
   },
 ]
 
@@ -155,8 +195,9 @@ function truncate(text: string, rule: SiteRule | undefined): string {
  * bandı gibi gürültü içermiyor. Yoksa sayfanın ana içeriği.
  */
 export function extractPostingText(html: string, host?: string): ExtractedPosting | null {
+  const rule = findRule(host)
   const configured = jsonLdPosting(html)
-  if (configured && configured.text.length >= 100) return configured
+  if (configured && configured.text.length >= 100 && !rule?.preferPage) return configured
 
   // Ana içerik: <main> ya da <article> varsa o, yoksa <body>. Menü ve alt
   // bilgi ayrıca atılıyor.
@@ -166,17 +207,19 @@ export function extractPostingText(html: string, host?: string): ExtractedPostin
     html.match(/<body\b[\s\S]*?<\/body>/i)?.[0] ??
     html
   const clean = body.replace(/<(nav|header|footer|aside|form)\b[\s\S]*?<\/\1>/gi, " ")
-  const rule = findRule(host)
   const bodyText = truncate(htmlToText(clean), rule)
-  if (bodyText.length < 200) return null
+  if (bodyText.length < 200) return configured && configured.text.length >= 100 ? configured : null
 
   const rawTitle = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]
   const titleText = rawTitle ? decodeEntities(rawTitle).trim() : null
-  const position = titleText && rule?.titleText ? rule.titleText(titleText) : titleText
+  const position =
+    configured?.position ?? (titleText && rule?.titleText ? rule.titleText(titleText) : titleText)
+  const company = configured?.company ?? null
+  const heading = [position, company].filter(Boolean).join(" — ")
   return {
-    text: position ? `${position}\n\n${bodyText}` : bodyText,
+    text: heading ? `${heading}\n\n${bodyText}` : bodyText,
     position,
-    company: null,
+    company,
     source: "sayfa",
   }
 }

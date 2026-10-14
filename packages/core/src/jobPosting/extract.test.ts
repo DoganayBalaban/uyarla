@@ -91,4 +91,60 @@ describe("extractPostingText · LinkedIn (DOG-70)", () => {
     expect(posting!.text).toContain("- Logo ERP bilgisi")
     expect(posting!.text).not.toContain("menü")
   })
+
+  it("unescapes a description LinkedIn ships as escaped HTML", () => {
+    // Gerçek LinkedIn sayfası: açıklama "&lt;p&gt;" biçiminde, etiketler kodlanmış.
+    const description =
+      "&lt;p&gt;&lt;strong&gt;Genel Nitelikler&lt;/strong&gt;&lt;/p&gt;&lt;ul&gt;&lt;li&gt;İşletme, İktisat bölümlerinden mezun,&lt;/li&gt;&lt;li&gt;MS Office programlarını etkin kullanabilen&lt;/li&gt;&lt;/ul&gt;"
+    const html = `<script type="application/ld+json">${JSON.stringify({
+      "@type": "JobPosting",
+      title: "Muhasebe Uzman Yardımcısı",
+      hiringOrganization: { name: "ZA Metal Kutu Ambalaj" },
+      description,
+    })}</script>`
+
+    const posting = extractPostingText(html, "tr.linkedin.com")
+
+    expect(posting!.text).toContain("- MS Office programlarını etkin kullanabilen")
+    expect(posting!.text).not.toMatch(/<\/?(p|li|ul|strong)>/)
+  })
 })
+
+describe("extractPostingText · yenibiris (DOG-70)", () => {
+  // Gerçek sayfanın sadeleştirilmiş hâli: JSON-LD açıklaması kısaltılmış ve
+  // kelimenin ortasında kesilmiş; tam ilan sayfa gövdesinde.
+  const page = `<html><head><title>BİLNET OKULLARI - Balıkesir Muhasebe Personeli İş İlanları - Yenibiris.com</title>
+    <script type="application/ld+json">${JSON.stringify({
+      "@type": "JobPosting",
+      title: "Muhasebe Personeli",
+      hiringOrganization: "BİLNET OKULLARI BALIKESİR KAMPÜSÜ",
+      description:
+        "Bilnet Okulları Balıkesir Kamp&uuml;s&uuml; b&uuml;nyesinde Muhasebe Personeli alınacaktır., &Uuml;niversitelerin İşletme b&ouml;l&uuml;mlerinden mezun, Fatura giriş-&ccedi",
+    })}</script></head><body><nav>menü</nav>
+    <div class="detailContent"><h2>İş Tanımı</h2><div><strong>Bilnet Okulları&nbsp;Balıkesir Kampüsü bünyesinde Muhasebe Personeli alınacaktır.</strong></div>
+    <h2>Aranan Nitelikler</h2><div><ul>
+      <li>Üniversitelerin İşletme, İktisadi ve İdari Bilimler Fakültelerinden mezun,</li>
+      <li>Luca MMP ve Luca Net Programlarını iyi derecede kullanabilen,</li>
+      <li>Fatura giriş-çıkış, tahsilat ve tediye işlemleri yapabilen,</li>
+      <li>Muhasebe kayıtlarının eksiksiz tutulmasını sağlayabilen,</li>
+    </ul></div></div>
+    <div><h2>Özet Bilgiler</h2><ul><li>Sektör: Eğitim</li></ul></div></body></html>`
+
+  it("reads the full posting from the page instead of the truncated JSON-LD", () => {
+    const posting = extractPostingText(page, "www.yenibiris.com")
+
+    expect(posting!.text).toContain("- Fatura giriş-çıkış, tahsilat ve tediye işlemleri yapabilen,")
+    expect(posting!.text).not.toContain("Özet Bilgiler")
+    expect(posting!.text).not.toContain("Sektör")
+    expect(posting).toMatchObject({ position: "Muhasebe Personeli", company: "BİLNET OKULLARI BALIKESİR KAMPÜSÜ" })
+  })
+})
+
+describe("htmlToText · Türkçe adlandırılmış karakterler", () => {
+  it("decodes Latin-1 entities, keeping their case", () => {
+    expect(htmlToText("&Uuml;niversite m&uuml;hendisli&#287;i, &Ccedil;al&#305;&scedil;ma &ouml;zl&uuml;k &Ouml;n &ccedil;")).toBe(
+      "Üniversite mühendisliği, Çalışma özlük Ön ç",
+    )
+  })
+})
+
