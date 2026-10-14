@@ -25,6 +25,17 @@ describe("pickSelection", () => {
     expect(pickSelection("   \n  ")).toBeNull()
     expect(pickSelection(undefined)).toBeNull()
   })
+
+  it("prefers the page's own selection, which keeps line breaks", () => {
+    // Chrome'un menü bilgisindeki selectionText satır sonlarını tek satıra indiriyor.
+    const lines = "Aranan Nitelikler\n- 3 yıl muhasebe deneyimi\n- Logo ERP bilgisi\n- MS Excel orta seviye"
+    expect(pickSelection(lines.replace(/\n/g, " "), lines)).toBe(lines)
+  })
+
+  it("falls back to the menu text when the page selection is unavailable", () => {
+    expect(pickSelection(LONG, undefined)).toBe(LONG.trim())
+    expect(pickSelection(LONG, "  ")).toBe(LONG.trim())
+  })
 })
 
 describe("uyarlaUrl", () => {

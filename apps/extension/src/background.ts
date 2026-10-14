@@ -50,7 +50,20 @@ chrome.action.onClicked.addListener(async (tab) => {
 /** Sağ tık: seçili metin, her sitede. */
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId !== MENU_ID) return
-  const text = pickSelection(info.selectionText)
+  let pageText: string | undefined
+  if (tab?.id !== undefined) {
+    // Menü tıklaması activeTab izni veriyor: seçim sayfadan satır sonlarıyla okunuyor.
+    try {
+      const [result] = await chrome.scripting.executeScript({
+        target: { tabId: tab.id, frameIds: info.frameId !== undefined ? [info.frameId] : undefined },
+        func: () => window.getSelection()?.toString() ?? "",
+      })
+      pageText = typeof result?.result === "string" ? result.result : undefined
+    } catch {
+      pageText = undefined
+    }
+  }
+  const text = pickSelection(info.selectionText, pageText)
   if (!text) return notFound(tab?.id)
   await openUyarla(text, tab?.url ?? null)
 })

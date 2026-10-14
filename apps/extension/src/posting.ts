@@ -17,9 +17,13 @@ export function pickPosting(page: { html: string; url: string }): string | null 
   return text.length >= MIN_JOB_TEXT_LENGTH ? text : null
 }
 
-/** Sağ tık menüsünden gelen seçili metin. */
-export function pickSelection(selection: string | undefined): string | null {
-  const text = (selection ?? "").trim()
+/**
+ * Sağ tık menüsünden gelen seçili metin. Chrome'un menü bilgisindeki metin
+ * satır sonlarını kaybediyor (maddeler tek satıra iniyor); sayfadan okunan
+ * seçim varsa o tercih ediliyor.
+ */
+export function pickSelection(menuText: string | undefined, pageText?: string): string | null {
+  const text = (pageText?.trim() || menuText || "").trim()
   return text.length >= MIN_JOB_TEXT_LENGTH ? text : null
 }
 
