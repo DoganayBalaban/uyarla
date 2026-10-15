@@ -40,8 +40,8 @@ describe("pickSelection", () => {
 
 describe("uyarlaUrl", () => {
   it("puts the text and source in the fragment, encoded", () => {
-    const url = new URL(uyarlaUrl("https://uyarla.vercel.app", "C++ & %50 #1 İşçi", "https://kariyer.net/a?b=1"))
-    expect(url.origin + url.pathname).toBe("https://uyarla.vercel.app/analyze")
+    const url = new URL(uyarlaUrl("https://uyarla.com.tr", "C++ & %50 #1 İşçi", "https://kariyer.net/a?b=1"))
+    expect(url.origin + url.pathname).toBe("https://uyarla.com.tr/analyze")
     expect(url.search).toBe("")
     const params = new URLSearchParams(url.hash.slice(1))
     expect(params.get("ilan")).toBe("C++ & %50 #1 İşçi")
@@ -53,12 +53,12 @@ describe("uyarlaUrl", () => {
   })
 
   it("caps very long text", () => {
-    const url = new URL(uyarlaUrl("https://uyarla.vercel.app", "a".repeat(MAX_EXTENSION_TEXT + 500), null))
+    const url = new URL(uyarlaUrl("https://uyarla.com.tr", "a".repeat(MAX_EXTENSION_TEXT + 500), null))
     expect(new URLSearchParams(url.hash.slice(1)).get("ilan")!.length).toBe(MAX_EXTENSION_TEXT)
   })
 
   it("does not split an emoji at the cap", () => {
     const text = "a".repeat(MAX_EXTENSION_TEXT - 1) + "😀 sonrası"
-    expect(() => uyarlaUrl("https://uyarla.vercel.app", text, null)).not.toThrow()
+    expect(() => uyarlaUrl("https://uyarla.com.tr", text, null)).not.toThrow()
   })
 })

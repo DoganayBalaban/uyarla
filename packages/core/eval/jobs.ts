@@ -65,7 +65,7 @@ async function main() {
     ? {
         apiKey: process.env.CAREERJET_API_KEY,
         locale: process.env.CAREERJET_LOCALE ?? "tr_TR",
-        pageUrl: process.env.CAREERJET_PAGE_URL ?? "https://uyarla.vercel.app/dashboard",
+        pageUrl: process.env.CAREERJET_PAGE_URL ?? "https://uyarla.com.tr/dashboard",
       }
     : null
   if (!jooble && !careerjet) {

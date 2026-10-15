@@ -7,7 +7,7 @@ const root = join(import.meta.dirname, "..")
 const dist = join(root, "dist")
 const watch = process.argv.includes("--watch")
 // İzleme kipi yerel geliştirme içindir: uyarla yerel sunucuda.
-const uyarlaUrl = process.env.UYARLA_URL ?? (watch ? "http://localhost:3000" : "https://uyarla.vercel.app")
+const uyarlaUrl = process.env.UYARLA_URL ?? (watch ? "http://localhost:3000" : "https://uyarla.com.tr")
 
 rmSync(dist, { recursive: true, force: true })
 mkdirSync(dist, { recursive: true })
