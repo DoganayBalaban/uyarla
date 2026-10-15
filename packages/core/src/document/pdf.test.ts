@@ -1,3 +1,4 @@
+import Module from "node:module"
 import { describe, it, expect } from "vitest"
 import { extractText } from "../documents/extractText.js"
 import type { DocumentModel } from "./model.js"
@@ -26,6 +27,25 @@ const model: DocumentModel = {
 }
 
 describe("renderPdf", () => {
+  it("never loads pdfkit's built-in standard fonts", async () => {
+    // Üretimde Sentry'nin modül kancası pdfkit'in `#standard-fonts/Helvetica`
+    // iç importunu çözemiyor ve indirme 500 veriyordu (15 Ekim 2026). Biz zaten
+    // kendi fontlarımızı kullanıyoruz; varsayılan Helvetica hiç yüklenmemeli.
+    const loader = Module as unknown as { _load: (request: string, ...rest: unknown[]) => unknown }
+    const original = loader._load
+    const requested: string[] = []
+    loader._load = function (request: string, ...rest: unknown[]) {
+      requested.push(request)
+      return original.call(this, request, ...rest)
+    }
+    try {
+      await renderPdf(model)
+    } finally {
+      loader._load = original
+    }
+    expect(requested.filter((r) => r.startsWith("#standard-fonts"))).toEqual([])
+  })
+
   it("produces a valid PDF", async () => {
     const pdf = await renderPdf(model)
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-")
