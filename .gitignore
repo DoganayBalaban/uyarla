@@ -38,3 +38,4 @@ packages/core/eval/inceleme.md
 # Tarayıcı eklentisi build çıktısı
 apps/extension/dist/
 apps/extension/*.zip
+apps/worker/dist/

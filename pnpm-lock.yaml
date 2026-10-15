@@ -154,6 +154,9 @@ importers:
       bullmq:
         specifier: ^5.20.0
         version: 5.81.5
+      esbuild:
+        specifier: ^0.28.2
+        version: 0.28.2
       ioredis:
         specifier: ^5.4.0
         version: 5.11.1
