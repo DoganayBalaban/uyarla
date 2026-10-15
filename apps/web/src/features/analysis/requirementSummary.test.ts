@@ -1,12 +1,19 @@
 import { describe, expect, it } from "vitest"
 import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
 
-const req = (importance: string, status: "matched" | "missing", method: string | null = "keyword", confidence = 1) => ({
+const req = (
+  importance: string,
+  status: "matched" | "missing",
+  method: string | null = "keyword",
+  confidence = 1,
+  missingConcepts: string[] = method === "keyword" && confidence < 1 ? ["eksik"] : [],
+) => ({
   requirement: { text: "x", importance, type: "skill" },
   status,
   method,
   confidence,
   evidence: null,
+  missingConcepts,
 })
 
 describe("summarizeRequirements", () => {
@@ -53,5 +60,15 @@ describe("partialNote", () => {
 
   it("is empty when nothing is partial", () => {
     expect(partialNote(summarizeRequirements([req("must", "matched")]))).toBeNull()
+  })
+})
+
+describe("isPartial · özet kanıtı (DOG-73)", () => {
+  it("is not partial when every concept matched but the evidence was the summary", () => {
+    // Özet kanıtı 0,75 ağırlıklı (summaryWeight); confidence 1'in altına
+    // düşüyor ama eksik kavram yok. Üretimde "Agile/Scrum" bu yüzden
+    // "Kısmen" görünüyordu.
+    expect(isPartial(req("must", "matched", "keyword", 0.75, []))).toBe(false)
+    expect(isPartial(req("must", "matched", "keyword", 0.5, ["test otomasyonu"]))).toBe(true)
   })
 })
