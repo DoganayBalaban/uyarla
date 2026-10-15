@@ -644,3 +644,120 @@ describe("score · type scope of the semantic layer (K-36)", () => {
     expect(outcome.requirements[0]!.method).toBe("semantic")
   })
 })
+
+describe("score · deneyim süresi şartı (DOG-75)", () => {
+  const NOW = new Date("2026-10-15T12:00:00Z")
+  const role = (title: string, startDate: string, endDate: string) => ({
+    company: "Bir Şirket", title, startDate, endDate, bullets: [],
+  })
+  const profileWith = (experience: ReturnType<typeof role>[]): ResumeProfile => ({ ...PROFILE, experience } as ResumeProfile)
+  const testingReq: Requirement = {
+    text: "En az 2 yıl yazılım test deneyimi",
+    type: "experience",
+    importance: "must",
+    concepts: [{ term: "yazılım test", synonyms: ["software testing"] }],
+  }
+  const run = (experience: ReturnType<typeof role>[]) =>
+    score({
+      profile: profileWith(experience),
+      posting: testPosting([testingReq]),
+      evidence: [{ text: "Software Testing Engineer", matchText: "Software Testing Engineer", kind: "role", sourceRef: "r0" }],
+      evidenceVectors: [V.far],
+      conceptVectors: [V.near],
+      now: NOW,
+    }).requirements[0]!
+
+  it("is missing when the candidate has fewer years than asked", () => {
+    // cv2: Nis 2025 – Ağu 2025 staj + Eyl 2025 – bugün = 19 ay.
+    const result = run([
+      role("Software Testing Engineer", "Sep 2025", "Present"),
+      role("Software Testing Engineer Intern", "Apr 2025", "Aug 2025"),
+    ])
+    expect(result.status).toBe("missing")
+    expect(result.confidence).toBe(0)
+    expect(result.missingConcepts).toContain("En az 2 yıl deneyim (CV'de ~1,6 yıl)")
+  })
+
+  it("is met when the relevant roles add up", () => {
+    const result = run([role("Software Testing Engineer", "Jan 2023", "Present")])
+    expect(result.status).toBe("matched")
+  })
+
+  it("counts only roles that mention the requirement's concepts", () => {
+    // 10 yıl muhasebe + 1 yıl test: 2 yıl test şartı karşılanmaz.
+    const result = run([
+      role("Muhasebe Uzmanı", "2014", "2024"),
+      role("Software Testing Engineer", "Oct 2025", "Present"),
+    ])
+    expect(result.status).toBe("missing")
+  })
+
+  it("leaves the decision alone when dates are unreadable", () => {
+    const result = run([role("Software Testing Engineer", "", "")])
+    expect(result.status).toBe("matched")
+  })
+})
+
+describe("score · 'veya ilgili bölümler' (DOG-75)", () => {
+  const educationReq = (text: string): Requirement => ({
+    text,
+    type: "education",
+    importance: "must",
+    concepts: [{ term: "Bilgisayar Mühendisliği", synonyms: ["Computer Engineering", "Computer Science"] }],
+  })
+  const evidenceOf = (text: string, kind: Evidence["kind"]): Evidence => ({ text, matchText: text, kind, sourceRef: text })
+  const run = (text: string, evidence: Evidence) =>
+    score({
+      profile: PROFILE,
+      posting: testPosting([educationReq(text)]),
+      evidence: [evidence],
+      // Dik vektörler: anlamsal eşleşme yok, yalnızca kelime eşleşmesi ölçülüyor.
+      evidenceVectors: [V.far],
+      conceptVectors: [V.near],
+    }).requirements[0]!
+
+  it("accepts a related department when the posting says so", () => {
+    // Üretim: CV'de "Bachelor of Computer and Information Science" var, ilan
+    // "Bilgisayar Mühendisliği veya ilgili bölümlerden" istiyor.
+    const result = run(
+      "Bilgisayar Mühendisliği veya ilgili bölümlerden mezun",
+      evidenceOf("Bachelor of Computer and Information Science", "education"),
+    )
+    expect(result.status).toBe("matched")
+  })
+
+  it("does not widen when the posting names one department", () => {
+    const result = run(
+      "Bilgisayar Mühendisliği mezunu",
+      evidenceOf("Bachelor of Computer and Information Science", "education"),
+    )
+    expect(result.status).toBe("missing")
+  })
+
+  it("widens only against education, not against a bullet that mentions computers", () => {
+    const result = run(
+      "Bilgisayar Mühendisliği veya ilgili bölümlerden mezun",
+      evidenceOf("Ofiste bilgisayar donanımı kurulumu yaptım", "bullet"),
+    )
+    expect(result.status).toBe("missing")
+  })
+
+  it("reads the field out of an English degree phrase", () => {
+    const result = score({
+      profile: PROFILE,
+      posting: testPosting([
+        {
+          text: "Bachelor's degree in Computer Science or related field",
+          type: "education",
+          importance: "must",
+          concepts: [{ term: "Bachelor degree in Computer Science", synonyms: [] }],
+        },
+      ]),
+      evidence: [evidenceOf("Bachelor of Computer and Information Science", "education")],
+      evidenceVectors: [V.far],
+      conceptVectors: [V.near],
+    }).requirements[0]!
+    expect(result.status).toBe("matched")
+  })
+})
+

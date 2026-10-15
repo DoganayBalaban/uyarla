@@ -3,6 +3,7 @@ import { containsKeyword } from "../normalize/turkish.js"
 import type { JobPostingData, Requirement } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { DEFAULT_SCORING_CONFIG, type ScoringConfig } from "./config.js"
+import { experienceMonths, requiredYears } from "./duration.js"
 import type { Evidence } from "./evidence.js"
 
 export interface ScoreInput {
@@ -22,6 +23,8 @@ export interface ScoreInput {
    * "version control" ile "Git ile versiyon kontrolü kullandım" buluşuyor.
    */
   conceptVectors: number[][]
+  /** "halen" ve deneyim süresi hesabı için bugün; testte sabitleniyor. */
+  now?: Date
 }
 
 /**
@@ -84,7 +87,7 @@ export function score(
   const results: RequirementResult[] = input.posting.requirements.map((requirement) => {
     const vectorSlice = input.conceptVectors.slice(cursor, cursor + requirement.concepts.length)
     cursor += requirement.concepts.length
-    return matchRequirement(requirement, vectorSlice, input, cfg)
+    return checkDuration(matchRequirement(requirement, vectorSlice, input, cfg), input)
   })
 
   let weightedSum = 0
@@ -186,9 +189,10 @@ function matchRequirement(
     //
     // Kanıtlar tam ağırlıklılar önde olacak şekilde sıralı (özet sonda), yani
     // ilk bulunan aynı zamanda en güçlü olanı.
-    const keywordEvidence = eligibleEvidence.find((item) =>
-      searchTerms.some((termText) => containsKeyword(item.evidence.matchText, termText)),
-    )?.evidence
+    const keywordEvidence =
+      eligibleEvidence.find((item) =>
+        searchTerms.some((termText) => containsKeyword(item.evidence.matchText, termText)),
+      )?.evidence ?? relatedFieldEvidence(requirement, searchTerms, eligibleEvidence)
     if (keywordEvidence) {
       satisfied.push(concept.term)
       weight += evidenceMultiplier(keywordEvidence, cfg)
@@ -258,4 +262,84 @@ function matchRequirement(
     matchedConcepts: satisfied,
     missingConcepts: unsatisfied,
   }
+}
+
+/**
+ * "En az 2 yıl …" gibi süre şartı (DOG-75). Kavram bulunsa bile ilgili
+ * rollerin toplam süresi yetmiyorsa gereksinim karşılanmamış sayılıyor.
+ *
+ * İlgili roller, gereksinimin kavramları unvanında ya da maddelerinde geçen
+ * roller: 10 yıl muhasebe ve 1 yıl test deneyimi olan aday "2 yıl test"
+ * şartını karşılamaz. Hiçbir rolde geçmiyorsa (kavram beceri listesinden
+ * bulunduysa) toplam deneyime bakılıyor.
+ *
+ * Tarihler okunamıyorsa karar değişmiyor: bilmediğimiz bir süre için
+ * "eksik" demek, kanıtsız "var" demek kadar yanlış olurdu.
+ *
+ * Süre metni eksik listesine ekleniyor ama kavram değil: uyarlama yalnızca
+ * kavram adlarını hedef alıyor (adapt/targets.ts), CV'ye süre yazdırılamaz.
+ */
+function checkDuration(result: RequirementResult, input: ScoreInput): RequirementResult {
+  if (result.status !== "matched") return result
+  const years = requiredYears(result.requirement.text)
+  if (years === null) return result
+
+  const now = input.now ?? new Date()
+  const roles = input.profile.experience
+  const terms = result.requirement.concepts.flatMap((c) => [c.term, ...c.synonyms])
+  const relevant = roles.filter((role) => {
+    const text = [role.title, ...role.bullets.map((b) => b.text)].join("\n")
+    return terms.some((t) => containsKeyword(text, t))
+  })
+  const months = experienceMonths(relevant.length > 0 ? relevant : roles, now)
+  if (months === null || months >= years * 12) return result
+
+  const have = (Math.round((months / 12) * 10) / 10).toLocaleString(input.posting.language === "en" ? "en" : "tr")
+  const note =
+    input.posting.language === "en"
+      ? `${years}+ years of experience (CV: ~${have} years)`
+      : `En az ${years} yıl deneyim (CV'de ~${have} yıl)`
+  return {
+    ...result,
+    status: "missing",
+    confidence: 0,
+    evidence: null,
+    method: null,
+    missingConcepts: [...result.missingConcepts, note],
+  }
+}
+
+/** İlanın yakın bölümleri de kabul ettiğini söyleyen ifade. */
+const RELATED_FIELD = /\b(ilgili|related|benzer|yakın)\b/iu
+
+/** Bölüm adının önündeki, alana ait olmayan kalıp. */
+const FIELD_PREFIX =
+  /^((üniversitelerin|üniversitenin|tercihen|preferably)\s+)*(bachelor'?s?(\s+degree)?\s+in\s+|degree\s+in\s+|b\.?\s?sc?\.?\s+in\s+)?/iu
+
+/** Bölüm adının sonundaki genel kelimeler; geriye alanın kendisi kalıyor. */
+const FIELD_TAIL =
+  /\s+(mühendisliği|mühendislik|bölümü|bölümleri|bilimleri|bilimi|fakültesi|engineering|science|sciences|studies|department)$/iu
+
+/**
+ * "Bilgisayar Mühendisliği veya ilgili bölümlerden mezun" (DOG-75): ilan yakın
+ * bölümleri de kabul ediyor. Bölüm adının çekirdeği ("Bilgisayar"; karşılığı
+ * "Computer Engineering"den "Computer") CV'nin eğitim satırında geçiyorsa
+ * şart karşılanıyor: "Computer and Information Science".
+ *
+ * Yalnızca eğitim kanıtına bakılıyor; çekirdek kelime bir deneyim maddesinde
+ * ("bilgisayar donanımı kurulumu") geçerse bölüm olmaz.
+ */
+function relatedFieldEvidence(
+  requirement: Requirement,
+  searchTerms: string[],
+  eligibleEvidence: Array<{ evidence: Evidence }>,
+): Evidence | undefined {
+  if (requirement.type !== "education" || !RELATED_FIELD.test(requirement.text)) return undefined
+  const heads = searchTerms
+    .map((t) => t.replace(FIELD_PREFIX, "").replace(FIELD_TAIL, "").trim())
+    .filter((h, i) => h !== searchTerms[i] && h.length >= 3)
+  if (heads.length === 0) return undefined
+  return eligibleEvidence.find(
+    (item) => item.evidence.kind === "education" && heads.some((h) => containsKeyword(item.evidence.matchText, h)),
+  )?.evidence
 }

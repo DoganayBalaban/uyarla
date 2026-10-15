@@ -150,7 +150,26 @@ export function splitIntoConcepts(
   // deneyim sahibi olmak" gibi. Bunlar tek kavram sayılıp bütün hâlleriyle
   // aranıyor; skorlamanın her gereksinim için en az bir kavrama ihtiyacı var.
   if (unique.length === 0) return [{ term: text, synonyms: [] }]
-  return unique
+  return type === "education" ? unique.map(educationConcept) : unique
+}
+
+/**
+ * "X veya ilgili bölümlerden mezun": "ilgili bölümler" bir bölüm adı değil,
+ * kapsamı genişleten bir ifade (DOG-75). Seçenek olarak kalınca eş anlamlı
+ * oluyor ve CV'deki herhangi bir "ilgili" kelimesi eğitimi karşılıyordu.
+ * Kapsam genişlemesi skorlamada ele alınıyor (score.ts, `relatedFieldHeads`).
+ */
+function educationConcept(concept: Concept): Concept {
+  const isOption = concept.term.includes(" / ")
+  if (!isOption) return concept
+  // Yalnızca kapsam ifadesi atılıyor; bölüm adına dokunulmuyor. "Üniversitelerin"
+  // gibi önekler kavram vektörünü eğitim satırına yakın tutuyor, onları silmek
+  // eval'de iki eğitim eşleşmesini özet ve rol satırına kaydırdı.
+  const parts = concept.term
+    .split(" / ")
+    .filter((p) => !/^(ilgili|related)\b/iu.test(p) && !isGeneralEducation(p))
+  if (parts.length === 0) return concept
+  return parts.length === 1 ? { term: parts[0]!, synonyms: [] } : { term: parts.join(" / "), synonyms: parts }
 }
 
 function splitSentences(text: string): string[] {
