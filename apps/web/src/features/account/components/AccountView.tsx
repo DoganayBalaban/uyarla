@@ -15,6 +15,7 @@ import {
 import { useSession } from "@/lib/authClient"
 import { apiErrorMessage } from "@/lib/api"
 import { loginPath } from "@/lib/returnPath"
+import { useQueryClient } from "@tanstack/react-query"
 import { useDeleteAccount } from "@/features/account/api"
 import { PageHeader } from "@/components/layout/PageShell"
 import { ProfileSection } from "@/features/account/components/ProfileSection"
@@ -24,13 +25,14 @@ import { ResumeLibrarySection } from "@/features/account/components/ResumeLibrar
 const CONFIRM_TEXT = "CV'ni ve tüm başvurularını kalıcı olarak silmek istediğine emin misin?"
 
 export function AccountView() {
-  const { data, isPending } = useSession()
+  const { data, isPending, refetch } = useSession()
   // "confirm" adımı ayrı: tek tıkla silinen bir hesap, geri alınamaz bir işlem
   // için fazla kolay. İkinci tık bilinçli bir karar oluyor.
   const [state, setState] = useState<"idle" | "confirm" | "deleting" | "deleted">("idle")
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const removeAccount = useDeleteAccount()
+  const queryClient = useQueryClient()
 
   async function deleteAccount() {
     setErrorMessage(null)
@@ -38,6 +40,11 @@ export function AccountView() {
     try {
       await removeAccount.mutateAsync()
       setState("deleted")
+      // Oturum sunucuda silindi ama istemcideki oturum deposu eski hâlinde
+      // kalıyordu: üst menüde silinen hesabın adı görünüyordu (DOG-74).
+      // Önbellekteki kullanıcı verisi (kütüphane, pano) de bırakılmıyor.
+      queryClient.clear()
+      await refetch()
     } catch (error) {
       setErrorMessage(await apiErrorMessage(error, "Hesabını silemedik. Birazdan tekrar dener misin?"))
       setState("confirm")

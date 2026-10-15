@@ -149,10 +149,11 @@ export function AdaptationView({ id }: { id: string }) {
     setErrorMessage(null)
     setIsBusy(true)
     try {
-      const url = URL.createObjectURL(await downloadAdaptation(id, format))
+      const { blob, fileName } = await downloadAdaptation(id, format)
+      const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = `uyarla-cv.${format}`
+      a.download = fileName
       a.click()
       URL.revokeObjectURL(url)
     } catch (error) {
