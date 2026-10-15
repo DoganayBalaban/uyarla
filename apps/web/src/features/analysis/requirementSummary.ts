@@ -4,6 +4,8 @@ interface RequirementLike {
   status: "matched" | "missing"
   method: string | null
   confidence: number
+  /** Karşılanmayan kavramlar (core `RequirementResult`). */
+  missingConcepts?: string[]
 }
 
 /**
@@ -14,7 +16,12 @@ interface RequirementLike {
  * altı "kısmen" demek değil.
  */
 export function isPartial(item: RequirementLike): boolean {
-  return item.status === "matched" && item.method === "keyword" && item.confidence < 1
+  if (item.status !== "matched") return false
+  // Asıl ölçü eksik kavram var mı. `confidence` tek başına yetmiyor: özet
+  // kanıtı 0,75 ağırlıklı olduğu için bütün kavramları tutan eşleşme de 1'in
+  // altında kalıyordu ve "Kısmen" görünüyordu (DOG-73).
+  if (item.missingConcepts) return item.missingConcepts.length > 0
+  return item.method === "keyword" && item.confidence < 1
 }
 
 export interface RequirementSummary {
