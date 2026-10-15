@@ -25,3 +25,14 @@ export function downloadFileName(fullName: string | null | undefined, format: "p
           .slice(0, 60)
   return slug ? `${slug}-CV.${format}` : `uyarla-cv.${format}`
 }
+
+/**
+ * İndirmede sunucunun `Content-Disposition` ile verdiği dosya adı (DOG-74).
+ * İstemci bunu `uyarla-cv.pdf` ile eziyordu; DOG-64'teki ad hiç görünmüyordu.
+ * Yol parçası atılıyor: ad yalnızca dosya adı olmalı.
+ */
+export function fileNameFromDisposition(header: string | null | undefined, fallback: string): string {
+  const match = header?.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i)
+  const name = match?.[1]?.split(/[/\\]/).pop()?.trim()
+  return name ? name : fallback
+}

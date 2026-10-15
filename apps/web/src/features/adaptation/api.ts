@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import type { CoverLetterRecord } from "@uyarla/core"
 import { api } from "@/lib/api"
 import type { AdaptationState } from "@/features/adaptation/types"
+import { fileNameFromDisposition } from "@/features/adaptation/fileName"
 
 /** Analizden uyarlama başlatır; aynı analizin uyarlaması varsa onu döndürür. */
 export async function startAdaptation(analysisId: string): Promise<{ adaptationId: string }> {
@@ -26,9 +27,17 @@ export async function requestCoverLetter(id: string): Promise<{ coverLetter: Cov
   return (await api.post<{ coverLetter: CoverLetterRecord }>(`/adapt/${encodeURIComponent(id)}/cover-letter`)).data
 }
 
-export async function downloadAdaptation(id: string, format: "pdf" | "docx"): Promise<Blob> {
-  return (await api.get<Blob>(`/adapt/${encodeURIComponent(id)}/download`, { params: { format }, responseType: "blob" }))
-    .data
+/** Uyarlanmış CV ve sunucunun verdiği dosya adı (`Content-Disposition`, DOG-74). */
+export async function downloadAdaptation(
+  id: string,
+  format: "pdf" | "docx",
+): Promise<{ blob: Blob; fileName: string }> {
+  const response = await api.get<Blob>(`/adapt/${encodeURIComponent(id)}/download`, {
+    params: { format },
+    responseType: "blob",
+  })
+  const disposition = response.headers?.["content-disposition"] as string | undefined
+  return { blob: response.data, fileName: fileNameFromDisposition(disposition, `uyarla-cv.${format}`) }
 }
 
 export const adaptationQueryKey = (id: string) => ["adaptation", id] as const
