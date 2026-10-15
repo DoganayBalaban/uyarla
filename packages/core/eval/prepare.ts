@@ -1,5 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
+import { splitIntoConcepts } from "../src/extract/concepts.js"
+import { addLanguageEquivalents } from "../src/extract/equivalents.js"
 import { extractJobPosting } from "../src/extract/job.js"
 import { extractResumeProfile } from "../src/extract/resume.js"
 import {
@@ -29,6 +31,11 @@ import { cacheDir } from "./types.js"
  *
  * Çıkarımın kendisi değiştiğinde (prompt, şema, model) önbellek geçersizdir:
  *   pnpm eval:prepare --refresh
+ *
+ * Yalnızca kavram kodu (bölme, karşılıklar) değiştiyse LLM'in gereksinim
+ * çıkarımına dokunmadan kavramlar yeniden hesaplanır ve önbelleğe yazılır:
+ *   pnpm eval:prepare --concepts                   bölme + karşılıklar
+ *   pnpm eval:prepare --concepts --no-equivalents  yalnızca bölme (taban)
  */
 const KOK = import.meta.dirname
 const SOURCES = join(KOK, "sources")
@@ -65,15 +72,23 @@ async function main() {
     )
   }
 
+  const recomputeConcepts = process.argv.includes("--concepts")
+  const withEquivalents = !process.argv.includes("--no-equivalents")
   const postingData = new Map<string, JobPostingData>()
   for (const id of postingIds) {
-    postingData.set(
-      id,
-      await cachedOrRun(`ilan-${id}`, refresh, async () => {
-        const rawText = readFileSync(join(SOURCES, "ilan", `${id}.txt`), "utf8")
-        return (await extractJobPosting(llm, rawText)).data
-      }, llm),
-    )
+    let posting = await cachedOrRun(`ilan-${id}`, refresh, async () => {
+      const rawText = readFileSync(join(SOURCES, "ilan", `${id}.txt`), "utf8")
+      return (await extractJobPosting(llm, rawText)).data
+    }, llm)
+    if (recomputeConcepts) {
+      posting = {
+        ...posting,
+        requirements: posting.requirements.map((r) => ({ ...r, concepts: splitIntoConcepts(r.text, r.type) })),
+      }
+      if (withEquivalents) posting = (await addLanguageEquivalents(llm, posting)).data
+      writeFileSync(join(CACHE, `ilan-${id}.json`), JSON.stringify(posting, null, 2))
+    }
+    postingData.set(id, posting)
   }
 
   const rows: string[] = [

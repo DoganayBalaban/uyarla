@@ -42,7 +42,9 @@ export function compareToExpectations(
       if (actual.method === "semantic") bySemantic++
     }
 
-    if (expected.shouldMatch && matched) {
+    if (expected.shouldMatch && matched && expected.fullMatch && actual.missingConcepts.length > 0) {
+      misses++
+    } else if (expected.shouldMatch && matched) {
       // Kanıt beklendiyse doğru maddeyi göstermiş olmalı: doğru sonuç ama
       // yanlış gerekçe, kullanıcıya yanlış bağ kurdurur.
       const evidenceCorrect =

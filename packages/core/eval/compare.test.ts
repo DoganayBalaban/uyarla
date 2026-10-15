@@ -8,6 +8,7 @@ const outcome = (
     status: "matched" | "missing"
     evidence?: string
     method?: "keyword" | "semantic"
+    missingConcepts?: string[]
   }>,
 ): ScoreResult => ({
   score: 50,
@@ -21,7 +22,7 @@ const outcome = (
       ? { text: s.evidence, matchText: s.evidence, kind: "bullet" as const, sourceRef: null }
       : null,
     matchedConcepts: [],
-    missingConcepts: [],
+    missingConcepts: s.missingConcepts ?? [],
   })),
 })
 
@@ -116,4 +117,25 @@ describe("compareToExpectations", () => {
     expect(m.hits).toBe(1)
     expect(m.notExtracted).toBe(0)
   })
+
+  it("with fullMatch, a partial match is a miss", () => {
+    // DOG-73: "Selenium WebDriver ile test otomasyonu" yalnızca Selenium'la
+    // tutuyor, "test otomasyonu" kaçıyordu; eval bunu isabet sayıyordu.
+    const result = outcome([
+      { text: "Selenium WebDriver ile test otomasyonu", status: "matched", missingConcepts: ["test otomasyonu"] },
+      { text: "SQL bilgisi", status: "matched" },
+    ])
+    const m = compareToExpectations(
+      "p1",
+      result,
+      [
+        { match: "Selenium", shouldMatch: true, fullMatch: true },
+        { match: "SQL", shouldMatch: true, fullMatch: true },
+      ],
+      1000,
+    )
+    expect(m.hits).toBe(1)
+    expect(m.misses).toBe(1)
+  })
 })
+
