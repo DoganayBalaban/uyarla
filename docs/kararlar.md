@@ -2211,3 +2211,39 @@ karardan bağımsız, eski bir sınırlama.
 eklenmiyor: ilan okuma CV okumayla paralel ve CV okuma genelde daha uzun.
 Ön yazıdaki yanlış "CV'nde yok" uyarıları da aynı eş anlamlıları kullandığı
 için kalkıyor (`verify/injection.ts`).
+
+## K-54 · Üretim modeli gpt-4.1-mini, gömme text-embedding-3-small
+
+**Tarih:** 15 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** Üretim modeli ve birim maliyet (DOG-16)
+
+**Karar:** Üretimde LLM `gpt-4.1-mini`, gömme `text-embedding-3-small` kalıyor.
+Başka modellerle karşılaştırma yapılmadı: kalite tabanı korunuyor, maliyet ve
+süre hedeflerin çok altında, model değiştirmek eşiklerin (anlamsal 0,50,
+kayma 0,7, K-52 etiketleri) yeniden ayarlanması demek. K2'den sonra kalite
+sorunu gözlenirse yeniden açılır.
+
+**Kalite (eval, 19 çift, K-53 sonrası):** isabet %91,5 · 7 kaçırma · 2 uydurma.
+
+**Birim maliyet ve süre** (4 iyi uyumlu eval çifti, dört meslek; OpenAI
+yanıtlarındaki `usage` alanından; fiyat: girdi $0,40/M, çıktı $1,60/M, gömme
+$0,02/M token):
+
+| Adım | Girdi | Çıktı | Gömme | Maliyet | Süre (ort / en çok) |
+|---|---|---|---|---|---|
+| Analiz (CV + ilan + karşılıklar + skor) | 3.037 | 1.150 | 764 | $0,0031 | 7,5 / 12,3 sn |
+| Uyarlama | 1.057 | 110 | 1.104 | $0,0006 | 2,3 / 3,6 sn |
+| Ön yazı | 1.277 | 300 | 0 | $0,0010 | 3,0 / 3,3 sn |
+| **Tam akış** | | | | **≈ $0,005** | |
+
+Üretim kayıtları (15 Ekim, 8 analiz): ortalama 5.196 token, medyan süre 8,3 sn,
+p90 15,9 sn. 30 sn ölçütü (B2) karşılanıyor. Kütüphaneden seçilen CV'de
+ayrıştırma atlandığı için (DOG-59) tekrar eden analizler daha ucuz.
+
+**Fiyatlandırmaya etkisi (DOG-34):** bir kullanıcının analiz + uyarlama + ön yazı
+akışı yarım sentin altında. Aylık 100 analiz yapan yoğun bir kullanıcı bile
+yaklaşık $0,50 tutuyor. %80 brüt marj hedefini belirleyen şey LLM değil; ödeme
+sağlayıcısı komisyonu ve sabit altyapı.
+
+**Bedel:** Fiyatlar ölçüm günündeki liste fiyatı; OpenAI fiyat değiştirirse tablo
+yeniden hesaplanmalı. Dil sınırında gömme zayıf (K-53); karşılık adımı bunu
+telafi ediyor, `-large` modeline geçmek gerekmedi.
