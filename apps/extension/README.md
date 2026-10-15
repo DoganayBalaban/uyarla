@@ -16,7 +16,7 @@ ilan metnini seç, sağ tıkla → "Seçili metni uyarla ile ölç".
 ## Geliştirme
 
 - `pnpm --filter @uyarla/extension dev`: `dist/` izlenir, uyarla adresi `http://localhost:3000`.
-- `pnpm --filter @uyarla/extension build`: `dist/` ve zip, adres `https://uyarla.vercel.app` (`UYARLA_URL=… pnpm build` ile değişir).
+- `pnpm --filter @uyarla/extension build`: `dist/` ve zip, adres `https://uyarla.com.tr` (`UYARLA_URL=… pnpm build` ile değişir).
 - `pnpm --filter @uyarla/extension icons`: simgeleri web'in `icon.svg`'sinden yeniden üretir.
 
 ## İzinler (mağaza incelemesi için gerekçeler)
@@ -41,4 +41,4 @@ bakarken uyarla simgesine tıkla. İlan metni uyarla'ya aktarılır ve CV'nin bu
 ilana ne kadar uyduğunu, hangi gereksinimlerin eksik kaldığını görürsün.
 Ardından CV'ni bu ilana uyarlayabilirsin; olmayan deneyim eklenmez.
 
-Gizlilik politikası: https://uyarla.vercel.app/privacy
+Gizlilik politikası: https://uyarla.com.tr/privacy
