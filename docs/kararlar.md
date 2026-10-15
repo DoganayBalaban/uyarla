@@ -2165,3 +2165,49 @@ gereksinimler ("iletişim becerisi güçlü" gibi) de paydada.
 **Bedel:** "32 · Yüksek uyum" ilk bakışta tuhaf durabilir. K2 testinde
 katılımcıların skoru nasıl okuduğu gözlenmeli; gerekirse ya eşikler ya da
 skorun kendisi (soft gereksinimlerin ağırlığı) yeniden ele alınır.
+
+## K-53 · İlan kavramlarına karşı dildeki karşılıklar (İngilizce CV ↔ Türkçe ilan)
+
+**Tarih:** 15 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** İlan çıkarımı, eşleştirme (DOG-73)
+
+**Sorun:** Üretim duman testinde İngilizce bir test mühendisi CV'si, Türkçe
+test mühendisi ilanında açıkça sahip olduğu yetkinlikleri karşılamadı:
+"test otomasyonu", "API testleri", "hata takibi" kısmen ya da eksik çıktı.
+Kavramlar kodda bölünüyor (K-23) ve eş anlamlılar yalnızca ilandaki
+parantezlerden geliyordu; dil karşılığı üreten bir adım yoktu.
+
+Ölçüm (text-embedding-3-small, eşik 0,50): Türkçe kavramların İngilizce
+kanıta benzerliği 0,31–0,47; aynı kavramların İngilizceleri 0,67–0,77. Gömme
+dil sınırını geçemiyor. "API testleri" ve "Agile/Scrum" ise eşiği geçtiği hâlde
+özel ad kuralı (K-38) yüzünden anlamsal aramaya hiç girmiyordu.
+
+**Karar:**
+
+- İlan çıkarımından sonra küçük bir LLM çağrısı (`extract/equivalents.ts`):
+  özel ad olmayan kavramların karşı dildeki karşılıkları eş anlamlıya
+  ekleniyor ("test otomasyonu" → "test automation", "automation testing").
+  Eşleşme böylece kelime düzeyinde, yani kesin. İçinde sıradan bir kelime
+  olan kısaltmalı kavramlar da gönderiliyor ("API testleri"). Çağrı düşerse
+  ilan karşılıksız devam ediyor.
+- "Agile/Scrum" gibi eğik çizgiyle birleşmiş iki kelime seçenek sayılıyor;
+  kısaltmalar (CI/CD, UI/UX, HTML/CSS) tek kavram kalıyor.
+- "ortamında" kavramdan atılıyor.
+- Eval'e `fullMatch` beklentisi: kısmen eşleşme kaçırma sayılıyor. Önceden
+  bileşik gereksinimin bir parçası tutunca isabet sayılıyordu ve bu hata
+  eval'de görünmüyordu. Yeni çift: cv-b × ilan-10 (İngilizce CV, Türkçe ilan).
+
+**Ölçüm (19 çift, kavramlar güncel kodla yeniden hesaplandı):**
+
+| | İsabet | Kaçırma | Uydurma |
+|---|---|---|---|
+| Taban (karşılıksız) | %89,6 | 9 | 2 |
+| Karşılıklarla | **%91,5** | **7** | 2 |
+
+Eski 18 çiftte hiçbir sonuç değişmedi. Yeni çiftte kaçırma 2 → 0. Kalan uydurma
+yeni çiftte "en az 2 yıl" deneyim: anlamsal eşleşme süreyi denetlemiyor; bu
+karardan bağımsız, eski bir sınırlama.
+
+**Bedel:** ilan başına 426–705 token ve 1,5–3,4 sn. Süre analize doğrudan
+eklenmiyor: ilan okuma CV okumayla paralel ve CV okuma genelde daha uzun.
+Ön yazıdaki yanlış "CV'nde yok" uyarıları da aynı eş anlamlıları kullandığı
+için kalkıyor (`verify/injection.ts`).

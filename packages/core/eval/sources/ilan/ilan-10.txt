@@ -1,0 +1,15 @@
+Software Test Engineer — Örnek Teknoloji A.Ş.
+
+Aranan Nitelikler
+- Bilgisayar Mühendisliği veya ilgili bölümlerden mezun
+- En az 2 yıl yazılım test deneyimi
+- Selenium WebDriver ile test otomasyonu
+- Postman ile API testleri
+- JIRA ile hata takibi
+- SQL bilgisi
+- Agile/Scrum ortamında çalışma deneyimi
+
+İş Tanımı
+- Web uygulamaları için test senaryoları yazmak ve çalıştırmak
+- Otomasyon testlerini geliştirmek ve sürdürmek
+- Hataları raporlamak ve takip etmek

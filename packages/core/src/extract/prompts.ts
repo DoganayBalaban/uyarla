@@ -88,3 +88,23 @@ Gereksinimler birden çok başlık altında olabilir ("Aradığımız nitelikler
 
 Şirket adı ilanda yoksa null yaz. Kıdem belirtilmemişse null yaz.
 İlanda olmayan hiçbir gereksinim ekleme.`
+
+/**
+ * Kavramların karşı dildeki karşılıkları (DOG-73). Türkiye'de İngilizce CV ile
+ * Türkçe ilana (ya da tersine) başvurmak yaygın; kelime eşleşmesi dil
+ * sınırını geçemiyor, gömme benzerliği de orada zayıf (0,31–0,47).
+ */
+export const EQUIVALENTS_PROMPT = `Sana bir iş ilanından çıkarılmış kavramların listesi ve ilanın dili verilecek.
+İlan Türkçeyse her kavramın İngilizce, İngilizceyse Türkçe karşılığını yaz.
+
+Karşılık, bir CV'de aynı yetkinliği anlatmak için yazılan ifadedir:
+"test otomasyonu" → "test automation", "automation testing";
+"hata takibi" → "bug tracking", "defect tracking";
+"project management" → "proje yönetimi".
+
+Kurallar:
+- Yalnızca aynı anlamı taşıyan karşılıklar. Daha geniş ya da daha dar bir kavram,
+  ilgili bir araç veya teknoloji yazma ("test otomasyonu" için "Selenium" yazma).
+- Her kavram için en fazla üç karşılık; CV'lerde en sık geçenler önce.
+- Kesin bir karşılık yoksa equivalents boş liste olsun.
+- term alanına kavramı sana verildiği gibi, değiştirmeden yaz.`

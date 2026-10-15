@@ -1,0 +1,15 @@
+{
+  "id": "cv-b__ilan-10",
+  "resumeId": "cv-b-test-engineer",
+  "postingId": "ilan-10",
+  "note": "İngilizce test mühendisi CV'si, Türkçe test mühendisi ilanı (DOG-73). Dil sınırı: ilan 'test otomasyonu', 'API testleri', 'hata takibi' diyor, CV 'Automation Testing', 'API Testing', 'Defect Tracking'. Bileşik gereksinimlerin iki kavramı da tutmalı (fullMatch). CV'de deneyim ~1,5 yıl, 2 yıl şartı karşılanmamalı.",
+  "expectations": [
+    { "match": "Selenium WebDriver ile test otomasyonu", "shouldMatch": true, "fullMatch": true },
+    { "match": "Postman ile API testleri", "shouldMatch": true, "fullMatch": true },
+    { "match": "JIRA ile hata takibi", "shouldMatch": true, "fullMatch": true },
+    { "match": "Agile/Scrum", "shouldMatch": true, "fullMatch": true },
+    { "match": "SQL bilgisi", "shouldMatch": true },
+    { "match": "Bilgisayar Mühendisliği", "shouldMatch": true },
+    { "match": "En az 2 yıl yazılım test", "shouldMatch": false }
+  ]
+}

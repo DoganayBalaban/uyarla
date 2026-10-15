@@ -17,6 +17,12 @@ export interface ExpectedRequirement {
   shouldMatch: boolean
   /** Karşılanıyorsa kanıt olarak beklenen CV maddesinden ayırt edici bir parça. */
   evidenceContains?: string
+  /**
+   * Gereksinimin bütün kavramları karşılanmalı; "kısmen" (bazı kavramlar
+   * eksik) kaçırma sayılır. Bileşik gereksinimin bir parçası bulunup diğeri
+   * kaçtığında eval bunu isabet sayıyordu (DOG-73).
+   */
+  fullMatch?: boolean
 }
 
 export interface EvalPair {

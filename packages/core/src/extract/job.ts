@@ -2,10 +2,11 @@ import type { ExtractResult, LlmProvider } from "../llm/types.js"
 import { JobPostingDraftSchema, JobPostingSchema, jobPostingDraftJsonSchema } from "../schemas/job.js"
 import type { JobPostingData } from "../schemas/job.js"
 import { splitIntoConcepts } from "./concepts.js"
+import { addLanguageEquivalents } from "./equivalents.js"
 import { JOB_PROMPT } from "./prompts.js"
 
 /**
- * İlan çıkarımı TEK çağrı.
+ * İlan çıkarımı: yorum için tek çağrı.
  *
  * Model yalnızca gerçekten yorum gerektiren işi yapıyor: ilan metninden
  * gereksinimleri ayırmak, türünü ve önemini belirlemek. Gereksinimin
@@ -17,6 +18,10 @@ import { JOB_PROMPT } from "./prompts.js"
  * doğrulanması gerekiyordu (K-18) — o sorun da tümüyle ortadan kalktı.
  *
  * Yan kazanç: ilan çıkarımı 21 saniyeden tek çağrıya indi.
+ *
+ * İkinci, küçük bir çağrı yalnızca karşı dildeki karşılıklar için yapılıyor
+ * (DOG-73, `equivalents.ts`): kavramların kendisi değil, İngilizce CV ile
+ * Türkçe ilanın aynı yetkinliği bulabilmesi. Çevrilecek kavram yoksa yapılmıyor.
  */
 export async function extractJobPosting(
   llm: LlmProvider,
@@ -38,5 +43,7 @@ export async function extractJobPosting(
     })),
   })
 
-  return { data: posting, tokens }
+  // Karşı dildeki karşılıklar (DOG-73): İngilizce CV ↔ Türkçe ilan.
+  const withEquivalents = await addLanguageEquivalents(llm, posting)
+  return { data: withEquivalents.data, tokens: tokens + withEquivalents.tokens }
 }

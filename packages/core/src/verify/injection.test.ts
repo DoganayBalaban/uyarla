@@ -99,3 +99,22 @@ describe("checkPostingTermInjection", () => {
     expect(warning.detail).not.toMatch(/error|injected|invalid/i)
   })
 })
+
+describe("checkPostingTermInjection · dil sınırı (DOG-73)", () => {
+  it("does not flag a Turkish posting term whose English equivalent is in the CV", () => {
+    // Ön yazıda "API testleri" yazıldı, İngilizce CV'de "API Testing" var.
+    // Karşılık eş anlamlı olarak geldiği için uyarı çıkmamalı.
+    const p: JobPostingData = {
+      ...posting([]),
+      requirements: [
+        {
+          text: "Postman ile API testleri",
+          type: "skill",
+          importance: "must",
+          concepts: [{ term: "API testleri", synonyms: ["API testing"] }],
+        },
+      ],
+    }
+    expect(checkPostingTermInjection("API testleri konusunda deneyimliyim.", "Manual & API Testing with Postman", p)).toEqual([])
+  })
+})

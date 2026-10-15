@@ -56,3 +56,14 @@ export type JobPostingDraft = z.infer<typeof JobPostingDraftSchema>
 
 export const jobPostingJsonSchema = toJsonSchema(JobPostingSchema)
 export const jobPostingDraftJsonSchema = toJsonSchema(JobPostingDraftSchema)
+
+/** Kavramların karşı dildeki karşılıkları (DOG-73, extract/equivalents.ts). */
+export const ConceptEquivalentsSchema = z.object({
+  items: z.array(
+    z.object({
+      term: z.string(),
+      equivalents: z.array(z.string()),
+    }),
+  ),
+})
+export const conceptEquivalentsJsonSchema = toJsonSchema(ConceptEquivalentsSchema)

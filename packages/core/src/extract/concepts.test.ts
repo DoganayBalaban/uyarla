@@ -190,3 +190,21 @@ describe("splitIntoConcepts · non-software postings (DOG-61)", () => {
     expect(termList("Aktif araç kullanabilen")).toEqual(["Aktif araç"])
   })
 })
+
+describe("splitIntoConcepts · dil sınırı (DOG-73)", () => {
+  it("drops 'ortamında' and treats two words joined by a slash as alternatives", () => {
+    // Üretimde "Agile/Scrum ortamında" tek kavram kalıyordu; CV'deki "Agile
+    // Methodologies (Scrum)" ne kelimeyle ne anlamla eşleşti.
+    expect(splitIntoConcepts("Agile/Scrum ortamında çalışma deneyimi", "experience")).toEqual([
+      { term: "Agile/Scrum", synonyms: ["Agile", "Scrum"] },
+    ])
+  })
+
+  it("leaves slash acronyms as one concept", () => {
+    // CI/CD, UI/UX, HTML/CSS seçenek değil; ayrılırlarsa yalnızca HTML bilen
+    // aday HTML/CSS'i karşılamış sayılır.
+    for (const term of ["CI/CD", "UI/UX", "HTML/CSS"]) {
+      expect(splitIntoConcepts(term, "skill")).toEqual([{ term, synonyms: [] }])
+    }
+  })
+})

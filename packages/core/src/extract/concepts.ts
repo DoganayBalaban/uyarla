@@ -50,7 +50,7 @@ const FRONT_PADDING =
 
 /** Sonda duran ve kavrama ait olmayan kalıplar. */
 const BACK_PADDING =
-  /\s+(deneyim(i|e|ine|leri|lerine)?|program(ı|ını|ları|larını|larına)?|güçlü|kuvvetli|gelişmiş|yüksek|tecrübe(si|ye|leri)?|bilgi(si|sine|leri)?|bilgisi olan|süreç(i|e|leri|lerine|lerinde|lerini)?|süreci|teknoloji(si|leri|lerine)?|yetkinli(k|ği|kleri)|kullanım(ı)?|konu(sunda|larında|larına)|alan(ında|larında)|hakimiyet(i)?|hakim|sahibi|sahip|uzmanlığı|mezun(u|ları)?|bölüm(ü|ünden|lerinden)?|beceri(si|leri)|zorunludur|şarttır|gerekmektedir|beklenmektedir|aranmaktadır|tercih sebebidir|vb|vs|etc|gibi|experience|knowledge|skills?|frameworks?|technologies|tools?|proficiency|expertise|background|practices)$/i
+  /\s+(deneyim(i|e|ine|leri|lerine)?|program(ı|ını|ları|larını|larına)?|güçlü|kuvvetli|gelişmiş|yüksek|tecrübe(si|ye|leri)?|bilgi(si|sine|leri)?|bilgisi olan|süreç(i|e|leri|lerine|lerinde|lerini)?|süreci|teknoloji(si|leri|lerine)?|yetkinli(k|ği|kleri)|kullanım(ı)?|konu(sunda|larında|larına)|alan(ında|larında)|ortam(ı|ında|larında)|hakimiyet(i)?|hakim|sahibi|sahip|uzmanlığı|mezun(u|ları)?|bölüm(ü|ünden|lerinden)?|beceri(si|leri)|zorunludur|şarttır|gerekmektedir|beklenmektedir|aranmaktadır|tercih sebebidir|vb|vs|etc|gibi|experience|knowledge|skills?|frameworks?|technologies|tools?|proficiency|expertise|background|practices)$/i
 
 /**
  * Sondaki sıfat-fiil ve ikinci tekil kişi ekli fiil adı: "Excel'i etkin
@@ -195,7 +195,7 @@ function sentenceConcepts(sentence: string, parens: string[]): Concept[] {
       if (synonymList[0]) fragments.push({ term: synonymList[0], synonyms: synonymList.slice(1) })
       continue
     }
-    fragments.push({ term, synonyms: synonymList })
+    fragments.push({ term, synonyms: [...synonymList, ...slashAlternatives(term)] })
   }
 
   distributeCommonHead(fragments)
@@ -219,6 +219,20 @@ function sentenceConcepts(sentence: string, parens: string[]): Concept[] {
     outcome.push({ term: listExamples.join(" / "), synonyms: listExamples })
   }
   return outcome
+}
+
+/**
+ * Eğik çizgiyle birleşmiş iki kelime seçenektir: "Agile/Scrum" isteyen ilan
+ * ikisinden birini yeterli sayar ve CV genelde birini ayrı yazar ("Agile
+ * Methodologies"). Kısaltmalar (CI/CD, UI/UX, HTML/CSS) tek kavram kalıyor:
+ * parçaları büyük harf ya da kısa; ayrılırlarsa yalnızca HTML bilen aday
+ * HTML/CSS'i karşılamış sayılırdı (DOG-73).
+ */
+function slashAlternatives(term: string): string[] {
+  const parts = term.split("/")
+  if (parts.length !== 2) return []
+  const isWord = (p: string) => /^\p{L}{4,}$/u.test(p) && /\p{Ll}/u.test(p)
+  return parts.every(isWord) ? parts : []
 }
 
 /** "Birim ve entegrasyon testleri" → "Birim testleri", "entegrasyon testleri". */
