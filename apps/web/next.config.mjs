@@ -10,8 +10,58 @@ import { fileURLToPath } from "node:url"
  */
 const repoRoot = fileURLToPath(new URL("../../", import.meta.url))
 
+const isDev = process.env.NODE_ENV === "development"
+
+/**
+ * Güvenlik başlıkları (DOG-26).
+ *
+ * #58'de bu dosya yeniden yazılırken başlıklar yanlışlıkla silinmişti ve
+ * üretim iki hafta CSP'siz çalıştı; `src/lib/securityHeaders.test.ts` artık
+ * bunu yakalıyor.
+ *
+ * CSP nonce'suz, `script-src 'unsafe-inline'` bilinçli: Next'in hidrasyon
+ * betikleri satır içi ve nonce her isteği middleware'den geçirip statik
+ * sayfaları dinamik yapar. Satır içi betiğe izin verilse de CSP asıl işini
+ * görüyor: dış kaynaktan betik, çerçeveye alınma (clickjacking), başka adrese
+ * form gönderme ve <base> ile adres kaçırma kapalı. XSS'e karşı asıl savunma
+ * React'in kaçışlaması; `dangerouslySetInnerHTML` kullanılmıyor (testte
+ * yasak).
+ *
+ * Dış kaynaklar: Google Fonts (app/layout.tsx) ve tarayıcı hata izlemesinin
+ * gönderdiği Sentry AB alımı (DOG-62). Geliştirmede React Refresh eval
+ * kullanıyor.
+ */
+const CSP = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data: blob:",
+  "connect-src 'self' https://*.ingest.de.sentry.io",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join("; ")
+
+const SECURITY_HEADERS = [
+  { key: "Content-Security-Policy", value: CSP },
+  // HTTPS'te etkili; tarayıcı yerel HTTP'de yok sayıyor.
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+]
+
 /** @type {import('next').NextConfig} */
 export default {
+  poweredByHeader: false,
+
+  async headers() {
+    return [{ source: "/:path*", headers: SECURITY_HEADERS }]
+  },
+
   /**
    * Dağıtım çıktısını yerelde inceleyebilmek için kapı.
    *
