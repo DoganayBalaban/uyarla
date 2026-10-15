@@ -10,15 +10,17 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "tsx src/index.ts",
+    "start": "node scripts/build.mjs && node --enable-source-maps dist/index.mjs",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "node scripts/build.mjs"
   },
   "dependencies": {
     "@sentry/node": "^11.6.0",
     "@uyarla/core": "workspace:*",
     "@uyarla/db": "workspace:*",
     "bullmq": "^5.20.0",
+    "esbuild": "^0.28.2",
     "ioredis": "^5.4.0"
   },
   "devDependencies": {
