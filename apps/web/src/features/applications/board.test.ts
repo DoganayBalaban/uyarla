@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isStage, toBoardCard, positionName, groupByStage, type BoardRow } from "@/features/applications/board"
+import { isStage, toBoardCard, positionName, groupByStage, scoreBadge, type BoardRow } from "@/features/applications/board"
 
 function row(suffix: Partial<BoardRow> = {}): BoardRow {
   return {
@@ -57,5 +57,14 @@ describe("toBoardCard · company (DOG-64)", () => {
   it("leaves the company empty when the posting has none", () => {
     expect(toBoardCard(row()).company).toBeNull()
     expect(toBoardCard(row({ jobPosting: { position: "X", company: "  ", rawText: "ilan" } })).company).toBeNull()
+  })
+})
+
+describe("scoreBadge", () => {
+  it("uses the same thresholds as the analysis result", () => {
+    // DOG-72: sonuç ve panoda 36 "Yüksek uyum", başvuru panosunda "Düşük" idi.
+    expect(scoreBadge(36).text).toBe("Yüksek")
+    expect(scoreBadge(25).text).toBe("Orta")
+    expect(scoreBadge(10).text).toBe("Düşük")
   })
 })

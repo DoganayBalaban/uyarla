@@ -29,19 +29,11 @@ import {
   STAGE_COLOR,
   NOTE_MAX_LENGTH,
   groupByStage,
+  scoreBadge,
   type Stage,
   type BoardCard,
 } from "@/features/applications/board"
 import { noteFormSchema, type NoteFormValues } from "@/features/applications/schema"
-
-/** Skor yalnızca renkle değil etiketle de (rehber §9.2). */
-function scoreLabel(scoreValue: number): { text: string; cls: string } {
-  // Koyu temada durum renklerinin açık tonları: AA kontrastı için.
-  if (scoreValue >= 70) return { text: "Yüksek", cls: "bg-brand-green/10 text-brand-green dark:text-[#4ade80]" }
-  if (scoreValue >= 40) return { text: "Orta", cls: "bg-brand-amber/15 text-brand-amber" }
-  return { text: "Düşük", cls: "bg-brand-red/10 text-brand-red dark:bg-brand-red/20 dark:text-[#f87171]" }
-}
-
 
 /** Sürükle-bırak verisinin türü; başka sürüklemelerle karışmasın. */
 const DRAG_TYPE = "application/x-uyarla-kart"
@@ -258,7 +250,7 @@ function BoardCardView({
   })
   const [adapting, setAdapting] = useState(false)
   const router = useRouter()
-  const labelText = card.score === null ? null : scoreLabel(card.score)
+  const labelText = card.score === null ? null : scoreBadge(card.score)
 
   async function adapt() {
     setAdapting(true)

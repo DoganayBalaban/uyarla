@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isPartial, summarizeRequirements } from "@/features/analysis/requirementSummary"
+import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
 
 const req = (importance: string, status: "matched" | "missing", method: string | null = "keyword", confidence = 1) => ({
   requirement: { text: "x", importance, type: "skill" },
@@ -33,5 +33,25 @@ describe("isPartial", () => {
     expect(isPartial(req("must", "matched", "semantic", 0.6))).toBe(false)
     expect(isPartial(req("must", "missing", null, 0))).toBe(false)
     expect(isPartial(req("must", "matched", "keyword", 0.34))).toBe(true)
+  })
+})
+
+describe("partialNote", () => {
+  it("says the partial ones are part of the met count", () => {
+    // DOG-72: "4 tanesi karşılanıyor · 3 gereksinim kısmen karşılanıyor" iki
+    // ayrı grup gibi okunuyordu; kısmenler karşılananların içinde.
+    const s = summarizeRequirements([
+      req("must", "matched", "keyword", 1),
+      req("must", "matched", "keyword", 0.5),
+      req("must", "matched", "keyword", 0.5),
+      req("must", "matched", "keyword", 0.5),
+      req("must", "missing", null, 0),
+    ])
+    expect(s.matched).toBe(4)
+    expect(partialNote(s)).toBe("Karşılananların 3 tanesi kısmen")
+  })
+
+  it("is empty when nothing is partial", () => {
+    expect(partialNote(summarizeRequirements([req("must", "matched")]))).toBeNull()
   })
 })
