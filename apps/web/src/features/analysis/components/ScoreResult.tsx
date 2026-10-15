@@ -15,7 +15,7 @@ import {
 import { cn } from "@/lib/cn"
 import { FormatReportCard as FormatReport, type FormatReportView } from "@/features/analysis/components/FormatReport"
 import { ScoreRing } from "@/features/analysis/components/ScoreRing"
-import { isPartial, summarizeRequirements } from "@/features/analysis/requirementSummary"
+import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
 import { scoreStatus } from "@/lib/scoreStatus"
 
 export interface RequirementResult {
@@ -117,7 +117,7 @@ export function ScoreResult({
                   </>
                 )}
                 {summary.mustTotal > 0 && summary.partial > 0 && " · "}
-                {summary.partial > 0 && <>{summary.partial} gereksinim kısmen karşılanıyor</>}
+                {partialNote(summary)}
               </p>
             )}
             <p className="mt-2 text-sm text-muted">

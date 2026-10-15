@@ -35,3 +35,12 @@ export function summarizeRequirements(items: RequirementLike[]): RequirementSumm
     partial: items.filter(isPartial).length,
   }
 }
+
+/**
+ * Kısmen karşılananlar karşılanan sayısının içinde. "4 tanesi karşılanıyor ·
+ * 3 gereksinim kısmen" iki ayrı grup gibi okunuyordu (DOG-72); not bunu açıkça
+ * söylüyor. Sayının ardından ek yok ("3'ü / 4'ü" sayıya göre değişiyor).
+ */
+export function partialNote(summary: RequirementSummary): string | null {
+  return summary.partial > 0 ? `Karşılananların ${summary.partial} tanesi kısmen` : null
+}

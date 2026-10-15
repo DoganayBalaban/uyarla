@@ -4,6 +4,8 @@
  * uçlarından ayrı.
  */
 
+import { scoreStatus } from "@/lib/scoreStatus"
+
 export const STAGES = ["saved", "applied", "interview", "offer", "rejected"] as const
 export type Stage = (typeof STAGES)[number]
 
@@ -105,4 +107,22 @@ export function groupByStage(cards: BoardCard[]): Record<Stage, BoardCard[]> {
   const time = (k: BoardCard) => Date.parse(k.stageChangedAt ?? k.createdAt)
   for (const a of STAGES) columns[a].sort((x, y) => time(y) - time(x))
   return columns
+}
+
+const BADGE_CLASS = {
+  high: "bg-brand-green/10 text-brand-green dark:text-[#4ade80]",
+  medium: "bg-brand-amber/15 text-brand-amber",
+  low: "bg-brand-red/10 text-brand-red dark:bg-brand-red/20 dark:text-[#f87171]",
+} as const
+
+/**
+ * Karttaki skor etiketi (rehber §9.2: renk tek başına değil). Eşikler
+ * `scoreStatus`'tan: başvuru panosu eskiden kendi 40/70 eşiğini kullanıyor ve
+ * aynı skoru sonuç ekranından farklı etiketliyordu (DOG-72).
+ */
+export function scoreBadge(score: number): { text: string; cls: string } {
+  const text = scoreStatus(score).label.replace(/ uyum$/, "")
+  // Koyu temada durum renklerinin açık tonları: AA kontrastı için.
+  const cls = text === "Yüksek" ? BADGE_CLASS.high : text === "Orta" ? BADGE_CLASS.medium : BADGE_CLASS.low
+  return { text, cls }
 }
