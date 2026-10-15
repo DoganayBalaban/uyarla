@@ -2247,3 +2247,55 @@ sağlayıcısı komisyonu ve sabit altyapı.
 **Bedel:** Fiyatlar ölçüm günündeki liste fiyatı; OpenAI fiyat değiştirirse tablo
 yeniden hesaplanmalı. Dil sınırında gömme zayıf (K-53); karşılık adımı bunu
 telafi ediyor, `-large` modeline geçmek gerekmedi.
+
+## K-55 · Deneyim süresi şartı CV tarihlerinden; "veya ilgili bölümler" yakın bölümü kabul ediyor
+
+**Tarih:** 15 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** Skorlama (DOG-75)
+
+**Sorun:** Üretim doğrulamasında (DOG-73) iki yanlış karar:
+
+- "En az 2 yıl yazılım test deneyimi" karşılanıyor göründü; CV'de ~1,6 yıl var.
+  Kavram ("yazılım test") bulununca süreye hiç bakılmıyordu. Eval'deki iki
+  uydurmadan biri buydu.
+- "Bilgisayar Mühendisliği veya ilgili bölümlerden mezun" eksik göründü; CV'de
+  "Bachelor of Computer and Information Science" var. "ilgili bölümlerden" ise
+  bölüm adı gibi eş anlamlı olmuştu: CV'deki herhangi bir "ilgili" kelimesi
+  eğitimi karşılayabilirdi.
+
+**Karar:**
+
+- **Süre (`score/duration.ts`):** gereksinimde "en az N yıl", "N+ years",
+  "2-3 yıl" (alt sınır) varsa, kavramları unvanında ya da maddelerinde geçen
+  rollerin süresi hesaplanıyor; hiçbir rolde geçmiyorsa toplam deneyim.
+  Çakışan aralıklar bir kez sayılıyor. Yetmezse gereksinim eksik, eksik
+  listesinde "En az 2 yıl deneyim (CV'de ~1,6 yıl)". Bu bir kavram değil;
+  uyarlama yalnızca kavram adlarını hedef aldığı için CV'ye süre yazdırılmıyor.
+  Yalnız yıl yazılmış tarih yılın ortası sayılıyor (başı ya da sonu süreyi
+  şişirir). Tarih okunamıyorsa ("2023'ten beri" yıl olarak okunuyor; boş tarih
+  okunmuyor) karar değişmiyor.
+- **Eğitim:** "ilgili bölümler" / "related field" kavramdan atılıyor. İlan bu
+  ifadeyi taşıyorsa bölüm adının çekirdeği ("Bilgisayar", karşılığından
+  "Computer") CV'nin **eğitim** satırında aranıyor; deneyim maddesindeki
+  "bilgisayar" bölüm sayılmıyor. Bölüm adındaki önekler ("Üniversitelerin")
+  kavramda kalıyor: silmek kavram vektörünü değiştirip eval'de iki eğitim
+  eşleşmesini özet ve rol satırına kaydırdı; önek yalnızca çekirdek aranırken
+  atılıyor.
+
+**Beklenti düzeltmesi:** cv-a × ilan-2'de "Yapay zekâ, makine öğrenmesi… en az 5
+yıl deneyim" `shouldMatch: true` idi; CV'de ~0,8 yıl var. Beklenti süre hiç
+denetlenmezken yazılmıştı; aynı CV'nin ilan-1'deki 5 yıl beklentisiyle tutarlı
+olarak `false` yapıldı.
+
+**Ölçüm (19 çift):**
+
+| | İsabet | Kaçırma | Uydurma |
+|---|---|---|---|
+| Önce (K-53) | %91,5 | 7 | 2 |
+| Sonra | **%93,4** | **6** | **1** |
+
+Beklenti düzeltilmeseydi 7 kaçırma, 1 uydurma olurdu.
+
+**Bedel:** "N yıl" şartı rol adından ya da maddeden bulunamayan bir deneyimi
+(örneğin yalnız beceri listesinde geçen) toplam deneyimle ölçüyor; bu, alana
+ait olmayan yılları da sayabilir. Uydurma tarafında değil ama iyimser tarafta
+kalan bir yaklaşım; K2'de gözlenirse daraltılır.

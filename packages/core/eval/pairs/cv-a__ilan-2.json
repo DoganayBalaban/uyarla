@@ -2,7 +2,7 @@
   "id": "cv-a__ilan-2",
   "resumeId": "cv-a-ai-engineer",
   "postingId": "ilan-2",
-  "note": "AI mühendisi CV'si, kıdemli GenAI ilanı. Vektör veritabanı ürünleri ve Agile CV'de yok.",
+  "note": "AI mühendisi CV'si, kıdemli GenAI ilanı. Vektör veritabanı ürünleri ve Agile CV'de yok. Gereksinim 'en az 5 yıl deneyim' istiyor; CV'de ~0,8 yıl var, karşılanmamalı (DOG-75, cv-a × ilan-1'deki 5 yıl beklentisiyle aynı ilke).",
   "expectations": [
     {
       "match": "Bilgisayar Mühendisliği",
@@ -10,7 +10,7 @@
     },
     {
       "match": "Yapay zekâ, makine öğrenmesi",
-      "shouldMatch": true
+      "shouldMatch": false
     },
     {
       "match": "en az 2 yıl",

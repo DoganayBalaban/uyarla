@@ -208,3 +208,28 @@ describe("splitIntoConcepts · dil sınırı (DOG-73)", () => {
     }
   })
 })
+
+describe("splitIntoConcepts · 'veya ilgili bölümler' (DOG-75)", () => {
+  it("keeps the field name and drops 'related departments' as a concept", () => {
+    // "ilgili bölümlerden" eş anlamlı olunca CV'deki herhangi bir "ilgili"
+    // kelimesi eğitimi karşılayabiliyordu.
+    expect(splitIntoConcepts("Bilgisayar Mühendisliği veya ilgili bölümlerden mezun", "education")).toEqual([
+      { term: "Bilgisayar Mühendisliği", synonyms: [] },
+    ])
+    expect(splitIntoConcepts("Elektrik-Elektronik Mühendisliği veya ilgili mühendislik bölümlerinden mezun", "education")).toEqual([
+      { term: "Elektrik-Elektronik Mühendisliği", synonyms: [] },
+    ])
+  })
+
+  it("keeps several fields as options", () => {
+    expect(splitIntoConcepts("Üniversitelerin İşletme, İktisat veya ilgili bölümlerinden mezun", "education")).toEqual([
+      { term: "Üniversitelerin İşletme / İktisat", synonyms: ["Üniversitelerin İşletme", "İktisat"] },
+    ])
+  })
+
+  it("handles the English form", () => {
+    expect(splitIntoConcepts("Bachelor's degree in Computer Science or related field", "education")).toEqual([
+      { term: "Bachelor degree in Computer Science", synonyms: [] },
+    ])
+  })
+})
