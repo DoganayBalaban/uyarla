@@ -9,14 +9,19 @@ import {
  * Anonim kullanıcı temizlik betiği. Süresi geçmiş doğrulama satırlarını da
  * topluyor (DOG-33): ikisi aynı zamanlanmış göreve bağlanacak.
  *
- * Zamanlanmış görev altyapısı yok (K-02: worker ayrı bir sunucuda, Vercel'in
- * fonksiyonları sürekli çalışamıyor). Bu yüzden mantık `src/server/cleanupAnonymousUsers.ts`'te
- * test edilebilir duruyor ve burada yalnızca çağrılıyor — cron'a bağlamak
- * dağıtım kararına bağlı bir satır.
+ * Mantık `src/server/cleanupAnonymousUsers.ts`'te test edilebilir duruyor,
+ * burada yalnızca çağrılıyor.
+ *
+ * Üretimde Railway'deki ayrı bir cron servisi her gün çalıştırıyor (DOG-25):
+ * `pnpm --filter @uyarla/web cleanup:cron`. Worker'da değil, çünkü worker
+ * kimlik ve kullanıcı verisi bilmiyor (spec §4); Vercel Cron'da değil, çünkü
+ * silme fonksiyon süresine bağlı kalır ve Hobby planının 12 fonksiyon sınırı
+ * dolu. Ortam değişkenleri servisin kendisinde (.env yok).
  *
  *   pnpm --filter @uyarla/web cleanup:anonymous            # dener, hiçbir şey silmez
  *   pnpm --filter @uyarla/web cleanup:anonymous --delete      # gerçekten siler
  *   pnpm --filter @uyarla/web cleanup:anonymous --delete --days 60
+ *   pnpm --filter @uyarla/web cleanup:cron             # üretim: siler, .env okumaz
  *
  * Öntanımlı DENEME kipinde: geri alınamaz bir işi çalıştırmak açık bir
  * bayrak istemeli. Yanlışlıkla çalıştırılan bir betik, hiç yazılmamış bir
