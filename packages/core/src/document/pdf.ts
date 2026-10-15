@@ -14,8 +14,12 @@ const MARGIN = 56
  * da garantiliyor — taranmış PDF'e benzer bir sonuç riski yok.
  */
 export async function renderPdf(model: DocumentModel): Promise<Buffer> {
-  const doc = new PDFDocument({ size: "A4", margin: MARGIN })
   const fontList = fontPaths()
+  // Varsayılan font bizim gövde fontumuz: pdfkit aksi hâlde açılışta kendi
+  // Helvetica'sını `#standard-fonts` iç importuyla yüklüyor. Üretimde Sentry'nin
+  // modül kancası o importu çözemiyor ve indirme 500 veriyordu (15 Ekim 2026);
+  // Helvetica'yı zaten kullanmıyoruz (Türkçe harfleri yok).
+  const doc = new PDFDocument({ size: "A4", margin: MARGIN, font: fontList.regular })
   doc.registerFont("govde", fontList.regular)
   doc.registerFont("kalin", fontList.bold)
 
