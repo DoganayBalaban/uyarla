@@ -29,6 +29,8 @@ model User {
   targetRole  String?
   // İndirilen CV'nin iletişim satırı için (DOG-58); boşsa eklenmiyor.
   phone       String?
+
+  accessPasses AccessPass[]
 }
 
 model Resume {
@@ -255,4 +257,25 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@index([identifier])
+}
+
+enum AccessPassStatus {
+  active
+  refunded
+}
+
+/// Ücretli erişim dönemi (DOG-34). Tek seferlik paket; otomatik yenileme yok.
+/// Polar sipariş kimliği tekil: aynı ödeme bildirimi iki kez dönem açmaz.
+model AccessPass {
+  id              String           @id @default(cuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan            String
+  startsAt        DateTime
+  endsAt          DateTime
+  providerOrderId String           @unique
+  status          AccessPassStatus @default(active)
+  createdAt       DateTime         @default(now())
+
+  @@index([userId, endsAt])
 }

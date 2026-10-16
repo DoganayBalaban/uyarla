@@ -14,6 +14,7 @@ const DATA: UserDataExport = {
   ],
   jobPostings: [],
   analyses: [],
+  accessPasses: [],
 }
 
 describe("data export", () => {
