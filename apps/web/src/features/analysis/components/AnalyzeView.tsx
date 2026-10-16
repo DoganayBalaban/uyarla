@@ -28,11 +28,17 @@ import {
 } from "@/features/analysis/activeAnalysis"
 import { resultPath } from "@/features/analysis/paths"
 import {
+  browserSendMessage,
   createAutoSubmitGate,
+  extensionIdsFromEnv,
   readExtensionHandoff,
   shouldAutoSubmit,
+  verifyHandoff,
   type ExtensionHandoff,
 } from "@/features/analysis/extensionHandoff"
+
+/** Jetonu doğrulayabilecek eklentiler (geliştirme ve mağaza kimlikleri, DOG-71). */
+const EXTENSION_IDS = extensionIdsFromEnv(process.env.NEXT_PUBLIC_EXTENSION_IDS)
 import { PageHeader } from "@/components/layout/PageShell"
 import { StageTimeline } from "@/features/analysis/components/StageTimeline"
 import { ResumeUpload } from "@/features/analysis/components/ResumeUpload"
@@ -123,6 +129,7 @@ export function AnalyzeView() {
 
   // Tarayıcı eklentisinden gelen ilan (DOG-70): formu doldur, # kısmını sil.
   const [handoff, setHandoff] = useState<ExtensionHandoff | null>(null)
+  const [handoffVerified, setHandoffVerified] = useState(false)
   const autoSubmitGate = useRef(createAutoSubmitGate())
   useEffect(() => {
     const incoming = readExtensionHandoff(window.location.hash, window.location.search)
@@ -132,17 +139,28 @@ export function AnalyzeView() {
     // Geri tuşunda ya da yenilemede form yeniden dolmasın.
     window.history.replaceState(null, "", window.location.pathname + window.location.search)
     setHandoff(incoming)
+    // Bağlantıyı eklenti mi açtı? Jeton tek kullanımlık; # silindiği için
+    // Strict Mode'un ikinci çalıştırması buraya gelmiyor (DOG-71).
+    void verifyHandoff(incoming.token, EXTENSION_IDS, browserSendMessage()).then(setHandoffVerified)
   }, [setValue])
 
   // Kayıtlı ve varsayılan CV'si ön seçili kullanıcıda analiz bir kez kendiliğinden başlar.
   useEffect(() => {
     if (!handoff || busy) return
-    if (!shouldAutoSubmit({ registered, resumeId: selectedResumeId ?? undefined, jobText: handoff.jobText })) return
+    if (
+      !shouldAutoSubmit({
+        registered,
+        resumeId: selectedResumeId ?? undefined,
+        jobText: handoff.jobText,
+        verified: handoffVerified,
+      })
+    )
+      return
     if (!autoSubmitGate.current()) return
     void handleSubmit(onSubmit)()
     // onSubmit her çizimde yeniden tanımlanıyor; kapı tek gönderimi garanti ediyor.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handoff, registered, selectedResumeId, busy, handleSubmit])
+  }, [handoff, handoffVerified, registered, selectedResumeId, busy, handleSubmit])
   const [postingState, setPostingState] = useState<
     { kind: "loading" } | { kind: "done"; text: string } | { kind: "error"; text: string } | null
   >(null)

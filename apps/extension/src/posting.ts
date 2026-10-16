@@ -32,11 +32,13 @@ export function pickSelection(menuText: string | undefined, pageText?: string): 
  * metin istek günlüklerine düşmüyor. encodeURIComponent "+"yı da kodluyor;
  * web tarafı URLSearchParams ile okuyor (bkz. extensionHandoff.ts).
  */
-export function uyarlaUrl(base: string, text: string, sourceUrl: string | null): string {
+export function uyarlaUrl(base: string, text: string, sourceUrl: string | null, token?: string): string {
   let capped = text.slice(0, MAX_EXTENSION_TEXT)
   // Kırpma bir emojinin yarısında kalırsa encodeURIComponent hata veriyor.
   if (/[\uD800-\uDBFF]$/.test(capped)) capped = capped.slice(0, -1)
   const parts = [`ilan=${encodeURIComponent(capped)}`]
   if (sourceUrl) parts.push(`kaynak=${encodeURIComponent(sourceUrl)}`)
+  // Sayfa kendiliğinden göndermeden önce bu jetonu eklentiye soruyor (DOG-71).
+  if (token) parts.push(`jeton=${encodeURIComponent(token)}`)
   return `${base.replace(/\/+$/, "")}/analyze#${parts.join("&")}`
 }

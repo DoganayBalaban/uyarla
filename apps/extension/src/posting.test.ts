@@ -61,4 +61,10 @@ describe("uyarlaUrl", () => {
     const text = "a".repeat(MAX_EXTENSION_TEXT - 1) + "😀 sonrası"
     expect(() => uyarlaUrl("https://uyarla.com.tr", text, null)).not.toThrow()
   })
+
+  it("carries the handoff token for the page to verify (DOG-71)", () => {
+    const url = new URL(uyarlaUrl("https://uyarla.com.tr", LONG, "https://kariyer.net/a", "jeton-123"))
+    expect(new URLSearchParams(url.hash.slice(1)).get("jeton")).toBe("jeton-123")
+  })
 })
+
