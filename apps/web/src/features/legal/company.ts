@@ -9,7 +9,10 @@
 export const LEGAL = {
   dataController: "[Veri sorumlusu unvanı]",
   address: "[Adres]",
+  /** KVKK başvuruları ve kişisel veri soruları. */
   contact: "kvkk@uyarla.com.tr",
-  lastUpdated: "6 Ekim 2026",
+  /** Genel sorular, destek ve iade talepleri. */
+  support: "iletisim@uyarla.com.tr",
+  lastUpdated: "16 Ekim 2026",
   draftData: true,
 } as const

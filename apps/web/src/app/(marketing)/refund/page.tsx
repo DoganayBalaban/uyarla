@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { YasalSayfa as LegalPage } from "@/features/legal/LegalPage"
+import { LEGAL } from "@/features/legal/company"
 
 export const metadata = { title: "İade ve cayma · uyarla" }
 
@@ -33,8 +34,8 @@ export default function RefundPage() {
       <section>
         <h2>3. Yine de iade</h2>
         <p>
-          Teknik bir sorun nedeniyle hizmeti kullanamadıysan, satın alma tarihinden itibaren 14 gün içinde
-          iletisim@uyarla.com.tr adresine yaz. Durumu değerlendirip ödemeni Polar üzerinden iade ederiz. İade
+          Teknik bir sorun nedeniyle hizmeti kullanamadıysan, satın alma tarihinden itibaren 14 gün içinde{" "}
+          {LEGAL.support} adresine yaz. Durumu değerlendirip ödemeni Polar üzerinden iade ederiz. İade
           edilen dönemin erişimi hemen kapanır.
         </p>
       </section>

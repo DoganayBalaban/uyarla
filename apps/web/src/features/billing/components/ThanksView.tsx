@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useBillingStatus } from "@/features/billing/api"
 import { formatPassEnd } from "@/features/billing/format"
+import { LEGAL } from "@/features/legal/company"
 
 /** Ödemeden sonra: bildirim birkaç saniye gecikebilir; dönem açılınca kullanıcı işine dönüyor. */
 export function ThanksView({ returnTo }: { returnTo: string | null }) {
@@ -33,7 +34,7 @@ export function ThanksView({ returnTo }: { returnTo: string | null }) {
       <h1 className="text-2xl">Ödemen alınıyor…</h1>
       <p className="mt-2 text-muted">
         {waitedLong
-          ? "Ödemen alındıysa erişimin birkaç dakika içinde açılır. Açılmazsa iletisim@uyarla.com.tr adresine yaz."
+          ? `Ödemen alındıysa erişimin birkaç dakika içinde açılır. Açılmazsa ${LEGAL.support} adresine yaz.`
           : "Birkaç saniye sürebilir, sayfadan ayrılma."}
       </p>
     </div>

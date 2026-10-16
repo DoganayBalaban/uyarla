@@ -103,8 +103,8 @@ export default function TermsPage() {
       <section>
         <h2>9. Uygulanacak hukuk ve iletişim</h2>
         <p>
-          Bu koşullara Türkiye Cumhuriyeti hukuku uygulanır. Sorun ve soruların için{" "}
-          {LEGAL.contact}.
+          Bu koşullara Türkiye Cumhuriyeti hukuku uygulanır. Sorun, soru ve iade talepleri için{" "}
+          {LEGAL.support}; kişisel verilerinle ilgili başvurular için {LEGAL.contact}.
         </p>
       </section>
     </LegalPage>
