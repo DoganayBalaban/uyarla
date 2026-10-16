@@ -25,6 +25,7 @@ export const EXPORTED_TABLES = [
   "jobPosting",
   "analysis",
   "adaptation",
+  "accessPass",
 ] as const satisfies readonly (typeof DELETION_ORDER)[number][]
 
 export interface ExportedResume {
@@ -43,10 +44,12 @@ export interface UserDataExport {
   resumes: ExportedResume[]
   jobPostings: Record<string, unknown>[]
   analyses: Record<string, unknown>[]
+  /** Erişim dönemleri (DOG-34); sipariş kimliği sağlayıcının iç anahtarı, yazılmıyor. */
+  accessPasses: Record<string, unknown>[]
 }
 
 export async function collectUserData(db: Db, userId: string, now = new Date()): Promise<UserDataExport> {
-  const [user, accounts, sessions, resumes, jobPostings, analyses] = await Promise.all([
+  const [user, accounts, sessions, resumes, jobPostings, analyses, accessPasses] = await Promise.all([
     db.user.findUniqueOrThrow({
       where: { id: userId },
       select: {
@@ -105,9 +108,14 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
         adaptation: { select: { draft: true, coverLetter: true, status: true, createdAt: true } },
       },
     }),
+    db.accessPass.findMany({
+      where: { userId },
+      select: { plan: true, startsAt: true, endsAt: true, status: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
   ])
 
-  return { exportedAt: now.toISOString(), user, accounts, sessions, resumes, jobPostings, analyses }
+  return { exportedAt: now.toISOString(), user, accounts, sessions, resumes, jobPostings, analyses, accessPasses }
 }
 
 const README = (missing: string[]) =>

@@ -90,7 +90,17 @@ async function makeJob(userId: string, label: string) {
     },
   })
 
-  return { filePath, resume, version, posting, analysis, adaptation, session, account }
+  const accessPass = await prisma.accessPass.create({
+    data: {
+      userId,
+      plan: "month",
+      providerOrderId: `test-${Math.random()}`,
+      startsAt: new Date(),
+      endsAt: new Date(Date.now() + 864e5),
+    },
+  })
+
+  return { filePath, resume, version, posting, analysis, adaptation, session, account, accessPass }
 }
 
 describe("account deletion · real database", () => {
@@ -106,7 +116,7 @@ describe("account deletion · real database", () => {
     expect(result.files.deleted).toBe(1)
     expect(result.files.skipped).toEqual([])
 
-    // Sekiz tablonun hepsi: bir tanesinin unutulması kişisel verinin
+    // Dokuz tablonun hepsi: bir tanesinin unutulması kişisel verinin
     // kalması demek, o yüzden hepsi tek tek soruluyor.
     expect(await prisma.adaptation.findUnique({ where: { id: is.adaptation.id } })).toBeNull()
     expect(await prisma.analysis.findUnique({ where: { id: is.analysis.id } })).toBeNull()
@@ -115,6 +125,7 @@ describe("account deletion · real database", () => {
     expect(await prisma.jobPosting.findUnique({ where: { id: is.posting.id } })).toBeNull()
     expect(await prisma.session.findUnique({ where: { id: is.session.id } })).toBeNull()
     expect(await prisma.account.findUnique({ where: { id: is.account.id } })).toBeNull()
+    expect(await prisma.accessPass.findUnique({ where: { id: is.accessPass.id } })).toBeNull()
     expect(await prisma.user.findUnique({ where: { id: dbUser.id } })).toBeNull()
 
     // Ve disk: veritabanı satırı gitmiş ama CV dosyası kalmışsa söz tutulmadı.

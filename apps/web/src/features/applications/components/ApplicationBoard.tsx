@@ -19,9 +19,10 @@ import {
 import { cn } from "@/lib/cn"
 import { loginPath } from "@/lib/returnPath"
 import { resultPath } from "@/features/analysis/paths"
-import { apiStatus } from "@/lib/api"
+import { apiErrorBody, apiStatus } from "@/lib/api"
 import { PageHeader } from "@/components/layout/PageShell"
 import { startAdaptation } from "@/features/adaptation/api"
+import { plansPath } from "@/features/billing/paywall"
 import { useApplicationCards, useUpdateCard, type CardChange } from "@/features/applications/api"
 import {
   STAGES,
@@ -257,7 +258,12 @@ function BoardCardView({
     try {
       const { adaptationId } = await startAdaptation(card.analysisId)
       router.push(`/adapt/${adaptationId}`)
-    } catch {
+    } catch (error) {
+      // Ücretsiz hak bitti (DOG-34): paket ekranına, dönüşte uyarlama başlıyor.
+      if ((await apiErrorBody(error)).code === "payment_required") {
+        router.push(plansPath(`/analyze?uyarla=${encodeURIComponent(card.analysisId)}`))
+        return
+      }
       setAdapting(false)
     }
   }

@@ -5,6 +5,7 @@ import { NextResponse } from "next/server"
 import { adaptRequestSchema } from "@/features/adaptation/schema"
 import { firstIssue } from "@/lib/validation"
 import { adaptQueue } from "@/server/adaptQueue"
+import { PaymentRequiredError, assertCanAdapt } from "@/server/billing/entitlement"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 import {
   authErrorResponse,
@@ -47,6 +48,10 @@ export async function POST(request: Request) {
     const existing = await prisma.adaptation.findUnique({ where: { analysisId } })
     if (existing) return NextResponse.json({ adaptationId: existing.id })
 
+    // Ödeme duvarı (DOG-34): ilk uyarlama ücretsiz, sonrası dönem ister.
+    // Mevcut uyarlamayı yeniden açmak yukarıda döndü; hak harcamıyor.
+    await assertCanAdapt(prisma, session.user.id, new Date())
+
     const adaptation = await prisma.adaptation.create({
       data: { analysisId, draft: {}, modelId: analysis.modelId, status: "running" },
     })
@@ -57,6 +62,9 @@ export async function POST(request: Request) {
   } catch (error) {
     const authResponse = authErrorResponse(error)
     if (authResponse) return authResponse
+    if (error instanceof PaymentRequiredError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 402 })
+    }
     if (error instanceof PermanentError) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: 400 })
     }

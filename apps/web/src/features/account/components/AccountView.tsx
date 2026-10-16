@@ -20,6 +20,7 @@ import { useDeleteAccount } from "@/features/account/api"
 import { PageHeader } from "@/components/layout/PageShell"
 import { ProfileSection } from "@/features/account/components/ProfileSection"
 import { ResumeLibrarySection } from "@/features/account/components/ResumeLibrarySection"
+import { PassSection } from "@/features/billing/components/PassSection"
 
 /** Marka rehberi §10.2'deki veri silme onay metni, birebir. */
 const CONFIRM_TEXT = "CV'ni ve tüm başvurularını kalıcı olarak silmek istediğine emin misin?"
@@ -121,6 +122,7 @@ export function AccountView() {
         {registered && (
           <>
             <ProfileSection />
+            <PassSection />
             <ResumeLibrarySection />
           </>
         )}

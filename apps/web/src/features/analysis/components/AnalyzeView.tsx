@@ -18,6 +18,7 @@ import {
   TriangleAlert,
 } from "lucide-react"
 import { loginPath } from "@/lib/returnPath"
+import { plansPath } from "@/features/billing/paywall"
 import { deriveStageStates } from "@/features/analysis/stageStates"
 import {
   startActiveAnalysis,
@@ -26,7 +27,7 @@ import {
   clearActiveAnalysis,
   handleResponse,
 } from "@/features/analysis/activeAnalysis"
-import { resultPath } from "@/features/analysis/paths"
+import { resultPath, resumeRequest } from "@/features/analysis/paths"
 import {
   browserSendMessage,
   createAutoSubmitGate,
@@ -201,12 +202,16 @@ export function AnalyzeView() {
   // geliştirme modunda efekti iki kez çalıştırmasına karşı: iki uyarlama
   // isteği gitmesin.
   useEffect(() => {
+    // Adres aşağıda değiştiği için ikinci çalışma `?analiz=` görüp sonucu da
+    // yüklemeye kalkmasın.
+    if (resumeStarted.current) return
     const urlParams = new URLSearchParams(window.location.search)
-    const analysisId = urlParams.get("uyarla")
-    if (analysisId && !resumeStarted.current) {
+    const resume = resumeRequest(window.location.search)
+    if (resume) {
       resumeStarted.current = true
+      window.history.replaceState(null, "", resume.address)
       setResuming(true)
-      void adapt(analysisId)
+      void adapt(resume.analysisId)
       return
     }
 
@@ -307,6 +312,11 @@ export function AnalyzeView() {
     // anonim kullanıcıdan yeni hesaba geçiyor (src/server/claimAnonymousData.ts).
     if (parsed.code === "registration_required") {
       router.push(loginPath(`/analyze?uyarla=${encodeURIComponent(analysisId)}`))
+      return
+    }
+    // Ücretsiz hak bitti (DOG-34): paket ekranına, ödemeden sonra uyarlamaya dönüş.
+    if (parsed.code === "payment_required") {
+      router.push(plansPath(`/analyze?uyarla=${encodeURIComponent(analysisId)}`))
       return
     }
     setError(parsed.error ?? "Uyarlama başlatılamadı.")
