@@ -1,3 +1,4 @@
+import { issueToken, redeemToken, type TokenStore } from "./handoffToken.js"
 import { pickPosting, pickSelection, uyarlaUrl } from "./posting.js"
 
 /** Build sırasında esbuild `define` ile veriliyor (scripts/build.mjs). */
@@ -11,9 +12,42 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({ id: MENU_ID, title: "Seçili metni uyarla ile ölç", contexts: ["selection"] })
 })
 
-async function openUyarla(text: string, sourceUrl: string | null): Promise<void> {
-  await chrome.tabs.create({ url: uyarlaUrl(UYARLA_URL, text, sourceUrl) })
+/** Jetonlar `chrome.storage.session`'da: tarayıcı kapanınca siliniyor, diske yazılmıyor. */
+const TOKENS_KEY = "uyarlaJetonlari"
+
+async function readTokens(): Promise<TokenStore> {
+  return ((await chrome.storage.session.get(TOKENS_KEY))[TOKENS_KEY] as TokenStore | undefined) ?? {}
 }
+
+async function openUyarla(text: string, sourceUrl: string | null): Promise<void> {
+  // Sayfa kendiliğinden göndermeden önce bu jetonu soruyor (DOG-71).
+  const { store, token } = issueToken(await readTokens(), Date.now())
+  await chrome.storage.session.set({ [TOKENS_KEY]: store })
+  await chrome.tabs.create({ url: uyarlaUrl(UYARLA_URL, text, sourceUrl, token) })
+}
+
+/**
+ * uyarla sayfasının jeton sorusu. Yalnızca manifest'teki
+ * `externally_connectable` adresleri (uyarla.com.tr, localhost) mesaj
+ * gönderebiliyor. Jeton bir kez doğrulanıp siliniyor: yenileme ya da
+ * kopyalanan adres analiz başlatmıyor.
+ */
+chrome.runtime.onMessageExternal.addListener((message: unknown, _sender, sendResponse) => {
+  const token = (message as { type?: string; token?: unknown } | null)?.type === "uyarla-jeton"
+    ? (message as { token?: unknown }).token
+    : undefined
+  if (typeof token !== "string") {
+    sendResponse({ valid: false })
+    return false
+  }
+  void (async () => {
+    const { store, valid } = redeemToken(await readTokens(), token, Date.now())
+    await chrome.storage.session.set({ [TOKENS_KEY]: store })
+    sendResponse({ valid })
+  })()
+  // Cevap eşzamansız gönderiliyor; kanal açık kalmalı.
+  return true
+})
 
 async function notFound(tabId: number | undefined): Promise<void> {
   if (tabId !== undefined) {
