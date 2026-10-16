@@ -12,6 +12,7 @@ import {
 } from "@/features/landing/components/Mockups"
 import { LANDING_FAQ } from "@/features/landing/faq"
 import { Pricing } from "@/features/landing/components/Pricing"
+import { JobSitesStrip } from "@/features/landing/components/JobSitesStrip"
 import type { PlanOffer } from "@/features/billing/plans"
 import s from "@/features/landing/landing.module.css"
 
@@ -222,6 +223,9 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
             </figure>
           </div>
         </section>
+
+        {/* ——— İlan siteleri (DOG-83) ——— */}
+        <JobSitesStrip />
 
         {/* ——— Sorun ——— */}
         <section className={s.problem}>
