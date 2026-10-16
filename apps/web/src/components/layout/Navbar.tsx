@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from "react"
 import { signOut, useSession } from "@/lib/authClient"
 import { cn } from "@/lib/cn"
 import { displayName } from "@/features/account/displayName"
+import { AccessBadge } from "@/features/billing/components/AccessStatus"
 import { Logo } from "@/components/layout/Logo"
 import { loginPath } from "@/lib/returnPath"
 import { CONTAINER } from "@/components/layout/PageShell"
@@ -104,7 +105,11 @@ export function Navbar() {
           {isPending ? (
             <span className="size-9" />
           ) : registered ? (
-            <AccountMenu userName={displayName(currentUser)} userEmail={currentUser.email} isActive={path === "/account"} />
+            <>
+              {/* Kalan haklar her ekranda görünsün (DOG-81). */}
+              <AccessBadge />
+              <AccountMenu userName={displayName(currentUser)} userEmail={currentUser.email} isActive={path === "/account"} />
+            </>
           ) : (
             <>
               <Link

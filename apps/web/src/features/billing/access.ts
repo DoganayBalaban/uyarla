@@ -48,3 +48,18 @@ export function extendPass(passes: PassLike[], plan: PlanKey, now: Date): { star
   const startsAt = activePassEnd(passes, now) ?? now
   return { startsAt, endsAt: new Date(startsAt.getTime() + PLAN_DAYS[plan] * DAY_MS) }
 }
+
+/** Kullanıcıya gösterilen hak durumu (DOG-81); sunucu `GET /api/billing/status` ile döndürüyor. */
+export function accessSnapshot(input: {
+  adaptationsUsed: number
+  adaptationsLast24h: number
+  passes: PassLike[]
+  now: Date
+}): { passEndsAt: Date | null; freeLeft: number; usedLast24h: number; dailyCap: number } {
+  return {
+    passEndsAt: activePassEnd(input.passes, input.now),
+    freeLeft: Math.max(0, FREE_ADAPTATIONS - input.adaptationsUsed),
+    usedLast24h: input.adaptationsLast24h,
+    dailyCap: DAILY_CAP,
+  }
+}

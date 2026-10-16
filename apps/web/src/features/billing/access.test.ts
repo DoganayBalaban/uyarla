@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { activePassEnd, canAdapt, extendPass, type PassLike } from "@/features/billing/access"
+import { DAILY_CAP, accessSnapshot, activePassEnd, canAdapt, extendPass, type PassLike } from "@/features/billing/access"
 
 const NOW = new Date("2026-11-10T12:00:00Z")
 const day = 864e5
@@ -66,5 +66,26 @@ describe("extendPass", () => {
 
   it("does not stack on an expired or refunded pass", () => {
     expect(extendPass([pass(-10, -1), pass(-1, 9, "refunded")], "quarter", NOW).startsAt).toEqual(NOW)
+  })
+})
+
+describe("accessSnapshot", () => {
+  it("reports the free right left when nothing is used", () => {
+    expect(accessSnapshot({ adaptationsUsed: 0, adaptationsLast24h: 0, passes: [], now: NOW })).toEqual({
+      passEndsAt: null,
+      freeLeft: 1,
+      usedLast24h: 0,
+      dailyCap: DAILY_CAP,
+    })
+  })
+
+  it("never reports a negative free right", () => {
+    expect(accessSnapshot({ adaptationsUsed: 4, adaptationsLast24h: 0, passes: [], now: NOW }).freeLeft).toBe(0)
+  })
+
+  it("reports the pass end and the last 24 hours during a pass", () => {
+    const snap = accessSnapshot({ adaptationsUsed: 9, adaptationsLast24h: 12, passes: [pass(-1, 6)], now: NOW })
+    expect(snap.passEndsAt).toEqual(new Date(NOW.getTime() + 6 * day))
+    expect(snap.usedLast24h).toBe(12)
   })
 })

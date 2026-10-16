@@ -19,6 +19,8 @@ import {
 } from "lucide-react"
 import { loginPath } from "@/lib/returnPath"
 import { plansPath } from "@/features/billing/paywall"
+import { billingStatusKey, useBillingStatus } from "@/features/billing/api"
+import { adaptHint } from "@/features/billing/format"
 import { deriveStageStates } from "@/features/analysis/stageStates"
 import {
   startActiveAnalysis,
@@ -110,6 +112,9 @@ export function AnalyzeView() {
   const { data: sessionData } = useSession()
   const registered = !!sessionData?.user && !(sessionData.user as { isAnonymous?: boolean | null }).isAnonymous
   const library = useLibrary(registered)
+  // Uyarlamadan önce neyin harcanacağı (DOG-81); anonimde uyarlama zaten girişe gidiyor.
+  const billing = useBillingStatus({ enabled: registered })
+  const adaptNote = registered && billing.data ? adaptHint(billing.data) : null
   const resumes = library.data ?? []
   const libraryFull = isLibraryFull(resumes)
   const selectedResumeId = watch("resumeId") ?? null
@@ -299,6 +304,8 @@ export function AnalyzeView() {
     let parsed: { error?: string; code?: string }
     try {
       const { adaptationId } = await startAdaptation(analysisId)
+      // Hak harcandı: üst menüdeki rozet ve Hesabım güncellensin.
+      void queryClient.invalidateQueries({ queryKey: billingStatusKey })
       router.push(`/adapt/${adaptationId}`)
       return
     } catch (error) {
@@ -411,6 +418,7 @@ export function AnalyzeView() {
         adapting={busy}
         error={error}
         onAdapt={state.analysisId ? () => adapt(state.analysisId!) : undefined}
+        adaptNote={adaptNote}
         onYeniAnaliz={startOver}
       />
     )

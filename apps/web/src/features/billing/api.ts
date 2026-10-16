@@ -9,6 +9,11 @@ export async function createCheckout(plan: PlanKey, returnTo: string | null): Pr
 export interface BillingStatus {
   passEndsAt: string | null
   freeUsed: boolean
+  /** Kalan ücretsiz uyarlama (DOG-81). */
+  freeLeft: number
+  /** Son 24 saatteki uyarlamalar; günlük sınır yalnız dönem içinde işliyor. */
+  usedLast24h: number
+  dailyCap: number
 }
 
 export const billingStatusKey = ["billing-status"] as const

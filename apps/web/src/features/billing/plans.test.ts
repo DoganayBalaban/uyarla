@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isPlanKey, plansFromEnv } from "@/features/billing/plans"
+import { cheapestPerDay, isPlanKey, plansFromEnv, recommendedPlan } from "@/features/billing/plans"
 
 describe("plansFromEnv", () => {
   it("lists only the plans with a product id, with display prices", () => {
@@ -26,5 +26,21 @@ describe("isPlanKey", () => {
     expect(isPlanKey("month")).toBe(true)
     expect(isPlanKey("year")).toBe(false)
     expect(isPlanKey(undefined)).toBe(false)
+  })
+})
+
+describe("plan picks", () => {
+  const offer = (key: "week" | "month" | "quarter", days: number, priceTry: number | null) => ({ key, days, productId: `p_${key}`, priceTry })
+  const all = [offer("week", 7, 149), offer("month", 30, 349), offer("quarter", 90, 799)]
+
+  it("recommends the month pass and falls back to the first offer", () => {
+    expect(recommendedPlan(all)?.key).toBe("month")
+    expect(recommendedPlan([all[0]!, all[2]!])?.key).toBe("week")
+    expect(recommendedPlan([])).toBeNull()
+  })
+
+  it("finds the cheapest plan per day, ignoring plans without a price", () => {
+    expect(cheapestPerDay(all)?.key).toBe("quarter")
+    expect(cheapestPerDay([offer("week", 7, 149), offer("quarter", 90, null)])?.key).toBe("week")
   })
 })
