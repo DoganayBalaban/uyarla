@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { PLAN_LABEL, perDay } from "@/features/billing/format"
 import type { PlanOffer } from "@/features/billing/plans"
 import { cn } from "@/lib/cn"
@@ -12,11 +13,14 @@ export function PlanCardBody({
   recommended,
   cheapest,
   selected = false,
+  footer,
 }: {
   plan: PlanOffer
   recommended: boolean
   cheapest: boolean
   selected?: boolean
+  /** Kartın altı; ana sayfada "Paketi seç". */
+  footer?: ReactNode
 }) {
   return (
     <div
@@ -39,6 +43,7 @@ export function PlanCardBody({
         {perDay(plan.priceTry, plan.days) && <> · {perDay(plan.priceTry, plan.days)}</>}
       </p>
       {cheapest && <p className="mt-3 text-xs font-semibold text-brand-green">Günlük en uygun</p>}
+      {footer && <div className="mt-auto pt-4">{footer}</div>}
     </div>
   )
 }

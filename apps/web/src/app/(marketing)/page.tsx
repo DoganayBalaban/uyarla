@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { plansFromEnv } from "@/features/billing/plans"
 import { LandingPage } from "@/features/landing/LandingPage"
 import { getSession } from "@/server/authz"
 
@@ -8,5 +9,5 @@ export default async function HomePage() {
   // kalır, çünkü ona henüz anlatılacak şey var.
   const session = await getSession()
   if (session && !session.user.isAnonymous) redirect("/dashboard")
-  return <LandingPage />
+  return <LandingPage plans={plansFromEnv(process.env)} />
 }

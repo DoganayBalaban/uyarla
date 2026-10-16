@@ -10,6 +10,9 @@ import {
   BeforeAfter,
   WarningCard,
 } from "@/features/landing/components/Mockups"
+import { LANDING_FAQ } from "@/features/landing/faq"
+import { Pricing } from "@/features/landing/components/Pricing"
+import type { PlanOffer } from "@/features/billing/plans"
 import s from "@/features/landing/landing.module.css"
 
 /**
@@ -156,38 +159,8 @@ const PERSONAS = [
   },
 ]
 
-const FAQ = [
-  {
-    s: "ATS nedir?",
-    c: "Aday takip sistemi. Birçok şirket başvuruları önce bu yazılımla süzer; CV'nde ilanın aradığı kavramlar yoksa bir insan görmeden elenebilir. Uyarla, CV'nin bu ilana göre ne kadar okunur ve eşleşir olduğunu gösterir.",
-  },
-  {
-    s: "Skor ücretsiz mi?",
-    c: "Evet. CV'ni yükleyip ilanı yapıştırman yeter, kayıt gerekmez. Uyarlama için e-postanla giriş yapman isteniyor; işin kaybolmaz, yaptığın analiz hesabına taşınır.",
-  },
-  {
-    s: "Deneyimimi abartıyor ya da uyduruyor mu?",
-    c: "Hayır. Olmayan deneyim, beceri veya sertifika eklemez. Yeniden yazılan her madde kontrol edilir; anlamı kayan ya da yeni olgu içeren madde işaretlenir ve senin onayın olmadan kullanılmaz.",
-  },
-  {
-    s: "Skorum mutlaka yükselir mi?",
-    c: "Söz vermiyoruz. Skor, CV'nde gerçekten olan deneyimi ölçer. Yetkinliğin varsa ama iyi anlatılmamışsa uyarlama bunu görünür kılar; yoksa dürüst bir metin onu ekleyemez. Eksik kalan kelimeler sana neyi öğrenmen ya da vurgulaman gerektiğini söyler.",
-  },
-  {
-    s: "Hangi dosya türlerini destekliyorsunuz?",
-    c: "CV için PDF ve DOCX yükleyebilirsin. Uyarlanmış CV'ni PDF veya DOCX olarak indirirsin; PDF'in metni seçilebilir, yani ATS okuyabilir.",
-  },
-  {
-    s: "İngilizce CV'm ya da ilanım varsa?",
-    c: "Skorlama Türkçe ve İngilizce kavramları birbirine eşleyebiliyor. İngilizce CV'ni Türkçe bir ilanla karşılaştırabilirsin.",
-  },
-  {
-    s: "CV'm güvende mi?",
-    c: "CV'n yalnızca skorunu hesaplamak ve uyarlamak için işlenir; satılmaz, reklamda ya da model eğitiminde kullanılmaz. Analiz için metni OpenAI'ın dil modeline gönderilir. Başka bir kullanıcı senin analizine ya da uyarlamana erişemez; hesabını sildiğinde CV'n de silinir.",
-  },
-]
 
-export function LandingPage() {
+export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
   return (
     <div className={s.page}>
       <main>
@@ -441,6 +414,9 @@ export function LandingPage() {
           </div>
         </section>
 
+        {/* ——— Fiyat (DOG-84) ——— */}
+        <Pricing plans={plans} />
+
         {/* ——— SSS ——— */}
         <section id="sss" className={`${s.section} ${s.sectionTinted}`}>
           <div className={`${s.container} ${s.faqInner}`}>
@@ -452,7 +428,7 @@ export function LandingPage() {
               </p>
             </div>
             <div className={s.faq}>
-              {FAQ.map((q) => (
+              {LANDING_FAQ.map((q) => (
                 <details key={q.s} className={s.faqItem}>
                   <summary>
                     {q.s}
@@ -507,6 +483,7 @@ export function LandingPage() {
               <p className={s.footerHeading}>Ürün</p>
               <a href="#nasil">Nasıl çalışır</a>
               <a href="#ozellikler">Özellikler</a>
+              <a href="#fiyat">Fiyat</a>
               <Link href="/analyze">Ücretsiz skor</Link>
             </div>
             <div>

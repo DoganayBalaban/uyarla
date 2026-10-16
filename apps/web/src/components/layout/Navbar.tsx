@@ -41,6 +41,7 @@ const MARKETING_LINKS = [
   { href: "/#nasil", label: "Nasıl çalışır" },
   { href: "/#ozellikler", label: "Özellikler" },
   { href: "/#durustluk", label: "Dürüstlük" },
+  { href: "/#fiyat", label: "Fiyat" },
   { href: "/#sss", label: "SSS" },
 ]
 
