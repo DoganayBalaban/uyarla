@@ -18,6 +18,7 @@ import {
   TriangleAlert,
 } from "lucide-react"
 import { loginPath } from "@/lib/returnPath"
+import { plansPath } from "@/features/billing/paywall"
 import { deriveStageStates } from "@/features/analysis/stageStates"
 import {
   startActiveAnalysis,
@@ -307,6 +308,11 @@ export function AnalyzeView() {
     // anonim kullanıcıdan yeni hesaba geçiyor (src/server/claimAnonymousData.ts).
     if (parsed.code === "registration_required") {
       router.push(loginPath(`/analyze?uyarla=${encodeURIComponent(analysisId)}`))
+      return
+    }
+    // Ücretsiz hak bitti (DOG-34): paket ekranına, ödemeden sonra uyarlamaya dönüş.
+    if (parsed.code === "payment_required") {
+      router.push(plansPath(`/analyze?uyarla=${encodeURIComponent(analysisId)}`))
       return
     }
     setError(parsed.error ?? "Uyarlama başlatılamadı.")
