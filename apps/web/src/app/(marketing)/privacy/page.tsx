@@ -8,7 +8,8 @@ export const metadata = { title: "KVKK aydınlatma metni · uyarla" }
  * bugün gerçekten işlediği verilere göre yazıldı (packages/db şeması,
  * src/server/auth.ts, src/server/mail.ts). Sağlayıcı listesi üretim topolojisinden
  * (K-02, Prod 1-6): web Vercel, worker ve Redis Railway, veritabanı Neon, dosya
- * Cloudflare R2, LLM ve gömme OpenAI, e-posta Resend, hata izleme Sentry (DOG-62). Yeni bir veri ya da hizmet
+ * Cloudflare R2, LLM ve gömme OpenAI, giden e-posta Resend, gelen e-posta Cloudflare Email
+ * Routing → Gmail, hata izleme Sentry (DOG-62), ödeme Polar (DOG-34). Yeni bir veri ya da hizmet
  * sağlayıcı eklenirse bu sayfa da güncellenmeli.
  */
 export default function PrivacyPage() {
@@ -122,13 +123,23 @@ export default function PrivacyPage() {
             tutulur.
           </li>
           <li>
-            <strong>Resend (ABD), e-posta:</strong> giriş bağlantısını gönderir; yalnızca e-posta
-            adresini görür.
+            <strong>Resend (ABD), e-posta gönderimi:</strong> giriş bağlantısını
+            noreply@uyarla.com.tr adresinden gönderir; yalnızca e-posta adresini görür. Bu adrese
+            gelen yanıtlar okunmaz.
+          </li>
+          <li>
+            <strong>Cloudflare Email Routing ve Google (ABD), gelen e-posta:</strong>{" "}
+            {LEGAL.support} ve {LEGAL.contact} adreslerine yazdığın e-postalar Cloudflare üzerinden
+            Google&apos;ın e-posta hizmetindeki (Gmail) hesabımıza iletilir ve orada saklanır.
           </li>
           <li>
             <strong>Sentry, hata izleme:</strong> uygulamada bir hata olduğunda teknik hata kaydını
             (hangi sayfada, hangi kod satırında) alır. CV metni, e-posta adresi, IP adresi ve çerezler bu
             kayda eklenmez.
+          </li>
+          <li>
+            <strong>Polar (ABD), ödeme:</strong> paket satın alırken ödemeyi alır ve faturanı gönderir. Kart
+            bilgin uyarla&apos;ya hiç gelmez; Polar&apos;a yalnızca e-posta adresin ve hesap kimliğin iletilir.
           </li>
           <li>
             <strong>Tarayıcı eklentisi:</strong> yalnızca sen tıkladığında açık sayfadaki ilan metnini
@@ -144,7 +155,7 @@ export default function PrivacyPage() {
       <section>
         <h2>5. Yurt dışına aktarım</h2>
         <p>
-          Yukarıdaki sağlayıcıların bir kısmı (OpenAI, Vercel, Resend, Cloudflare) yurt dışında,
+          Yukarıdaki sağlayıcıların bir kısmı (OpenAI, Vercel, Resend, Cloudflare, Google, Polar) yurt dışında,
           ağırlıklı olarak ABD&apos;de bulunuyor. En önemlisi: skorunu hesaplamak için CV&apos;nin ve
           ilanın metni OpenAI&apos;ın ABD&apos;deki sunucularına gönderilir. Bu aktarım olmadan hizmeti
           sunamıyoruz.

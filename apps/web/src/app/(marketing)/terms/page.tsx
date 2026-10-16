@@ -76,8 +76,10 @@ export default function TermsPage() {
       <section>
         <h2>6. Ücretler</h2>
         <p>
-          Skor ücretsizdir. Ücretli bir plan sunulduğunda fiyatı, kapsamı ve iptal koşulları satın
-          almadan önce açıkça gösterilir.
+          Skor her zaman ücretsizdir; ilk uyarlaman da ücretsizdir. Sonraki uyarlamalar için tek
+          seferlik bir erişim dönemi (1 hafta, 1 ay ya da 3 ay) satın alırsın. Ödeme tek seferliktir,
+          otomatik yenileme yoktur. Fiyatlar satın almadan önce paket ekranında gösterilir; iade ve
+          cayma koşulları <Link href="/refund">iade ve cayma</Link> sayfasındadır.
         </p>
       </section>
 
@@ -101,8 +103,8 @@ export default function TermsPage() {
       <section>
         <h2>9. Uygulanacak hukuk ve iletişim</h2>
         <p>
-          Bu koşullara Türkiye Cumhuriyeti hukuku uygulanır. Sorun ve soruların için{" "}
-          {LEGAL.contact}.
+          Bu koşullara Türkiye Cumhuriyeti hukuku uygulanır. Sorun, soru ve iade talepleri için{" "}
+          {LEGAL.support}; kişisel verilerinle ilgili başvurular için {LEGAL.contact}.
         </p>
       </section>
     </LegalPage>
