@@ -39,6 +39,7 @@ export function YasalSayfa({
           <span className="flex gap-5">
             <Link href="/privacy" className="hover:text-foreground">KVKK aydınlatma metni</Link>
             <Link href="/terms" className="hover:text-foreground">Kullanım koşulları</Link>
+            <Link href="/refund" className="hover:text-foreground">İade ve cayma</Link>
           </span>
         </div>
       </footer>

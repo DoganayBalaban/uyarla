@@ -518,6 +518,7 @@ export function LandingPage() {
               <p className={s.footerHeading}>Yasal</p>
               <Link href="/privacy">KVKK aydınlatma metni</Link>
               <Link href="/terms">Kullanım koşulları</Link>
+              <Link href="/refund">İade ve cayma</Link>
             </div>
           </nav>
         </div>

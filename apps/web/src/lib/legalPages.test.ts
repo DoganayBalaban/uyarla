@@ -34,4 +34,11 @@ describe("legal pages (DOG-34)", () => {
     expect(text).toContain("Cloudflare Email Routing")
     expect(text).toContain("Google (ABD)")
   })
+
+  it("links the refund page wherever the other legal pages are linked", () => {
+    // Polar hesap incelemesi iade sayfasını sitede arıyor.
+    const src = (p: string) => readFileSync(join(__dirname, "..", p), "utf8")
+    expect(src("features/landing/LandingPage.tsx")).toContain('href="/refund"')
+    expect(src("features/legal/LegalPage.tsx")).toContain('href="/refund"')
+  })
 })
