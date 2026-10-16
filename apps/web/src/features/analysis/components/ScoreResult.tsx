@@ -57,6 +57,7 @@ export function ScoreResult({
   adapting,
   error,
   onAdapt,
+  adaptNote,
   onYeniAnaliz,
 }: {
   result: ScoreResultView
@@ -66,6 +67,8 @@ export function ScoreResult({
   adapting: boolean
   error?: string | null
   onAdapt?: () => void
+  /** Uyarla düğmesinin altında: bu uyarlamanın neyi harcayacağı (DOG-81). */
+  adaptNote?: string | null
   onYeniAnaliz?: () => void
 }) {
   const reducedMotion = useReducedMotion() ?? false
@@ -154,6 +157,7 @@ export function ScoreResult({
                 </button>
               )}
             </div>
+            {onAdapt && adaptNote && <p className="mt-2 text-sm text-muted">{adaptNote}</p>}
 
             {error && (
               <p

@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/nextjs"
 import type { prisma } from "@uyarla/db"
-import { FREE_ADAPTATIONS, activePassEnd } from "@/features/billing/access"
+import { accessSnapshot } from "@/features/billing/access"
 import { isPlanKey, type PlanOffer } from "@/features/billing/plans"
 import { plansPath } from "@/features/billing/paywall"
 import { applyBillingEvent, loadAccess } from "@/server/billing/entitlement"
@@ -66,10 +66,19 @@ export async function handleWebhook(input: {
   return { status: 200, json: { received: true, outcome } }
 }
 
-export async function handleStatus(input: { db: Db; userId: string; now: Date }): Promise<{ passEndsAt: string | null; freeUsed: boolean }> {
-  const access = await loadAccess(input.db, input.userId, input.now)
+export async function handleStatus(input: { db: Db; userId: string; now: Date }): Promise<{
+  passEndsAt: string | null
+  freeUsed: boolean
+  freeLeft: number
+  usedLast24h: number
+  dailyCap: number
+}> {
+  const snap = accessSnapshot({ ...(await loadAccess(input.db, input.userId, input.now)), now: input.now })
   return {
-    passEndsAt: activePassEnd(access.passes, input.now)?.toISOString() ?? null,
-    freeUsed: access.adaptationsUsed >= FREE_ADAPTATIONS,
+    passEndsAt: snap.passEndsAt?.toISOString() ?? null,
+    freeUsed: snap.freeLeft === 0,
+    freeLeft: snap.freeLeft,
+    usedLast24h: snap.usedLast24h,
+    dailyCap: snap.dailyCap,
   }
 }

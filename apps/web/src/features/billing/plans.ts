@@ -40,3 +40,24 @@ export function plansFromEnv(env: Record<string, string | undefined>): PlanOffer
     return productId ? [{ key, days: PLAN_DAYS[key], productId, priceTry: prices.get(key) ?? null }] : []
   })
 }
+
+/** Paket ekranında baştan seçili ve ana sayfada vurgulanan paket. */
+export function recommendedPlan(plans: PlanOffer[]): PlanOffer | null {
+  return plans.find((p) => p.key === "month") ?? plans[0] ?? null
+}
+
+/** Günlük fiyatı en düşük paket; fiyatı bilinmeyenler sayılmıyor. */
+export function cheapestPerDay(plans: PlanOffer[]): PlanOffer | null {
+  return plans.reduce<PlanOffer | null>((best, p) => {
+    if (p.priceTry === null) return best
+    return !best || p.priceTry / p.days < best.priceTry! / best.days ? p : best
+  }, null)
+}
+
+/** Her pakette aynı: süre boyunca neler açık. */
+export const PASS_FEATURES = [
+  "Sınırsız CV uyarlama (son 24 saatte en fazla 30)",
+  "Her ilana özel ön yazı",
+  "PDF ya da DOCX olarak indirme",
+  "Uydurma kontrolü; her değişiklik senin onayınla",
+] as const

@@ -89,7 +89,13 @@ describe("handleWebhook", () => {
 describe("handleStatus", () => {
   it("reports the pass end and whether the free adaptation was used", async () => {
     const u = await makeUser()
-    expect(await handleStatus({ db: prisma, userId: u.id, now: NOW })).toEqual({ passEndsAt: null, freeUsed: false })
+    expect(await handleStatus({ db: prisma, userId: u.id, now: NOW })).toEqual({
+      passEndsAt: null,
+      freeUsed: false,
+      freeLeft: 1,
+      usedLast24h: 0,
+      dailyCap: 30,
+    })
     await prisma.accessPass.create({
       data: { userId: u.id, plan: "week", providerOrderId: `s-${u.id}`, startsAt: NOW, endsAt: new Date(NOW.getTime() + 7 * 864e5) },
     })

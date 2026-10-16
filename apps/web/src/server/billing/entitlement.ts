@@ -31,7 +31,7 @@ export class PaymentRequiredError extends Error {
   constructor(readonly code: "payment_required" | "daily_cap") {
     super(
       code === "daily_cap"
-        ? "Bugünlük uyarlama sınırına ulaştın. Yarın devam edebilirsin."
+        ? "Son 24 saatteki uyarlama sınırına ulaştın. En eski uyarlaman 24 saati doldurunca devam edebilirsin."
         : "Ücretsiz uyarlama hakkını kullandın. Devam etmek için bir paket seç.",
     )
     this.name = "PaymentRequiredError"
