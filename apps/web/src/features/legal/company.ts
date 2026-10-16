@@ -9,7 +9,7 @@
 export const LEGAL = {
   dataController: "[Veri sorumlusu unvanı]",
   address: "[Adres]",
-  contact: "[kvkk@alanadi.com]",
+  contact: "kvkk@uyarla.com.tr",
   lastUpdated: "6 Ekim 2026",
   draftData: true,
 } as const

@@ -131,6 +131,10 @@ export default function PrivacyPage() {
             kayda eklenmez.
           </li>
           <li>
+            <strong>Polar (ABD), ödeme:</strong> paket satın alırken ödemeyi alır ve faturanı gönderir. Kart
+            bilgin uyarla&apos;ya hiç gelmez; Polar&apos;a yalnızca e-posta adresin ve hesap kimliğin iletilir.
+          </li>
+          <li>
             <strong>Tarayıcı eklentisi:</strong> yalnızca sen tıkladığında açık sayfadaki ilan metnini
             uyarla&apos;ya aktarır; başka bir veri toplamaz, kendi başına hiçbir sunucuya bağlanmaz.
           </li>
@@ -144,7 +148,7 @@ export default function PrivacyPage() {
       <section>
         <h2>5. Yurt dışına aktarım</h2>
         <p>
-          Yukarıdaki sağlayıcıların bir kısmı (OpenAI, Vercel, Resend, Cloudflare) yurt dışında,
+          Yukarıdaki sağlayıcıların bir kısmı (OpenAI, Vercel, Resend, Cloudflare, Polar) yurt dışında,
           ağırlıklı olarak ABD&apos;de bulunuyor. En önemlisi: skorunu hesaplamak için CV&apos;nin ve
           ilanın metni OpenAI&apos;ın ABD&apos;deki sunucularına gönderilir. Bu aktarım olmadan hizmeti
           sunamıyoruz.
