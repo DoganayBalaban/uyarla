@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { plansPath } from "@/features/billing/paywall"
+import { plansPath, safePlansReturn } from "@/features/billing/paywall"
 
 describe("plansPath", () => {
   it("carries the page to return to after payment", () => {
@@ -10,4 +10,13 @@ describe("plansPath", () => {
     expect(plansPath("https://kotu.example")).toBe("/plans")
     expect(plansPath("//kotu.example")).toBe("/plans")
   })
+
+  it("drops a backslash trick that browsers read as another site", () => {
+    // Gözden geçirme: "/\\evil.com" startsWith("/") testini geçiyordu, tarayıcı onu https://evil.com sayıyor.
+    expect(plansPath("/\\evil.com")).toBe("/plans")
+    expect(safePlansReturn("/\\evil.com")).toBeNull()
+    expect(safePlansReturn("/analyze?uyarla=abc")).toBe("/analyze?uyarla=abc")
+    expect(safePlansReturn(undefined)).toBeNull()
+  })
 })
+

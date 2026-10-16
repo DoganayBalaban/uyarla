@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import type { prisma } from "@uyarla/db"
 import { FREE_ADAPTATIONS, activePassEnd } from "@/features/billing/access"
 import { isPlanKey, type PlanOffer } from "@/features/billing/plans"
@@ -44,7 +45,14 @@ export async function handleWebhook(input: {
   now: Date
   log?: (message: string, extra: unknown) => void
 }): Promise<Reply> {
-  const log = input.log ?? ((message, extra) => console.warn(message, extra))
+  // Varsayılan: Sentry uyarısı. Para alındı ama dönem açılmadıysa (silinmiş
+  // hesap, bilinmeyen paket) birinin elle iade etmesi gerekiyor (spec §4).
+  const log =
+    input.log ??
+    ((message: string, extra: unknown) => {
+      console.warn(message, extra)
+      Sentry.captureMessage(message, { level: "warning", extra: { event: extra } })
+    })
   let event
   try {
     event = await input.provider.parseWebhook(input.rawBody, input.headers)

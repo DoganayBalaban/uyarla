@@ -72,6 +72,11 @@ describe("applyBillingEvent", () => {
     expect(await applyBillingEvent(prisma, { type: "refunded", orderId: `a-${u.id}` }, NOW)).toBe("revoked")
     const statuses = (await prisma.accessPass.findMany({ where: { userId: u.id }, orderBy: { startsAt: "asc" } })).map((p) => p.status)
     expect(statuses).toEqual(["refunded", "active"])
+    // Gözden geçirme: sonraki dönem iade edilenin bitişini beklememeli; hemen kullanılabilir olmalı.
+    await expect(assertCanAdapt(prisma, u.id, NOW)).resolves.toBeUndefined()
+    const shifted = await prisma.accessPass.findUniqueOrThrow({ where: { providerOrderId: `b-${u.id}` } })
+    expect(shifted.startsAt).toEqual(NOW)
+    expect(shifted.endsAt).toEqual(new Date(NOW.getTime() + 7 * day))
   })
 
   it("ignores an unknown plan or a deleted user", async () => {

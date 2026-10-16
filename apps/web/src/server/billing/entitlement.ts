@@ -55,11 +55,27 @@ export async function applyBillingEvent(
   now: Date,
 ): Promise<"granted" | "duplicate" | "revoked" | "ignored"> {
   if (event.type === "refunded") {
-    const { count } = await db.accessPass.updateMany({
-      where: { providerOrderId: event.orderId, status: "active" },
-      data: { status: "refunded" },
+    const refunded = await db.accessPass.findUnique({ where: { providerOrderId: event.orderId } })
+    if (!refunded || refunded.status !== "active") return "ignored"
+    // Sonraki dönemler iade edilenin bitişine göre üst üste eklenmişti; iade
+    // edilen aralık boşalınca onlar da öne kaydırılıyor (süreleri korunuyor).
+    // Kaydırılmasa kullanıcı ödediği dönemi eski başlangıç tarihine kadar
+    // kullanamıyordu (son gözden geçirme).
+    const later = await db.accessPass.findMany({
+      where: { userId: refunded.userId, status: "active", startsAt: { gte: refunded.endsAt } },
+      orderBy: { startsAt: "asc" },
     })
-    return count > 0 ? "revoked" : "ignored"
+    let cursor = new Date(Math.max(now.getTime(), refunded.startsAt.getTime()))
+    await db.$transaction([
+      db.accessPass.update({ where: { id: refunded.id }, data: { status: "refunded" } }),
+      ...later.map((pass) => {
+        const duration = pass.endsAt.getTime() - pass.startsAt.getTime()
+        const startsAt = cursor
+        cursor = new Date(startsAt.getTime() + duration)
+        return db.accessPass.update({ where: { id: pass.id }, data: { startsAt, endsAt: cursor } })
+      }),
+    ])
+    return "revoked"
   }
 
   if (!isPlanKey(event.plan)) return "ignored"

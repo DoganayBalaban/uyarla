@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
+import * as Sentry from "@sentry/nextjs"
+
+vi.mock("@sentry/nextjs", () => ({ captureMessage: vi.fn() }))
 import { prisma } from "@uyarla/db"
 import { deletionOperations } from "@/server/deleteAccount"
 import { handleCheckout, handleStatus, handleWebhook } from "@/server/billing/handlers"
@@ -72,6 +75,14 @@ describe("handleWebhook", () => {
     const res = await handleWebhook({ db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW, log })
     expect(res.status).toBe(200)
     expect(log).toHaveBeenCalled()
+  })
+
+  it("alerts Sentry by default when a paid order could not be applied", async () => {
+    // Spec §4: silinmiş hesap gibi durumlarda para alındı ama dönem açılmadı;
+    // elle iade için birinin haberi olmalı. console.warn kimseye ulaşmıyordu.
+    const p = provider({ type: "paid", orderId: "kayip-2", userId: "silinmis", plan: "month" })
+    await handleWebhook({ db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW })
+    expect(Sentry.captureMessage).toHaveBeenCalledWith(expect.stringContaining("uygulanamayan"), expect.objectContaining({ level: "warning" }))
   })
 })
 
