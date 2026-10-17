@@ -119,6 +119,45 @@ export function segmentResume(rawText: string): CodeSegments {
     else blockList[active].push(line)
   }
 
+  // İki sütunlu şablonlarda metin iç içe geçiyor (DOG-107): "HAKKIMDA"
+  // başlığının hemen ardından "PROFESYONEL DENEYİM" geliyor, özet paragrafı
+  // onun altında kalıyor ve deneyim çıkarıcısı onu atıyordu. Özet başlığının
+  // altı boşsa, sonraki başlığın altındaki ilk düz yazı paragrafı özete gidiyor.
+  let summaryEmpty = false
+  let seekingSummary = false
+  let lastSummaryLine: string | null = null
+
+  /** Başlık olmayan bir içerik satırını yerine koyar. */
+  const place = (line: string) => {
+    const t = line.trim()
+    // Yalnızca iletişim bilgisi taşıyan satır nerede görünürse görünsün
+    // başlık bloğuna (DOG-107): iki sütunlu şablonda e-posta ve LinkedIn
+    // deneyimin ortasına düşüyordu. Referanslar gibi bölümlerde değil; oradaki
+    // e-posta adayın değil.
+    if (t && active !== "header" && active !== "ignore" && isContactLine(t)) {
+      blockList.header.push(line)
+      return
+    }
+    if (t && active === "summary") summaryEmpty = false
+    if (t && seekingSummary) {
+      const fits = lastSummaryLine === null ? startsParagraph(t) : continuesParagraph(t, lastSummaryLine)
+      if (fits) {
+        blockList.summary.push(line)
+        lastSummaryLine = t
+        return
+      }
+      seekingSummary = false
+    }
+    push(line)
+  }
+
+  /** Başlık satırında özet aramasının durumunu günceller. */
+  const onHeading = (section: ResumeSection) => {
+    seekingSummary = section !== "summary" && section !== "header" && section !== "ignore" && summaryEmpty
+    summaryEmpty = section === "summary"
+    lastSummaryLine = null
+  }
+
   for (const rawLine of lineItems) {
     // Tablolu DOCX'te başlık ve içerik aynı satırda gelebiliyor (Europass:
     // "KİŞİSEL BİLGİLER | Ece Yıldırım"). Başlık ayrılıp içerik kendi satırına
@@ -129,6 +168,7 @@ export function segmentResume(rawText: string): CodeSegments {
     const remainder = rowHeading ? rest.join(" | ") : null
 
     const section = rowHeading ?? headingKind(lineItem)
+    if (section) onHeading(section)
     if (section === "header") {
       active = "header"
       headingFound = true
@@ -146,9 +186,10 @@ export function segmentResume(rawText: string): CodeSegments {
       }
       // Başlığın kendisi de bloğa giriyor: K-10'daki kayıp tam da başlıkların
       // atılmasıydı ve çıkarıcılar bağlamdan yararlanıyor.
-      push(lineItem)
+      if (section) push(lineItem)
+      else place(lineItem)
     }
-    if (remainder) push(remainder)
+    if (remainder) place(remainder)
   }
 
   // Hiç başlık yoksa (tasarım ağırlıklı bazı CV'ler) bölemeyiz; her
@@ -230,4 +271,45 @@ function headingKind(lineItem: string): ResumeSection | null {
 
 function isLanguageOrCertificate(lineItem: string): boolean {
   return LANGUAGE_OR_CERTIFICATE.test(normalizeText(lineItem.trim()))
+}
+
+const BULLET = /^[•\-*▪–●◦]/
+const YEAR = /\b(19|20)\d{2}\b/
+
+/**
+ * Özet paragrafının ilk satırı olabilir mi (DOG-107): düz yazı, en az sekiz
+ * kelime, madde imi ve yıl yok. Yıl bir iş kaydının başlığını gösterir; boş
+ * özet başlığının ardından gelen deneyim kaydını özete almamak için temkinli.
+ */
+function startsParagraph(t: string): boolean {
+  return !BULLET.test(t) && !YEAR.test(t) && t.split(/\s+/).length >= 8
+}
+
+/** Önceki satır cümle ortasında bittiyse ya da yeni bir düz yazı cümlesiyse paragraf sürüyor. */
+function continuesParagraph(t: string, previous: string): boolean {
+  if (BULLET.test(t)) return false
+  return !/[.!?]$/.test(previous) || startsParagraph(t)
+}
+
+const EMAIL_ANY = /[\w.+-]+@[\w-]+(\.[\w-]+)+/g
+// Anonimleştirilmiş CV'lerde rakamlar X: "+90 5XX XXX XX XX".
+const PHONE_ANY = /\+?\d[\dX\s().-]{8,}[\dX]/g
+const URL_ANY = /(?:https?:\/\/)?(?:www\.)?[\w-]+(?:\.[\w-]+)+(?:\/\S*)?/g
+const CONTACT_LABEL = /\b(e-?posta|e-?mail|tel|telefon|phone|gsm|cep|linkedin|github|web|portfolio|portföy|site)\b\s*:?/gi
+
+/**
+ * Satırda iletişim bilgisinden başka bir şey yok mu (DOG-107). Kişisel bir
+ * işaret şart: e-posta, telefon ya da LinkedIn profili. Tek başına bir site
+ * adresi bir projenin ya da şirketin olabilir.
+ */
+function isContactLine(t: string): boolean {
+  const personal = /[\w.+-]+@[\w-]+\.[\w-]+/.test(t) || /\+?\d[\dX\s().-]{8,}[\dX]/.test(t) || /linkedin\.com\/in\//i.test(t)
+  if (!personal) return false
+  const rest = t
+    .replace(EMAIL_ANY, "")
+    .replace(URL_ANY, "")
+    .replace(PHONE_ANY, "")
+    .replace(CONTACT_LABEL, "")
+    .replace(/[\s|•·,;:/()\-]+/g, "")
+  return rest.length === 0
 }

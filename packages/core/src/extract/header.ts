@@ -46,7 +46,8 @@ function cannotBeName(lineItem: string): boolean {
 export function parseHeader(headerBlock: string): ResumeHeader {
   const lineItems = headerBlock
     .split("\n")
-    .map((s) => s.trim())
+    // Sekme sütun ayırıcısı ("+90 … ⇥ ad@ornek.com"); belgede görünmüyordu.
+    .map((s) => s.trim().replace(/\s*\t\s*/g, " · "))
     .filter(Boolean)
     .filter((s) => !DOCUMENT_TITLE.test(normalizeText(s)))
 

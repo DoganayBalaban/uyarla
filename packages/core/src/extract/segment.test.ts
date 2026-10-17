@@ -258,3 +258,62 @@ describe("segmentResume · section order (DOG-106)", () => {
     expect(segmentResume("Ad\nbir satır").sectionOrder).toBeUndefined()
   })
 })
+
+describe("segmentResume · two-column leftovers (DOG-107)", () => {
+  // cv-c: iki sütun iç içe geçiyor; özet başlığının altı boş, paragraf deneyim başlığının altında.
+  const twoColumn = [
+    "I. Z.",
+    "HAKKIMDA",
+    "PROFESYONEL DENEYİM",
+    "Yönetim Bilişim Sistemleri mezunu ve yazılım geliştiricisiyim. Python, web",
+    "teknolojileri ve yapay zeka alanlarında projeler geliştiriyorum.",
+    "+90 555 111 22 33\tad@ornek.com",
+    "YAPAY ZEKA EĞİTMENİ",
+    "Bir Eğitim Vakfı",
+    "• Uygulamalı eğitimler verdim.",
+    "github.com/ad\tlinkedin.com/in/ad",
+    "EĞİTİM",
+    "Bir Üniversite",
+  ].join("\n")
+
+  it("gives the paragraph under the next heading to an empty summary", () => {
+    const s = segmentResume(twoColumn)
+    expect(stripLeadingHeading(s.summaryBlock)).toBe(
+      "Yönetim Bilişim Sistemleri mezunu ve yazılım geliştiricisiyim. Python, web\nteknolojileri ve yapay zeka alanlarında projeler geliştiriyorum.",
+    )
+    expect(s.experienceBlock).not.toContain("mezunu")
+    expect(s.experienceBlock).toContain("YAPAY ZEKA EĞİTMENİ")
+    expect(s.experienceBlock).toContain("• Uygulamalı eğitimler verdim.")
+  })
+
+  it("moves contact-only lines to the header wherever they appear", () => {
+    const s = segmentResume(twoColumn)
+    expect(s.headerBlock).toContain("ad@ornek.com")
+    expect(s.headerBlock).toContain("linkedin.com/in/ad")
+    expect(s.experienceBlock).not.toContain("linkedin")
+  })
+
+  it("does not take an experience entry as the summary", () => {
+    // Yıl taşıyan satır bir iş kaydının başlığı: özet değil.
+    const s = segmentResume(
+      "Ad\nÖZET\nDENEYİM\nAcme Teknoloji şirketinde yazılım geliştirici olarak çalıştım 2020 - 2023\n• Servis yazdım",
+    )
+    expect(stripLeadingHeading(s.summaryBlock)).toBe("")
+    expect(s.experienceBlock).toContain("Acme Teknoloji")
+  })
+
+  it("does not search when the summary has its own content", () => {
+    const s = segmentResume(
+      "Ad\nÖZET\nKısa özet.\nDENEYİM\nUzun bir açıklama satırı ki sekiz kelimeden fazla kelime taşıyor burada\n• Servis yazdım",
+    )
+    expect(stripLeadingHeading(s.summaryBlock)).toBe("Kısa özet.")
+    expect(s.experienceBlock).toContain("Uzun bir açıklama")
+  })
+
+  it("leaves a referee's e-mail and a project's repository link where they are", () => {
+    const s = segmentResume("Ad\nPROJELER\nAsistan\ngithub.com/ad/asistan\nREFERENCES\nali@ornek.com")
+    expect(s.projectsBlock).toContain("github.com/ad/asistan")
+    expect(s.headerBlock).not.toContain("ali@ornek.com")
+    expect(s.otherSections).toEqual([{ heading: "REFERENCES", lines: ["ali@ornek.com"] }])
+  })
+})

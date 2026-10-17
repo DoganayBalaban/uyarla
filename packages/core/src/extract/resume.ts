@@ -156,7 +156,8 @@ export async function extractResumeProfile(
 // 2: Europass, LinkedIn ve tablolu şablon bölümlemesi (DOG-60, K-49).
 // 3: Projeler ve diğer bölümler artık kaybolmuyor (DOG-105).
 // 4: Beceri kategorileri ve bölüm sırası saklanıyor (DOG-106).
-const RESUME_PARSER_REVISION = 4
+// 5: İki sütunlu şablonda özet ve iletişim satırı kaybolmuyor (DOG-107).
+const RESUME_PARSER_REVISION = 5
 
 /**
  * Kayıtlı bir CV'nin ayrıştırılmış profili, aynı anahtarla üretildiyse yeniden
