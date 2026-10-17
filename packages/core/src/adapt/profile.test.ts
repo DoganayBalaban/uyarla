@@ -144,3 +144,38 @@ describe("applyAdaptation", () => {
     )
   })
 })
+
+describe("applyAdaptation · contributions (DOG-94)", () => {
+  const contribution = (over: Partial<NonNullable<AdaptationDraft["contributions"]>[number]> = {}) => ({
+    id: "c1",
+    requirementIndex: 0,
+    experienceIndex: 0,
+    answer: "staj projesinde docker compose ile 3 servisi ayağa kaldırdım",
+    status: "done" as const,
+    text: "Staj projesinde 3 servisi Docker Compose ile ayağa kaldırdım.",
+    verification: { status: "ok" as const, issues: [] },
+    decision: "accepted" as const,
+    ...over,
+  })
+
+  it("appends an accepted contribution to its job, with the user's answer as sourceRef", () => {
+    const outcome = applyAdaptation(resumeProfile, { ...draftData, contributions: [contribution()] })
+    const bullets = outcome.experience[0]!.bullets
+    expect(bullets.at(-1)).toEqual({
+      text: "Staj projesinde 3 servisi Docker Compose ile ayağa kaldırdım.",
+      sourceRef: "staj projesinde docker compose ile 3 servisi ayağa kaldırdım",
+    })
+    expect(bullets).toHaveLength(resumeProfile.experience[0]!.bullets.length + 1)
+  })
+
+  it("leaves out rejected, pending, running and empty contributions", () => {
+    const skipped = [
+      contribution({ id: "a", decision: "rejected" }),
+      contribution({ id: "b", decision: "pending" }),
+      contribution({ id: "c", status: "running", text: undefined }),
+      contribution({ id: "d", text: "" }),
+    ]
+    const outcome = applyAdaptation(resumeProfile, { ...draftData, contributions: skipped })
+    expect(outcome.experience[0]!.bullets).toHaveLength(resumeProfile.experience[0]!.bullets.length)
+  })
+})
