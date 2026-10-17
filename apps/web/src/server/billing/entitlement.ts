@@ -38,7 +38,14 @@ export class PaymentRequiredError extends Error {
   }
 }
 
-export async function assertCanAdapt(db: Db, userId: string, now: Date): Promise<void> {
+export async function assertCanAdapt(
+  db: Db,
+  userId: string,
+  now: Date,
+  opts: { unlimited?: boolean } = {},
+): Promise<void> {
+  // Yöneticide sayım bile gereksiz; veritabanına gidilmiyor.
+  if (opts.unlimited) return
   const decision = canAdapt({ ...(await loadAccess(db, userId, now)), now })
   if (!decision.allowed) throw new PaymentRequiredError(decision.reason)
 }

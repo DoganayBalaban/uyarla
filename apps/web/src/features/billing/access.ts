@@ -18,7 +18,7 @@ function isLive(pass: PassLike, now: Date): boolean {
 }
 
 export type AdaptDecision =
-  | { allowed: true; via: "free" | "pass" }
+  | { allowed: true; via: "free" | "pass" | "admin" }
   | { allowed: false; reason: "payment_required" | "daily_cap" }
 
 /**
@@ -30,7 +30,10 @@ export function canAdapt(input: {
   adaptationsLast24h: number
   passes: PassLike[]
   now: Date
+  /** Yönetici: ödeme duvarı ve günlük tavan yok (server/admin.ts). */
+  unlimited?: boolean
 }): AdaptDecision {
+  if (input.unlimited) return { allowed: true, via: "admin" }
   if (input.passes.some((p) => isLive(p, input.now))) {
     return input.adaptationsLast24h >= DAILY_CAP ? { allowed: false, reason: "daily_cap" } : { allowed: true, via: "pass" }
   }

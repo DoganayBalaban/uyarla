@@ -89,3 +89,11 @@ describe("accessSnapshot", () => {
     expect(snap.usedLast24h).toBe(12)
   })
 })
+
+describe("canAdapt · admin", () => {
+  it("lets an admin adapt with no free right, no pass and past the daily cap", () => {
+    expect(
+      canAdapt({ adaptationsUsed: 50, adaptationsLast24h: DAILY_CAP + 5, passes: [], now: new Date(), unlimited: true }),
+    ).toEqual({ allowed: true, via: "admin" })
+  })
+})

@@ -2,6 +2,7 @@ import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { plansFromEnv } from "@/features/billing/plans"
 import { siteUrl } from "@/lib/site"
+import { isAdmin } from "@/server/admin"
 import { authErrorResponse, ensureRegistered, getSession } from "@/server/authz"
 import { handleCheckout, handleStatus, handleWebhook } from "@/server/billing/handlers"
 import { polarProviderFromEnv } from "@/server/billing/polar"
@@ -51,7 +52,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ act
   if (action !== "status") return NextResponse.json({ error: "not_found" }, { status: 404 })
   try {
     const session = ensureRegistered(await getSession())
-    return NextResponse.json(await handleStatus({ db: prisma, userId: session.user.id, now: new Date() }))
+    return NextResponse.json(
+      await handleStatus({ db: prisma, userId: session.user.id, now: new Date(), unlimited: isAdmin(session.user) }),
+    )
   } catch (error) {
     const authResponse = authErrorResponse(error)
     if (authResponse) return authResponse

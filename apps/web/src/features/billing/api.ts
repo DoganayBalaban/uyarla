@@ -14,6 +14,8 @@ export interface BillingStatus {
   /** Son 24 saatteki uyarlamalar; günlük sınır yalnız dönem içinde işliyor. */
   usedLast24h: number
   dailyCap: number
+  /** Yönetici hesabı: ödeme duvarı ve günlük tavan yok. Eski yanıtlarda yok. */
+  unlimited?: boolean
 }
 
 export const billingStatusKey = ["billing-status"] as const

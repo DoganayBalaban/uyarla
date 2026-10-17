@@ -39,6 +39,9 @@ export interface AccessSummary {
  * kullanıyor. Günlük sınır kayan 24 saat; "yarın" denmiyor.
  */
 export function accessSummary(status: BillingStatus, now: Date): AccessSummary {
+  if (status.unlimited) {
+    return { title: "Yönetici hesabı: uyarlama sınırsız", detail: null, badge: "Sınırsız", cta: "Paketleri gör" }
+  }
   if (status.passEndsAt) {
     const left = timeLeft(status.passEndsAt, now)
     const dailyLeft = Math.max(0, status.dailyCap - status.usedLast24h)
@@ -71,6 +74,7 @@ export function accessSummary(status: BillingStatus, now: Date): AccessSummary {
 
 /** Uyarla düğmesinin altında: basmadan önce neyin harcanacağı görünsün. */
 export function adaptHint(status: BillingStatus): string | null {
+  if (status.unlimited) return null
   if (status.passEndsAt) {
     return status.usedLast24h >= status.dailyCap
       ? `Son 24 saatteki ${status.dailyCap} uyarlama sınırına ulaştın.`

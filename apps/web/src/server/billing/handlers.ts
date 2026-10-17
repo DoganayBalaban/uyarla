@@ -66,12 +66,13 @@ export async function handleWebhook(input: {
   return { status: 200, json: { received: true, outcome } }
 }
 
-export async function handleStatus(input: { db: Db; userId: string; now: Date }): Promise<{
+export async function handleStatus(input: { db: Db; userId: string; now: Date; unlimited?: boolean }): Promise<{
   passEndsAt: string | null
   freeUsed: boolean
   freeLeft: number
   usedLast24h: number
   dailyCap: number
+  unlimited: boolean
 }> {
   const snap = accessSnapshot({ ...(await loadAccess(input.db, input.userId, input.now)), now: input.now })
   return {
@@ -80,5 +81,6 @@ export async function handleStatus(input: { db: Db; userId: string; now: Date })
     freeLeft: snap.freeLeft,
     usedLast24h: snap.usedLast24h,
     dailyCap: snap.dailyCap,
+    unlimited: input.unlimited ?? false,
   }
 }

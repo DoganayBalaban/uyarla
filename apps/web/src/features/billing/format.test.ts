@@ -90,5 +90,16 @@ describe("billing format", () => {
     it("stays quiet during a pass with room left", () => {
       expect(adaptHint({ ...base, passEndsAt: "2026-12-06T12:00:00.000Z", usedLast24h: 3 })).toBeNull()
     })
+
+    it("stays quiet for an admin even with no right left", () => {
+      expect(adaptHint({ ...base, freeUsed: true, freeLeft: 0, unlimited: true })).toBeNull()
+    })
+
+    it("tells an admin the account is unlimited", () => {
+      expect(accessSummary({ ...base, freeLeft: 0, unlimited: true }, new Date())).toMatchObject({
+        title: "Yönetici hesabı: uyarlama sınırsız",
+        badge: "Sınırsız",
+      })
+    })
   })
 })
