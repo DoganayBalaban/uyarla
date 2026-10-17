@@ -1,3 +1,4 @@
+import type { Language } from "../normalize/language.js"
 import { cosineSimilarity } from "../llm/embedding.js"
 import { containsKeyword } from "../normalize/turkish.js"
 import type { JobPostingData, Requirement } from "../schemas/job.js"
@@ -31,9 +32,32 @@ export interface ScoreInput {
 /**
  * Bir ilanın tüm kavram metinlerini gereksinim sırasıyla düzleştirir.
  * Gömme çağrısı ve skorlama bu sırayı paylaşmak zorunda.
+ *
+ * CV ile ilan farklı dildeyse gömülen metin terim ve eş anlamlıları birlikte
+ * (DOG-104): "kişisel veri
+ * koruma (personal data protection; personal data privacy)". Karşı dil
+ * karşılıkları (DOG-73) kelime eşleşmesinde kullanılıyordu ama anlamsal
+ * katman yalnızca Türkçe terimi görüyordu; İngilizce CV'deki "privacy…
+ * PII/KVKK masking" maddesi 0,47'de eşiğin altında kalıyordu.
  */
-export function conceptTexts(posting: JobPostingData): string[] {
-  return posting.requirements.flatMap((r) => r.concepts.map((c) => c.term))
+export function conceptTexts(posting: JobPostingData, resumeLanguage?: Language): string[] {
+  // Yalnızca diller farklıysa: aynı dilde İngilizce karşılık eklemek Türkçe
+  // terimin vektörünü bulandırıp doğru eşleşmeleri eşiğin altına itiyordu
+  // (ölçüm: kaçırma 6 → 8).
+  const crossLanguage = resumeLanguage !== undefined && resumeLanguage !== posting.language
+  return posting.requirements.flatMap((r) =>
+    r.concepts.map((c) => (crossLanguage ? conceptEmbeddingText(c) : c.term)),
+  )
+}
+
+const MAX_EMBEDDED_SYNONYMS = 3
+
+function conceptEmbeddingText(concept: { term: string; synonyms: string[] }): string {
+  const term = concept.term.trim()
+  const extra = [...new Set(concept.synonyms.map((s) => s.trim()))]
+    .filter((s) => s && s.toLocaleLowerCase("tr") !== term.toLocaleLowerCase("tr"))
+    .slice(0, MAX_EMBEDDED_SYNONYMS)
+  return extra.length ? `${term} (${extra.join("; ")})` : term
 }
 
 export interface RequirementResult {

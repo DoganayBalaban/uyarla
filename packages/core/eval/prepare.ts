@@ -20,6 +20,7 @@ import type { ResumeProfile } from "../src/schemas/resume.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { conceptTexts, score } from "../src/score/score.js"
 import { cacheDir } from "./types.js"
+import { resumeLanguage } from "../src/normalize/language.js"
 
 /**
  * Değerlendirme çiftlerini hazırlar ve incelenebilir bir rapor üretir.
@@ -106,7 +107,7 @@ async function main() {
 
     const evidenceList = collectEvidence(resumeProfile)
     const evidenceTexts = evidenceList.map((k) => k.text)
-    const conceptTextList = conceptTexts(postingDataItem)
+    const conceptTextList = conceptTexts(postingDataItem, resumeLanguage(resumeProfile))
     const vectors = await embedding.embed([...evidenceTexts, ...conceptTextList])
 
     const outcome = score({

@@ -2377,3 +2377,39 @@ Uyarlama değerlendirmesinde (eval:adapt) önerilen yazım 4 → 7, skoru artan
 kanıtı). Süre şartı (K-55) rollerden hesaplandığı için projeler yıl
 eklemiyor; ama "X deneyimi" gibi süresiz bir şart bir projeyle karşılanabilir.
 Yeni mezun için doğru olan bu; iş tecrübesi şart koşan ilanlarda iyimser.
+
+---
+
+## K-58 · Diller farklıysa kavram gömmesine karşı dil karşılıkları da giriyor
+
+**Tarih:** 17 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-104
+
+**Bağlam:** K-53'teki karşı dil karşılıkları (Türkçe kavrama İngilizce eş
+anlamlı) yalnızca kelime eşleşmesinde kullanılıyordu; anlamsal katman
+kavramın Türkçe terimini gömüyordu. İngilizce CV'de "privacy… PII/KVKK
+masking" maddesi "kişisel veri koruma" kavramına 0,47'de kalıyordu.
+
+**Karar:** CV ile ilan farklı dildeyse kavram "terim (eş1; eş2; eş3)"
+biçiminde gömülüyor; aynı dildeyse yalnızca terim, eskisi gibi.
+`conceptTexts(posting, resumeLanguage)` tek kaynak: analiz, uyarlama
+hedefleri, yeniden skorlama ve değerlendirme betikleri aynı metni gömüyor.
+
+**Ölçüm (19 çift):**
+
+| | İsabet | Kaçırma | Uydurma |
+|---|---|---|---|
+| Önce | %93,4 | 6 | 1 |
+| Eş anlamlılar her zaman | %92,5 | 8 | 0 |
+| **Yalnızca diller farklıysa** | **%94,3** | **5** | **1** |
+
+Her zaman eklemek aynı dildeki çiftlerde Türkçe terimin vektörünü
+bulandırdı ve iki doğru eşleşmeyi eşiğin altına itti; kalan uydurma
+öncekinden gelen, yeni değil.
+
+**Denenip bırakılan:** Kanıt metnindeki rol önekini ("AI Engineer · Kurum:")
+kaldırmak. Önek bu örneklerde benzerliği artırıyor (0,497 → öneksiz 0,383).
+
+**Açık:** "kişisel veri koruma" artık 0,50 sınırında; "model değerlendirme"
+ile "retrieval evaluation" 0,45. Uzun madde ile kısa kavram arasındaki zayıf
+sinyal eşikle değil, madde içindeki ifadeyi hedefleyen bir eşleştirmeyle
+çözülmeli. Uyarlamanın diller farklıyken madde yazmaması (K-39) ayrı iş.

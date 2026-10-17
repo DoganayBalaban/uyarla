@@ -12,6 +12,7 @@ import { collectEvidence } from "../src/score/evidence.js"
 import { type ScoreInput, conceptTexts, score } from "../src/score/score.js"
 import { compareToExpectations } from "./compare.js"
 import { cacheDir, type EvalPair } from "./types.js"
+import { resumeLanguage } from "../src/normalize/language.js"
 
 /**
  * Kapsam taraması: anlamsal katmanın ve kanıt türlerinin daraltılmasını ölçer.
@@ -130,7 +131,7 @@ async function main() {
 
     const evidenceList = collectEvidence(resumeProfile)
     const evidenceTexts = evidenceList.map((k) => k.text)
-    const conceptTextList = conceptTexts(postingDataItem)
+    const conceptTextList = conceptTexts(postingDataItem, resumeLanguage(resumeProfile))
     const vectors = await embedding.embed([...evidenceTexts, ...conceptTextList])
 
     ready.push({

@@ -1,4 +1,5 @@
 import {
+  resumeLanguage,
   PermanentError,
   checkFormat,
   TransientError,
@@ -57,7 +58,7 @@ export async function runAnalysis(
     deps.onProgress?.("comparing")
     const evidence = collectEvidence(profile.data)
     const evidenceTexts = evidence.map((e) => e.text)
-    const conceptTerms = conceptTexts(posting.data)
+    const conceptTerms = conceptTexts(posting.data, resumeLanguage(profile.data))
 
     // Tek toplu çağrı: kanıtlar önce, kavramlar sonra. Sıralama aşağıdaki
     // dilimlemeyle eşleşmek zorunda.

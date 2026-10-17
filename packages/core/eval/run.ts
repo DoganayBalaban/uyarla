@@ -5,6 +5,7 @@ import {
   embeddingConfigFromEnv,
 } from "../src/llm/embedding.js"
 import { llmConfigFromEnv } from "../src/llm/types.js"
+import { resumeLanguage } from "../src/normalize/language.js"
 import type { JobPostingData } from "../src/schemas/job.js"
 import type { ResumeProfile } from "../src/schemas/resume.js"
 import { DEFAULT_SCORING_CONFIG } from "../src/score/config.js"
@@ -58,7 +59,7 @@ async function main() {
 
     const evidenceList = collectEvidence(resumeProfile)
     const evidenceTexts = evidenceList.map((k) => k.text)
-    const conceptTextList = conceptTexts(postingDataItem)
+    const conceptTextList = conceptTexts(postingDataItem, resumeLanguage(resumeProfile))
     const vectors = await embedding.embed([...evidenceTexts, ...conceptTextList])
 
     const outcome = score({
