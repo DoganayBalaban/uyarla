@@ -13,15 +13,17 @@ const model: DocumentModel = {
       title: "DENEYİM",
       entries: [
         {
-          heading: "Geliştirici · Acme",
-          subheading: "2022-01 – halen",
+          heading: "Geliştirici",
+          organization: "Acme",
+          date: "2022-01 – halen",
           lines: ["React ile panel geliştirdim", "Test altyapısını kurdum"],
         },
       ],
     },
     {
       title: "BECERİLER",
-      entries: [{ heading: null, subheading: null, lines: ["React, TypeScript"] }],
+      entries: [],
+      rows: [{ label: null, text: "React, TypeScript" }],
     },
   ],
 }

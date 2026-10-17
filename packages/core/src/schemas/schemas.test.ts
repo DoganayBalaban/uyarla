@@ -53,10 +53,10 @@ describe("resume profile schema", () => {
   })
 
   it("JSON Schema is strict-compatible", () => {
-    // Profil şeması LLM'e gönderilmiyor; projects ve otherSections eski
-    // profillerde olmadığı için isteğe bağlı (DOG-105). LLM'e giden blok
-    // şemaları tam katı kalmalı.
-    assertStrictCompatible(resumeProfileJsonSchema, ["projects", "otherSections"])
+    // Profil şeması LLM'e gönderilmiyor; projects, otherSections (DOG-105),
+    // skillGroups ve sectionOrder (DOG-106) eski profillerde olmadığı için
+    // isteğe bağlı. LLM'e giden blok şemaları tam katı kalmalı.
+    assertStrictCompatible(resumeProfileJsonSchema, ["projects", "otherSections", "skillGroups", "sectionOrder"])
     assertStrictCompatible(experienceListJsonSchema)
     assertStrictCompatible(projectListJsonSchema)
   })

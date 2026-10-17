@@ -1,6 +1,6 @@
 import { normalizeText } from "../normalize/turkish.js"
 import { sectionHeading } from "./segment.js"
-import type { SkillLines } from "../schemas/resume.js"
+import type { SkillGroup, SkillLines } from "../schemas/resume.js"
 
 /**
  * Bir öğenin beceri değil açıklama sayılacağı uzunluk sınırı.
@@ -32,24 +32,47 @@ const SECTION_HEADING =
  * deterministik ve test edilebilir oluyor (K-19).
  */
 export function flattenSkillLines(data: SkillLines): string[] {
-  const skillList: string[] = []
+  return groupLines(data).flatMap((g) => g.items)
+}
+
+/**
+ * Becerileri CV'deki kategorileriyle döndürür (DOG-106): "Backend: Python,
+ * FastAPI" satırının etiketi grubun adı. Etiketin kendisi beceri olan
+ * satırlar ("Manual Testing: Performing…") ve etiketsiz satırlar adsız
+ * gruba giriyor; art arda gelenler tek grupta. Hiç adlı grup yoksa CV
+ * kategori yazmamış demek ve sonuç `undefined`: belge düz listeye düşer.
+ *
+ * Öğeler `flattenSkillLines` ile aynı süzgeçten geçiyor; iki çıktının
+ * birleşimi her zaman düz listenin kendisi.
+ */
+export function skillGroups(data: SkillLines): SkillGroup[] | undefined {
+  const groups = groupLines(data)
+  return groups.some((g) => g.name !== null) ? groups : undefined
+}
+
+function groupLines(data: SkillLines): SkillGroup[] {
+  const groups: SkillGroup[] = []
+  const add = (name: string | null, items: string[]) => {
+    const last = groups.at(-1)
+    if (name === null && last && last.name === null) last.items.push(...items)
+    else groups.push({ name, items: [...items] })
+  }
 
   for (const line of data.lines) {
     const termList = line.items.filter(
       (item) => looksLikeTerm(item) && !isSectionHeading(item),
     )
+    const headingLabel = line.label.trim()
+    const labelIsTerm = headingLabel !== "" && looksLikeTerm(headingLabel) && !isSectionHeading(headingLabel)
 
     if (termList.length > 0) {
-      skillList.push(...termList)
+      add(labelIsTerm && !namesItsItems(headingLabel, termList) ? headingLabel : null, termList)
       continue
     }
 
     // Etikete de aynı ölçüt uygulanıyor: bölümlemenin karıştığı CV'lerde
     // deneyim cümleleri beceri bloğuna sızabiliyor ve etiket olarak geliyor.
-    const headingLabel = line.label.trim()
-    if (headingLabel && looksLikeTerm(headingLabel) && !isSectionHeading(headingLabel)) {
-      skillList.push(headingLabel)
-    }
+    if (labelIsTerm) add(null, [headingLabel])
   }
 
   // Dil ve sertifikalar kendi alanlarında zaten var; beceri sayılmamalılar.
@@ -60,15 +83,29 @@ export function flattenSkillLines(data: SkillLines): string[] {
   const others = new Set(
     [...data.languages, ...data.certifications].map((x) => normalizeText(x)),
   )
-
-  return [
-    ...new Set(
-      skillList.filter((b) => {
+  // Aynı beceri iki grupta geçerse ilkinde kalıyor (düz liste de tekil).
+  const seen = new Set<string>()
+  return groups
+    .map((g) => ({
+      name: g.name,
+      items: g.items.filter((b) => {
         const n = normalizeText(b)
-        return n.length > 0 && !others.has(n)
+        if (n.length === 0 || others.has(n) || seen.has(b)) return false
+        seen.add(b)
+        return true
       }),
-    ),
-  ]
+    }))
+    .filter((g) => g.items.length > 0)
+}
+
+/**
+ * Etiket öğelerin kendisiyse kategori değildir: "Git & GitHub" satırını model
+ * ["Git", "GitHub"] diye bölüyor ve belgede "Git & GitHub: Git, GitHub"
+ * çıkıyordu (cv-c).
+ */
+function namesItsItems(label: string, items: string[]): boolean {
+  const l = normalizeText(label)
+  return items.every((item) => l.includes(normalizeText(item)))
 }
 
 /**

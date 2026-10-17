@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { flattenSkillLines } from "./skills.js"
+import { flattenSkillLines, skillGroups } from "./skills.js"
 
 describe("flattenSkillLines", () => {
   it("takes items from a category line, not the category", () => {
@@ -222,5 +222,96 @@ describe("flattenSkillLines · sentence leakage", () => {
         languages: [], certifications: [],
       }),
     ).toEqual(["Git & GitHub"])
+  })
+})
+
+describe("skillGroups (DOG-106)", () => {
+  it("keeps the resume's own categories in order", () => {
+    expect(
+      skillGroups({
+        lines: [
+          { label: "TECHNICAL SKILLS", items: [] },
+          { label: "AI / LLM", items: ["RAG", "MCP"] },
+          { label: "Backend", items: ["Python", "FastAPI"] },
+        ],
+        languages: [],
+        certifications: [],
+      }),
+    ).toEqual([
+      { name: "AI / LLM", items: ["RAG", "MCP"] },
+      { name: "Backend", items: ["Python", "FastAPI"] },
+    ])
+  })
+
+  it("puts label-as-skill lines into one unnamed group", () => {
+    // cv-b: "Manual Testing: Performing…" satırlarında etiket becerinin kendisi.
+    expect(
+      skillGroups({
+        lines: [
+          { label: "Manual Testing", items: [] },
+          { label: "API Validation", items: [] },
+          { label: "Programming & Query Languages", items: ["Java", "SQL Queries"] },
+        ],
+        languages: [],
+        certifications: [],
+      }),
+    ).toEqual([
+      { name: null, items: ["Manual Testing", "API Validation"] },
+      { name: "Programming & Query Languages", items: ["Java", "SQL Queries"] },
+    ])
+  })
+
+  it("a label that only names its own items is not a category", () => {
+    // cv-c: "Git & GitHub" → ["Git", "GitHub"]; belgede "Git & GitHub: Git, GitHub" çıkıyordu.
+    expect(
+      skillGroups({
+        lines: [
+          { label: "Git & GitHub", items: ["Git", "GitHub"] },
+          { label: "Tasarım Araçları", items: ["Canva", "Photoshop"] },
+        ],
+        languages: [],
+        certifications: [],
+      }),
+    ).toEqual([
+      { name: null, items: ["Git", "GitHub"] },
+      { name: "Tasarım Araçları", items: ["Canva", "Photoshop"] },
+    ])
+  })
+
+  it("is undefined when the resume has no categories; the document falls back to one line", () => {
+    expect(
+      skillGroups({ lines: [{ label: "", items: ["Excel", "SAP"] }], languages: [], certifications: [] }),
+    ).toBeUndefined()
+  })
+
+  it("a section heading is not a group name", () => {
+    expect(
+      skillGroups({
+        lines: [
+          { label: "Technical Skills", items: ["Java"] },
+          { label: "Araçlar ve Yöntemler", items: ["Jira"] },
+        ],
+        languages: [],
+        certifications: [],
+      }),
+    ).toEqual([
+      { name: null, items: ["Java"] },
+      { name: "Araçlar ve Yöntemler", items: ["Jira"] },
+    ])
+  })
+
+  it("flattened groups equal the flat list: languages, certifications and duplicates stay out", () => {
+    const data = {
+      lines: [
+        { label: "Project Tools", items: ["Jira", "Excel"] },
+        { label: "Office", items: ["Excel", "İngilizce (C1)"] },
+        { label: "Languages", items: ["İngilizce (C1)"] },
+      ],
+      languages: ["İngilizce (C1)"],
+      certifications: [],
+    }
+    const groups = skillGroups(data)!
+    expect(groups).toEqual([{ name: "Project Tools", items: ["Jira", "Excel"] }])
+    expect(groups.flatMap((g) => g.items)).toEqual(flattenSkillLines(data))
   })
 })
