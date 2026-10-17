@@ -7,6 +7,17 @@ export const ADAPT_QUEUE = "adapt"
  */
 export const COVER_LETTER_JOB = "cover-letter"
 
+/**
+ * Kullanıcının anlattığı deneyimden madde yazımı (DOG-94). Katkı kaydı web
+ * katmanında taslağa "running" olarak ekleniyor; iş onu dolduruyor.
+ */
+export const CONTRIBUTION_JOB = "contribution"
+
+export interface ContributionJobData {
+  adaptationId: string
+  contributionId: string
+}
+
 export interface AdaptJobData {
   /**
    * Uyarlama kaydı web katmanında oluşturuluyor ve kimliği buraya geliyor.

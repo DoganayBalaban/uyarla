@@ -1,5 +1,5 @@
 import { describe, expect, expectTypeOf, it } from "vitest"
-import { ADAPT_QUEUE, type AdaptJobData, COVER_LETTER_JOB } from "./adapt-queue"
+import { ADAPT_QUEUE, type AdaptJobData, CONTRIBUTION_JOB, type ContributionJobData, COVER_LETTER_JOB } from "./adapt-queue"
 import { ANALYZE_QUEUE, type AnalyzeJobData } from "./queue"
 
 /**
@@ -12,10 +12,12 @@ describe("job contract", () => {
     expect(ANALYZE_QUEUE).toBe("analyze")
     expect(ADAPT_QUEUE).toBe("adapt")
     expect(COVER_LETTER_JOB).toBe("cover-letter")
+    expect(CONTRIBUTION_JOB).toBe("contribution")
   })
 
   it("keeps job data keys", () => {
     expectTypeOf<keyof AnalyzeJobData>().toEqualTypeOf<"resumeId" | "jobPostingId" | "userId">()
     expectTypeOf<keyof AdaptJobData>().toEqualTypeOf<"adaptationId">()
+    expectTypeOf<keyof ContributionJobData>().toEqualTypeOf<"adaptationId" | "contributionId">()
   })
 })
