@@ -98,7 +98,7 @@ export async function buildAdaptationDraft(
   ]
 
   // 1. Hedefler: her maddeye anlamca yakın, henüz karşılanmamış ilan terimleri.
-  const conceptTextList = conceptTexts(posting)
+  const conceptTextList = conceptTexts(posting, resumeLanguage(profile))
   const targetVectors = await embedding.embed([
     ...bulletList.map((m) => m.original),
     ...conceptTextList,

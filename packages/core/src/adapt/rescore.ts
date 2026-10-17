@@ -1,4 +1,5 @@
 import type { EmbeddingProvider } from "../llm/types.js"
+import { resumeLanguage } from "../normalize/language.js"
 import type { AdaptationDraft } from "../schemas/adaptation.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
@@ -22,7 +23,7 @@ export async function rescore(
   const adapted = applyAdaptation(input.profile, input.draft)
   const evidenceList = collectEvidence(adapted)
   const evidenceTexts = evidenceList.map((k) => k.text)
-  const conceptTextList = conceptTexts(input.posting)
+  const conceptTextList = conceptTexts(input.posting, resumeLanguage(input.profile))
 
   // Tek toplu çağrı: kanıtlar önce, kavramlar sonra (Sprint 1'deki sıra).
   const vecs = await embedding.embed([...evidenceTexts, ...conceptTextList])
@@ -61,7 +62,7 @@ export async function guardSummaryScore(
     const adapted = applyAdaptation(profile, d)
     return { adapted, evidence: collectEvidence(adapted) }
   })
-  const conceptTextList = conceptTexts(posting)
+  const conceptTextList = conceptTexts(posting, resumeLanguage(profile))
   const texts = [...new Set([...variants.flatMap((v) => v.evidence.map((e) => e.text)), ...conceptTextList])]
   const vectors = await embedding.embed(texts)
   const vectorOf = new Map(texts.map((text, i) => [text, vectors[i]!]))

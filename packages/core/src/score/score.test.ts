@@ -780,3 +780,35 @@ describe("weightedScore", () => {
     expect(weightedScore([r("must", 1)], undefined, [0])).toBe(0)
   })
 })
+
+describe("conceptTexts · cross-language (DOG-104)", () => {
+  const posting = {
+    position: "x",
+    company: null,
+    seniority: null,
+    language: "tr" as const,
+    requirements: [
+      {
+        text: "Kişisel veri koruma ve React",
+        type: "skill" as const,
+        importance: "must" as const,
+        concepts: [
+          { term: "kişisel veri koruma", synonyms: ["personal data protection", "Personal data privacy", "KVKK", "GDPR", "Kişisel Veri Koruma"] },
+          { term: "React", synonyms: [] },
+        ],
+      },
+    ],
+  }
+
+  it("embeds only the term when the resume is in the posting's language, as before", () => {
+    expect(conceptTexts(posting, "tr")).toEqual(["kişisel veri koruma", "React"])
+    expect(conceptTexts(posting)).toEqual(["kişisel veri koruma", "React"])
+  })
+
+  it("adds up to three distinct synonyms when the resume is in another language", () => {
+    expect(conceptTexts(posting, "en")).toEqual([
+      "kişisel veri koruma (personal data protection; Personal data privacy; KVKK)",
+      "React",
+    ])
+  })
+})

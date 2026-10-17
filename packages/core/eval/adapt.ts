@@ -114,7 +114,7 @@ async function main() {
 
     const evidenceList = collectEvidence(resumeProfile)
     const evidenceTexts = evidenceList.map((k) => k.text)
-    const vectors = await embedding.embed([...evidenceTexts, ...conceptTexts(postingDataItem)])
+    const vectors = await embedding.embed([...evidenceTexts, ...conceptTexts(postingDataItem, resumeLanguage(resumeProfile))])
     const outcome = score({
       profile: resumeProfile,
       posting: postingDataItem,
