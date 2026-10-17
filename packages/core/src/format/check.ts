@@ -1,5 +1,6 @@
 import JSZip from "jszip"
-import { sectionHeading, type ResumeSection } from "../extract/segment.js"
+import { sectionHeading, segmentResume, type ResumeSection } from "../extract/segment.js"
+import { measurableResults } from "./measurable.js"
 
 /**
  * CV'nin ATS tarafından okunabilirliğini kontrol eder.
@@ -17,11 +18,20 @@ import { sectionHeading, type ResumeSection } from "../extract/segment.js"
 
 export type FormatSeverity = "problem" | "warning"
 
+/**
+ * "readability": ATS doğru okuyabilir mi. "content": işe alımcı okuyunca ne
+ * görüyor (DOG-86). Eski kayıtlarda alan yok; yokluğu "readability" demek.
+ */
+export type FormatGroup = "readability" | "content"
+
 export interface FormatFinding {
   code: string
   severity: FormatSeverity
   title: string
   description: string
+  group?: FormatGroup
+  /** Bulgunun CV'deki yerinden birkaç örnek; kullanıcı nereye bakacağını bilsin. */
+  examples?: string[]
 }
 
 export interface FormatReport {
@@ -50,6 +60,14 @@ const ICON_CHARACTER = /[-]/g
 
 const SHORT_WORD = 150
 const LONG_WORD = 1100
+/**
+ * Deneyim cümlelerinin en az bu kadarında ölçülebilir sonuç olmalı. Değerlendirme
+ * setinde (7 CV) pazarlama 3/9 ve satış 2/6 ile geçiyor, kalan beşi uyarı
+ * alıyor; sayısız CV'ler gerçekten sayısız. Jobscan sabit "en az 5" diyor ama
+ * 6 cümlelik bir deneyimle 32 cümlelik bir deneyimi aynı ölçüye vurmak yanlış.
+ */
+const MEASURABLE_RATIO = 1 / 3
+const MIN_STATEMENTS_FOR_MEASURABLE = 3
 
 export async function checkFormat(input: {
   filename: string
@@ -64,6 +82,7 @@ export async function checkFormat(input: {
 
   textChecks(input.text, docx, findings, passed)
   if (docx) docxChecks(docx, findings, passed)
+  contentChecks(input.text, findings, passed)
 
   // Önce sorunlar, sonra uyarılar: arayüz sırayı olduğu gibi gösteriyor.
   findings.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === "problem" ? -1 : 1))
@@ -194,6 +213,30 @@ function textChecks(
   } else {
     passed.push("Özel karakterler")
   }
+}
+
+function contentChecks(text: string, findings: FormatFinding[], passed: string[]): void {
+  const m = measurableResults(segmentResume(text).experienceBlock)
+  // Deneyimi olmayan ya da okunamayan CV için söyleyecek bir şey yok; o
+  // durumu başlık ve uzunluk kontrolleri zaten söylüyor.
+  if (m.statements < MIN_STATEMENTS_FOR_MEASURABLE) return
+  if (m.quantified / m.statements >= MEASURABLE_RATIO) {
+    passed.push("Ölçülebilir sonuçlar")
+    return
+  }
+  findings.push({
+    code: "few_measurable_results",
+    severity: "warning",
+    group: "content",
+    // Ek gerektirmeyen biçim: "6'sında / 10'unda" sayıya göre değişiyor.
+    title:
+      m.quantified === 0
+        ? `Ölçülebilir sonuç yok: ${m.statements} deneyim cümlesinin hiçbirinde rakam geçmiyor`
+        : `Ölçülebilir sonuç az: ${m.statements} deneyim cümlesinden ${m.quantified} tanesinde rakam var`,
+    description:
+      "İşe alımcı “satışları artırdım” ile “satışları %20 artırdım” arasındaki farkı ilk okumada görüyor. Gerçekten bildiğin rakamları ekle: müşteri ya da ekip sayısı, yüzde, süre, bütçe. Uyarlama rakam uyduramaz; bunları ancak sen ekleyebilirsin.",
+    examples: m.examples,
+  })
 }
 
 function consecutiveHeadings(lineItems: string[], headings: (ResumeSection | null)[]): boolean {
