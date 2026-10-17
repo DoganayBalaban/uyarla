@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
-import { readFileSync } from "node:fs"
+import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
-import { segmentResume, stripLeadingHeading } from "./segment.js"
+import { sectionHeading, segmentResume, stripLeadingHeading } from "./segment.js"
 
 const resume = (name: string) =>
   readFileSync(join(import.meta.dirname, "../../eval/sources/cv", `${name}.txt`), "utf8")
@@ -200,4 +200,39 @@ describe("segmentResume · projects and other sections (DOG-105)", () => {
   it("gives the project extractor nothing when the resume has no headings at all", () => {
     expect(segmentResume("Ada Yılmaz\nada@ornek.com\nBir şeyler yaptım.").projectsBlock).toBe("")
   })
+})
+
+describe("segmentResume · no line is lost (DOG-105)", () => {
+  // Değişmez: bölümleme hiçbir satırı atmamalı. Her boş olmayan satır ya bir
+  // bloğa ya da otherSections'a düşer. Eskiden "Additional", "Honors" gibi
+  // bölümler sessizce atılıyordu ve indirilen CV'de kayboluyordu.
+  const dir = join(import.meta.dirname, "../../eval/sources/cv")
+  for (const file of readdirSync(dir).filter((f) => f.endsWith(".txt"))) {
+    it(`keeps every line of ${file}`, () => {
+      const text = readFileSync(join(dir, file), "utf8")
+      const s = segmentResume(text)
+      const kept = [
+        s.headerBlock,
+        s.summaryBlock,
+        s.experienceBlock,
+        s.projectsBlock,
+        s.educationBlock,
+        s.skillsBlock,
+        ...s.otherSections.flatMap((o) => [o.heading, ...o.lines]),
+      ].join("\n")
+      const lost = text
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean)
+        // İletişim başlıklarının kendisi bilerek bloğa girmiyor (DOG-60);
+        // tablo satırında ("KİŞİSEL BİLGİLER | Ece") kalan kısım aranıyor.
+        .map((l) => {
+          const [first, ...rest] = l.split(" | ")
+          return sectionHeading(first!) === "header" ? rest.join(" | ").trim() : first!.trim()
+        })
+        .filter((l) => l && sectionHeading(l) !== "header")
+        .filter((l) => !kept.includes(l))
+      expect(lost).toEqual([])
+    })
+  }
 })
