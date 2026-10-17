@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import type { CoverLetterRecord } from "@uyarla/core"
 import { api } from "@/lib/api"
-import type { AdaptationState } from "@/features/adaptation/types"
+import type { AdaptationState, Draft } from "@/features/adaptation/types"
 import { fileNameFromDisposition } from "@/features/adaptation/fileName"
 
 /** Analizden uyarlama başlatır; aynı analizin uyarlaması varsa onu döndürür. */
@@ -56,13 +56,24 @@ export const adaptationQueryKey = (id: string) => ["adaptation", id] as const
  * İstek başarısızsa duruyor: uyarlama yok ya da kullanıcının değil.
  */
 export function adaptationPollDelay(
-  data: Pick<AdaptationState, "status" | "coverLetter"> | undefined,
+  data: (Pick<AdaptationState, "status" | "coverLetter"> & { draft?: Pick<Draft, "contributions"> | null }) | undefined,
   error: unknown,
 ): number | false {
   if (error) return false
   if (!data || data.status === "running") return 1500
   if (data.coverLetter?.status === "running") return 2000
+  // Kullanıcının anlattığından madde yazılıyor (DOG-94).
+  if (data.draft?.contributions?.some((c) => c.status === "running")) return 2000
   return false
+}
+
+/** Eksik bir gereksinim için anlatılan deneyimi maddeye çevirtir (DOG-94). */
+export async function requestContribution(
+  id: string,
+  input: { requirementIndex: number; experienceIndex: number; answer: string },
+): Promise<void> {
+  // Uç ön yazı dosyasında: Vercel'in 12 fonksiyon sınırı (bkz. route.ts).
+  await api.post(`/adapt/${encodeURIComponent(id)}/cover-letter`, { contribution: input })
 }
 
 /**

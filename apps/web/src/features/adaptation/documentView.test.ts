@@ -36,3 +36,15 @@ describe("documentSections", () => {
     expect(documentSections(empty, { bullets: [] }).summary).toBeNull()
   })
 })
+
+describe("documentSections · contributions", () => {
+  it("shows a bullet that exists only in the after state as fully added", () => {
+    const withAdded = { ...document, after: { ...document.after, experience: [job(["A", "b", "Yeni madde"])] } }
+    expect(documentSections(withAdded, { bullets: [] }).experience[0]!.bullets[2]).toEqual({
+      before: "",
+      after: "Yeni madde",
+      changed: true,
+      pending: false,
+    })
+  })
+})

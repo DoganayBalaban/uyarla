@@ -19,6 +19,12 @@ describe("adaptationPollDelay", () => {
     expect(adaptationPollDelay({ status: "failed", coverLetter: null }, null)).toBe(false)
   })
 
+  it("polls while a contribution is being written", () => {
+    const c = (status: "running" | "done") => ({ id: "c", requirementIndex: 0, experienceIndex: 0, answer: "x", status, decision: "pending" as const })
+    expect(adaptationPollDelay({ status: "ready", coverLetter: null, draft: { contributions: [c("running")] } }, null)).toBe(2000)
+    expect(adaptationPollDelay({ status: "ready", coverLetter: null, draft: { contributions: [c("done")] } }, null)).toBe(false)
+  })
+
   it("stops when the request failed", () => {
     expect(adaptationPollDelay(undefined, new Error("404"))).toBe(false)
   })

@@ -19,6 +19,8 @@ import {
 } from "lucide-react"
 import { DiffText } from "@/features/adaptation/components/DiffText"
 import { DocumentView } from "@/features/adaptation/components/DocumentView"
+import { DecisionToggle, VerificationWarning } from "@/features/adaptation/components/DecisionControls"
+import { ContributionsSection } from "@/features/adaptation/components/ContributionsSection"
 import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/cn"
 import { adaptationQueryKey, decide, decideAll, downloadAdaptation, useAdaptation } from "@/features/adaptation/api"
@@ -42,68 +44,6 @@ const STAGES = [
     description: "Her yeni cümleyi CV'ndeki gerçek bilgilerle karşılaştırıyoruz.",
   },
 ]
-
-/**
- * Yeni/eski hâl seçimi. 21st.dev'deki "segmented control" desenleri gibi
- * iki seçenekli bir radyo grubu: ekran okuyucu için de tek bir soru.
- */
-function DecisionToggle({
-  val,
-  canPickNew = true,
-  busy,
-  onSelect,
-}: {
-  val: string
-  canPickNew?: boolean
-  busy: boolean
-  onSelect: (d: "accepted" | "rejected") => void
-}) {
-  const options = [
-    ...(canPickNew ? [{ d: "accepted" as const, label: "Yeni hâli" }] : []),
-    { d: "rejected" as const, label: "Eski hâli" },
-  ]
-  return (
-    <div role="radiogroup" aria-label="Hangi hâli kullanılsın?" className="inline-flex rounded-button bg-background p-1 text-sm">
-      {options.map((s) => {
-        const selected = val === s.d
-        return (
-          <button
-            key={s.d}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            disabled={busy || selected}
-            onClick={() => onSelect(s.d)}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 font-semibold transition disabled:cursor-default",
-              selected ? "bg-card text-brand-blue shadow-sm" : "text-muted hover:text-foreground",
-            )}
-          >
-            {selected && <Check className="size-3.5" strokeWidth={3} aria-hidden />}
-            {s.label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-function VerificationWarning({ v }: { v: Verification }) {
-  if (v.status !== "flagged") return null
-  return (
-    <div className="mb-3 flex gap-2.5 rounded-button bg-brand-amber/10 p-3 text-sm">
-      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-brand-amber" aria-hidden />
-      <div>
-        <p className="m-0 font-semibold text-brand-amber">Kontrol et</p>
-        {v.issues.map((problemCount, i) => (
-          <p className="m-0 mt-0.5 text-foreground/80" key={i}>
-            {problemCount.detail}
-          </p>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 export function AdaptationView({ id }: { id: string }) {
   const reducedMotion = useReducedMotion() ?? false
@@ -188,7 +128,11 @@ export function AdaptationView({ id }: { id: string }) {
   }
 
   const { draft } = state
-  const pendingCount = draft.bullets.filter((b) => b.decision === "pending").length
+  // Yazımı bitmiş katkılar da maddeler gibi karar bekleyebilir (DOG-94).
+  const writtenContributions = (draft.contributions ?? []).filter((c) => c.status === "done" && c.text)
+  const pendingCount =
+    draft.bullets.filter((b) => b.decision === "pending").length +
+    writtenContributions.filter((c) => c.decision === "pending").length
   // Hedefi olmayan maddeler hiç yazılmıyor (K-38); onlar ayrı, katlanmış
   // listede duruyor ki kullanıcı yalnızca gerçekten değişenlere baksın.
   const ordered = draft.bullets.map((bullet, i) => ({ bullet, order: i + 1 }))
@@ -204,20 +148,25 @@ export function AdaptationView({ id }: { id: string }) {
   const summaryChanged = !!draft.summary.original && draft.summary.original !== draft.summary.rewritten
   const acceptable =
     changedBullets.filter(({ bullet }) => bullet.verification.status === "ok" && bullet.decision !== "accepted").length +
-    (summaryChanged && draft.summary.verification.status === "ok" && draft.summary.decision !== "accepted" ? 1 : 0)
+    (summaryChanged && draft.summary.verification.status === "ok" && draft.summary.decision !== "accepted" ? 1 : 0) +
+    writtenContributions.filter((c) => c.verification?.status !== "flagged" && c.decision !== "accepted").length
   const alignmentTerms = [
-    ...new Set(
-      changedBullets
+    ...new Set([
+      ...changedBullets
         .filter(({ bullet }) => bullet.verification.status === "ok" && bullet.decision === "pending")
         .flatMap(({ bullet }) => (bullet.alignments ?? []).map((a) => a.term)),
-    ),
+      ...writtenContributions
+        .filter((c) => c.verification?.status !== "flagged" && c.decision === "pending")
+        .flatMap((c) => (c.alignments ?? []).map((a) => a.term)),
+    ]),
   ]
-  const flaggedPending = changedBullets.filter(
-    ({ bullet }) => bullet.decision === "pending" && bullet.verification.status === "flagged",
-  ).length
+  const flaggedPending =
+    changedBullets.filter(({ bullet }) => bullet.decision === "pending" && bullet.verification.status === "flagged").length +
+    writtenContributions.filter((c) => c.decision === "pending" && c.verification?.status === "flagged").length
   const anyNew =
     changedBullets.some(({ bullet }) => bullet.decision !== "rejected") ||
-    (summaryChanged && draft.summary.decision !== "rejected")
+    (summaryChanged && draft.summary.decision !== "rejected") ||
+    writtenContributions.some((c) => c.decision !== "rejected")
   const before = state.scoreBefore ?? 0
   const after = state.scoreAfter ?? 0
   const diff = after - before
@@ -461,6 +410,17 @@ export function AdaptationView({ id }: { id: string }) {
                   </details>
                 )}
               </motion.section>
+
+              {state.document && (
+                <ContributionsSection
+                  adaptationId={id}
+                  missing={state.missingRequirements ?? []}
+                  contributions={draft.contributions ?? []}
+                  experience={state.document.before.experience}
+                  busy={busy}
+                  onDecide={(itemId, d) => void decisionValue(itemId, d)}
+                />
+              )}
 
               <motion.section {...entrance(0.14)} className="rounded-card border border-border bg-card p-5 sm:p-6">
                 <h2 className="m-0 text-lg">Beceriler</h2>
