@@ -39,6 +39,37 @@ export function applyDecision(
   }
 }
 
+/**
+ * Toplu karar (DOG-93).
+ *
+ * - "accept_verified": uydurma kontrolünden temiz geçen her değişikliği yeni
+ *   hâline alır; terim uyumu yüzünden onay bekleyenler de dahil, arayüz onay
+ *   öncesinde terimleri listeliyor. Uyarı taşıyan maddelere dokunmaz: onlar
+ *   tek tek okunmadan kabul edilmemeli (K-26).
+ * - "reject_all": özet dahil her şeyi eski hâline döndürür. Uyarlamanın
+ *   tamamını geri almanın karşılığı; tek tek yeniden kabul edilebilir.
+ *
+ * Değişmeyen maddelerin kararı anlamsız (eski ve yeni hâl aynı); dokunulmuyor.
+ */
+export type BulkDecision = "accept_verified" | "reject_all"
+
+export function applyBulkDecision(draft: AdaptationDraft, action: BulkDecision): AdaptationDraft {
+  const decide = (verification: { status: string }): "accepted" | "rejected" | null => {
+    if (action === "reject_all") return "rejected"
+    return verification.status === "ok" ? "accepted" : null
+  }
+  const summaryDecision = draft.summary.original ? decide(draft.summary.verification) : null
+  return {
+    ...draft,
+    summary: summaryDecision ? { ...draft.summary, decision: summaryDecision } : draft.summary,
+    bullets: draft.bullets.map((b) => {
+      if (b.rewritten === b.original) return b
+      const d = decide(b.verification)
+      return d ? { ...b, decision: d } : b
+    }),
+  }
+}
+
 /** Uyarı taşıyan madde kaldıysa `draft`, kalmadıysa `ready` (K-26). */
 export function nextStatus(draft: AdaptationDraft): "draft" | "ready" {
   return hasPendingDecisions(draft) ? "draft" : "ready"
