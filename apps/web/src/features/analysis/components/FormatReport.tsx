@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { ChevronDown, CircleCheck, OctagonAlert, ScanText, TriangleAlert, Wand2 } from "lucide-react"
-import type { FormatReport } from "@uyarla/core"
+import type { FormatFinding, FormatReport } from "@uyarla/core"
 import { cn } from "@/lib/cn"
 import { fixHint } from "@/features/analysis/formatFixes"
 
@@ -11,8 +11,9 @@ import { fixHint } from "@/features/analysis/formatFixes"
 export type FormatReportView = Pick<FormatReport, "findings" | "passed">
 
 /**
- * CV'nin ATS okunabilirliği. Skordan ayrı bir soru: skor "ilana uyuyor mu",
- * bu bölüm "ATS doğru okuyabilir mi". Durum renkleri yalnızca durumu
+ * CV kontrolü. Skordan ayrı bir soru: skor "ilana uyuyor mu", bu bölüm "ATS
+ * doğru okuyabilir mi" ve "işe alımcı okuyunca ne görüyor" (içerik bulguları,
+ * DOG-86; ilandan bağımsızlar). Durum renkleri yalnızca durumu
  * anlatıyor ve her zaman bir etiketle birlikte (rehber §9.2).
  *
  * Bulgular 21st.dev'deki "alert" bileşenlerinin desenini izliyor: ikon,
@@ -20,6 +21,9 @@ export type FormatReportView = Pick<FormatReport, "findings" | "passed">
  */
 export function FormatReportCard({ report }: { report: FormatReportView }) {
   const problemCount = report.findings.filter((b) => b.severity === "problem").length
+  // Eski kayıtlarda grup yok: hepsi okunabilirlik bulgusu (DOG-86).
+  const readability = report.findings.filter((b) => b.group !== "content")
+  const content = report.findings.filter((b) => b.group === "content")
   const warningCount = report.findings.length - problemCount
 
   return (
@@ -30,8 +34,8 @@ export function FormatReportCard({ report }: { report: FormatReportView }) {
             <ScanText className="size-5" aria-hidden />
           </span>
           <div>
-            <h2 className="m-0 text-lg">ATS okunabilirliği</h2>
-            <p className="m-0 text-sm text-muted">Başvuru sistemleri CV&apos;ni doğru okuyabilir mi?</p>
+            <h2 className="m-0 text-lg">CV kontrolü</h2>
+            <p className="m-0 text-sm text-muted">Başvuru sistemleri CV&apos;ni doğru okuyabilir mi, işe alımcı ne görüyor?</p>
           </div>
         </div>
         <ul className="flex flex-wrap gap-1.5 text-xs font-semibold">
@@ -48,65 +52,28 @@ export function FormatReportCard({ report }: { report: FormatReportView }) {
       {report.findings.length === 0 ? (
         <p className="mt-4 flex items-center gap-2 text-sm text-muted">
           <CircleCheck className="size-4 text-brand-green dark:text-[#4ade80]" aria-hidden />
-          CV&apos;nde ATS&apos;in okumasını zorlaştıracak bir biçim sorunu bulmadık.
+          CV&apos;nde ATS&apos;in okumasını zorlaştıracak ya da işe alımcının gözüne batacak bir sorun bulmadık.
         </p>
       ) : (
-        <ul className="mt-5 space-y-2.5">
-          {report.findings.map((b) => {
-            const isProblem = b.severity === "problem"
-            const Icon = isProblem ? OctagonAlert : TriangleAlert
-            return (
-              <li
-                key={b.code}
-                className={cn(
-                  "flex gap-3 rounded-button border border-border border-l-4 bg-background/60 p-3.5",
-                  isProblem ? "border-l-brand-red" : "border-l-brand-amber",
-                )}
-              >
-                <Icon
-                  className={cn(
-                    "mt-0.5 size-4 shrink-0",
-                    isProblem ? "text-brand-red dark:text-[#f87171]" : "text-brand-amber",
-                  )}
-                  aria-hidden
-                />
-                <div className="min-w-0">
-                  <p className="m-0 font-semibold">
-                    <span className="sr-only">{isProblem ? "Sorun: " : "Uyarı: "}</span>
-                    {b.title}
-                  </p>
-                  <p className="m-0 mt-0.5 text-sm text-muted">{b.description}</p>
-                  {fixHint(b.code) && (
-                    <p
-                      className={cn(
-                        "m-0 mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium",
-                        fixHint(b.code)!.kind === "action" ? "text-foreground" : "text-brand-green dark:text-[#4ade80]",
-                      )}
-                    >
-                      <Wand2 className="size-3.5" aria-hidden />
-                      {fixHint(b.code)!.href ? (
-                        <Link href={fixHint(b.code)!.href!} className="underline underline-offset-2">
-                          {fixHint(b.code)!.text}
-                        </Link>
-                      ) : (
-                        fixHint(b.code)!.text
-                      )}
-                    </p>
-                  )}
-                </div>
-                <span
-                  aria-hidden
-                  className={cn(
-                    "ml-auto h-fit shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase",
-                    isProblem ? "bg-brand-red/10 text-brand-red dark:text-[#f87171]" : "bg-brand-amber/15 text-brand-amber",
-                  )}
-                >
-                  {isProblem ? "Sorun" : "Uyarı"}
-                </span>
-              </li>
-            )
-          })}
-        </ul>
+        <>
+          {readability.length > 0 && (
+            <ul className="mt-5 space-y-2.5">
+              {readability.map((b) => (
+                <FindingItem key={b.code} finding={b} />
+              ))}
+            </ul>
+          )}
+          {content.length > 0 && (
+            <div className="mt-5">
+              <h3 className="m-0 text-sm font-semibold text-muted">İşe alımcı gözüyle</h3>
+              <ul className="mt-2.5 space-y-2.5">
+                {content.map((b) => (
+                  <FindingItem key={b.code} finding={b} />
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
 
       {report.passed.length > 0 && (
@@ -126,5 +93,67 @@ export function FormatReportCard({ report }: { report: FormatReportView }) {
         </details>
       )}
     </section>
+  )
+}
+
+function FindingItem({ finding: b }: { finding: FormatFinding }) {
+  const isProblem = b.severity === "problem"
+  const Icon = isProblem ? OctagonAlert : TriangleAlert
+  const hint = fixHint(b.code)
+  return (
+    <li
+      className={cn(
+        "flex gap-3 rounded-button border border-border border-l-4 bg-background/60 p-3.5",
+        isProblem ? "border-l-brand-red" : "border-l-brand-amber",
+      )}
+    >
+      <Icon
+        className={cn("mt-0.5 size-4 shrink-0", isProblem ? "text-brand-red dark:text-[#f87171]" : "text-brand-amber")}
+        aria-hidden
+      />
+      <div className="min-w-0">
+        <p className="m-0 font-semibold">
+          <span className="sr-only">{isProblem ? "Sorun: " : "Uyarı: "}</span>
+          {b.title}
+        </p>
+        <p className="m-0 mt-0.5 text-sm text-muted">{b.description}</p>
+        {b.examples && b.examples.length > 0 && (
+          <div className="mt-2">
+            <p className="m-0 text-xs font-medium">Rakam ekleyebileceğin cümleler:</p>
+            <ul className="mt-1 list-disc space-y-0.5 pl-4 text-sm text-muted">
+              {b.examples.map((e) => (
+                <li key={e}>{e}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {hint && (
+          <p
+            className={cn(
+              "m-0 mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium",
+              hint.kind === "action" ? "text-foreground" : "text-brand-green dark:text-[#4ade80]",
+            )}
+          >
+            <Wand2 className="size-3.5" aria-hidden />
+            {hint.href ? (
+              <Link href={hint.href} className="underline underline-offset-2">
+                {hint.text}
+              </Link>
+            ) : (
+              hint.text
+            )}
+          </p>
+        )}
+      </div>
+      <span
+        aria-hidden
+        className={cn(
+          "ml-auto h-fit shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase",
+          isProblem ? "bg-brand-red/10 text-brand-red dark:text-[#f87171]" : "bg-brand-amber/15 text-brand-amber",
+        )}
+      >
+        {isProblem ? "Sorun" : "Uyarı"}
+      </span>
+    </li>
   )
 }

@@ -11,7 +11,7 @@ React ve TypeScript ile arayüz geliştiren bir geliştiriciyim.
 
 Deneyim
 Acme Yazılım — Frontend Geliştirici (03/2022 – Günümüz)
-${"React ile müşteri paneli geliştirdim ve performansı iyileştirdim. ".repeat(20)}
+${"React ile müşteri paneli geliştirdim ve yükleme süresini %40 kısalttım. ".repeat(20)}
 
 Eğitim
 İstanbul Üniversitesi, Bilgisayar Mühendisliği (2016 – 2020)
@@ -115,5 +115,52 @@ describe("checkFormat · DOCX structure", () => {
     const r = await checkFormat({ filename: "cv.docx", buffer: Buffer.from("zip değil"), text: GOOD_RESUME })
     expect(r.findings).toEqual([])
     expect(r.passed).not.toContain("Tek sütun")
+  })
+})
+
+describe("checkFormat · content", () => {
+  const withExperience = (experience: string) => GOOD_RESUME.replace(/Deneyim\n[\s\S]*?\n\nEğitim/, `Deneyim\n${experience}\n\nEğitim`)
+
+  it("warns when few experience statements carry a number, with examples to fix", async () => {
+    const text = withExperience(
+      [
+        "Acme Yazılım — Frontend Geliştirici (03/2022 – Günümüz)",
+        "• Müşteri paneli için yeni bir tasarım sistemi kurdum.",
+        "• Test altyapısını sıfırdan hazırlayıp ekibe öğrettim.",
+        "• Ödeme sayfasını yeniden yazarak hataları azalttım.",
+        "• Sayfa yükleme süresini %40 kısalttım.",
+      ].join("\n"),
+    )
+    const r = await checkFormat({ filename: "cv.pdf", buffer: Buffer.from(""), text })
+    const finding = r.findings.find((b) => b.code === "few_measurable_results")
+    expect(finding).toMatchObject({ severity: "warning", group: "content" })
+    expect(finding!.title).toContain("4 deneyim cümlesinden 1 tanesinde")
+    expect(finding!.examples).toEqual([
+      "Müşteri paneli için yeni bir tasarım sistemi kurdum.",
+      "Test altyapısını sıfırdan hazırlayıp ekibe öğrettim.",
+      "Ödeme sayfasını yeniden yazarak hataları azalttım.",
+    ])
+  })
+
+  it("passes when at least a third of statements are quantified", async () => {
+    const r = await checkFormat({ filename: "cv.pdf", buffer: Buffer.from(""), text: GOOD_RESUME })
+    expect(r.passed).toContain("Ölçülebilir sonuçlar")
+  })
+
+  it("says none rather than zero when no statement has a number", async () => {
+    const text = withExperience(
+      ["• Müşteri paneli için yeni bir tasarım sistemi kurdum.", "• Test altyapısını sıfırdan hazırlayıp ekibe öğrettim.", "• Ödeme sayfasını yeniden yazdım."].join("\n"),
+    )
+    const r = await checkFormat({ filename: "cv.pdf", buffer: Buffer.from(""), text })
+    expect(r.findings.find((b) => b.code === "few_measurable_results")!.title).toBe(
+      "Ölçülebilir sonuç yok: 3 deneyim cümlesinin hiçbirinde rakam geçmiyor",
+    )
+  })
+
+  it("stays silent when experience is too thin to judge", async () => {
+    const text = withExperience("Acme Yazılım — Stajyer (2023)\nArayüz testleri yazdım.")
+    const r = await checkFormat({ filename: "cv.pdf", buffer: Buffer.from(""), text })
+    expect(codes(r)).not.toContain("few_measurable_results")
+    expect(r.passed).not.toContain("Ölçülebilir sonuçlar")
   })
 })
