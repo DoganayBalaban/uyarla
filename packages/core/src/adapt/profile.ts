@@ -39,11 +39,18 @@ export function applyAdaptation(
         : draft.summary.original,
     experience: profile.experience.map((job, i) => ({
       ...job,
-      bullets: job.bullets.map((bullet, j) => ({
-        ...bullet,
-        text: accepted.get(bulletId(i, j)) ?? bullet.text,
-        // sourceRef asla değişmez: doğrulamanın tek kaynağı bu.
-      })),
+      bullets: [
+        ...job.bullets.map((bullet, j) => ({
+          ...bullet,
+          text: accepted.get(bulletId(i, j)) ?? bullet.text,
+          // sourceRef asla değişmez: doğrulamanın tek kaynağı bu.
+        })),
+        // Kullanıcının anlattığı deneyimden yazılanlar o işin sonuna (DOG-94).
+        // Dayanak kullanıcının cevabı; sourceRef olarak o saklanıyor.
+        ...(draft.contributions ?? [])
+          .filter((c) => c.experienceIndex === i && c.status === "done" && c.decision === "accepted" && c.text)
+          .map((c) => ({ text: c.text!, sourceRef: c.answer })),
+      ],
     })),
     // Eklenen beceriler adayın kendi maddelerinden geliyor (K-38).
     skills: sortItems([...profile.skills, ...(draft.addedSkills ?? [])], draft.skillOrder),
