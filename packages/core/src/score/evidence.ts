@@ -55,6 +55,19 @@ export function collectEvidence(profile: ResumeProfile): Evidence[] {
     }
   }
 
+  // Proje maddeleri anlatı kanıtı: deneyim maddeleriyle aynı tür, bağlam
+  // olarak proje adı (DOG-105). Yeni mezunun çoğu kanıtı burada.
+  for (const project of profile.projects ?? []) {
+    for (const bullet of project.bullets) {
+      evidence.push({
+        text: `${project.name}: ${bullet.text}`,
+        matchText: bullet.text,
+        kind: "bullet",
+        sourceRef: bullet.sourceRef,
+      })
+    }
+  }
+
   for (const skill of profile.skills) {
     evidence.push({ text: skill, matchText: skill, kind: "skill", sourceRef: null })
   }

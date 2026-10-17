@@ -176,6 +176,7 @@ export function resumeText(profile: ResumeProfile): string {
       `${job.title} ${job.company}`,
       ...job.bullets.map((b) => b.sourceRef || b.text),
     ]),
+    ...(profile.projects ?? []).flatMap((p) => [p.name, ...p.bullets.map((b) => b.sourceRef || b.text)]),
     ...profile.education.map((e) => [e.school, e.degree, e.field].filter(Boolean).join(" ")),
     profile.skills.join(", "),
     profile.languages.join(", "),

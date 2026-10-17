@@ -133,3 +133,33 @@ describe("collectEvidence · blank fields", () => {
   })
 })
 
+
+describe("collectEvidence · projects (DOG-105)", () => {
+  it("adds each project bullet as narrative evidence, with the project name as context", () => {
+    const withProject: ResumeProfile = {
+      ...PROFILE,
+      projects: [
+        {
+          name: "Yeni Nesil Asistan",
+          role: null,
+          startDate: null,
+          endDate: null,
+          bullets: [{ text: "RAG ile belge asistanı geliştirdim.", sourceRef: "RAG ile belge asistanı geliştirdim." }],
+        },
+      ],
+    }
+    const project = collectEvidence(withProject).filter((e) => e.text.startsWith("Yeni Nesil Asistan"))
+    expect(project).toEqual([
+      {
+        text: "Yeni Nesil Asistan: RAG ile belge asistanı geliştirdim.",
+        matchText: "RAG ile belge asistanı geliştirdim.",
+        kind: "bullet",
+        sourceRef: "RAG ile belge asistanı geliştirdim.",
+      },
+    ])
+  })
+
+  it("is unchanged for profiles saved before projects existed", () => {
+    expect(collectEvidence(PROFILE)).toEqual(collectEvidence({ ...PROFILE, projects: [] }))
+  })
+})

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import type { AdaptationDraft } from "../schemas/adaptation.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { applyAdaptation, bulletId } from "./profile.js"
+import { applyAdaptation, bulletId, projectBulletId } from "./profile.js"
 
 const resumeProfile: ResumeProfile = {
   fullName: "Test Aday",
@@ -177,5 +177,48 @@ describe("applyAdaptation · contributions (DOG-94)", () => {
     ]
     const outcome = applyAdaptation(resumeProfile, { ...draftData, contributions: skipped })
     expect(outcome.experience[0]!.bullets).toHaveLength(resumeProfile.experience[0]!.bullets.length)
+  })
+})
+
+describe("applyAdaptation · project bullets (DOG-105)", () => {
+  const withProject: ResumeProfile = {
+    ...resumeProfile,
+    projects: [
+      {
+        name: "Asistan",
+        role: null,
+        startDate: null,
+        endDate: null,
+        bullets: [
+          { text: "Belge asistanı yaptım", sourceRef: "Belge asistanı yaptım" },
+          { text: "Arayüz yazdım", sourceRef: "Arayüz yazdım" },
+        ],
+      },
+    ],
+  }
+  const projectBullet = (j: number, decision: "accepted" | "rejected") => ({
+    id: projectBulletId(0, j),
+    projectIndex: 0,
+    original: withProject.projects![0]!.bullets[j]!.text,
+    sourceRef: withProject.projects![0]!.bullets[j]!.sourceRef,
+    rewritten: j === 0 ? "RAG ile belge asistanı yaptım" : "React ile arayüz yazdım",
+    verification: { status: "ok" as const, issues: [] },
+    decision,
+  })
+
+  it("uses an accepted project rewrite, keeps a rejected one and never touches sourceRef", () => {
+    const draft: AdaptationDraft = { ...draftData, bullets: [...draftData.bullets, projectBullet(0, "accepted"), projectBullet(1, "rejected")] }
+    const bullets = applyAdaptation(withProject, draft).projects![0]!.bullets
+    expect(bullets.map((b) => b.text)).toEqual(["RAG ile belge asistanı yaptım", "Arayüz yazdım"])
+    expect(bullets[0]!.sourceRef).toBe("Belge asistanı yaptım")
+  })
+
+  it("gives project bullets ids that cannot collide with experience bullets", () => {
+    expect(projectBulletId(0, 0)).toBe("p0-0")
+    expect(projectBulletId(0, 0)).not.toBe(bulletId(0, 0))
+  })
+
+  it("adds no projects field to a profile that had none", () => {
+    expect(applyAdaptation(resumeProfile, draftData)).not.toHaveProperty("projects")
   })
 })

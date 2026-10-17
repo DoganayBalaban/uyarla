@@ -113,12 +113,11 @@ export function DocumentView({
           </div>
         )}
 
-        {/* Projeler henüz uyarlanmıyor; önce ve sonra aynı (DOG-105). */}
-        {(document.after.projects?.length ?? 0) > 0 && (
+        {s.projects.length > 0 && (
           <div>
             <h3 className="m-0 mb-3 text-xs font-bold tracking-wider text-muted uppercase">Projeler</h3>
-            <div className="space-y-4">
-              {document.after.projects!.map((p, i) => (
+            <div className="space-y-5">
+              {s.projects.map((p, i) => (
                 <div key={i}>
                   <p className="m-0 font-semibold">
                     {p.name}
@@ -128,8 +127,13 @@ export function DocumentView({
                   {p.bullets.length > 0 && (
                     <ul className="mt-2 list-disc space-y-1.5 pl-5">
                       {p.bullets.map((b, j) => (
-                        <li key={j} className="leading-relaxed">
-                          {b}
+                        <li key={j}>
+                          {text(b)}
+                          {b.pending && mode !== "before" && (
+                            <span className="mt-0.5 block text-xs font-medium text-brand-blue">
+                              Karar bekliyor; yeni hâlini seçmezsen bu madde eski hâliyle kalır.
+                            </span>
+                          )}
                         </li>
                       ))}
                     </ul>
