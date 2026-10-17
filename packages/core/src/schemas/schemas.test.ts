@@ -105,6 +105,8 @@ describe("posting schema", () => {
   })
 
   it("JSON Schema is strict-compatible", () => {
+    // Kavramdaki equivalents isteğe bağlı (DOG-104); şema LLM'e gönderilmiyor,
+    // kavramlar kodda bölünüyor. Üst düzey alanlar katı kalmalı.
     assertStrictCompatible(jobPostingJsonSchema)
   })
 })

@@ -44,7 +44,7 @@ import { cacheDir, type AdaptMetrics, type EvalPair } from "./types.js"
  * Kullanım:
  *   pnpm eval:adapt              önbellekten ölç, eksik yanıtları üret
  *   pnpm eval:adapt --refresh    bütün yanıtları yenile
- *   pnpm eval:adapt --ayrinti    atılan her yazımı gerekçesiyle göster
+ *   pnpm eval:adapt --ayrinti    önerilen ve atılan her yazımı göster
  */
 const KOK = import.meta.dirname
 const CACHE = cacheDir(KOK)
@@ -196,6 +196,13 @@ async function main() {
         ` · skor ${m.scoreBefore} → madde ${m.scoreBullets} → tam ${m.scoreFull}` +
         (llm.newCalls ? ` · yeni çağrı ${llm.newCalls}` : ""),
     )
+    if (verbose) {
+      for (const b of proposed) {
+        console.log(`      ✓ ${b.id} ${(b.alignments ?? []).map((a) => `${a.term} ← "${a.basis}"`).join("; ")}`)
+        console.log(`          önce : ${b.original}`)
+        console.log(`          sonra: ${b.rewritten}`)
+      }
+    }
     for (const d of m.discards) {
       console.log(`      ✗ ${d.id} ${d.reason}: ${d.detail}`)
       if (verbose) {

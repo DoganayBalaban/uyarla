@@ -57,7 +57,7 @@ export async function addLanguageEquivalents(
         const extra = (found.get(key(c.term)) ?? [])
           .map((e) => e.trim())
           .filter((e) => e.length > 0 && e.length <= MAX_EQUIVALENT_LENGTH && !existing.has(key(e)))
-        return extra.length ? { ...c, synonyms: [...new Set([...c.synonyms, ...extra])] } : c
+        return extra.length ? { ...c, synonyms: [...new Set([...c.synonyms, ...extra])], equivalents: extra } : c
       }),
     })),
   }

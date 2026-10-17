@@ -311,8 +311,9 @@ describe("runAdaptation", () => {
   })
 
   it("does not translate bullets when adapting an English resume to a Turkish posting; writes the summary in English", async () => {
-    // K-39: İngilizce CV Türkçeye çevriliyordu. Diller farklıysa terim uyumu
-    // kapalı (maddeler modele gitmiyor), özet yazımına dil açıkça veriliyor.
+    // K-39: İngilizce CV Türkçeye çevriliyordu. Diller farklıysa ilan terimi
+    // maddeye verilmiyor; CV dilinde karşılığı olmayan kavram hedef olmuyor
+    // (maddeler modele gitmiyor), özet yazımına dil açıkça veriliyor.
     const { store, record } = fakeStore()
     const englishProfile: ResumeProfile = {
       ...testProfile,
@@ -339,6 +340,39 @@ describe("runAdaptation", () => {
     expect(llmInputs.filter((g) => g.startsWith("Madde:"))).toHaveLength(0)
     expect(llmInputs.find((g) => g.startsWith("Özet:"))).toContain("Dil: İngilizce")
     for (const bullet of record.draft!.bullets) expect(bullet.rewritten).toBe(bullet.original)
+  })
+
+  it("gives an English bullet the concept's English equivalent as target, never the Turkish term (DOG-104)", async () => {
+    const { store } = fakeStore()
+    const englishProfile: ResumeProfile = {
+      ...testProfile,
+      experience: [
+        {
+          company: "Acme",
+          title: "Developer",
+          startDate: "2022",
+          endDate: "Present",
+          bullets: [{ text: "Built the admin panel with React", sourceRef: "Built the admin panel with React" }],
+        },
+      ],
+    }
+    const posting: JobPostingData = {
+      ...testPosting,
+      requirements: testPosting.requirements.map((r) =>
+        r.concepts[0]!.term === "konteyner yönetimi"
+          ? { ...r, concepts: [{ term: "konteyner yönetimi", synonyms: ["container management"], equivalents: ["container management"] }] }
+          : r,
+      ),
+    }
+    store.getAdaptationContext = vi.fn(async () => ({ profile: englishProfile, posting, result: testScore }))
+    const llm = echoLlm()
+
+    await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
+
+    const bulletInputs = vi.mocked(llm.extract).mock.calls.map((c) => c[0].input).filter((g) => g.startsWith("Madde:"))
+    expect(bulletInputs).toHaveLength(1)
+    expect(bulletInputs[0]).toContain("İlanın terimleri: container management")
+    expect(bulletInputs[0]).not.toContain("konteyner")
   })
 
   it("if one bullet fails it stays original; the others are unaffected", async () => {

@@ -8,7 +8,7 @@ import {
   type AdaptedBullet,
   type Verification,
 } from "../schemas/adaptation.js"
-import type { JobPostingData } from "../schemas/job.js"
+import type { Concept, JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { conceptTexts, type ScoreResult } from "../score/score.js"
 import { DEFAULT_ALIGNMENT_CONFIG, verifyAlignments, type AlignmentConfig } from "../verify/alignment.js"
@@ -21,6 +21,7 @@ import {
   DEFAULT_TARGET_OPTIONS,
   alignmentTargets,
   resumeText,
+  type AlignmentTarget,
   skillsFromBullets,
   supportedConceptTerms,
   type TargetOptions,
@@ -98,17 +99,21 @@ export async function buildAdaptationDraft(
   ]
 
   // 1. Hedefler: her maddeye anlamca yakın, henüz karşılanmamış ilan terimleri.
-  const conceptTextList = conceptTexts(posting, resumeLanguage(profile))
-  const targetVectors = await embedding.embed([
-    ...bulletList.map((m) => m.original),
-    ...conceptTextList,
-  ])
   // Terim uyumu yalnızca CV ile ilan aynı dildeyse: Türkçe bir ilan
   // terimini İngilizce bir maddeye yazdırmak çeviri olur, kelime düzeyinde
   // doğrulanamaz ve adayın CV'sinin dilini bozar (K-39). Özet yazımı
   // etkilenmiyor; ona verilen terimler CV'nin kendi metninden geliyor.
   const lang = resumeLanguage(profile)
   const sameLanguage = lang === posting.language
+  // Diller farklıysa hedef seçimi kavramın CV dilindeki karşılıklarıyla:
+  // karışık "terim (karşılıklar)" metni maddeye eşikten uzak kalıyordu.
+  const conceptTextList = sameLanguage
+    ? conceptTexts(posting, lang)
+    : posting.requirements.flatMap((r) => r.concepts.map(equivalentText))
+  const targetVectors = await embedding.embed([
+    ...bulletList.map((m) => m.original),
+    ...conceptTextList,
+  ])
   const allTargets = alignmentTargets(
     {
       bullets: bulletList.map((m) => m.original),
@@ -119,7 +124,11 @@ export async function buildAdaptationDraft(
     },
     input.targetOptions ?? DEFAULT_TARGET_OPTIONS,
   )
-  const targetList = sameLanguage ? allTargets : allTargets.map(() => [])
+  // Diller farklıysa ilan terimi değil, kavramın CV dilindeki karşılığı
+  // (DOG-104): K-39'un endişesi çeviriydi; karşılıkla hizalanan madde kendi
+  // dilinde kalıyor ve dayanağı yine maddede birebir aranıyor. Karşılığı
+  // olmayan kavram (eski ilanlar, özel adlar) hedef olmuyor.
+  const targetList = sameLanguage ? allTargets : allTargets.map(toResumeLanguage)
 
   // 2. Yazım.
   input.onStage?.("rewriting")
@@ -310,4 +319,18 @@ export async function buildAdaptationDraft(
   const tokens =
     rewrites.reduce((totalSum, y) => totalSum + (y?.tokens ?? 0), 0) + (summaryText?.tokens ?? 0)
   return { draft: guarded.draft, tokens }
+}
+
+/** Hedefleri kavramın karşı dildeki ilk karşılığıyla etiketler; karşılığı olmayanı atar. */
+/** Karşılık yoksa terimin kendisi; o kavram zaten hedef olmayacak. */
+function equivalentText(concept: Concept): string {
+  const list = [...new Set((concept.equivalents ?? []).map((e) => e.trim()).filter(Boolean))]
+  return list.length ? list.slice(0, 3).join("; ") : concept.term
+}
+
+function toResumeLanguage(targets: AlignmentTarget[]): AlignmentTarget[] {
+  return targets.flatMap((t) => {
+    const label = t.concept.equivalents?.find((e) => e.trim())
+    return label ? [{ ...t, label }] : []
+  })
 }
