@@ -113,6 +113,33 @@ export function DocumentView({
           </div>
         )}
 
+        {/* Projeler henüz uyarlanmıyor; önce ve sonra aynı (DOG-105). */}
+        {(document.after.projects?.length ?? 0) > 0 && (
+          <div>
+            <h3 className="m-0 mb-3 text-xs font-bold tracking-wider text-muted uppercase">Projeler</h3>
+            <div className="space-y-4">
+              {document.after.projects!.map((p, i) => (
+                <div key={i}>
+                  <p className="m-0 font-semibold">
+                    {p.name}
+                    {p.role && <span className="font-normal text-muted"> · {p.role}</span>}
+                  </p>
+                  {p.dates && <p className="m-0 text-xs text-muted">{p.dates}</p>}
+                  {p.bullets.length > 0 && (
+                    <ul className="mt-2 list-disc space-y-1.5 pl-5">
+                      {p.bullets.map((b, j) => (
+                        <li key={j} className="leading-relaxed">
+                          {b}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {s.skills.length > 0 && (
           <div>
             <h3 className="m-0 mb-2 text-xs font-bold tracking-wider text-muted uppercase">Beceriler</h3>
@@ -131,6 +158,17 @@ export function DocumentView({
             </ul>
           </div>
         )}
+
+        {(document.after.otherSections ?? []).map((o, i) => (
+          <div key={i}>
+            <h3 className="m-0 mb-2 text-xs font-bold tracking-wider text-muted uppercase">{o.heading}</h3>
+            {o.lines.map((l, j) => (
+              <p key={j} className="m-0 leading-relaxed">
+                {l}
+              </p>
+            ))}
+          </div>
+        ))}
       </div>
     </section>
   )

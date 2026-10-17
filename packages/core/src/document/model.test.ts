@@ -127,3 +127,43 @@ describe("toDocumentModel · language", () => {
     expect(m.sections.map((s) => s.title)).not.toContain("DENEYİM")
   })
 })
+
+describe("toDocumentModel · projects and other sections (DOG-105)", () => {
+  const withProjects: ResumeProfile = {
+    ...resumeProfile,
+    projects: [
+      {
+        name: "Yeni Nesil Asistan",
+        role: "Bitirme projesi",
+        startDate: null,
+        endDate: "2026",
+        bullets: [{ text: "RAG ile kurumsal belge asistanı geliştirdim.", sourceRef: "x" }],
+      },
+      { name: "AI Workflow Platform", role: null, startDate: null, endDate: null, bullets: [] },
+    ],
+    otherSections: [{ heading: "Gönüllü Çalışmalar", lines: ["TEMA Vakfı fidan dikimi, 2023"] }],
+  }
+
+  it("puts projects right after experience, with role and date", () => {
+    const m = toDocumentModel(withProjects)
+    expect(m.sections.map((s) => s.title).slice(0, 3)).toEqual(["DENEYİM", "PROJELER", "EĞİTİM"])
+    expect(m.sections[1]!.entries[0]).toEqual({
+      heading: "Yeni Nesil Asistan · Bitirme projesi",
+      subheading: "2026",
+      lines: ["RAG ile kurumsal belge asistanı geliştirdim."],
+    })
+    expect(m.sections[1]!.entries[1]).toMatchObject({ heading: "AI Workflow Platform", subheading: null })
+  })
+
+  it("writes sections it does not structure at the end, under their own heading", () => {
+    const m = toDocumentModel(withProjects)
+    expect(m.sections.at(-1)).toEqual({
+      title: "GÖNÜLLÜ ÇALIŞMALAR",
+      entries: [{ heading: null, subheading: null, lines: ["TEMA Vakfı fidan dikimi, 2023"] }],
+    })
+  })
+
+  it("keeps older profiles without these fields unchanged", () => {
+    expect(toDocumentModel(resumeProfile).sections.map((s) => s.title)).not.toContain("PROJELER")
+  })
+})

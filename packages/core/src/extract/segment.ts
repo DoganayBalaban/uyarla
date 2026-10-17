@@ -1,5 +1,5 @@
 import { normalizeText } from "../normalize/turkish.js"
-import type { ResumeSegments } from "../schemas/resume.js"
+import type { OtherSection, ResumeSegments } from "../schemas/resume.js"
 
 /**
  * CV'yi bölümlerine kodla ayırır.
@@ -15,7 +15,16 @@ import type { ResumeSegments } from "../schemas/resume.js"
  * ~10 saniye kazandırıyor ve üretimde bir çağrılık token maliyeti düşüyor.
  */
 
-export type ResumeSection = "header" | "summary" | "experience" | "education" | "skills" | "ignore"
+export type ResumeSection = "header" | "summary" | "experience" | "projects" | "education" | "skills" | "ignore"
+
+/**
+ * Kodla bölümlemenin çıktısı: LLM bölümleyicisinin şemasına (ResumeSegments)
+ * ek olarak projeler ve şemada karşılığı olmayan bölümler (DOG-105).
+ */
+export interface CodeSegments extends ResumeSegments {
+  projectsBlock: string
+  otherSections: OtherSection[]
+}
 
 /** Başlık satırı bu uzunluğu aşmaz; aşıyorsa içerik satırıdır. */
 const MAX_HEADING_LENGTH = 60
@@ -34,11 +43,13 @@ const PATTERNS: Array<[ResumeSection, RegExp]> = [
   ["experience", /^((work|professional|relevant)\s+)?(experience|employment|history)$/],
   ["experience", /^(iş\s+)?(deneyim|deneyimler|deneyimi|tecrübe|tecrübeler)$/],
   ["experience", /^(profesyonel deneyim|çalışma deneyimi|iş tecrübesi|kariyer geçmişi)$/],
-  // Projeler deneyim sayılır: kanıt olarak aynı işi görüyorlar.
+  // Projeler kendi bloğunda (DOG-105). Önceden deneyime gidiyordu, ama
+  // deneyim çıkarıcısı kurumu olmayan projeleri kayıt saymıyor ve atıyordu.
   [
-    "experience",
-    /^(selected\s+)?(projects|projeler|seçilmiş projeler|kişisel projeler|project experience)$/,
+    "projects",
+    /^(selected\s+|personal\s+|academic\s+|key\s+)?(projects|project experience)$/,
   ],
+  ["projects", /^(projeler|seçilmiş projeler|kişisel projeler|akademik projeler|projelerim)$/],
   ["education", /^(education|eğitim|egitim|öğrenim|akademik geçmiş|eğitim bilgileri)$/],
   // Europass (DOG-60): eğitim ve beceri başlıkları bu biçimde yazılıyor.
   ["education", /^(eğitim ve öğretim|education and training)$/],
@@ -65,26 +76,38 @@ const PATTERNS: Array<[ResumeSection, RegExp]> = [
 const CONTACT =
   /^(contact|contact information|iletişim|iletişim bilgileri|kişisel bilgiler|personal information)$/
 
-/** Tanınan ama dört bloğun hiçbirine ait olmayan bölümler. */
+/**
+ * Tanınan ama yapılandırılmış bloklara ait olmayan bölümler. Atılmıyor:
+ * başlıklarıyla otherSections'a gidiyor ve indirilen belgeye aynen yazılıyor
+ * (DOG-105).
+ */
 const IGNORED =
   /^(additional|references|referanslar|hobbies|ilgi alanları|awards|honors|ödüller|volunteer|gönüllü çalışmalar|publications|yayınlar|interests)$/
 
-export function segmentResume(rawText: string): ResumeSegments {
+export function segmentResume(rawText: string): CodeSegments {
   const lineItems = rawText.split("\n")
   const blockList: Record<ResumeSection, string[]> = {
     header: [],
     summary: [],
     experience: [],
+    projects: [],
     education: [],
     skills: [],
     ignore: [],
   }
+  // Yapılandırılmış bloklara girmeyen bölümler, her biri kendi başlığıyla.
+  const others: OtherSection[] = []
 
   // İlk başlıktan önceki satırlar ad, unvan ve iletişim bilgisidir ve kendi
   // bloğuna gidiyor. Sprint 1'de özete karışıyorlardı; skor özeti
   // kullanmadığı için sorun görünmüyordu, indirilen belgede görünür oldu.
   let active: ResumeSection = "header"
   let headingFound = false
+
+  const push = (line: string) => {
+    if (active === "ignore") others.at(-1)?.lines.push(line)
+    else blockList[active].push(line)
+  }
 
   for (const rawLine of lineItems) {
     // Tablolu DOCX'te başlık ve içerik aynı satırda gelebiliyor (Europass:
@@ -99,6 +122,11 @@ export function segmentResume(rawText: string): ResumeSegments {
     if (section === "header") {
       active = "header"
       headingFound = true
+    } else if (section === "ignore") {
+      // Başlığı da saklanıyor: indirilen belgede bölüm aynı adla yer alsın.
+      active = "ignore"
+      headingFound = true
+      others.push({ heading: lineItem.trim(), lines: [] })
     } else {
       if (section) {
         active = section
@@ -106,13 +134,15 @@ export function segmentResume(rawText: string): ResumeSegments {
       }
       // Başlığın kendisi de bloğa giriyor: K-10'daki kayıp tam da başlıkların
       // atılmasıydı ve çıkarıcılar bağlamdan yararlanıyor.
-      blockList[active].push(lineItem)
+      push(lineItem)
     }
-    if (remainder) blockList[active].push(remainder)
+    if (remainder) push(remainder)
   }
 
   // Hiç başlık yoksa (tasarım ağırlıklı bazı CV'ler) bölemeyiz; her
   // çıkarıcıya ham metnin tamamı verilir. Bugünkü davranıştan kötü değil.
+  // Proje çıkarıcısına verilmiyor: aynı maddeler hem deneyim hem proje olarak
+  // iki kez çıkardı.
   if (!headingFound) {
     const full = rawText.trim()
     return {
@@ -121,8 +151,10 @@ export function segmentResume(rawText: string): ResumeSegments {
       headerBlock: full.split("\n").slice(0, 4).join("\n"),
       summaryBlock: full,
       experienceBlock: full,
+      projectsBlock: "",
       educationBlock: full,
       skillsBlock: full,
+      otherSections: [],
     }
   }
 
@@ -130,8 +162,13 @@ export function segmentResume(rawText: string): ResumeSegments {
     headerBlock: blockList.header.join("\n").trim(),
     summaryBlock: blockList.summary.join("\n").trim(),
     experienceBlock: blockList.experience.join("\n").trim(),
+    projectsBlock: blockList.projects.join("\n").trim(),
     educationBlock: blockList.education.join("\n").trim(),
     skillsBlock: blockList.skills.join("\n").trim(),
+    // Boş satırlar ve içeriksiz bölümler atılıyor; satırlar olduğu gibi.
+    otherSections: others
+      .map((o) => ({ heading: o.heading, lines: o.lines.map((l) => l.trim()).filter(Boolean) }))
+      .filter((o) => o.lines.length > 0),
   }
 }
 

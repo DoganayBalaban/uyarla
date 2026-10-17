@@ -139,7 +139,9 @@ function textChecks(
     { section: "skills", name: "Beceriler", severity: "warning", example: "“Beceriler” ya da “Yetkinlikler”" },
   ]
   for (const b of HEADINGS) {
-    if (found.has(b.section)) {
+    // Projeler deneyim yerine geçer: yeni mezunun deneyim bölümü çoğu zaman
+    // yalnızca projelerden oluşuyor (DOG-105).
+    if (found.has(b.section) || (b.section === "experience" && found.has("projects"))) {
       passed.push(`${b.name} başlığı`)
     } else {
       findings.push({
@@ -216,7 +218,9 @@ function textChecks(
 }
 
 function contentChecks(text: string, findings: FormatFinding[], passed: string[]): void {
-  const m = measurableResults(segmentResume(text).experienceBlock)
+  // Proje maddeleri de sayılıyor; çoğu yeni mezunun sonuçları orada (DOG-105).
+  const blocks = segmentResume(text)
+  const m = measurableResults([blocks.experienceBlock, blocks.projectsBlock].filter(Boolean).join("\n"))
   // Deneyimi olmayan ya da okunamayan CV için söyleyecek bir şey yok; o
   // durumu başlık ve uzunluk kontrolleri zaten söylüyor.
   if (m.statements < MIN_STATEMENTS_FOR_MEASURABLE) return

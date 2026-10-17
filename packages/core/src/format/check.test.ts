@@ -164,3 +164,12 @@ describe("checkFormat · content", () => {
     expect(r.passed).not.toContain("Ölçülebilir sonuçlar")
   })
 })
+
+describe("checkFormat · projects (DOG-105)", () => {
+  it("accepts a projects section in place of an experience heading", async () => {
+    const text = GOOD_RESUME.replace(/Deneyim\n/, "Projeler\n")
+    const r = await checkFormat({ filename: "cv.pdf", buffer: Buffer.from(""), text })
+    expect(codes(r)).not.toContain("baslik_yok_experience")
+    expect(r.passed).toContain("Deneyim başlığı")
+  })
+})

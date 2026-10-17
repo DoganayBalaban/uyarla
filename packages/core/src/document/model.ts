@@ -30,9 +30,26 @@ export interface DocumentModel {
  * Bölüm başlıkları CV'nin dilinde. Sabit Türkçe başlıklar İngilizce bir
  * CV'yi "DENEYİM", "BECERİLER" başlıklarıyla indirtiyordu (K-39).
  */
-const HEADINGS: Record<Language, Record<"experience" | "education" | "skills" | "languages" | "certifications", string>> = {
-  tr: { experience: "DENEYİM", education: "EĞİTİM", skills: "BECERİLER", languages: "DİLLER", certifications: "SERTİFİKALAR" },
-  en: { experience: "EXPERIENCE", education: "EDUCATION", skills: "SKILLS", languages: "LANGUAGES", certifications: "CERTIFICATIONS" },
+const HEADINGS: Record<
+  Language,
+  Record<"experience" | "projects" | "education" | "skills" | "languages" | "certifications", string>
+> = {
+  tr: {
+    experience: "DENEYİM",
+    projects: "PROJELER",
+    education: "EĞİTİM",
+    skills: "BECERİLER",
+    languages: "DİLLER",
+    certifications: "SERTİFİKALAR",
+  },
+  en: {
+    experience: "EXPERIENCE",
+    projects: "PROJECTS",
+    education: "EDUCATION",
+    skills: "SKILLS",
+    languages: "LANGUAGES",
+    certifications: "CERTIFICATIONS",
+  },
 }
 
 export interface DocumentOptions {
@@ -54,6 +71,20 @@ export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions
         heading: `${job.title} · ${job.company}`,
         subheading: `${job.startDate} – ${job.endDate}`,
         lines: job.bullets.map((b) => b.text),
+      })),
+    })
+  }
+
+  // Projeler deneyimin hemen ardından (DOG-105). Önceden hiç yazılmıyordu:
+  // çıkarıcı onları atıyordu ve yeni mezun CV'sinin çoğu kayboluyordu.
+  const projects = profile.projects ?? []
+  if (projects.length > 0) {
+    sections.push({
+      title: b.projects,
+      entries: projects.map((p) => ({
+        heading: p.role ? `${p.name} · ${p.role}` : p.name,
+        subheading: p.startDate && p.endDate ? `${p.startDate} – ${p.endDate}` : (p.endDate ?? p.startDate),
+        lines: p.bullets.map((x) => x.text),
       })),
     })
   }
@@ -95,6 +126,15 @@ export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions
     sections.push({
       title: b.certifications,
       entries: [{ heading: null, subheading: null, lines: profile.certifications }],
+    })
+  }
+
+  // Şemada karşılığı olmayan bölümler sonda, CV'deki adlarıyla ve olduğu
+  // gibi (DOG-105): kullanıcının yazdığı hiçbir bölüm sessizce düşmesin.
+  for (const other of profile.otherSections ?? []) {
+    sections.push({
+      title: other.heading.toLocaleUpperCase(resumeLanguage(profile) === "tr" ? "tr" : "en"),
+      entries: [{ heading: null, subheading: null, lines: other.lines }],
     })
   }
 

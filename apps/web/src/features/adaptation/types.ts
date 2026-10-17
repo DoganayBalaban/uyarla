@@ -50,6 +50,9 @@ export interface DocumentOutline {
   headline: string | null
   summary: string | null
   experience: Array<{ company: string; title: string; startDate: string; endDate: string; bullets: string[] }>
+  /** Projeler ve diğer bölümler (DOG-105); eski yanıtlarda yok. */
+  projects?: Array<{ name: string; role: string | null; dates: string | null; bullets: string[] }>
+  otherSections?: Array<{ heading: string; lines: string[] }>
   skills: string[]
 }
 

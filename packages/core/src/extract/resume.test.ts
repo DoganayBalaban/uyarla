@@ -222,3 +222,45 @@ describe("resumeParserKey", () => {
     expect(resumeParserKey("gpt-4.1-mini")).not.toBe(resumeParserKey("gpt-4.1"))
   })
 })
+
+describe("extractResumeProfile · projects and other sections (DOG-105)", () => {
+  const cv = [
+    "Ada Yılmaz",
+    "ada@ornek.com",
+    "EXPERIENCE",
+    "Acme — Intern | 2024",
+    "• Built dashboards.",
+    "PROJECTS",
+    "Yeni Nesil Asistan — Enterprise document assistant with RAG.",
+    "EDUCATION",
+    "Bir Üniversite — B.Sc. Software Engineering",
+    "SKILLS",
+    "Python, React",
+    "HONORS",
+    "Dean's list 2023",
+  ].join("\n")
+  const project = {
+    name: "Yeni Nesil Asistan",
+    role: null,
+    startDate: null,
+    endDate: null,
+    bullets: [{ text: "Enterprise document assistant with RAG.", sourceRef: "Enterprise document assistant with RAG." }],
+  }
+
+  it("extracts projects from their own block and keeps other sections as they are", async () => {
+    const llm = fakeLlm({ ...RESPONSES, resume_projects: { projects: [project] } })
+    const { data } = await extractResumeProfile(llm, cv)
+    expect(data.projects).toEqual([project])
+    expect(data.otherSections).toEqual([{ heading: "HONORS", lines: ["Dean's list 2023"] }])
+    const projectCall = llm.calls.find((c) => c.schemaName === "resume_projects")!
+    expect(projectCall.input).toContain("Yeni Nesil Asistan")
+    expect(llm.calls.find((c) => c.schemaName === "resume_experience")!.input).not.toContain("Yeni Nesil Asistan")
+  })
+
+  it("makes no projects call for a resume without a projects section", async () => {
+    const llm = fakeLlm(RESPONSES)
+    const { data } = await extractResumeProfile(llm, cv.replace(/PROJECTS\n.*\n/, ""))
+    expect(llm.calls.some((c) => c.schemaName === "resume_projects")).toBe(false)
+    expect(data.projects).toEqual([])
+  })
+})

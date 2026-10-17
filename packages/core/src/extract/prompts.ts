@@ -34,6 +34,26 @@ Devam eden işlerde bitiş metinde nasıl yazıyorsa öyle kalsın ("halen",
 "halen", İngilizce CV'de "Present".
 CV'de olmayan hiçbir bilgi ekleme.`
 
+/**
+ * Projeler (DOG-105). Deneyim isteminden ayrı: proje bir kurum ve unvan
+ * taşımıyor, deneyim kalıbına zorlanınca model onu atıyordu. Biçimler
+ * çeşitli: tek satırda "Ad — açıklama", ya da ad satırı ve altında maddeler.
+ */
+export const PROJECTS_PROMPT = `Sana bir CV'nin projeler bölümü verilecek.
+Her proje için adını, varsa rolünü ya da bağlamını ("Bitirme projesi",
+"Kişisel", "Takım lideri"), varsa başlangıç ve bitiş tarihini çıkar. Yoksa null yaz.
+
+Projenin açıklamasını bullets dizisine koy:
+- Proje altında madde madde yazılmışsa her madde ayrı bir kayıt.
+- Açıklama ad ile aynı satırda ya da paragraf olarak yazılmışsa ("Ad — açıklama"),
+  açıklamanın tamamı TEK bir kayıt.
+
+sourceRef alanına, o açıklamanın ham metindeki BİREBİR kopyasını yaz.
+Metni değiştirme, kısaltma veya düzeltme. text alanı da aynı metin olsun.
+
+Hiçbir alanı ÇEVİRME; CV'nin dilinde kalsın. Hiçbir projeyi atlama, sırayı koru.
+Bölüm başlığını proje sayma. CV'de olmayan hiçbir bilgi ekleme.`
+
 export const EDUCATION_PROMPT = `Sana bir CV'nin eğitim bölümü verilecek.
 Her eğitim kaydı için okul, derece, bölüm, başlangıç yılı ve bitiş yılını çıkar.
 "2017 – 2021" gibi bir aralıkta ilk yıl başlangıç, ikincisi bitiştir.

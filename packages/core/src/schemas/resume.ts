@@ -32,6 +32,32 @@ export const EducationSchema = z.object({
   endDate: z.string().nullable(),
 })
 
+/**
+ * Proje (DOG-105). Kurumu olmadığı için deneyim kalıbına uymuyor ve çıkarıcı
+ * onları atıyordu; yeni mezun CV'lerinin büyük kısmı kayboluyordu (K2: 4/5).
+ * Maddeler deneyimdeki gibi sourceRef taşıyor: uyarlama ve doğrulama aynı
+ * düzenle çalışabilsin.
+ */
+export const ProjectSchema = z.object({
+  name: z.string(),
+  /** Ünvan, rol ya da bağlam ("Bitirme projesi", "Kişisel"); yoksa null. */
+  role: z.string().nullable(),
+  startDate: z.string().nullable(),
+  endDate: z.string().nullable(),
+  bullets: z.array(BulletSchema),
+})
+
+/**
+ * Şemada karşılığı olmayan bölüm ("Additional", "Honors", "Gönüllü
+ * Çalışmalar"…). Yorumlanmadan, başlığı ve satırlarıyla olduğu gibi
+ * saklanıyor ve indirilen belgeye aynen yazılıyor: kullanıcının yazdığı hiçbir
+ * bölüm sessizce düşmesin (DOG-105).
+ */
+export const OtherSectionSchema = z.object({
+  heading: z.string(),
+  lines: z.array(z.string()),
+})
+
 export const ResumeProfileSchema = z.object({
   fullName: z.string().nullable(),
   headline: z.string().nullable(),
@@ -41,6 +67,12 @@ export const ResumeProfileSchema = z.object({
   skills: z.array(z.string()),
   languages: z.array(z.string()),
   certifications: z.array(z.string()),
+  /**
+   * Projeler ve diğer bölümler (DOG-105). İsteğe bağlı: bu alanlardan önce
+   * kaydedilmiş profillerde yok; okuyan kod boş diziye düşmeli.
+   */
+  projects: z.array(ProjectSchema).optional(),
+  otherSections: z.array(OtherSectionSchema).optional(),
 })
 
 /** Aşama 1: ham metni kaba bloklara böler (spec §6.3). */
@@ -62,6 +94,7 @@ export const ResumeSegmentsSchema = z.object({
 /** Aşama 2 şemaları: her blok için ayrı ve kısa çağrı. */
 export const ExperienceListSchema = z.object({ experience: z.array(ExperienceSchema) })
 export const EducationListSchema = z.object({ education: z.array(EducationSchema) })
+export const ProjectListSchema = z.object({ projects: z.array(ProjectSchema) })
 /**
  * Beceri bölümünün SATIR SATIR transkripsiyonu.
  *
@@ -95,6 +128,8 @@ export const SkillsSchema = z.object({
 export type Bullet = z.infer<typeof BulletSchema>
 export type Experience = z.infer<typeof ExperienceSchema>
 export type Education = z.infer<typeof EducationSchema>
+export type Project = z.infer<typeof ProjectSchema>
+export type OtherSection = z.infer<typeof OtherSectionSchema>
 export type ResumeProfile = z.infer<typeof ResumeProfileSchema>
 export type ResumeSegments = z.infer<typeof ResumeSegmentsSchema>
 export type SkillLines = z.infer<typeof SkillLinesSchema>
@@ -103,5 +138,6 @@ export const resumeProfileJsonSchema = toJsonSchema(ResumeProfileSchema)
 export const resumeSegmentsJsonSchema = toJsonSchema(ResumeSegmentsSchema)
 export const experienceListJsonSchema = toJsonSchema(ExperienceListSchema)
 export const educationListJsonSchema = toJsonSchema(EducationListSchema)
+export const projectListJsonSchema = toJsonSchema(ProjectListSchema)
 export const skillLinesJsonSchema = toJsonSchema(SkillLinesSchema)
 export const skillsJsonSchema = toJsonSchema(SkillsSchema)

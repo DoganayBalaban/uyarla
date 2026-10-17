@@ -173,6 +173,9 @@ export interface DocumentOutline {
   headline: string | null
   summary: string | null
   experience: Array<{ company: string; title: string; startDate: string; endDate: string; bullets: string[] }>
+  /** Projeler ve diğer bölümler (DOG-105); indirilen belgede de var. */
+  projects: Array<{ name: string; role: string | null; dates: string | null; bullets: string[] }>
+  otherSections: Array<{ heading: string; lines: string[] }>
   skills: string[]
 }
 
@@ -202,6 +205,13 @@ function outline(p: ResumeProfile): DocumentOutline {
       endDate: e.endDate,
       bullets: e.bullets.map((b) => b.text),
     })),
+    projects: (p.projects ?? []).map((x) => ({
+      name: x.name,
+      role: x.role,
+      dates: [x.startDate, x.endDate].filter(Boolean).join(" – ") || null,
+      bullets: x.bullets.map((b) => b.text),
+    })),
+    otherSections: p.otherSections ?? [],
     skills: p.skills,
   }
 }
