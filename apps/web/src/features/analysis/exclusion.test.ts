@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { applyExclusions } from "@/features/analysis/exclusion"
+import { weightedScore } from "@uyarla/core"
+import { adjustedScore, applyExclusions } from "@/features/analysis/exclusion"
 
 const req = (text: string, status: "matched" | "missing", missingConcepts: string[] = []) => ({
   requirement: { text, importance: "must", type: "skill" },
@@ -25,19 +26,31 @@ describe("applyExclusions", () => {
     expect(v.excludedCount).toBe(0)
   })
 
-  it("uses the server's adjusted score and leaves marked requirements out of counts", () => {
-    const v = applyExclusions({ ...base, excluded: [2], adjustedScore: 50 })
+  it("recomputes the score without marked requirements and leaves them out of counts", () => {
+    const v = applyExclusions({ ...base, excluded: [2] })
     expect(v.score).toBe(50)
     expect(v.active.map((r) => r.requirement.text)).toEqual(["Excel", "İş hukuku"])
     expect(v.rows[2]).toMatchObject({ index: 2, excluded: true })
   })
 
   it("drops a missing concept only when no unmarked requirement still misses it", () => {
-    expect(applyExclusions({ ...base, excluded: [2], adjustedScore: 50 }).missingKeywords).toEqual(["İş hukuku"])
-    expect(applyExclusions({ ...base, excluded: [1, 2], adjustedScore: 100 }).missingKeywords).toEqual([])
+    expect(applyExclusions({ ...base, excluded: [2] }).missingKeywords).toEqual(["İş hukuku"])
+    expect(applyExclusions({ ...base, excluded: [1, 2] }).missingKeywords).toEqual([])
   })
 
-  it("falls back to the original score if an older record has marks but no adjusted score", () => {
-    expect(applyExclusions({ ...base, excluded: [1] }).score).toBe(33)
+})
+
+describe("adjustedScore", () => {
+  // Eşlik testi: web'deki kopya core'daki weightedScore'la aynı sonucu
+  // vermeli. Ağırlıklar ya da formül değişirse burası kırılır.
+  it("matches core weightedScore on mixed must/nice requirements", () => {
+    const mk = (importance: "must" | "nice", confidence: number) => ({
+      requirement: { text: "x", type: "skill" as const, importance, concepts: [] },
+      confidence,
+    })
+    const reqs = [mk("must", 1), mk("must", 0.25), mk("nice", 0.6), mk("nice", 0), mk("must", 0.5)]
+    for (const excluded of [[], [0], [1, 3], [0, 1, 2, 3, 4]]) {
+      expect(adjustedScore(reqs, excluded)).toBe(weightedScore(reqs, undefined, excluded))
+    }
   })
 })

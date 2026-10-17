@@ -5,8 +5,30 @@ import type { RequirementResult } from "@/features/analysis/components/ScoreResu
  *
  * İşaretli gereksinim ne eksik ne karşılanmış sayılıyor: özet sayılardan ve
  * eksik kavramlardan çıkıyor, listede soluk duruyor ve geri alınabiliyor.
- * Skor sunucudan geliyor (adjustedScore); burada yalnızca sayım var.
+ *
+ * Düzeltilmiş skor burada hesaplanıyor: core/score weightedScore ile aynı
+ * formül ve ağırlıklar. İstemci core'u içe aktaramıyor (PDF/LLM kodu pakete
+ * sızar); sunucu route'u da aktaramıyor (Vercel fonksiyon sınırı). İki kopya
+ * exclusion.test.ts'teki eşlik testiyle bağlı: biri değişirse test kırılır.
  */
+const MUST_WEIGHT = 2
+const NICE_WEIGHT = 1
+
+export function adjustedScore(
+  requirements: Pick<RequirementResult, "requirement" | "confidence">[],
+  excluded: readonly number[],
+): number {
+  const skip = new Set(excluded)
+  let weightedSum = 0
+  let totalWeight = 0
+  requirements.forEach((r, i) => {
+    if (skip.has(i)) return
+    const weight = r.requirement.importance === "must" ? MUST_WEIGHT : NICE_WEIGHT
+    totalWeight += weight
+    weightedSum += weight * r.confidence
+  })
+  return totalWeight === 0 ? 0 : Math.round((weightedSum / totalWeight) * 100)
+}
 export interface ExclusionView<T extends RequirementResult> {
   rows: Array<{ item: T; index: number; excluded: boolean }>
   /** Sayımlarda kullanılacak, işaretli olmayan gereksinimler. */
@@ -21,7 +43,6 @@ export function applyExclusions<T extends RequirementResult & { missingConcepts?
   requirements: T[]
   missingKeywords: string[]
   excluded?: number[]
-  adjustedScore?: number
 }): ExclusionView<T> {
   const skip = new Set(result.excluded ?? [])
   const rows = result.requirements.map((item, index) => ({ item, index, excluded: skip.has(index) }))
@@ -38,7 +59,9 @@ export function applyExclusions<T extends RequirementResult & { missingConcepts?
     rows,
     active,
     missingKeywords: result.missingKeywords.filter((k) => !onlyExcluded.has(k)),
-    score: skip.size > 0 && result.adjustedScore !== undefined ? result.adjustedScore : result.score,
+    // İşaret yoksa analizin kendi skoru; yeniden hesaplamak yuvarlama farkı
+    // bile olsa ilk skoru oynatmasın.
+    score: skip.size > 0 ? adjustedScore(result.requirements, [...skip]) : result.score,
     excludedCount: skip.size,
   }
 }

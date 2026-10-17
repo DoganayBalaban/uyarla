@@ -39,9 +39,8 @@ export interface ScoreResultView {
   format?: FormatReportView | null
   /** İlan unvanı CV'de geçiyor mu (DOG-87); eski analizlerde yok. */
   titleMatch?: TitleMatch | null
-  /** "İlanda yok, yanlış okunmuş" işaretleri ve düzeltilmiş skor (DOG-90). */
+  /** "İlanda yok, yanlış okunmuş" işaretleri (DOG-90). */
   excluded?: number[]
-  adjustedScore?: number
 }
 
 type FilterBar = "all" | "missing" | "satisfied"

@@ -72,11 +72,9 @@ export interface ScoreResult {
   /**
    * Kullanıcının "ilanda yok, yanlış okunmuş" diye işaretlediği gereksinimlerin
    * `requirements` içindeki sırası (DOG-90). Analizin kendi skoru değişmiyor;
-   * ekran düzeltilmiş skoru weightedScore ile ayrıca gösteriyor.
+   * ekran düzeltilmiş skoru weightedScore'un web'deki eşiyle hesaplıyor.
    */
   excluded?: number[]
-  /** `excluded` hariç tutularak hesaplanan skor; işaret yoksa alan da yok. */
-  adjustedScore?: number
 }
 
 /**

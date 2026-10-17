@@ -1,4 +1,3 @@
-import { weightedScore, type RequirementResult } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
@@ -76,10 +75,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Gereksinim bulunamadı." }, { status: 404 })
     }
 
-    // Düzeltilmiş skor skorlamayla aynı formülden (core/score weightedScore);
-    // istemci core'u içe aktaramıyor, o yüzden burada hesaplanıp yazılıyor.
-    const adjustedScore = weightedScore(result.requirements as RequirementResult[], undefined, excluded)
-    const updated = { ...result, excluded, adjustedScore }
+    // Yalnızca işaretler saklanıyor; düzeltilmiş skoru ekran hesaplıyor
+    // (features/analysis/exclusion.ts). Bu dosya @uyarla/core içe aktarmıyor:
+    // aktarınca Vercel route'u ayrı bir fonksiyona taşıyor ve Hobby'nin 12
+    // fonksiyon sınırı aşılıyor (DOG-90, PR 117'nin ilk denemesi).
+    const updated = { ...result, excluded }
     await prisma.analysis.update({ where: { id }, data: { result: updated as object } })
     return NextResponse.json({ result: updated })
   } catch (error) {
