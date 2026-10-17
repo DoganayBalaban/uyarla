@@ -17,6 +17,8 @@ import { FormatReportCard as FormatReport, type FormatReportView } from "@/featu
 import { ScoreRing } from "@/features/analysis/components/ScoreRing"
 import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
 import { scoreStatus } from "@/lib/scoreStatus"
+import { withTitleFinding } from "@/features/analysis/titleFinding"
+import type { TitleMatch } from "@uyarla/core"
 
 export interface RequirementResult {
   requirement: { text: string; importance: string; type: string }
@@ -32,6 +34,8 @@ export interface ScoreResultView {
   missingKeywords: string[]
   /** Biçim kontrolü; eski analizlerde ve kontrol patladığında yok. */
   format?: FormatReportView | null
+  /** İlan unvanı CV'de geçiyor mu (DOG-87); eski analizlerde yok. */
+  titleMatch?: TitleMatch | null
 }
 
 type FilterBar = "all" | "missing" | "satisfied"
@@ -75,6 +79,7 @@ export function ScoreResult({
   const [activeFilter, setFilter] = useState<FilterBar>("all")
   const state = scoreStatus(result.score)
   const summary = summarizeRequirements(result.requirements)
+  const format = withTitleFinding(result.format, result.titleMatch)
   const satisfiedCount = summary.matched
   const missing = summary.total - satisfiedCount
   const visible = result.requirements.filter((r) =>
@@ -172,9 +177,9 @@ export function ScoreResult({
         </div>
       </motion.div>
 
-      {result.format && (
+      {format && (
         <motion.div {...entrance(0.08)}>
-          <FormatReport report={result.format} />
+          <FormatReport report={format} />
         </motion.div>
       )}
 

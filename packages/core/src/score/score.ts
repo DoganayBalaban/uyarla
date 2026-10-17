@@ -5,6 +5,7 @@ import type { ResumeProfile } from "../schemas/resume.js"
 import { DEFAULT_SCORING_CONFIG, type ScoringConfig } from "./config.js"
 import { experienceMonths, requiredYears } from "./duration.js"
 import type { Evidence } from "./evidence.js"
+import { titleMatch, type TitleMatch } from "./title.js"
 
 export interface ScoreInput {
   profile: ResumeProfile
@@ -63,6 +64,11 @@ export interface ScoreResult {
   requirements: RequirementResult[]
   /** Eksik gereksinimlerin anahtar kelimeleri; kullanıcıya gösterilen liste. */
   missingKeywords: string[]
+  /**
+   * İlan unvanı CV'de geçiyor mu (DOG-87). Skora katılmıyor. Bu alandan önce
+   * kaydedilmiş analizlerde yok; ilanda unvan yoksa null.
+   */
+  titleMatch?: TitleMatch | null
 }
 
 /**
@@ -109,6 +115,7 @@ export function score(
     score: totalWeight === 0 ? 0 : Math.round((weightedSum / totalWeight) * 100),
     requirements: results,
     missingKeywords: missingWords,
+    titleMatch: titleMatch(input.posting.position, input.profile),
   }
 }
 
