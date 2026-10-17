@@ -225,6 +225,7 @@ function matchRequirement(
   }
 
   const semanticEnabled = cfg.semanticTypes.includes(requirement.type)
+  const summarySemantic = cfg.summarySemanticTypes.includes(requirement.type)
 
   // Karşılanan kavramların ağırlıklı toplamı. Tam kelime eşleşmesi kesindir
   // ve 1.0 katkı verir; anlamsal eşleşme bir tahmindir ve benzerlik değeri
@@ -271,6 +272,7 @@ function matchRequirement(
       let best: { similarity: number; contribution: number; evidence: Evidence } | null = null
       for (const { evidence: ev, vector: evidenceVector } of eligibleEvidence) {
         if (!evidenceVector) continue
+        if (ev.kind === "summary" && !summarySemantic) continue
         const similarityScore = cosineSimilarity(vec, evidenceVector)
         if (similarityScore < cfg.semanticThreshold) continue
         const contribution = similarityScore * evidenceMultiplier(ev, cfg)
