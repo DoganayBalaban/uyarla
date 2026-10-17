@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { conceptTexts, isProperNoun, score } from "./score.js"
+import { conceptTexts, isProperNoun, score, weightedScore } from "./score.js"
 import { DEFAULT_SCORING_CONFIG } from "./config.js"
 import type { Evidence } from "./evidence.js"
 import type { ResumeProfile } from "../schemas/resume.js"
@@ -761,3 +761,22 @@ describe("score · 'veya ilgili bölümler' (DOG-75)", () => {
   })
 })
 
+
+describe("weightedScore", () => {
+  const r = (importance: "must" | "nice", confidence: number) => ({
+    requirement: { text: "x", type: "skill" as const, importance, concepts: [] },
+    confidence,
+  })
+
+  it("leaves excluded requirements out of both the sum and the weight", () => {
+    const results = [r("must", 1), r("must", 0), r("nice", 1)]
+    const all = weightedScore(results)
+    const withoutMissing = weightedScore(results, undefined, [1])
+    expect(withoutMissing).toBeGreaterThan(all)
+    expect(withoutMissing).toBe(100)
+  })
+
+  it("is 0 when every requirement is excluded", () => {
+    expect(weightedScore([r("must", 1)], undefined, [0])).toBe(0)
+  })
+})

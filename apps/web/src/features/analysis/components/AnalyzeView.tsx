@@ -55,6 +55,7 @@ import {
   analysisQueryKey,
   fetchPostingFromUrl,
   getAnalysis,
+  setRequirementExcluded,
   startAnalysis,
   useAnalysisJob,
   type AnalysisResponse,
@@ -299,6 +300,16 @@ export function AnalyzeView() {
   }
 
   /** Uyarlamayı başlatır ve uyarlama ekranına geçer. */
+  async function toggleExcluded(analysisId: string, index: number, excluded: boolean) {
+    try {
+      const { result } = await setRequirementExcluded(analysisId, index, excluded)
+      setState((s) => (s ? { ...s, result } : s))
+      queryClient.setQueryData<AnalysisResponse>(analysisQueryKey(analysisId), (d) => (d ? { ...d, result } : d))
+    } catch {
+      setError("İşaretleyemedik. Birazdan tekrar dener misin?")
+    }
+  }
+
   async function adapt(analysisId: string) {
     setBusy(true)
     let parsed: { error?: string; code?: string }
@@ -420,6 +431,7 @@ export function AnalyzeView() {
         onAdapt={state.analysisId ? () => adapt(state.analysisId!) : undefined}
         adaptNote={adaptNote}
         onYeniAnaliz={startOver}
+        onToggleExcluded={state.analysisId ? (index, excluded) => toggleExcluded(state.analysisId!, index, excluded) : undefined}
       />
     )
   }

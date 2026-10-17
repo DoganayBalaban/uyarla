@@ -44,6 +44,20 @@ export async function getAnalysis(analysisId: string): Promise<AnalysisResponse>
   return (await api.get<AnalysisResponse>(`/analysis/${encodeURIComponent(analysisId)}`)).data
 }
 
+/** Gereksinimi "ilanda yok, yanlış okunmuş" diye işaretler ya da geri alır (DOG-90). */
+export async function setRequirementExcluded(
+  analysisId: string,
+  requirementIndex: number,
+  excluded: boolean,
+): Promise<{ result: ScoreResultView }> {
+  return (
+    await api.patch<{ result: ScoreResultView }>(`/analysis/${encodeURIComponent(analysisId)}`, {
+      requirementIndex,
+      excluded,
+    })
+  ).data
+}
+
 export const analysisQueryKey = (analysisId: string) => ["analysis", analysisId] as const
 
 /**

@@ -18,6 +18,7 @@ import { ScoreRing } from "@/features/analysis/components/ScoreRing"
 import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
 import { scoreStatus } from "@/lib/scoreStatus"
 import { withTitleFinding } from "@/features/analysis/titleFinding"
+import { applyExclusions } from "@/features/analysis/exclusion"
 import type { TitleMatch } from "@uyarla/core"
 
 export interface RequirementResult {
@@ -26,6 +27,8 @@ export interface RequirementResult {
   confidence: number
   method: string | null
   evidence: { text: string; kind: string } | null
+  /** Eksik kavramlar; eski kayıtlarda yok (DOG-90 sayımı için). */
+  missingConcepts?: string[]
 }
 
 export interface ScoreResultView {
@@ -36,6 +39,8 @@ export interface ScoreResultView {
   format?: FormatReportView | null
   /** İlan unvanı CV'de geçiyor mu (DOG-87); eski analizlerde yok. */
   titleMatch?: TitleMatch | null
+  /** "İlanda yok, yanlış okunmuş" işaretleri (DOG-90). */
+  excluded?: number[]
 }
 
 type FilterBar = "all" | "missing" | "satisfied"
@@ -63,6 +68,7 @@ export function ScoreResult({
   onAdapt,
   adaptNote,
   onYeniAnaliz,
+  onToggleExcluded,
 }: {
   result: ScoreResultView
   durationMs?: number | null
@@ -74,16 +80,20 @@ export function ScoreResult({
   /** Uyarla düğmesinin altında: bu uyarlamanın neyi harcayacağı (DOG-81). */
   adaptNote?: string | null
   onYeniAnaliz?: () => void
+  /** Gereksinimi "ilanda yok" diye işaretler ya da geri alır (DOG-90); yoksa düğme çıkmıyor. */
+  onToggleExcluded?: (requirementIndex: number, excluded: boolean) => Promise<void>
 }) {
   const reducedMotion = useReducedMotion() ?? false
   const [activeFilter, setFilter] = useState<FilterBar>("all")
-  const state = scoreStatus(result.score)
-  const summary = summarizeRequirements(result.requirements)
+  const exclusion = applyExclusions(result)
+  const state = scoreStatus(exclusion.score)
+  const summary = summarizeRequirements(exclusion.active)
   const format = withTitleFinding(result.format, result.titleMatch)
   const satisfiedCount = summary.matched
   const missing = summary.total - satisfiedCount
-  const visible = result.requirements.filter((r) =>
-    activeFilter === "all" ? true : activeFilter === "missing" ? r.status === "missing" : r.status === "matched",
+  // İşaretli gereksinimler yalnızca "Hepsi"nde, soluk duruyor.
+  const visible = exclusion.rows.filter(({ item, excluded }) =>
+    activeFilter === "all" ? true : !excluded && (activeFilter === "missing" ? item.status === "missing" : item.status === "matched"),
   )
 
   const entrance = (delayMs: number) =>
@@ -107,12 +117,12 @@ export function ScoreResult({
           className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-brand-blue/10 blur-3xl"
         />
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
-          <ScoreRing score={result.score} size={148} className="shrink-0 self-center sm:self-auto" />
+          <ScoreRing score={exclusion.score} size={148} className="shrink-0 self-center sm:self-auto" />
 
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold tracking-wider text-muted uppercase">Uyum skoru</p>
             <h1 className="mt-1 text-2xl sm:text-3xl">
-              {result.requirements.length} gereksinimin{" "}
+              {exclusion.active.length} gereksinimin{" "}
               <span className={state.textClass}>{satisfiedCount} tanesi</span> karşılanıyor
             </h1>
             {/* Zorunlular ayrıca: işe alımcının ilk baktığı yer (DOG-66). Sayının
@@ -126,6 +136,12 @@ export function ScoreResult({
                 )}
                 {summary.mustTotal > 0 && summary.partial > 0 && " · "}
                 {partialNote(summary)}
+              </p>
+            )}
+            {exclusion.excludedCount > 0 && (
+              <p className="mt-1 text-sm text-muted">
+                İlanda olmadığını işaretlediğin {exclusion.excludedCount} gereksinim skora katılmıyor (ilk skor{" "}
+                {result.score}).
               </p>
             )}
             <p className="mt-2 text-sm text-muted">
@@ -216,8 +232,13 @@ export function ScoreResult({
           <p className="mt-4 text-sm text-muted">Bu süzgeçte gereksinim yok.</p>
         ) : (
           <ul className="mt-4 divide-y divide-border">
-            {visible.map((item, i) => (
-              <RequirementRow key={`${activeFilter}-${i}`} item={item} />
+            {visible.map(({ item, index, excluded }) => (
+              <RequirementRow
+                key={`${activeFilter}-${index}`}
+                item={item}
+                excluded={excluded}
+                onToggleExcluded={onToggleExcluded ? (ex) => onToggleExcluded(index, ex) : undefined}
+              />
             ))}
           </ul>
         )}
@@ -227,11 +248,11 @@ export function ScoreResult({
       <motion.div {...entrance(0.2)} className="rounded-card border border-border bg-card p-5 sm:p-6">
         <h2 className="m-0 text-lg">Eksik kavramlar</h2>
         <p className="mt-1 text-sm text-muted">İlanda geçen ama CV&apos;nde karşılığını bulamadığımız kavramlar.</p>
-        {result.missingKeywords.length === 0 ? (
+        {exclusion.missingKeywords.length === 0 ? (
           <p className="mt-3 text-sm text-muted">Eksik kavram yok.</p>
         ) : (
           <ul className="mt-4 flex flex-wrap gap-2">
-            {result.missingKeywords.map((k) => (
+            {exclusion.missingKeywords.map((k) => (
               <li
                 key={k}
                 className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-sm"
@@ -260,14 +281,51 @@ export function ScoreResult({
   )
 }
 
-function RequirementRow({ item }: { item: RequirementResult }) {
+function RequirementRow({
+  item,
+  excluded = false,
+  onToggleExcluded,
+}: {
+  item: RequirementResult
+  excluded?: boolean
+  onToggleExcluded?: (excluded: boolean) => Promise<void>
+}) {
   const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const toggle = async (ex: boolean) => {
+    if (!onToggleExcluded) return
+    setSaving(true)
+    try {
+      await onToggleExcluded(ex)
+    } finally {
+      setSaving(false)
+    }
+  }
   const done = item.status === "matched"
   const partial = isPartial(item)
   const importanceLabel = IMPORTANCE_LABEL[item.requirement.importance] ?? item.requirement.importance
 
+  if (excluded) {
+    return (
+      <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3 text-muted">
+        <span className="min-w-0 flex-1 line-through decoration-muted/60">{item.requirement.text}</span>
+        <span className="text-xs">İlanda yok olarak işaretlendi · skora katılmıyor</span>
+        {onToggleExcluded && (
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => void toggle(false)}
+            className="text-xs font-semibold text-brand-blue underline-offset-2 hover:underline disabled:opacity-50"
+          >
+            Geri al
+          </button>
+        )}
+      </li>
+    )
+  }
+
   return (
-    <li className="py-3">
+    <li className="group py-3">
       <button
         type="button"
         className="flex w-full items-start gap-3 text-left"
@@ -308,6 +366,18 @@ function RequirementRow({ item }: { item: RequirementResult }) {
         <p className="mt-2 ml-8 rounded-button border-l-2 border-brand-green/60 bg-background px-3 py-2 text-sm text-muted">
           <span className="font-semibold text-foreground">CV&apos;nde bunu karşılayan:</span> {item.evidence.text}
         </p>
+      )}
+      {/* Kavram ayırma bazen ilanda olmayan bir şart üretiyor; kullanıcı
+          düzeltebilsin, işaret de bize hata verisi olsun (DOG-90). */}
+      {onToggleExcluded && (
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => void toggle(true)}
+          className="mt-1 ml-8 text-xs text-muted underline-offset-2 hover:text-foreground hover:underline focus-visible:opacity-100 disabled:opacity-50 sm:opacity-0 sm:group-hover:opacity-100"
+        >
+          İlanda böyle bir şart yok mu? Yanlış okunmuş olarak işaretle
+        </button>
       )}
     </li>
   )

@@ -69,6 +69,12 @@ export interface ScoreResult {
    * kaydedilmiş analizlerde yok; ilanda unvan yoksa null.
    */
   titleMatch?: TitleMatch | null
+  /**
+   * Kullanıcının "ilanda yok, yanlış okunmuş" diye işaretlediği gereksinimlerin
+   * `requirements` içindeki sırası (DOG-90). Analizin kendi skoru değişmiyor;
+   * ekran düzeltilmiş skoru weightedScore'un web'deki eşiyle hesaplıyor.
+   */
+  excluded?: number[]
 }
 
 /**
@@ -96,14 +102,6 @@ export function score(
     return checkDuration(matchRequirement(requirement, vectorSlice, input, cfg), input)
   })
 
-  let weightedSum = 0
-  let totalWeight = 0
-  for (const result of results) {
-    const weight =
-      result.requirement.importance === "must" ? cfg.mustWeight : cfg.niceWeight
-    totalWeight += weight
-    weightedSum += weight * result.confidence
-  }
 
   // Eksik kelimeler tekilleştiriliyor: aynı teknoloji birden çok gereksinimde
   // geçebiliyor ve kullanıcıya iki kez göstermenin anlamı yok.
@@ -112,11 +110,36 @@ export function score(
   const missingWords = [...new Set(results.flatMap((r) => r.missingConcepts))]
 
   return {
-    score: totalWeight === 0 ? 0 : Math.round((weightedSum / totalWeight) * 100),
+    score: weightedScore(results, cfg),
     requirements: results,
     missingKeywords: missingWords,
     titleMatch: titleMatch(input.posting.position, input.profile),
   }
+}
+
+/**
+ * Gereksinim sonuçlarından 0–100 skor: zorunlular ve tercih sebepleri kendi
+ * ağırlıklarıyla, güven oranında.
+ *
+ * `excluded`: kullanıcının "ilanda yok, yanlış okunmuş" diye işaretlediği
+ * gereksinimlerin sırası (DOG-90). Paydadan da çıkıyorlar; yanlış okunan bir
+ * gereksinim ne eksik ne karşılanmış sayılmalı. Hepsi çıkarılırsa 0.
+ */
+export function weightedScore(
+  results: Pick<RequirementResult, "requirement" | "confidence">[],
+  cfg: ScoringConfig = DEFAULT_SCORING_CONFIG,
+  excluded: readonly number[] = [],
+): number {
+  const skip = new Set(excluded)
+  let weightedSum = 0
+  let totalWeight = 0
+  results.forEach((result, i) => {
+    if (skip.has(i)) return
+    const weight = result.requirement.importance === "must" ? cfg.mustWeight : cfg.niceWeight
+    totalWeight += weight
+    weightedSum += weight * result.confidence
+  })
+  return totalWeight === 0 ? 0 : Math.round((weightedSum / totalWeight) * 100)
 }
 
 /**
