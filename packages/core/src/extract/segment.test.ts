@@ -159,3 +159,45 @@ describe("stripLeadingHeading", () => {
     )
   })
 })
+
+describe("segmentResume · projects and other sections (DOG-105)", () => {
+  const cv = [
+    "Ada Yılmaz",
+    "ada@ornek.com",
+    "EXPERIENCE",
+    "Acme — Intern  |  2024",
+    "• Built dashboards.",
+    "SELECTED PROJECTS",
+    "Yeni Nesil Asistan — Enterprise document assistant with RAG.",
+    "AI Workflow Platform — Workflow automation with React and FastAPI.",
+    "EDUCATION",
+    "Bir Üniversite — B.Sc. Software Engineering",
+    "ADDITIONAL",
+    "Driving licence: B",
+    "",
+    "Honors",
+    "Dean's list 2023",
+  ].join("\n")
+
+  it("puts projects in their own block instead of experience", () => {
+    const s = segmentResume(cv)
+    expect(s.projectsBlock).toContain("Yeni Nesil Asistan")
+    expect(s.projectsBlock).toContain("AI Workflow Platform")
+    expect(s.experienceBlock).not.toContain("Yeni Nesil Asistan")
+  })
+
+  it("keeps sections it does not structure, with their own heading and lines", () => {
+    expect(segmentResume(cv).otherSections).toEqual([
+      { heading: "ADDITIONAL", lines: ["Driving licence: B"] },
+      { heading: "Honors", lines: ["Dean's list 2023"] },
+    ])
+  })
+
+  it("recognises Turkish project headings", () => {
+    expect(segmentResume("Ada\nPROJELER\nBitirme projesi — Mobil uygulama").projectsBlock).toContain("Bitirme projesi")
+  })
+
+  it("gives the project extractor nothing when the resume has no headings at all", () => {
+    expect(segmentResume("Ada Yılmaz\nada@ornek.com\nBir şeyler yaptım.").projectsBlock).toBe("")
+  })
+})

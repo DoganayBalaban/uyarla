@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest"
-import { ResumeProfileSchema, resumeProfileJsonSchema, experienceListJsonSchema } from "./resume.js"
+import { ResumeProfileSchema, resumeProfileJsonSchema, experienceListJsonSchema, projectListJsonSchema } from "./resume.js"
 import { JobPostingSchema, jobPostingJsonSchema } from "./job.js"
 
 /** LM Studio'nun strict kısıtı: her alan required, ek alan yok, $schema yok. */
-function assertStrictCompatible(schema: Record<string, unknown>) {
-  const props = Object.keys(schema.properties as Record<string, unknown>)
+function assertStrictCompatible(schema: Record<string, unknown>, optional: string[] = []) {
+  const props = Object.keys(schema.properties as Record<string, unknown>).filter((p) => !optional.includes(p))
   expect((schema.required as string[]).sort()).toEqual(props.sort())
   expect(schema.additionalProperties).toBe(false)
   expect(schema).not.toHaveProperty("$schema")
@@ -53,8 +53,12 @@ describe("resume profile schema", () => {
   })
 
   it("JSON Schema is strict-compatible", () => {
-    assertStrictCompatible(resumeProfileJsonSchema)
+    // Profil şeması LLM'e gönderilmiyor; projects ve otherSections eski
+    // profillerde olmadığı için isteğe bağlı (DOG-105). LLM'e giden blok
+    // şemaları tam katı kalmalı.
+    assertStrictCompatible(resumeProfileJsonSchema, ["projects", "otherSections"])
     assertStrictCompatible(experienceListJsonSchema)
+    assertStrictCompatible(projectListJsonSchema)
   })
 
   it("extra fields are forbidden in nested objects too", () => {

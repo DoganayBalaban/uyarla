@@ -3,11 +3,13 @@ import type { ExtractResult, LlmProvider } from "../llm/types.js"
 import {
   EducationListSchema,
   ExperienceListSchema,
+  ProjectListSchema,
   ResumeProfileSchema,
   ResumeSegmentsSchema,
   SkillLinesSchema,
   educationListJsonSchema,
   experienceListJsonSchema,
+  projectListJsonSchema,
   resumeSegmentsJsonSchema,
   skillLinesJsonSchema,
 } from "../schemas/resume.js"
@@ -18,6 +20,7 @@ import { flattenSkillLines } from "./skills.js"
 import {
   EDUCATION_PROMPT,
   EXPERIENCE_PROMPT,
+  PROJECTS_PROMPT,
   SEGMENT_PROMPT,
   SKILLS_PROMPT,
 } from "./prompts.js"
@@ -72,19 +75,28 @@ export async function extractResumeProfile(
       input: rawText,
     })
     tokens += segments.tokens
-    blocks = ResumeSegmentsSchema.parse(segments.data)
+    // LLM bölümleyicisi yalnızca karşılaştırma için; projeleri ayırmıyor.
+    blocks = { ...ResumeSegmentsSchema.parse(segments.data), projectsBlock: "", otherSections: [] }
   } else {
     blocks = segmentResume(rawText)
   }
 
   // Boş bloklar için çağrı yapılmaz: hem süre hem gereksiz uydurma riski.
-  const [experience, education, skills] = await Promise.all([
+  const [experience, projects, education, skills] = await Promise.all([
     blocks.experienceBlock.trim()
       ? llm.extract({
           prompt: EXPERIENCE_PROMPT,
           schemaName: "resume_experience",
           schema: experienceListJsonSchema,
           input: blocks.experienceBlock,
+        })
+      : null,
+    blocks.projectsBlock.trim()
+      ? llm.extract({
+          prompt: PROJECTS_PROMPT,
+          schemaName: "resume_projects",
+          schema: projectListJsonSchema,
+          input: blocks.projectsBlock,
         })
       : null,
     blocks.educationBlock.trim()
@@ -104,7 +116,7 @@ export async function extractResumeProfile(
         })
       : null,
   ])
-  for (const call of [experience, education, skills]) if (call) tokens += call.tokens
+  for (const call of [experience, projects, education, skills]) if (call) tokens += call.tokens
 
   // Ad ve başlık kodda çıkarılıyor, LLM'e sorulmuyor: deterministik bir iş
   // ve kırıldığında testler kırmızıya dönüyor (bkz. parseHeader).
@@ -118,6 +130,9 @@ export async function extractResumeProfile(
     experience: experience ? ExperienceListSchema.parse(experience.data).experience : [],
     education: education ? EducationListSchema.parse(education.data).education : [],
     ...(skills ? flatten(SkillLinesSchema.parse(skills.data)) : EMPTY_SKILLS),
+    projects: projects ? ProjectListSchema.parse(projects.data).projects : [],
+    // Yorumlanmadan, olduğu gibi (DOG-105).
+    otherSections: blocks.otherSections,
   })
 
   return { data: profile, tokens }
@@ -129,7 +144,8 @@ export async function extractResumeProfile(
  * okunur (DOG-59). Prompt ve şema değişiklikleri anahtara kendiliğinden giriyor.
  */
 // 2: Europass, LinkedIn ve tablolu şablon bölümlemesi (DOG-60, K-49).
-const RESUME_PARSER_REVISION = 2
+// 3: Projeler ve diğer bölümler artık kaybolmuyor (DOG-105).
+const RESUME_PARSER_REVISION = 3
 
 /**
  * Kayıtlı bir CV'nin ayrıştırılmış profili, aynı anahtarla üretildiyse yeniden
@@ -142,9 +158,11 @@ export function resumeParserKey(modelId: string): string {
         RESUME_PARSER_REVISION,
         modelId,
         EXPERIENCE_PROMPT,
+        PROJECTS_PROMPT,
         EDUCATION_PROMPT,
         SKILLS_PROMPT,
         experienceListJsonSchema,
+        projectListJsonSchema,
         educationListJsonSchema,
         skillLinesJsonSchema,
       ]),
