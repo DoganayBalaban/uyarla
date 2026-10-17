@@ -117,18 +117,6 @@ export async function computeFunnel(db: Db, { from, to }: { from: Date; to: Date
   )
 }
 
-/**
- * Yönetim sayfasına erişim: `ADMIN_EMAILS` listesindeki kayıtlı hesaplar.
- * Liste boşsa kimse giremiyor; varsayılan kapalı.
- */
-export function isAdmin(
-  user: { email: string; isAnonymous?: boolean | null } | null | undefined,
-  adminEmails: string | undefined = process.env.ADMIN_EMAILS,
-): boolean {
-  if (!user || user.isAnonymous === true || !user.email) return false
-  const allowed = (adminEmails ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean)
-  return allowed.includes(user.email.trim().toLowerCase())
-}
+// Yönetici kontrolü uyarlama ucunda da kullanılıyor (sınırsız hak); orada
+// huni kodunu çekmemek için bağımlılıksız ayrı modülde (server/admin.ts).
+export { isAdmin } from "@/server/admin"

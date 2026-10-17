@@ -3,7 +3,8 @@ import { NextResponse } from "next/server"
 import { auth } from "@/server/auth"
 
 export interface AppSession {
-  user: { id: string; isAnonymous: boolean }
+  /** email: yönetici kontrolü için (server/admin.ts); anonimde yer tutucu. */
+  user: { id: string; isAnonymous: boolean; email?: string }
 }
 
 /** HTTP durumunu ve makine okunur kodu taşıyan yetki hatası. */
@@ -68,6 +69,7 @@ export async function getSession(): Promise<AppSession | null> {
       // anonymous eklentisi bu alanı ekliyor ve şemada nullable; yoksa
       // kayıtlı sayılıyor.
       isAnonymous: (result.user as { isAnonymous?: boolean | null }).isAnonymous ?? false,
+      email: result.user.email,
     },
   }
 }

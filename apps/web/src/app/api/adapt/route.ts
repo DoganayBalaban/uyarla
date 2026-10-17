@@ -5,6 +5,7 @@ import { NextResponse } from "next/server"
 import { adaptRequestSchema } from "@/features/adaptation/schema"
 import { firstIssue } from "@/lib/validation"
 import { adaptQueue } from "@/server/adaptQueue"
+import { isAdmin } from "@/server/admin"
 import { PaymentRequiredError, assertCanAdapt } from "@/server/billing/entitlement"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 import {
@@ -50,7 +51,8 @@ export async function POST(request: Request) {
 
     // Ödeme duvarı (DOG-34): ilk uyarlama ücretsiz, sonrası dönem ister.
     // Mevcut uyarlamayı yeniden açmak yukarıda döndü; hak harcamıyor.
-    await assertCanAdapt(prisma, session.user.id, new Date())
+    // Yöneticiler sınırsız (ADMIN_EMAILS, server/admin.ts).
+    await assertCanAdapt(prisma, session.user.id, new Date(), { unlimited: isAdmin(session.user) })
 
     const adaptation = await prisma.adaptation.create({
       data: { analysisId, draft: {}, modelId: analysis.modelId, status: "running" },
