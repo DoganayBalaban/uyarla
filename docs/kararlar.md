@@ -2299,3 +2299,50 @@ Beklenti düzeltilmeseydi 7 kaçırma, 1 uydurma olurdu.
 (örneğin yalnız beceri listesinde geçen) toplam deneyimle ölçüyor; bu, alana
 ait olmayan yılları da sayabilir. Uydurma tarafında değil ama iyimser tarafta
 kalan bir yaklaşım; K2'de gözlenirse daraltılır.
+
+---
+
+## K-56 · K2 değer kapısı geçti; odak indirilen CV'nin bütünlüğü ve çapraz dil eşleşmesi
+
+**Tarih:** 17 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 3B sonrası (DOG-22)
+
+**Kapı:** 5 test kullanıcısından en az 4'ü uyarlanmış CV'yi gerçek bir
+başvuruda kullanmak istemeli. Kriter tutmazsa odak uyarlama kalitesine döner.
+
+**Sonuç:** Kriter tuttu: "Uyarlanmış CV'ni gerçek bir başvuruda kullanır
+mıydın?" sorusuna 4/5 Evet. Beşinci katılımcı soruyu boş bıraktı ama CV'yi
+olduğu gibi göndermeyeceğini yazdı. Ancak kapı ince bir kenardan geçti: Evet
+diyen dört kişiden ikisi de CV'yi **olduğu gibi** göndermeyeceğini söyledi
+("projelerimi de sildi", "yarısı eksikti"). Ödeme işi (DOG-34) zaten canlıda;
+erteleme gerekmiyor, ama sıradaki iş uyarlama kalitesi.
+
+**Katılımcılar:** 5 yeni mezun yazılım mühendisi (AI ve Full-Stack
+hedefli), hepsi kendi CV'siyle; 16–17 Ekim. Ekip çevresinden oldukları için
+olumlu taraf ağır basabilir (NPS: cevaplayan 4 kişinin hepsi 10).
+
+**Bulgular ve kararlar:**
+
+- İndirilen CV'de projeler ve şemada karşılığı olmayan bölümler kayboluyor
+  (4/5). Yeni mezun CV'sinin çoğu proje; en kritik bulgu. → DOG-105, Urgent.
+- Uyarlama maddelerin neredeyse hiçbirini değiştirmiyor, yalnızca özet
+  değişiyor (3/5). Canlıda İngilizce CV × Türkçe ilanda da aynı görüldü. →
+  DOG-104, Urgent.
+- İndirilen CV'nin biçimi zayıf bulundu: beceriler okunmuyor, bağlantılar
+  tıklanmıyor, "düz yazı" (4/5). → DOG-106, High.
+- "Ekip çalışmasına uygun" gibi kişisel nitelikler haksız yere eksik
+  sayılıyor (2/5). Skor da "uygun değilsin" diye okunabiliyor (2/5). → K-52
+  eşikleri bu veriyle yeniden ele alınacak (DOG-103).
+- Ön yazı en sevilen özellik oldu (5/5 kullanırım, uydurma görülmedi). Giriş
+  ve hesap açmada hiç takılma yok.
+- Bir katılımcı "yalan da olsa ilanın istediği yetenekleri eklesin" dedi. Bu
+  yapılmayacak; dürüst karşılığı kullanıcının kendi anlattığından madde
+  yazan "AI ile yaz" (DOG-94).
+
+**Fiyat sinyali:** Cevaplayan 4 kişiden 3'ü aylık 100 TL'nin altını gösterdi
+(paketler 149 TL/hafta, 349 TL/ay). Örneklem küçük ve öğrenci ağırlıklı;
+karar değil, satın alma oranıyla birlikte izlenecek (DOG-34 yorumu).
+
+**Değerlendirilen alternatifler:** Kapıyı "olduğu gibi gönderirim" ölçüsüyle
+okumak: bu ölçüde 2/5 ile kapı kalırdı. Soru formda "kullanır mıydın" diye
+sorulduğu için kapı o ölçüyle okundu; ama bu fark sıradaki işin önceliğini
+belirledi.
