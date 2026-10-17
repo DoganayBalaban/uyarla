@@ -30,6 +30,14 @@ export interface Draft {
   addedSkills?: string[]
 }
 
+/** Belge görünümünün bir hâli; sunucudaki DocumentOutline ile aynı (DOG-93). */
+export interface DocumentOutline {
+  headline: string | null
+  summary: string | null
+  experience: Array<{ company: string; title: string; startDate: string; endDate: string; bullets: string[] }>
+  skills: string[]
+}
+
 export interface AdaptationState {
   status: "running" | "draft" | "ready" | "failed"
   /** API şimdilik göndermiyor; gelirse çizelge onu izler. */
@@ -38,4 +46,6 @@ export interface AdaptationState {
   scoreBefore: number | null
   scoreAfter: number | null
   coverLetter: CoverLetterRecord | null
+  /** Önceki ve indirilecek hâl; profil yoksa ya da taslak hazır değilse null. */
+  document?: { before: DocumentOutline; after: DocumentOutline } | null
 }

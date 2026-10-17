@@ -1,5 +1,6 @@
 import {
   AdaptationDraftSchema,
+  applyAdaptation,
   CachedEmbeddingProvider,
   OpenAiCompatibleEmbeddingProvider,
   embeddingConfigFromEnv,
@@ -133,4 +134,42 @@ export async function computeScoreAfter(
     config.model,
   )
   return rescore({ profile, posting, draft }, embedding)
+}
+
+/** Belge görünümünün bir hâli (DOG-93): yalnızca ekranın gösterdiği alanlar. */
+export interface DocumentOutline {
+  headline: string | null
+  summary: string | null
+  experience: Array<{ company: string; title: string; startDate: string; endDate: string; bullets: string[] }>
+  skills: string[]
+}
+
+/**
+ * Belge görünümü için CV'nin önceki ve sonraki hâli (DOG-93).
+ *
+ * "Sonra" indirmenin kullandığı applyAdaptation'dan geliyor; ekranda görünen
+ * ile indirilen belge ayrışamaz. Karar bekleyen maddeler indirmede olduğu
+ * gibi eski hâliyle duruyor.
+ */
+export function adaptationDocument(
+  profile: ResumeProfile | null,
+  draft: AdaptationDraft | null,
+): { before: DocumentOutline; after: DocumentOutline } | null {
+  if (!profile || !draft) return null
+  return { before: outline(profile), after: outline(applyAdaptation(profile, draft)) }
+}
+
+function outline(p: ResumeProfile): DocumentOutline {
+  return {
+    headline: p.headline,
+    summary: p.summary,
+    experience: p.experience.map((e) => ({
+      company: e.company,
+      title: e.title,
+      startDate: e.startDate,
+      endDate: e.endDate,
+      bullets: e.bullets.map((b) => b.text),
+    })),
+    skills: p.skills,
+  }
 }

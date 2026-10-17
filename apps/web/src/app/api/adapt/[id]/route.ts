@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { computeScoreAfter, loadAdaptation } from "@/server/adaptationDecision"
+import { adaptationDocument, computeScoreAfter, loadAdaptation } from "@/server/adaptationDecision"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 
 export const runtime = "nodejs"
@@ -27,6 +27,7 @@ export async function GET(
       scoreAfter: await computeScoreAfter(profile, posting, draft),
       errorClass: adaptation.errorClass,
       coverLetter: adaptation.coverLetter ?? null,
+      document: adaptationDocument(profile, draft),
     })
   } catch (error) {
     const reply = authErrorResponse(error)

@@ -17,7 +17,8 @@ import {
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react"
-import { diffWords } from "@/features/adaptation/diff"
+import { DiffText } from "@/features/adaptation/components/DiffText"
+import { DocumentView } from "@/features/adaptation/components/DocumentView"
 import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/cn"
 import { adaptationQueryKey, decide, decideAll, downloadAdaptation, useAdaptation } from "@/features/adaptation/api"
@@ -41,29 +42,6 @@ const STAGES = [
     description: "Her yeni cümleyi CV'ndeki gerçek bilgilerle karşılaştırıyoruz.",
   },
 ]
-
-function DiffText({ original, rewritten }: { original: string; rewritten: string }) {
-  return (
-    <p className="m-0 leading-relaxed">
-      {diffWords(original, rewritten).map((part, i) =>
-        part.kind === "same" ? (
-          <span key={i}>{part.text} </span>
-        ) : (
-          <span
-            key={i}
-            className={
-              part.kind === "added"
-                ? "rounded bg-brand-green/15 px-0.5 text-foreground decoration-brand-green/60 underline-offset-2"
-                : "text-muted line-through decoration-muted/60"
-            }
-          >
-            {part.text}{" "}
-          </span>
-        ),
-      )}
-    </p>
-  )
-}
 
 /**
  * Yeni/eski hâl seçimi. 21st.dev'deki "segmented control" desenleri gibi
@@ -133,6 +111,8 @@ export function AdaptationView({ id }: { id: string }) {
   const { data: state } = useAdaptation(id)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [busy, setIsBusy] = useState(false)
+  // Değişiklikler: madde madde karar. Belge: CV'nin tamamı (DOG-93).
+  const [view, setView] = useState<"changes" | "document">("changes")
 
   async function decisionValue(itemId: string, decision: "accepted" | "rejected") {
     setIsBusy(true)
@@ -355,129 +335,160 @@ export function AdaptationView({ id }: { id: string }) {
             </motion.section>
           )}
 
-          {draft.summary.original && (
-            <motion.section {...entrance(0.06)} className="rounded-card border border-border bg-card p-5 sm:p-6">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="m-0 text-lg">Özet</h2>
-                <DecisionToggle
-                  val={draft.summary.decision === "rejected" ? "rejected" : "accepted"}
-                  busy={busy}
-                  onSelect={(d) => void decisionValue("summary", d)}
-                />
-              </div>
-              <VerificationWarning v={draft.summary.verification} />
-              <DiffText original={draft.summary.original} rewritten={draft.summary.rewritten} />
-            </motion.section>
-          )}
-
-          <motion.section {...entrance(0.1)} className="rounded-card border border-border bg-card p-5 sm:p-6">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="m-0 text-lg">Deneyim maddeleri</h2>
-              {changedBullets.length > 0 && (
-                <p className="m-0 text-sm text-muted">
-                  {decided}/{changedBullets.length} karar verildi
-                </p>
-              )}
-            </div>
-            {changedBullets.length > 0 ? (
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-background">
-                <div
-                  className="h-full rounded-full bg-brand-blue transition-[width] duration-500"
-                  style={{ width: `${(decided / changedBullets.length) * 100}%` }}
-                />
-              </div>
-            ) : (
-              <p className="mt-2 text-sm text-muted">
-                Maddelerinde ilanın terimleriyle anlatılabilecek bir şey bulamadık, o yüzden olduğu gibi bıraktık.
-              </p>
-            )}
-
-            {changedBullets.length > 0 && (
-              <ol className="mt-5 space-y-3">
-                {changedBullets.map(({ bullet, order }) => (
-                  <li
-                    key={bullet.id}
-                    className={cn(
-                      "rounded-button border p-4 transition",
-                      bullet.decision === "pending" ? "border-brand-blue/30 bg-brand-blue/[0.03]" : "border-border",
-                    )}
-                  >
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-muted">
-                        Madde {order}
-                        {bullet.decision === "pending" && <span className="ml-2 text-brand-blue">· Karar bekliyor</span>}
-                      </span>
-                      <DecisionToggle val={bullet.decision} busy={busy} onSelect={(d) => void decisionValue(bullet.id, d)} />
-                    </div>
-                    <VerificationWarning v={bullet.verification} />
-                    <DiffText original={bullet.original} rewritten={bullet.rewritten} />
-                    {(bullet.alignments?.length ?? 0) > 0 && (
-                      <ul className="mt-3 space-y-1.5">
-                        {bullet.alignments!.map((a) => (
-                          <li key={a.term} className="flex gap-2 text-sm text-muted">
-                            <Link2 className="mt-0.5 size-3.5 shrink-0 text-brand-blue" aria-hidden />
-                            <span>
-                              <span className="font-semibold text-foreground">{a.term}</span>, senin{" "}
-                              <span className="text-foreground">&ldquo;{a.basis}&rdquo;</span> ifadene dayanıyor.
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {bullet.decision === "pending" &&
-                      bullet.verification.status === "ok" &&
-                      (bullet.alignments?.length ?? 0) > 0 && (
-                        <p className="mt-3 text-sm font-medium text-foreground">
-                          Bu terim deneyimini doğru anlatıyorsa yeni hâlini seç; anlatmıyorsa eski hâli kalsın.
-                        </p>
-                      )}
-                  </li>
-                ))}
-              </ol>
-            )}
-
-            {unchangedBullets.length > 0 && (
-              <details className="group mt-4">
-                <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-muted">
-                  Olduğu gibi kalan maddeler ({unchangedBullets.length})
-                  <ChevronDown className="size-4 transition group-open:rotate-180" aria-hidden />
-                </summary>
-                <ul className="mt-3 space-y-2">
-                  {unchangedBullets.map(({ bullet }) => (
-                    <li key={bullet.id} className="rounded-button bg-background px-3 py-2 text-sm">
-                      {bullet.original}
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            )}
-          </motion.section>
-
-          <motion.section {...entrance(0.14)} className="rounded-card border border-border bg-card p-5 sm:p-6">
-            <h2 className="m-0 text-lg">Beceriler</h2>
-            <p className="mt-1 text-sm text-muted">
-              {added.size > 0
-                ? "İlanın aradığı ve deneyim maddelerinde geçen beceriler listeye eklendi; ilana en çok uyanlar başa alındı. Hiçbir beceri silinmedi."
-                : "İlana en çok uyanlar başa alındı. Hiçbir beceri eklenmedi veya silinmedi."}
-            </p>
-            <ol className="mt-4 flex flex-wrap gap-2">
-              {draft.skillOrder.map((b, i) => (
-                <li
-                  key={b}
+          {state.document && (
+            <div role="tablist" aria-label="Görünüm" className="inline-flex rounded-button bg-card p-1 text-sm shadow-sm">
+              {(
+                [
+                  ["changes", "Değişiklikler"],
+                  ["document", "Belge"],
+                ] as const
+              ).map(([v, label]) => (
+                <button
+                  key={v}
+                  type="button"
+                  role="tab"
+                  aria-selected={view === v}
+                  onClick={() => setView(v)}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm",
-                    added.has(b) ? "border-brand-blue/40 bg-brand-blue/10" : "border-border bg-background",
+                    "rounded-[8px] px-4 py-1.5 font-semibold transition",
+                    view === v ? "bg-brand-blue text-white" : "text-muted hover:text-foreground",
                   )}
                 >
-                  <span className="text-xs font-semibold text-muted tabular-nums">{i + 1}</span>
-                  {b}
-                  {added.has(b) && (
-                    <span className="text-[11px] font-semibold text-brand-blue dark:text-brand-blue-light">CV&apos;nden</span>
-                  )}
-                </li>
+                  {label}
+                </button>
               ))}
-            </ol>
-          </motion.section>
+            </div>
+          )}
+
+          {view === "document" && state.document ? (
+            <DocumentView document={state.document} draft={draft} />
+          ) : (
+            <>
+              {draft.summary.original && (
+                <motion.section {...entrance(0.06)} className="rounded-card border border-border bg-card p-5 sm:p-6">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="m-0 text-lg">Özet</h2>
+                    <DecisionToggle
+                      val={draft.summary.decision === "rejected" ? "rejected" : "accepted"}
+                      busy={busy}
+                      onSelect={(d) => void decisionValue("summary", d)}
+                    />
+                  </div>
+                  <VerificationWarning v={draft.summary.verification} />
+                  <DiffText original={draft.summary.original} rewritten={draft.summary.rewritten} />
+                </motion.section>
+              )}
+
+              <motion.section {...entrance(0.1)} className="rounded-card border border-border bg-card p-5 sm:p-6">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="m-0 text-lg">Deneyim maddeleri</h2>
+                  {changedBullets.length > 0 && (
+                    <p className="m-0 text-sm text-muted">
+                      {decided}/{changedBullets.length} karar verildi
+                    </p>
+                  )}
+                </div>
+                {changedBullets.length > 0 ? (
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-background">
+                    <div
+                      className="h-full rounded-full bg-brand-blue transition-[width] duration-500"
+                      style={{ width: `${(decided / changedBullets.length) * 100}%` }}
+                    />
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-muted">
+                    Maddelerinde ilanın terimleriyle anlatılabilecek bir şey bulamadık, o yüzden olduğu gibi bıraktık.
+                  </p>
+                )}
+
+                {changedBullets.length > 0 && (
+                  <ol className="mt-5 space-y-3">
+                    {changedBullets.map(({ bullet, order }) => (
+                      <li
+                        key={bullet.id}
+                        className={cn(
+                          "rounded-button border p-4 transition",
+                          bullet.decision === "pending" ? "border-brand-blue/30 bg-brand-blue/[0.03]" : "border-border",
+                        )}
+                      >
+                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-muted">
+                            Madde {order}
+                            {bullet.decision === "pending" && <span className="ml-2 text-brand-blue">· Karar bekliyor</span>}
+                          </span>
+                          <DecisionToggle val={bullet.decision} busy={busy} onSelect={(d) => void decisionValue(bullet.id, d)} />
+                        </div>
+                        <VerificationWarning v={bullet.verification} />
+                        <DiffText original={bullet.original} rewritten={bullet.rewritten} />
+                        {(bullet.alignments?.length ?? 0) > 0 && (
+                          <ul className="mt-3 space-y-1.5">
+                            {bullet.alignments!.map((a) => (
+                              <li key={a.term} className="flex gap-2 text-sm text-muted">
+                                <Link2 className="mt-0.5 size-3.5 shrink-0 text-brand-blue" aria-hidden />
+                                <span>
+                                  <span className="font-semibold text-foreground">{a.term}</span>, senin{" "}
+                                  <span className="text-foreground">&ldquo;{a.basis}&rdquo;</span> ifadene dayanıyor.
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {bullet.decision === "pending" &&
+                          bullet.verification.status === "ok" &&
+                          (bullet.alignments?.length ?? 0) > 0 && (
+                            <p className="mt-3 text-sm font-medium text-foreground">
+                              Bu terim deneyimini doğru anlatıyorsa yeni hâlini seç; anlatmıyorsa eski hâli kalsın.
+                            </p>
+                          )}
+                      </li>
+                    ))}
+                  </ol>
+                )}
+
+                {unchangedBullets.length > 0 && (
+                  <details className="group mt-4">
+                    <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-muted">
+                      Olduğu gibi kalan maddeler ({unchangedBullets.length})
+                      <ChevronDown className="size-4 transition group-open:rotate-180" aria-hidden />
+                    </summary>
+                    <ul className="mt-3 space-y-2">
+                      {unchangedBullets.map(({ bullet }) => (
+                        <li key={bullet.id} className="rounded-button bg-background px-3 py-2 text-sm">
+                          {bullet.original}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </motion.section>
+
+              <motion.section {...entrance(0.14)} className="rounded-card border border-border bg-card p-5 sm:p-6">
+                <h2 className="m-0 text-lg">Beceriler</h2>
+                <p className="mt-1 text-sm text-muted">
+                  {added.size > 0
+                    ? "İlanın aradığı ve deneyim maddelerinde geçen beceriler listeye eklendi; ilana en çok uyanlar başa alındı. Hiçbir beceri silinmedi."
+                    : "İlana en çok uyanlar başa alındı. Hiçbir beceri eklenmedi veya silinmedi."}
+                </p>
+                <ol className="mt-4 flex flex-wrap gap-2">
+                  {draft.skillOrder.map((b, i) => (
+                    <li
+                      key={b}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm",
+                        added.has(b) ? "border-brand-blue/40 bg-brand-blue/10" : "border-border bg-background",
+                      )}
+                    >
+                      <span className="text-xs font-semibold text-muted tabular-nums">{i + 1}</span>
+                      {b}
+                      {added.has(b) && (
+                        <span className="text-[11px] font-semibold text-brand-blue dark:text-brand-blue-light">CV&apos;nden</span>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </motion.section>
+            </>
+          )}
 
           <CoverLetterSection adaptationId={id} letter={state.coverLetter} />
         </div>

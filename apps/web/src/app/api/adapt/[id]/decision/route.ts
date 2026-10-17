@@ -2,6 +2,7 @@ import { AdaptationDraftSchema } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import {
+  adaptationDocument,
   applyBulkDecision,
   applyDecision,
   computeScoreAfter,
@@ -61,5 +62,7 @@ export async function PATCH(
     status,
     draft: fresh,
     scoreAfter: await computeScoreAfter(payload.profile, payload.posting, fresh),
+    // Belge görünümü kararla birlikte güncelleniyor (DOG-93).
+    document: adaptationDocument(payload.profile, fresh),
   })
 }
