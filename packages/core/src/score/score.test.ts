@@ -519,6 +519,45 @@ describe("score · evidence scope by requirement type (K-36)", () => {
     expect(outcome.requirements[0]!.confidence).toBe(DEFAULT_SCORING_CONFIG.summaryWeight)
   })
 
+  it("a summary sentence is not semantic evidence for a skill (DOG-108)", () => {
+    // cv-c: "Üreterek öğrenmeye … önem veriyorum" ↔ "Makine öğrenmesi" 0,541.
+    // Kendini anlatan cümleden anlamsal tahmin beceri kanıtı değil.
+    const outcome = score({
+      profile: PROFILE,
+      posting: testPosting([typedRequirement("skill", "makine öğrenmesi")]),
+      evidence: [typedEvidence("Üreterek öğrenmeye önem veriyorum.", "summary")],
+      evidenceVectors: [V.near],
+      conceptVectors: [V.near],
+    })
+
+    expect(outcome.requirements[0]!.status).toBe("missing")
+  })
+
+  it("a summary that names the skill still meets it by keyword", () => {
+    const outcome = score({
+      profile: PROFILE,
+      posting: testPosting([typedRequirement("skill", "makine öğrenmesi")]),
+      evidence: [typedEvidence("Makine öğrenmesi projeleri geliştiriyorum.", "summary")],
+      evidenceVectors: [V.far],
+      conceptVectors: [V.near],
+    })
+
+    expect(outcome.requirements[0]!.status).toBe("matched")
+    expect(outcome.requirements[0]!.method).toBe("keyword")
+  })
+
+  it("a summary sentence stays semantic evidence for a soft requirement", () => {
+    const outcome = score({
+      profile: PROFILE,
+      posting: testPosting([typedRequirement("soft", "takım çalışması")]),
+      evidence: [typedEvidence("Ekiplerle uyum içinde çalışırım.", "summary")],
+      evidenceVectors: [V.near],
+      conceptVectors: [V.near],
+    })
+
+    expect(outcome.requirements[0]!.status).toBe("matched")
+  })
+
   it("a bullet becomes the evidence instead of the summary when it also mentions the concept", () => {
     const outcome = score({
       profile: PROFILE,

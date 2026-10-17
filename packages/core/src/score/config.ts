@@ -39,6 +39,17 @@ export interface ScoringConfig {
    * tamamen eksik görünüyordu (K-38).
    */
   summaryWeight: number
+  /**
+   * Özet cümlesinin ANLAMSAL kanıt sayılabildiği gereksinim türleri (DOG-108).
+   *
+   * Beceri, adayın yaptığı işten (madde), listelediğinden ya da özette adıyla
+   * geçmesinden (kelime eşleşmesi) kanıtlanır. Kendini anlatan bir cümleden
+   * anlamsal tahmin beceri kanıtı değil: "Üreterek öğrenmeye … önem
+   * veriyorum" cümlesi "Makine öğrenmesi"yle 0,541 eşleşiyordu. Deneyim ve
+   * kişisel özellik ise özette doğal olarak anlatılıyor ("üretim ortamında
+   * mavi yaka ekiplerle", 0,544, doğru). Kelime eşleşmesi her türde açık.
+   */
+  summarySemanticTypes: readonly Requirement["type"][]
 }
 
 const ALL_EVIDENCE_KINDS: readonly Evidence["kind"][] = [
@@ -80,4 +91,5 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
     soft: ALL_EVIDENCE_KINDS,
   },
   summaryWeight: 0.75,
+  summarySemanticTypes: ["experience", "soft"],
 }

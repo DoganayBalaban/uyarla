@@ -2523,3 +2523,31 @@ veriyle eşik ayarlanmadı. Ayrı iş olarak ele alınıyor.
 
 **Açık:** Aynı CV'de SERTİFİKALAR'dan sonra başlıksız gelen bir deneyim kaydı
 beceri bloğuna düşüyor. Ayrı kayıt.
+
+## K-62 · Özet cümlesi beceriye anlamsal kanıt sayılmıyor
+
+**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-108 · **Değiştirdiği:** K-38 (kısmen)
+
+**Bağlam:** DOG-107 cv-c'nin özetini geri getirince yeni bir uydurma göründü:
+"Üreterek öğrenmeye ve teknolojiyi erişilebilir hale getirmeye önem
+veriyorum." cümlesi "Makine öğrenmesi" ile 0,541 benzerlikle eşleşiyordu
+(eşik 0,5). Eval'de özet kanıtıyla yapılan üç anlamsal eşleşmenin benzerliği
+eşikle ayrılamıyordu (doğru olan 0,544). Ama türleri ayrılıyordu: iki
+şüpheli eşleşme **skill** türü gereksinimdeydi ("Makine öğrenmesi",
+"Vertex AI experience" ↔ "Experienced in building enterprise assistants"),
+doğru olan ise **experience** türündeydi ("üretim ortamında mavi yaka
+ekiplerle").
+
+**Karar:** Özet cümlesi anlamsal katmanda yalnızca deneyim ve kişisel özellik
+(soft) gereksinimlerine kanıt sayılıyor (`summarySemanticTypes`). Beceri;
+adayın yaptığı işten (madde), listelediğinden ya da özette adıyla geçmesinden
+(kelime eşleşmesi, her türde açık) kanıtlanır. Kendini anlatan bir cümleden
+yapılan anlamsal tahmin, beceri için iki kez zayıf bir sinyal.
+
+**Ölçüm (`pnpm eval`, 19 çift):** %93,4 · kaçırma 5 · uydurma 2 → %94,3 · 5 · 1.
+Doğru özet eşleşmesi (cv-g__ilan-9) korundu. cv-a__ilan-5'in skoru 28 → 27
+(beklentisi olmayan "Vertex AI" gereksinimi).
+
+**Açık:** Karar üç veriye dayanıyor; tür ayrımı eşikten daha ilkeli olduğu
+için alındı. Değerlendirme setine özet ağırlıklı çiftler eklendiğinde yeniden
+sınanmalı.
