@@ -29,6 +29,17 @@ export function applyDecision(
     return { ...draft, summary: { ...draft.summary, decision } }
   }
 
+  // Kullanıcı katkıları kendi kimlikleriyle (DOG-94). Yazımı bitmemiş katkıya
+  // karar verilemez; ortada seçilecek bir metin yok.
+  const contribution = draft.contributions?.find((c) => c.id === itemId)
+  if (contribution) {
+    if (contribution.status !== "done" || !contribution.text) throw new Error(`Madde bulunamadı: ${itemId}`)
+    return {
+      ...draft,
+      contributions: draft.contributions!.map((c) => (c.id === itemId ? { ...c, decision } : c)),
+    }
+  }
+
   if (!draft.bullets.some((b) => b.id === itemId)) {
     // Sessizce yok saymak, kullanıcının tıkladığı kararın kaybolması olurdu.
     throw new Error(`Madde bulunamadı: ${itemId}`)
@@ -68,7 +79,28 @@ export function applyBulkDecision(draft: AdaptationDraft, action: BulkDecision):
       const d = decide(b.verification)
       return d ? { ...b, decision: d } : b
     }),
+    // Katkılar da aynı kurala tabi: uyarılı katkı toplu kabul edilmez.
+    contributions: draft.contributions?.map((c) => {
+      if (c.status !== "done" || !c.text) return c
+      const d = decide(c.verification ?? { status: "ok" })
+      return d ? { ...c, decision: d } : c
+    }),
   }
+}
+
+/**
+ * Analizde karşılanmayan zorunlu gereksinimler (DOG-94): "AI ile yaz"
+ * bunlar için açılıyor. Kullanıcının "ilanda yok" diye işaretledikleri
+ * (DOG-90) listede yok.
+ */
+export function missingMustRequirements(result: unknown): Array<{ index: number; text: string }> {
+  const r = result as { requirements?: Array<{ requirement: { text: string; importance: string }; status: string }>; excluded?: number[] } | null
+  if (!r?.requirements) return []
+  const excluded = new Set(r.excluded ?? [])
+  return r.requirements
+    .map((x, index) => ({ x, index }))
+    .filter(({ x, index }) => x.status === "missing" && x.requirement.importance === "must" && !excluded.has(index))
+    .map(({ x, index }) => ({ index, text: x.requirement.text }))
 }
 
 /** Uyarı taşıyan madde kaldıysa `draft`, kalmadıysa `ready` (K-26). */

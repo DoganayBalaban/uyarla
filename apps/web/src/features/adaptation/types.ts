@@ -17,6 +17,19 @@ export interface Bullet {
   decision: "accepted" | "rejected" | "pending"
 }
 
+/** Kullanıcının anlattığı deneyimden yazılan madde (DOG-94). */
+export interface Contribution {
+  id: string
+  requirementIndex: number
+  experienceIndex: number
+  answer: string
+  status: "running" | "done" | "failed"
+  text?: string
+  verification?: Verification
+  alignments?: Array<{ term: string; basis: string }>
+  decision: "accepted" | "rejected" | "pending"
+}
+
 export interface Draft {
   summary: {
     original: string | null
@@ -28,6 +41,8 @@ export interface Draft {
   skillOrder: string[]
   /** CV'nin maddelerinden beceri listesine eklenenler; eski taslaklarda yok. */
   addedSkills?: string[]
+  /** Kullanıcı katkıları (DOG-94); eski taslaklarda yok. */
+  contributions?: Contribution[]
 }
 
 /** Belge görünümünün bir hâli; sunucudaki DocumentOutline ile aynı (DOG-93). */
@@ -48,4 +63,6 @@ export interface AdaptationState {
   coverLetter: CoverLetterRecord | null
   /** Önceki ve indirilecek hâl; profil yoksa ya da taslak hazır değilse null. */
   document?: { before: DocumentOutline; after: DocumentOutline } | null
+  /** Analizde karşılanmayan zorunlu gereksinimler; "AI ile yaz" bunlar için (DOG-94). */
+  missingRequirements?: Array<{ index: number; text: string }>
 }

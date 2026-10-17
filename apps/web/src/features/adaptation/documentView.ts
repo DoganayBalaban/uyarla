@@ -45,7 +45,8 @@ export function documentSections(
       title: job.title,
       dates: [job.startDate, job.endDate].filter(Boolean).join(" – "),
       bullets: job.bullets.map((text, j) =>
-        line(before.experience[i]?.bullets[j] ?? text, text, pending.has(`${i}-${j}`)),
+        // Önceki hâlde olmayan madde kullanıcının katkısı (DOG-94): tamamı eklenmiş.
+        line(before.experience[i]?.bullets[j] ?? "", text, pending.has(`${i}-${j}`)),
       ),
     })),
     skills: after.skills.map((name) => ({ name, added: !beforeSkills.has(name) })),

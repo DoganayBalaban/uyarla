@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import type { AdaptationDraft } from "@uyarla/core"
-import { applyBulkDecision, applyDecision, nextStatus } from "@/server/adaptationDecision"
+import { applyBulkDecision, applyDecision, missingMustRequirements, nextStatus } from "@/server/adaptationDecision"
 
 const draftData: AdaptationDraft = {
   summary: {
@@ -120,5 +120,58 @@ describe("applyBulkDecision", () => {
   it("does not mutate the input draft", () => {
     applyBulkDecision(withAlignment, "reject_all")
     expect(decisions(withAlignment)).toEqual(["accepted", "pending", "pending", "accepted"])
+  })
+})
+
+describe("contributions (DOG-94)", () => {
+  const c = (id: string, over: object = {}) => ({
+    id,
+    requirementIndex: 0,
+    experienceIndex: 0,
+    answer: "cevap",
+    status: "done" as const,
+    text: "madde",
+    verification: { status: "ok" as const, issues: [] },
+    decision: "pending" as const,
+    ...over,
+  })
+  const withContributions: AdaptationDraft = {
+    ...draftData,
+    contributions: [c("k1"), c("k2", { verification: { status: "flagged", issues: [{ kind: "number_mismatch", detail: "…" }] } }), c("k3", { status: "running", text: undefined })],
+  }
+
+  it("decides a written contribution by its id", () => {
+    expect(applyDecision(withContributions, "k1", "accepted").contributions![0]!.decision).toBe("accepted")
+  })
+
+  it("refuses a decision on a contribution that is still being written", () => {
+    expect(() => applyDecision(withContributions, "k3", "accepted")).toThrow(/bulunamadı/i)
+  })
+
+  it("bulk-accepts verified contributions but never a flagged or unfinished one", () => {
+    const r = applyBulkDecision(withContributions, "accept_verified")
+    expect(r.contributions!.map((x) => x.decision)).toEqual(["accepted", "pending", "pending"])
+    expect(applyBulkDecision(withContributions, "reject_all").contributions!.map((x) => x.decision)).toEqual([
+      "rejected",
+      "rejected",
+      "pending",
+    ])
+  })
+})
+
+describe("missingMustRequirements", () => {
+  const req = (text: string, importance: string, status: string) => ({ requirement: { text, importance }, status })
+
+  it("lists missing must requirements with their index, leaving out ones marked as not in the posting", () => {
+    const result = {
+      requirements: [req("Excel", "must", "matched"), req("SAP", "must", "missing"), req("Almanca", "nice", "missing"), req("İş hukuku", "must", "missing")],
+      excluded: [3],
+    }
+    expect(missingMustRequirements(result)).toEqual([{ index: 1, text: "SAP" }])
+  })
+
+  it("is empty for a missing or malformed result", () => {
+    expect(missingMustRequirements(null)).toEqual([])
+    expect(missingMustRequirements({})).toEqual([])
   })
 })
