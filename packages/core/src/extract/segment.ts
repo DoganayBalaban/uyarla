@@ -1,5 +1,5 @@
 import { normalizeText } from "../normalize/turkish.js"
-import type { OtherSection, ResumeSegments } from "../schemas/resume.js"
+import type { OtherSection, ResumeSegments, StructuredSection } from "../schemas/resume.js"
 
 /**
  * CV'yi bölümlerine kodla ayırır.
@@ -24,10 +24,18 @@ export type ResumeSection = "header" | "summary" | "experience" | "projects" | "
 export interface CodeSegments extends ResumeSegments {
   projectsBlock: string
   otherSections: OtherSection[]
+  /**
+   * Yapılandırılmış bölümlerin CV'de ilk görüldüğü sıra (DOG-106). Başlık
+   * bulunamadıysa yok: sıra bilinmiyor.
+   */
+  sectionOrder: StructuredSection[] | undefined
 }
 
 /** Başlık satırı bu uzunluğu aşmaz; aşıyorsa içerik satırıdır. */
 const MAX_HEADING_LENGTH = 60
+
+const LANGUAGE_OR_CERTIFICATE =
+  /^(certifications?|certificates|sertifikalar|sertifikalar belgeler|belgeler|languages|diller|yabancı diller?)$/
 
 const PATTERNS: Array<[ResumeSection, RegExp]> = [
   [
@@ -61,10 +69,7 @@ const PATTERNS: Array<[ResumeSection, RegExp]> = [
   ["skills", /^(tech stack|teknolojiler|teknik beceriler|uzmanlık alanları|technologies)$/],
   // Sertifika ve diller beceri bloğuna gider: çıkarıcının bunlar için ayrı
   // alanları var ve düzleştirme onları beceri listesinden eliyor (K-20).
-  [
-    "skills",
-    /^(certifications?|certificates|sertifikalar|sertifikalar belgeler|belgeler|languages|diller|yabancı diller?)$/,
-  ],
+  ["skills", LANGUAGE_OR_CERTIFICATE],
 ]
 
 /**
@@ -97,6 +102,11 @@ export function segmentResume(rawText: string): CodeSegments {
   }
   // Yapılandırılmış bloklara girmeyen bölümler, her biri kendi başlığıyla.
   const others: OtherSection[] = []
+  const order: StructuredSection[] = []
+  // Beceri bölümünün yeri asıl beceri başlığından: diller ve sertifikalar da
+  // beceri bloğuna gidiyor ama CV'de çoğu zaman ayrı yerdeler (cv-c'de
+  // eğitimden önce). Beceri başlığı hiç yoksa onların yeri kullanılıyor.
+  let languagesAt: number | null = null
 
   // İlk başlıktan önceki satırlar ad, unvan ve iletişim bilgisidir ve kendi
   // bloğuna gidiyor. Sprint 1'de özete karışıyorlardı; skor özeti
@@ -131,6 +141,8 @@ export function segmentResume(rawText: string): CodeSegments {
       if (section) {
         active = section
         headingFound = true
+        if (section === "skills" && isLanguageOrCertificate(lineItem)) languagesAt ??= order.length
+        else if (section !== "summary" && !order.includes(section)) order.push(section)
       }
       // Başlığın kendisi de bloğa giriyor: K-10'daki kayıp tam da başlıkların
       // atılmasıydı ve çıkarıcılar bağlamdan yararlanıyor.
@@ -155,6 +167,7 @@ export function segmentResume(rawText: string): CodeSegments {
       educationBlock: full,
       skillsBlock: full,
       otherSections: [],
+      sectionOrder: undefined,
     }
   }
 
@@ -169,6 +182,10 @@ export function segmentResume(rawText: string): CodeSegments {
     otherSections: others
       .map((o) => ({ heading: o.heading, lines: o.lines.map((l) => l.trim()).filter(Boolean) }))
       .filter((o) => o.lines.length > 0),
+    sectionOrder:
+      !order.includes("skills") && languagesAt !== null
+        ? [...order.slice(0, languagesAt), "skills", ...order.slice(languagesAt)]
+        : order,
   }
 }
 
@@ -209,4 +226,8 @@ function headingKind(lineItem: string): ResumeSection | null {
     if (pattern.test(n)) return section
   }
   return null
+}
+
+function isLanguageOrCertificate(lineItem: string): boolean {
+  return LANGUAGE_OR_CERTIFICATE.test(normalizeText(lineItem.trim()))
 }

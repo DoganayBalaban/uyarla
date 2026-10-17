@@ -2441,3 +2441,48 @@ ilan terimini dayanaksız eklediği için doğrulamada atıldı. Aynı dildeki
 **Açık:** Kazanç küçük; uzun madde ile kısa kavram arasındaki benzerlik
 çoğu kavramda 0,45 eşiğinin altında kalıyor. Eşiği yalnızca çapraz dil için
 düşürmek ölçülmeden yapılmadı.
+
+## K-60 · İndirilen CV adayın düzenine yakın: kategoriler, bölüm sırası, bağlantılar
+
+**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-106
+
+**Bağlam:** K2'de beş katılımcıdan dördü indirilen belgenin biçiminden
+şikâyet etti: beceriler tek uzun satır, "düz yazı gibi", bağlantılar
+tıklanmıyor, "mevcut formatımı bozmasın". Biri bu yüzden göndermeyeceğini
+söyledi.
+
+**Karar:**
+- **Beceri kategorileri CV'nin kendisinden.** Beceri bölümü zaten satır
+  satır, etiketiyle okunuyordu (K-19) ve düzleştiriliyordu. Etiket artık
+  grubun adı olarak saklanıyor (`skillGroups`); belge her grubu kalın etiketli
+  bir satır olarak yazıyor. Kategorileri biz uydurmuyoruz (LLM ile
+  sınıflandırma yok): CV kategori yazmamışsa tek virgüllü satır kalıyor.
+  Etiket yalnızca öğelerini sayıyorsa ("Git & GitHub" → Git, GitHub)
+  kategori sayılmıyor. Grup içinde uyarlamanın sırası korunuyor;
+  uyarlamanın eklediği beceriler sonda ayrı satırda.
+- **Bölüm sırası CV'den.** Kodla bölümleme yapılandırılmış bölümlerin ilk
+  görüldüğü sırayı kaydediyor (`sectionOrder`). Beceri bölümünün yeri asıl
+  beceri başlığından alınıyor, diller ve sertifikalardan değil. CV'nin kendi
+  sırası, ilk iş arayana eğitimi öne alan kuralın (DOG-55) önüne geçiyor;
+  o kural yalnızca sıra bilinmiyorsa uygulanıyor.
+- **Kayıt başlığı üç parça:** kalın unvan, yanında kurum, tarih sağa yaslı ve
+  aynı satırda. Tablo ya da ikinci sütun değil: PDF'te satırın sağ ucu,
+  DOCX'te sağ sekme durağı. Metin katmanı unvan · kurum · tarih sırasıyla
+  okunuyor.
+- **Bağlantılar tıklanabilir:** e-posta, http/www adresleri, LinkedIn,
+  GitHub gibi bilinen siteler. Çıplak alan adı ("aday.dev") yalnızca iletişim
+  satırında ve küçük harfle tanınıyor: "ASP.NET", "Node.js" bağlantı değil.
+- PDF'ten kalan satır sonları madde içinde birleştiriliyor (özetteki gibi,
+  K-38).
+
+**Ölçüm:** Gidiş-dönüş testi (roundtrip.test.ts): üretilen PDF ve DOCX kendi
+okuyucumuzla geri okunup yeniden bölümleniyor; bölüm sırası, beceri
+kategorileri ve her kaydın unvan → kurum → tarih → madde sırası yerinde.
+Sağa yaslı tarih sütun algılamasını (DOG-31) tetiklemiyor. Beş değerlendirme
+CV'si yeni çıkarımla belgeye döküldü ve gözle kontrol edildi. Skor eval'i
+değişmedi (düz beceri listesi aynı fonksiyondan).
+
+**Açık:** Ayrıştırıcı revizyonu 4: kayıtlı CV'ler bir sonraki analizde bir
+kez daha okunuyor. Önceki uyarlamaların profillerinde kategori yok; onlar tek
+satıra düşüyor. Kullanıcının kendi tasarımını korumak (DOG-92'ye yakın) bu
+işin dışında.

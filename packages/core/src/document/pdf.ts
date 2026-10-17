@@ -1,9 +1,13 @@
 import { fontPaths } from "@uyarla/fonts"
 import PDFDocument from "pdfkit"
-import type { DocumentModel } from "./model.js"
+import { linkParts, type TextPart } from "./links.js"
+import type { DocumentEntry, DocumentModel } from "./model.js"
 
 /** ~2 cm kenar boşluğu. */
 const MARGIN = 56
+const TEXT = "#000"
+const MUTED = "#444"
+const LINK = "#1f4e9c"
 
 /**
  * ATS dostu tek sütunlu PDF (spec §9).
@@ -27,18 +31,20 @@ export async function renderPdf(model: DocumentModel): Promise<Buffer> {
   doc.on("data", (fragment: Buffer) => fragments.push(fragment))
   const finished = new Promise<void>((resolve) => doc.on("end", () => resolve()))
 
-  doc.font("kalin").fontSize(20).text(model.name)
+  doc.font("kalin").fontSize(22).text(model.name)
   if (model.contact) {
-    doc.font("govde").fontSize(10).fillColor("#444").text(model.contact)
-    doc.fillColor("#000")
+    doc.moveDown(0.15)
+    writeParts(doc, linkParts(model.contact, { bareDomains: true }), { font: "govde", size: 9.5, color: MUTED })
   }
 
   if (model.summary) {
-    doc.moveDown(0.8).font("govde").fontSize(10).text(model.summary, { align: "left" })
+    doc.moveDown(0.8)
+    writeParts(doc, linkParts(model.summary), { font: "govde", size: 10, color: TEXT })
   }
 
   for (const section of model.sections) {
-    doc.moveDown(1).font("kalin").fontSize(11).text(section.title)
+    keepWithNext(doc, 60)
+    doc.moveDown(1).font("kalin").fontSize(11).fillColor(TEXT).text(section.title, MARGIN, doc.y, { characterSpacing: 0.6 })
 
     // İnce bir çizgi; grafik değil, bölüm ayracı. Metin katmanını
     // etkilemiyor, ATS tarafında görünmez.
@@ -51,19 +57,89 @@ export async function renderPdf(model: DocumentModel): Promise<Buffer> {
     doc.moveDown(0.5)
 
     for (const entry of section.entries) {
-      if (entry.heading) doc.font("kalin").fontSize(10).text(entry.heading)
-      if (entry.subheading) {
-        doc.font("govde").fontSize(9).fillColor("#555").text(entry.subheading)
-        doc.fillColor("#000")
-      }
-      for (const line of entry.lines) {
-        doc.font("govde").fontSize(10).text(`• ${line}`, { indent: 8 })
-      }
+      if (entry.heading || entry.organization || entry.date) writeEntryHeader(doc, entry)
+      for (const line of entry.lines) writeBullet(doc, line)
       doc.moveDown(0.5)
+    }
+
+    for (const row of section.rows ?? []) {
+      const parts = linkParts(row.text)
+      writeParts(doc, row.label ? [{ text: `${row.label}: `, href: null, bold: true }, ...parts] : parts, {
+        font: "govde",
+        size: 10,
+        color: TEXT,
+      })
+      doc.moveDown(0.25)
     }
   }
 
   doc.end()
   await finished
   return Buffer.concat(fragments)
+}
+
+type Doc = PDFKit.PDFDocument
+
+/** Sayfanın sonuna bu kadar yer kalmadıysa başlığı yeni sayfaya taşır. */
+function keepWithNext(doc: Doc, height: number) {
+  if (doc.y + height > doc.page.height - MARGIN) doc.addPage()
+}
+
+/**
+ * Parçaları tek paragraf olarak yazar; bağlantılar tıklanabilir (DOG-106).
+ * pdfkit'te `continued` ile aynı satırda font ve renk değişebiliyor.
+ */
+function writeParts(
+  doc: Doc,
+  parts: Array<TextPart & { bold?: boolean }>,
+  style: { font: "govde" | "kalin"; size: number; color: string; x?: number; y?: number; width?: number },
+) {
+  const x = style.x ?? MARGIN
+  const width = style.width ?? doc.page.width - MARGIN - x
+  parts.forEach((part, i) => {
+    doc
+      .font(part.bold ? "kalin" : style.font)
+      .fontSize(style.size)
+      .fillColor(part.href ? LINK : style.color)
+    const options = { width, continued: i < parts.length - 1, link: part.href ?? undefined }
+    if (i === 0) doc.text(part.text, x, style.y ?? doc.y, options)
+    else doc.text(part.text, options)
+  })
+  doc.fillColor(TEXT)
+  doc.x = MARGIN
+}
+
+/**
+ * Kayıt başlığı (DOG-106): kalın unvan, yanında kurum, tarih sağa yaslı ve
+ * aynı satırda. Tek sütun: tarih ayrı bir sütun değil, satırın sağ ucu;
+ * metin katmanında unvan · kurum · tarih sırasıyla okunuyor.
+ */
+function writeEntryHeader(doc: Doc, entry: DocumentEntry) {
+  keepWithNext(doc, 40)
+  const y = doc.y
+  const fullWidth = doc.page.width - 2 * MARGIN
+  doc.font("govde").fontSize(9.5)
+  const dateWidth = entry.date ? doc.widthOfString(entry.date) + 12 : 0
+
+  const parts: Array<TextPart & { bold?: boolean }> = []
+  if (entry.heading) parts.push({ text: entry.heading, href: null, bold: true })
+  if (entry.organization) parts.push({ text: `${entry.heading ? " · " : ""}${entry.organization}`, href: null })
+  if (parts.length > 0) writeParts(doc, parts, { font: "govde", size: 10.5, color: TEXT, y, width: fullWidth - dateWidth })
+  const after = doc.y
+
+  if (entry.date) {
+    doc.font("govde").fontSize(9.5).fillColor("#555").text(entry.date, MARGIN, y + 1, { width: fullWidth, align: "right" })
+    doc.fillColor(TEXT)
+  }
+  doc.x = MARGIN
+  doc.y = Math.max(after, doc.y)
+  doc.moveDown(0.15)
+}
+
+/** Asılı girintili madde: satır kaydığında metin imin hizasında kalmıyor. */
+function writeBullet(doc: Doc, line: string) {
+  const y = doc.y
+  doc.font("govde").fontSize(10).fillColor(TEXT).text("•", MARGIN + 4, y)
+  writeParts(doc, linkParts(line), { font: "govde", size: 10, color: TEXT, x: MARGIN + 14, y })
+  doc.moveDown(0.1)
 }

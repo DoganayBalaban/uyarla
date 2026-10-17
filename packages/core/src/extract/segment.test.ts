@@ -236,3 +236,25 @@ describe("segmentResume · no line is lost (DOG-105)", () => {
     })
   }
 })
+
+describe("segmentResume · section order (DOG-106)", () => {
+  it("records structured sections in the order they first appear", () => {
+    const s = segmentResume("Ad Soyad\nEĞİTİM\nİTÜ\nDENEYİM\nAcme\nBECERİLER\nReact\nPROJELER\nAsistan")
+    expect(s.sectionOrder).toEqual(["education", "experience", "skills", "projects"])
+  })
+
+  it("places skills by the skills heading, not by languages or certificates", () => {
+    // cv-c: DİLLER eğitimden önce, BECERİLER sonra; ikisi de beceri bloğuna gidiyor.
+    const s = segmentResume("Ad\nDENEYİM\nAcme\nDİLLER\nİngilizce\nEĞİTİM\nİTÜ\nBECERİLER\nPython")
+    expect(s.sectionOrder).toEqual(["experience", "education", "skills"])
+  })
+
+  it("uses the languages position when there is no skills heading", () => {
+    const s = segmentResume("Ad\nDENEYİM\nAcme\nSERTİFİKALAR\nAWS\nEĞİTİM\nİTÜ")
+    expect(s.sectionOrder).toEqual(["experience", "skills", "education"])
+  })
+
+  it("does not record an order when no heading is found", () => {
+    expect(segmentResume("Ad\nbir satır").sectionOrder).toBeUndefined()
+  })
+})

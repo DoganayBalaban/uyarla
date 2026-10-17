@@ -16,7 +16,7 @@ import {
 import type { ResumeProfile, SkillLines } from "../schemas/resume.js"
 import { parseHeader } from "./header.js"
 import { segmentResume, stripLeadingHeading } from "./segment.js"
-import { flattenSkillLines } from "./skills.js"
+import { flattenSkillLines, skillGroups } from "./skills.js"
 import {
   EDUCATION_PROMPT,
   EXPERIENCE_PROMPT,
@@ -32,8 +32,11 @@ const EMPTY_SKILLS = { skills: [], languages: [], certifications: [] }
  * "Hangisi beceri" kararı kodda veriliyor, modelde değil (K-19).
  */
 function flatten(lines: SkillLines) {
+  const groups = skillGroups(lines)
   return {
     skills: flattenSkillLines(lines),
+    // Belgenin düzeni için CV'nin kendi kategorileri (DOG-106).
+    ...(groups ? { skillGroups: groups } : {}),
     languages: lines.languages,
     certifications: lines.certifications,
   }
@@ -76,7 +79,12 @@ export async function extractResumeProfile(
     })
     tokens += segments.tokens
     // LLM bölümleyicisi yalnızca karşılaştırma için; projeleri ayırmıyor.
-    blocks = { ...ResumeSegmentsSchema.parse(segments.data), projectsBlock: "", otherSections: [] }
+    blocks = {
+      ...ResumeSegmentsSchema.parse(segments.data),
+      projectsBlock: "",
+      otherSections: [],
+      sectionOrder: undefined,
+    }
   } else {
     blocks = segmentResume(rawText)
   }
@@ -133,6 +141,8 @@ export async function extractResumeProfile(
     projects: projects ? ProjectListSchema.parse(projects.data).projects : [],
     // Yorumlanmadan, olduğu gibi (DOG-105).
     otherSections: blocks.otherSections,
+    // CV'deki bölüm sırası; belge buna yakın kalıyor (DOG-106).
+    ...(blocks.sectionOrder ? { sectionOrder: blocks.sectionOrder } : {}),
   })
 
   return { data: profile, tokens }
@@ -145,7 +155,8 @@ export async function extractResumeProfile(
  */
 // 2: Europass, LinkedIn ve tablolu şablon bölümlemesi (DOG-60, K-49).
 // 3: Projeler ve diğer bölümler artık kaybolmuyor (DOG-105).
-const RESUME_PARSER_REVISION = 3
+// 4: Beceri kategorileri ve bölüm sırası saklanıyor (DOG-106).
+const RESUME_PARSER_REVISION = 4
 
 /**
  * Kayıtlı bir CV'nin ayrıştırılmış profili, aynı anahtarla üretildiyse yeniden

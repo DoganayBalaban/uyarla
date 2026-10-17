@@ -58,6 +58,11 @@ export const OtherSectionSchema = z.object({
   lines: z.array(z.string()),
 })
 
+export const SkillGroupSchema = z.object({
+  name: z.string().nullable(),
+  items: z.array(z.string()),
+})
+
 export const ResumeProfileSchema = z.object({
   fullName: z.string().nullable(),
   headline: z.string().nullable(),
@@ -73,6 +78,19 @@ export const ResumeProfileSchema = z.object({
    */
   projects: z.array(ProjectSchema).optional(),
   otherSections: z.array(OtherSectionSchema).optional(),
+  /**
+   * Becerilerin CV'deki kendi kategorileri ("Backend: Python, FastAPI"),
+   * CV'deki sırayla (DOG-106). Düz `skills` skor için duruyor; bu yalnızca
+   * belgenin düzeni. Kategorisi olmayan satırların grubu adsız. Kategori
+   * yazmamış CV'de ve bu alandan önceki profillerde yok.
+   */
+  skillGroups: z.array(SkillGroupSchema).optional(),
+  /**
+   * Yapılandırılmış bölümlerin CV'deki sırası (DOG-106): indirilen belge
+   * adayın kendi düzenine yakın kalsın. Kodla bölümlemede dolu; yoksa
+   * belge varsayılan sırayı kullanıyor.
+   */
+  sectionOrder: z.array(z.enum(["experience", "projects", "education", "skills"])).optional(),
 })
 
 /** Aşama 1: ham metni kaba bloklara böler (spec §6.3). */
@@ -130,7 +148,10 @@ export type Experience = z.infer<typeof ExperienceSchema>
 export type Education = z.infer<typeof EducationSchema>
 export type Project = z.infer<typeof ProjectSchema>
 export type OtherSection = z.infer<typeof OtherSectionSchema>
+export type SkillGroup = z.infer<typeof SkillGroupSchema>
 export type ResumeProfile = z.infer<typeof ResumeProfileSchema>
+/** Belgede sırası CV'den alınan bölümler (DOG-106). */
+export type StructuredSection = NonNullable<ResumeProfile["sectionOrder"]>[number]
 export type ResumeSegments = z.infer<typeof ResumeSegmentsSchema>
 export type SkillLines = z.infer<typeof SkillLinesSchema>
 
