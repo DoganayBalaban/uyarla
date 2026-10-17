@@ -15,6 +15,13 @@ export const ConceptSchema = z.object({
   term: z.string(),
   /** Yazım varyantları ve çeviriler; herhangi biri eşleşirse kavram karşılanır. */
   synonyms: z.array(z.string()),
+  /**
+   * Karşı dildeki karşılıklar (DOG-73); eşleşme için synonyms'e de ekli.
+   * Ayrı tutulmasının sebebi uyarlama: CV başka dildeyse madde, ilan terimi
+   * yerine bu karşılıkla hizalanıyor ve CV kendi dilinde kalıyor (DOG-104).
+   * Bu alandan önce çıkarılmış ilanlarda yok.
+   */
+  equivalents: z.array(z.string()).optional(),
 })
 
 export const RequirementSchema = z.object({

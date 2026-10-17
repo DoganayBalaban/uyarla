@@ -2413,3 +2413,31 @@ kaldırmak. Önek bu örneklerde benzerliği artırıyor (0,497 → öneksiz 0,3
 ile "retrieval evaluation" 0,45. Uzun madde ile kısa kavram arasındaki zayıf
 sinyal eşikle değil, madde içindeki ifadeyi hedefleyen bir eşleştirmeyle
 çözülmeli. Uyarlamanın diller farklıyken madde yazmaması (K-39) ayrı iş.
+
+## K-59 · Diller farklıysa madde kavramın CV dilindeki karşılığıyla uyarlanıyor
+
+**Tarih:** 17 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-104 · **Değiştirdiği:** K-39 (madde kısmı)
+
+**Bağlam:** K-39 diller farklıyken madde yazımını tümden kapatmıştı: Türkçe
+ilan terimini İngilizce maddeye yazdırmak çeviri olur. K2'de İngilizce CV ile
+Türkçe ilana giren katılımcı hiçbir maddenin değişmediğini gördü.
+
+**Karar:** İlan çıkarımı her kavrama karşı dildeki karşılıklarını
+(`equivalents`, extract/equivalents.ts) ayrı alan olarak yazıyor. Diller
+farklıysa:
+- Hedef seçimi kavramın karşılık metniyle gömülüyor ("terim (karşılıklar)"
+  karışık metni maddeye eşiğin altında kalıyordu: "Enterprise data security"
+  0,35 → 0,49, "system integrations" 0,30 → 0,48).
+- Modele ilan terimi değil, karşılığın kendisi veriliyor; madde CV'nin
+  dilinde kalıyor. Dayanak yine maddede birebir aranıyor, uydurma kontrolü
+  değişmedi.
+- Karşılığı olmayan kavram (eski ilan kayıtları, özel adlar) hedef olmuyor.
+
+**Ölçüm (`pnpm eval:adapt`, 19 çift):** dil farklı 5 çiftte 0 hedef → 2 yazım;
+biri önerildi (cv-a__ilan-2, "corporate data security", skor 30 → 32), biri
+ilan terimini dayanaksız eklediği için doğrulamada atıldı. Aynı dildeki
+çiftler ve skor eval'i (`pnpm eval`: kaçırma 5, uydurma 1) değişmedi.
+
+**Açık:** Kazanç küçük; uzun madde ile kısa kavram arasındaki benzerlik
+çoğu kavramda 0,45 eşiğinin altında kalıyor. Eşiği yalnızca çapraz dil için
+düşürmek ölçülmeden yapılmadı.
