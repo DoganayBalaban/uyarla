@@ -2486,3 +2486,40 @@ değişmedi (düz beceri listesi aynı fonksiyondan).
 kez daha okunuyor. Önceki uyarlamaların profillerinde kategori yok; onlar tek
 satıra düşüyor. Kullanıcının kendi tasarımını korumak (DOG-92'ye yakın) bu
 işin dışında.
+
+## K-61 · İki sütunlu şablonda kalan özet ve iletişim satırları yerine dönüyor
+
+**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-107
+
+**Bağlam:** DOG-106'nın görsel kontrolünde cv-c'nin indirilen belgesinde ne
+özet ne iletişim satırı vardı. Kaynak: iki sütunlu PDF'te metin iç içe
+geçiyor. "HAKKIMDA" başlığının hemen ardından "PROFESYONEL DENEYİM" geliyor,
+özet paragrafı onun altında kalıyor. E-posta, telefon ve LinkedIn satırları da
+deneyimin ortasına düşüyor. Deneyim çıkarıcısı ikisini de kayıt saymıyor ve
+atıyordu (DOG-105 türünden sessiz kayıp).
+
+**Karar (bölümleme, kodda):**
+- Yalnızca iletişim bilgisi taşıyan satır nerede görünürse görünsün başlık
+  bloğuna gidiyor. Satırda kişisel bir işaret şart: e-posta, telefon ya da
+  LinkedIn profili. Tek başına bir site adresi bir projenin ya da şirketin
+  olabilir. Referanslar gibi yok sayılan bölümlerde uygulanmıyor; oradaki
+  e-posta adayın değil.
+- Özet başlığının altı boşsa, sonraki başlığın altındaki ilk düz yazı
+  paragrafı özete gidiyor. Paragrafın ilk satırı en az sekiz kelime olmalı,
+  madde imi ve yıl taşımamalı: boş özet başlığının ardından gelen bir iş
+  kaydı özete alınmasın.
+- Başlık satırındaki sekme ayraca çevriliyor.
+
+**Ölçüm:** Yedi değerlendirme CV'sinin bölümlemesi eski sürümle karşılaştırıldı.
+Yalnızca cv-c değişti, o da tam olarak hedeflenen satırlarla: özetin 4 satırı
+ve 2 iletişim satırı. Ayrıştırıcı revizyonu 5.
+
+Skor eval'i (cv-c önbelleği yenilendi): %94,3 · kaçırma 5 · uydurma 1 →
+%93,4 · 5 · 2. Yeni uydurma bir eşleşme hatası değil, önceden görünmeyen bir
+zayıflık: geri gelen özetteki "Üreterek öğrenmeye … önem veriyorum" cümlesi
+"Makine öğrenmesi" ile anlamca 0,541 eşleşiyor. Özet kanıtıyla yapılan üç
+anlamsal eşleşmeden doğru olanı 0,544. Hiçbir eşik ikisini ayırmıyor; üç
+veriyle eşik ayarlanmadı. Ayrı iş olarak ele alınıyor.
+
+**Açık:** Aynı CV'de SERTİFİKALAR'dan sonra başlıksız gelen bir deneyim kaydı
+beceri bloğuna düşüyor. Ayrı kayıt.

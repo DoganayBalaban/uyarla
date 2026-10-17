@@ -67,3 +67,9 @@ describe("parseHeader", () => {
     expect(parseHeader(many).headline!.split(" · ")).toHaveLength(3)
   })
 })
+
+describe("parseHeader · tabs (DOG-107)", () => {
+  it("turns a tab between contact parts into a separator", () => {
+    expect(parseHeader("I. Z.\n+90 555 111 22 33\tad@ornek.com").headline).toBe("+90 555 111 22 33 · ad@ornek.com")
+  })
+})
