@@ -14,7 +14,7 @@ import { conceptTexts, type ScoreResult } from "../score/score.js"
 import { DEFAULT_ALIGNMENT_CONFIG, verifyAlignments, type AlignmentConfig } from "../verify/alignment.js"
 import { preservesSource, summaryAnchors } from "../verify/preserve.js"
 import { verifyRewrite } from "../verify/verify.js"
-import { bulletId } from "./profile.js"
+import { bulletId, projectBulletId } from "./profile.js"
 import { rewriteBullets, rewriteSummary } from "./rewrite.js"
 import { orderSkillsForPosting } from "./skills.js"
 import {
@@ -70,14 +70,32 @@ export async function buildAdaptationDraft(
   const { llm, embedding, profile, posting, result } = input
   const alignmentCfg = input.alignmentConfig ?? DEFAULT_ALIGNMENT_CONFIG
 
-  const bulletList = profile.experience.flatMap((job, i) =>
-    job.bullets.map((bullet, j) => ({
-      id: bulletId(i, j),
-      experienceIndex: i,
-      original: bullet.text,
-      sourceRef: bullet.sourceRef,
-    })),
-  )
+  const bulletList: Array<{
+    id: string
+    experienceIndex?: number
+    projectIndex?: number
+    original: string
+    sourceRef: string
+  }> = [
+    ...profile.experience.flatMap((job, i) =>
+      job.bullets.map((bullet, j) => ({
+        id: bulletId(i, j),
+        experienceIndex: i,
+        original: bullet.text,
+        sourceRef: bullet.sourceRef,
+      })),
+    ),
+    // Proje maddeleri de aynı hedef, yazım ve doğrulama hattından geçiyor
+    // (DOG-105): yeni mezun CV'sinin asıl kanıtı çoğu zaman projelerde.
+    ...(profile.projects ?? []).flatMap((project, i) =>
+      project.bullets.map((bullet, j) => ({
+        id: projectBulletId(i, j),
+        projectIndex: i,
+        original: bullet.text,
+        sourceRef: bullet.sourceRef,
+      })),
+    ),
+  ]
 
   // 1. Hedefler: her maddeye anlamca yakın, henüz karşılanmamış ilan terimleri.
   const conceptTextList = conceptTexts(posting)

@@ -2346,3 +2346,34 @@ karar değil, satın alma oranıyla birlikte izlenecek (DOG-34 yorumu).
 okumak: bu ölçüde 2/5 ile kapı kalırdı. Soru formda "kullanır mıydın" diye
 sorulduğu için kapı o ölçüyle okundu; ama bu fark sıradaki işin önceliğini
 belirledi.
+
+---
+
+## K-57 · Projeler kanıt sayılıyor ve uyarlanıyor; bir beklenti düzeltildi
+
+**Tarih:** 17 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-105
+
+K-56'daki bölüm kaybı düzeltilince (projeler profilde) proje maddeleri
+deneyim maddeleriyle aynı kurala bağlandı: skorlamada anlatı kanıtı
+(`kind: "bullet"`, bağlam olarak proje adı), uyarlamada aynı hedef, yazım ve
+uydurma kontrolü (kimlik `p<proje>-<madde>`).
+
+**Beklenti düzeltmesi:** cv-b × ilan-1'de "Git ve CI/CD…" `shouldMatch: false`
+idi. CV'nin proje maddesinde "Used Maven for project management and Git for
+version control" birebir geçiyor; beklenti projeler hiç okunmazken yazılmıştı.
+Kısmi eşleşme (0,20, yalnızca Git) doğru; kanıtın o madde olması şart koşuldu.
+
+**Ölçüm (19 çift, projeler yalnızca proje bölümü olan iki CV'ye eklendi):**
+
+| | İsabet | Kaçırma | Uydurma |
+|---|---|---|---|
+| Projesiz (düzeltilmiş beklentiyle) | %92,5 | 7 | 1 |
+| Projeli | **%93,4** | **6** | **1** |
+
+Uyarlama değerlendirmesinde (eval:adapt) önerilen yazım 4 → 7, skoru artan
+çift 2 → 4, düşen 0; uydurma işaretli 4 yazım önerilmeden atıldı.
+
+**Bedel:** Proje maddesi deneyim gereksinimini de karşılayabiliyor (anlatı
+kanıtı). Süre şartı (K-55) rollerden hesaplandığı için projeler yıl
+eklemiyor; ama "X deneyimi" gibi süresiz bir şart bir projeyle karşılanabilir.
+Yeni mezun için doğru olan bu; iş tecrübesi şart koşan ilanlarda iyimser.

@@ -164,6 +164,30 @@ describe("runAdaptation", () => {
     expect(record.draft!.bullets[0]!.id).toBe("0-0")
   })
 
+  it("drafts project bullets too, after experience bullets, with project ids (DOG-105)", async () => {
+    const { store, record } = fakeStore()
+    const withProject = {
+      ...testProfile,
+      projects: [
+        {
+          name: "Asistan",
+          role: null,
+          startDate: null,
+          endDate: null,
+          bullets: [{ text: "Belge asistanı yaptım", sourceRef: "Belge asistanı yaptım" }],
+        },
+      ],
+    }
+    store.getAdaptationContext = vi.fn(async () => ({ profile: withProject, posting: testPosting, result: testScore }))
+    const llm = fakeLlm(() => "yeniden yazıldı")
+
+    await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
+
+    const ids = record.draft!.bullets.map((b) => b.id)
+    expect(ids).toEqual(["0-0", "0-1", "p0-0"])
+    expect(record.draft!.bullets[2]).toMatchObject({ projectIndex: 0, original: "Belge asistanı yaptım" })
+  })
+
   it("orders skills by the posting", async () => {
     const { store, record } = fakeStore()
     await runAdaptation(

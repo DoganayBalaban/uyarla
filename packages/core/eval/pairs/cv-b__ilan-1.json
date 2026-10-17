@@ -2,7 +2,7 @@
   "id": "cv-b__ilan-1",
   "resumeId": "cv-b-test-engineer",
   "postingId": "ilan-1",
-  "note": "Test mühendisi CV'si, AI mühendisi ilanı. Uyumsuz çift: uydurma eşleşmeyi yakalar.",
+  "note": "Test mühendisi CV'si, AI mühendisi ilanı. Uyumsuz çift: uydurma eşleşmeyi yakalar. Git ve CI/CD: CV'nin proje maddesinde 'Git for version control' birebir geçiyor; projeler okunmadığı için eskiden eşleşmemeli sanılıyordu (DOG-105). Kısmi eşleşme, kanıt o madde olmalı.",
   "expectations": [
     {
       "match": "Bilgisayar Mühendisliği",
@@ -18,7 +18,8 @@
     },
     {
       "match": "Git ve CI/CD",
-      "shouldMatch": false
+      "shouldMatch": true,
+      "evidenceContains": "Git for version control"
     },
     {
       "match": "Generative AI Yetkinlikleri",

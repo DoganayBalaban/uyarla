@@ -37,8 +37,13 @@ export const AdaptedSummarySchema = z.object({
 export const AdaptedBulletSchema = z.object({
   /** Kararların adreslenmesi için kararlı kimlik. */
   id: z.string(),
-  /** Hangi iş deneyiminin maddesi olduğu. */
-  experienceIndex: z.number().int().nonnegative(),
+  /**
+   * Hangi iş deneyiminin ya da projenin maddesi olduğu; ikisinden biri dolu.
+   * projectIndex sonradan eklendi (DOG-105); ondan önceki taslaklarda
+   * yalnızca experienceIndex var.
+   */
+  experienceIndex: z.number().int().nonnegative().optional(),
+  projectIndex: z.number().int().nonnegative().optional(),
   original: z.string(),
   /** Ham CV metnindeki birebir karşılık; doğrulamanın kaynağı (Sprint 1). */
   sourceRef: z.string(),

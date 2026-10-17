@@ -20,6 +20,8 @@ export interface DocumentSections {
   headline: string | null
   summary: DocumentLine | null
   experience: Array<{ company: string; title: string; dates: string; bullets: DocumentLine[] }>
+  /** Proje maddeleri de uyarlanıyor (DOG-105); kimlikleri "p<proje>-<madde>". */
+  projects: Array<{ name: string; role: string | null; dates: string | null; bullets: DocumentLine[] }>
   skills: Array<{ name: string; added: boolean }>
 }
 
@@ -47,6 +49,14 @@ export function documentSections(
       bullets: job.bullets.map((text, j) =>
         // Önceki hâlde olmayan madde kullanıcının katkısı (DOG-94): tamamı eklenmiş.
         line(before.experience[i]?.bullets[j] ?? "", text, pending.has(`${i}-${j}`)),
+      ),
+    })),
+    projects: (after.projects ?? []).map((p, i) => ({
+      name: p.name,
+      role: p.role,
+      dates: p.dates,
+      bullets: p.bullets.map((text, j) =>
+        line(before.projects?.[i]?.bullets[j] ?? "", text, pending.has(`p${i}-${j}`)),
       ),
     })),
     skills: after.skills.map((name) => ({ name, added: !beforeSkills.has(name) })),

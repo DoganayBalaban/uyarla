@@ -48,3 +48,25 @@ describe("documentSections · contributions", () => {
     })
   })
 })
+
+describe("documentSections · projects (DOG-105)", () => {
+  const project = (bullets: string[]) => ({ name: "Asistan", role: null, dates: "2026", bullets })
+  const withProjects = {
+    before: { ...document.before, projects: [project(["belge asistanı"])], otherSections: [] },
+    after: { ...document.after, projects: [project(["RAG ile belge asistanı"])], otherSections: [] },
+  }
+
+  it("pairs project bullets with their originals and marks pending ones by project id", () => {
+    const pendingBullet = { id: "p0-0", original: "belge asistanı", rewritten: "RAG ile belge asistanı", verification: { status: "ok" as const, issues: [] }, decision: "pending" as const }
+    expect(documentSections(withProjects, { bullets: [pendingBullet] }).projects[0]!.bullets[0]).toEqual({
+      before: "belge asistanı",
+      after: "RAG ile belge asistanı",
+      changed: true,
+      pending: true,
+    })
+  })
+
+  it("has no projects for older responses", () => {
+    expect(documentSections(document, { bullets: [] }).projects).toEqual([])
+  })
+})

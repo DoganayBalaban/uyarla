@@ -12,6 +12,11 @@ export function bulletId(experienceIndex: number, bulletIndex: number): string {
   return `${experienceIndex}-${bulletIndex}`
 }
 
+/** Proje maddesinin kimliği (DOG-105); deneyim kimlikleriyle çakışmasın diye "p" önekli. */
+export function projectBulletId(projectIndex: number, bulletIndex: number): string {
+  return `p${projectIndex}-${bulletIndex}`
+}
+
 /**
  * Kabul edilen kararlardan yeni bir profil üretir (spec §10).
  *
@@ -52,6 +57,18 @@ export function applyAdaptation(
           .map((c) => ({ text: c.text!, sourceRef: c.answer })),
       ],
     })),
+    // Projelerin maddeleri de deneyim maddeleri gibi uyarlanıyor (DOG-105).
+    ...(profile.projects
+      ? {
+          projects: profile.projects.map((project, i) => ({
+            ...project,
+            bullets: project.bullets.map((bullet, j) => ({
+              ...bullet,
+              text: accepted.get(projectBulletId(i, j)) ?? bullet.text,
+            })),
+          })),
+        }
+      : {}),
     // Eklenen beceriler adayın kendi maddelerinden geliyor (K-38).
     skills: sortItems([...profile.skills, ...(draft.addedSkills ?? [])], draft.skillOrder),
     // Eğitim, diller ve sertifikalar dokunulmadan geçer (spec §6.4).
