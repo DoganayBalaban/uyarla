@@ -107,6 +107,8 @@ function fakeStore() {
       record.errorClass = errorClass
     }),
     saveCoverLetter: vi.fn(async () => {}),
+    getDraft: vi.fn(async () => record.draft!),
+    updateContribution: vi.fn(async () => {}),
   }
   return { store, record }
 }

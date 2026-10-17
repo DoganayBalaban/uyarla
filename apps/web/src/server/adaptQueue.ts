@@ -1,8 +1,11 @@
-import { ADAPT_QUEUE, type AdaptJobData } from "@uyarla/worker/adapt-queue"
+import { ADAPT_QUEUE, type AdaptJobData, type ContributionJobData } from "@uyarla/worker/adapt-queue"
 import { Queue } from "bullmq"
 import { redis } from "@/server/redis"
 
-const globalForQueue = globalThis as unknown as { adaptQueue?: Queue<AdaptJobData, void> }
+/** Uyarlama ve ön yazı { adaptationId }, katkı ayrıca contributionId taşıyor (DOG-94). */
+type AdaptQueueData = AdaptJobData | ContributionJobData
+
+const globalForQueue = globalThis as unknown as { adaptQueue?: Queue<AdaptQueueData, void> }
 
 /**
  * Next geliştirme modunda modülleri yeniden yüklüyor; global'de saklanmazsa
@@ -10,6 +13,6 @@ const globalForQueue = globalThis as unknown as { adaptQueue?: Queue<AdaptJobDat
  */
 export const adaptQueue =
   globalForQueue.adaptQueue ??
-  new Queue<AdaptJobData, void>(ADAPT_QUEUE, { connection: redis })
+  new Queue<AdaptQueueData, void>(ADAPT_QUEUE, { connection: redis })
 
 if (process.env.NODE_ENV !== "production") globalForQueue.adaptQueue = adaptQueue

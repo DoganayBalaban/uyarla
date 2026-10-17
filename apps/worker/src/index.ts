@@ -13,6 +13,8 @@ import { runAdaptation } from "./adapt-pipeline.js"
 import { ADAPT_QUEUE, type AdaptJobData } from "./adapt-queue.js"
 import { prismaAdaptationStore } from "./adapt-store.js"
 import { COVER_LETTER_JOB, runCoverLetter } from "./cover-pipeline.js"
+import { CONTRIBUTION_JOB, runContribution } from "./contribution-pipeline.js"
+import type { ContributionJobData } from "./adapt-queue.js"
 import { initErrorTracking, reportJobFailure } from "./observability.js"
 import { runAnalysis } from "./pipeline.js"
 import { ANALYZE_QUEUE, type AnalyzeJobData } from "./queue.js"
@@ -80,6 +82,25 @@ const adaptWorker = new Worker<AdaptJobData, void>(
   async (job) => {
     // Ön yazı aynı kuyrukta ayrı bir iş adıyla: aynı yerel modeli
     // paylaşıyorlar, ayrı kuyruk ikisini paralel çalıştırıp sıraya sokardı.
+    // Kullanıcının anlattığı deneyimden madde (DOG-94); aynı kuyruk, aynı model.
+    if (job.name === CONTRIBUTION_JOB) {
+      const data = job.data as ContributionJobData
+      try {
+        await runContribution({ llm, embedding, store: prismaAdaptationStore }, data)
+      } catch (error) {
+        const lastAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1)
+        if (error instanceof PermanentError || lastAttempt) {
+          // Arayüz "yazılıyor"da takılı kalmasın.
+          await prismaAdaptationStore
+            .updateContribution(data.adaptationId, data.contributionId, { status: "failed" })
+            .catch(() => {})
+        }
+        if (error instanceof PermanentError) throw toUnrecoverable(error, "adapt")
+        throw error
+      }
+      return
+    }
+
     if (job.name === COVER_LETTER_JOB) {
       try {
         await runCoverLetter({ llm, store: prismaAdaptationStore }, job.data)

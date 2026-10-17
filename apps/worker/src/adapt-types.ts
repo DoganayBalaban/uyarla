@@ -5,6 +5,7 @@ import type {
   JobPostingData,
   LlmProvider,
   CoverLetterRecord,
+  Contribution,
   ResumeProfile,
   ScoreResult,
 } from "@uyarla/core"
@@ -35,6 +36,13 @@ export interface AdaptationStore {
   }): Promise<void>
   failAdaptation(adaptationId: string, errorClass: string): Promise<void>
   saveCoverLetter(adaptationId: string, value: CoverLetterRecord): Promise<void>
+  /** Uyarlamanın güncel taslağı; katkı işi kendi kaydını buradan okuyor. */
+  getDraft(adaptationId: string): Promise<AdaptationDraft>
+  /**
+   * Bir katkıyı günceller. Taslak yazmadan hemen önce kilitlenip yeniden
+   * okunuyor: LLM beklenirken verilen kararlar ezilmesin (DOG-94).
+   */
+  updateContribution(adaptationId: string, contributionId: string, patch: Partial<Contribution>): Promise<void>
 }
 
 /** Arayüzdeki ilerleme metinleri bu aşamalara karşılık geliyor. */

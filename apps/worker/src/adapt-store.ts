@@ -1,4 +1,4 @@
-import { PermanentError } from "@uyarla/core"
+import { AdaptationDraftSchema, PermanentError, hasPendingDecisions } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import type { AdaptationStore } from "./adapt-types.js"
 
@@ -57,6 +57,30 @@ export const prismaAdaptationStore: AdaptationStore = {
     await prisma.adaptation.update({
       where: { id: adaptationId },
       data: { coverLetter: value as unknown as object },
+    })
+  },
+
+  async getDraft(adaptationId) {
+    const adaptation = await prisma.adaptation.findUnique({ where: { id: adaptationId }, select: { draft: true } })
+    if (!adaptation) throw new PermanentError("Uyarlama bulunamadı", "adaptation_not_found")
+    return AdaptationDraftSchema.parse(adaptation.draft)
+  },
+
+  async updateContribution(adaptationId, contributionId, patch) {
+    await prisma.$transaction(async (tx) => {
+      // Satır kilidi: aynı anda bir karar (PATCH /decision) yazılıyorsa biri
+      // ötekini beklesin; okuma-değiştirme-yazma arasına giremesin.
+      await tx.$queryRaw`SELECT id FROM "Adaptation" WHERE id = ${adaptationId} FOR UPDATE`
+      const row = await tx.adaptation.findUnique({ where: { id: adaptationId }, select: { draft: true, status: true } })
+      if (!row) return
+      const draft = AdaptationDraftSchema.parse(row.draft)
+      const next = {
+        ...draft,
+        contributions: (draft.contributions ?? []).map((c) => (c.id === contributionId ? { ...c, ...patch } : c)),
+      }
+      // Bekleyen katkı indirmeyi bloklıyor; durum taslakla birlikte değişmeli.
+      const status = row.status === "draft" || row.status === "ready" ? (hasPendingDecisions(next) ? "draft" : "ready") : row.status
+      await tx.adaptation.update({ where: { id: adaptationId }, data: { draft: next as unknown as object, status } })
     })
   },
 
