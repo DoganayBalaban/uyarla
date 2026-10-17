@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import type { AdaptationDraft } from "@uyarla/core"
-import { applyDecision, nextStatus } from "@/server/adaptationDecision"
+import { applyBulkDecision, applyDecision, nextStatus } from "@/server/adaptationDecision"
 
 const draftData: AdaptationDraft = {
   summary: {
@@ -66,5 +66,59 @@ describe("nextStatus", () => {
 
   it("ready when no decision is pending", () => {
     expect(nextStatus(applyDecision(draftData, "0-1", "rejected"))).toBe("ready")
+  })
+})
+
+describe("applyBulkDecision", () => {
+  const withAlignment: AdaptationDraft = {
+    ...draftData,
+    summary: { ...draftData.summary, decision: "rejected" },
+    bullets: [
+      ...draftData.bullets,
+      {
+        id: "0-2",
+        experienceIndex: 0,
+        original: "sunucu tarafı render",
+        sourceRef: "sunucu tarafı render",
+        rewritten: "SSR",
+        verification: { status: "ok", issues: [] },
+        alignments: [{ term: "SSR", basis: "sunucu tarafı render" }],
+        decision: "pending",
+      },
+      {
+        id: "0-3",
+        experienceIndex: 0,
+        original: "aynı",
+        sourceRef: "aynı",
+        rewritten: "aynı",
+        verification: { status: "ok", issues: [] },
+        decision: "accepted",
+      },
+    ],
+  }
+  const decisions = (d: AdaptationDraft) => d.bullets.map((b) => b.decision)
+
+  it("accepts every verified change, including term alignments waiting for approval", () => {
+    const r = applyBulkDecision(withAlignment, "accept_verified")
+    expect(r.summary.decision).toBe("accepted")
+    expect(decisions(r)).toEqual(["accepted", "pending", "accepted", "accepted"])
+  })
+
+  it("never accepts a flagged bullet in bulk", () => {
+    const r = applyBulkDecision(withAlignment, "accept_verified")
+    expect(r.bullets[1]!.decision).toBe("pending")
+    expect(nextStatus(r)).toBe("draft")
+  })
+
+  it("rejects everything, flagged ones included, which also unblocks download", () => {
+    const r = applyBulkDecision(withAlignment, "reject_all")
+    expect(r.summary.decision).toBe("rejected")
+    expect(decisions(r)).toEqual(["rejected", "rejected", "rejected", "accepted"])
+    expect(nextStatus(r)).toBe("ready")
+  })
+
+  it("does not mutate the input draft", () => {
+    applyBulkDecision(withAlignment, "reject_all")
+    expect(decisions(withAlignment)).toEqual(["accepted", "pending", "pending", "accepted"])
   })
 })

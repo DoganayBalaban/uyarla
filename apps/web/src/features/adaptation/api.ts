@@ -23,6 +23,14 @@ export async function decide(
     .data
 }
 
+/** Toplu karar (DOG-93): uyarısızları yeni hâline al ya da hepsini geri al. */
+export async function decideAll(
+  id: string,
+  bulk: "accept_verified" | "reject_all",
+): Promise<Partial<AdaptationState>> {
+  return (await api.patch<Partial<AdaptationState>>(`/adapt/${encodeURIComponent(id)}/decision`, { bulk })).data
+}
+
 export async function requestCoverLetter(id: string): Promise<{ coverLetter: CoverLetterRecord }> {
   return (await api.post<{ coverLetter: CoverLetterRecord }>(`/adapt/${encodeURIComponent(id)}/cover-letter`)).data
 }

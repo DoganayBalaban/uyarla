@@ -13,13 +13,14 @@ import {
   FileText,
   LayoutGrid,
   Link2,
+  RotateCcw,
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react"
 import { diffWords } from "@/features/adaptation/diff"
 import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/cn"
-import { adaptationQueryKey, decide, downloadAdaptation, useAdaptation } from "@/features/adaptation/api"
+import { adaptationQueryKey, decide, decideAll, downloadAdaptation, useAdaptation } from "@/features/adaptation/api"
 import { deriveStageStates } from "@/features/analysis/stageStates"
 import { CoverLetterSection } from "@/features/adaptation/components/CoverLetterSection"
 import type { AdaptationState, Verification } from "@/features/adaptation/types"
@@ -145,6 +146,18 @@ export function AdaptationView({ id }: { id: string }) {
     }
   }
 
+  async function bulkDecision(action: "accept_verified" | "reject_all") {
+    setIsBusy(true)
+    try {
+      const parsed = await decideAll(id, action)
+      queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
+    } catch {
+      // Tek karardaki gibi: kaydedilemediyse ekran eski hâlinde kalıyor.
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
   async function downloadFile(format: "pdf" | "docx") {
     setErrorMessage(null)
     setIsBusy(true)
@@ -206,6 +219,25 @@ export function AdaptationView({ id }: { id: string }) {
   const pendingAlignment = changedBullets.filter(
     ({ bullet }) => bullet.decision === "pending" && (bullet.alignments?.length ?? 0) > 0,
   ).length
+  // Toplu karar (DOG-93). Yalnızca uydurma kontrolünden temiz geçenler toplu
+  // kabul edilebiliyor; uyarılı maddeler tek tek okunmalı (K-26).
+  const summaryChanged = !!draft.summary.original && draft.summary.original !== draft.summary.rewritten
+  const acceptable =
+    changedBullets.filter(({ bullet }) => bullet.verification.status === "ok" && bullet.decision !== "accepted").length +
+    (summaryChanged && draft.summary.verification.status === "ok" && draft.summary.decision !== "accepted" ? 1 : 0)
+  const alignmentTerms = [
+    ...new Set(
+      changedBullets
+        .filter(({ bullet }) => bullet.verification.status === "ok" && bullet.decision === "pending")
+        .flatMap(({ bullet }) => (bullet.alignments ?? []).map((a) => a.term)),
+    ),
+  ]
+  const flaggedPending = changedBullets.filter(
+    ({ bullet }) => bullet.decision === "pending" && bullet.verification.status === "flagged",
+  ).length
+  const anyNew =
+    changedBullets.some(({ bullet }) => bullet.decision !== "rejected") ||
+    (summaryChanged && draft.summary.decision !== "rejected")
   const before = state.scoreBefore ?? 0
   const after = state.scoreAfter ?? 0
   const diff = after - before
@@ -269,6 +301,60 @@ export function AdaptationView({ id }: { id: string }) {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
         <div className="space-y-6">
+          {(acceptable > 0 || anyNew) && (
+            <motion.section
+              {...entrance(0.04)}
+              aria-label="Toplu karar"
+              className="flex flex-col gap-3 rounded-card border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="text-sm">
+                {acceptable > 0 ? (
+                  <>
+                    <p className="m-0 font-semibold">
+                      Uyarısız {acceptable} değişikliği tek seferde yeni hâline alabilirsin.
+                    </p>
+                    {alignmentTerms.length > 0 && (
+                      <p className="m-0 mt-0.5 text-muted">
+                        Bunlarda şu terimleri kullandık: {alignmentTerms.join(", ")}. Hepsi deneyimini doğru anlatıyorsa onayla.
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="m-0 font-semibold">Değişikliklerin hepsi seçili.</p>
+                )}
+                {flaggedPending > 0 && (
+                  <p className="m-0 mt-0.5 text-muted">
+                    Uyarılı {flaggedPending} madde bu işleme dahil değil; onlara tek tek bakman gerekiyor.
+                  </p>
+                )}
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-2">
+                {acceptable > 0 && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void bulkDecision("accept_verified")}
+                    className="inline-flex items-center gap-1.5 rounded-button bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue/90 disabled:opacity-50"
+                  >
+                    <Check className="size-4" strokeWidth={3} aria-hidden />
+                    Hepsini yeni hâline al
+                  </button>
+                )}
+                {anyNew && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void bulkDecision("reject_all")}
+                    className="inline-flex items-center gap-1.5 rounded-button border border-border px-4 py-2 text-sm font-semibold transition hover:border-brand-blue/40 hover:text-brand-blue disabled:opacity-50"
+                  >
+                    <RotateCcw className="size-4" aria-hidden />
+                    Hepsini eski hâline döndür
+                  </button>
+                )}
+              </div>
+            </motion.section>
+          )}
+
           {draft.summary.original && (
             <motion.section {...entrance(0.06)} className="rounded-card border border-border bg-card p-5 sm:p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
