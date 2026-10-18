@@ -222,3 +222,19 @@ describe("applyAdaptation · project bullets (DOG-105)", () => {
     expect(applyAdaptation(resumeProfile, draftData)).not.toHaveProperty("projects")
   })
 })
+
+describe("applyAdaptation · omitted bullets (DOG-93)", () => {
+  it("drops omitted bullets and keeps the ids of the rest stable", () => {
+    const profile = {
+      fullName: null, headline: null, summary: null, education: [], skills: [], languages: [], certifications: [],
+      experience: [{ company: "A", title: "T", startDate: "", endDate: "", bullets: [{ text: "bir", sourceRef: "bir" }, { text: "iki", sourceRef: "iki" }, { text: "üç", sourceRef: "üç" }] }],
+    }
+    const draft = {
+      summary: { original: null, rewritten: "", verification: { status: "ok" as const, issues: [] }, decision: "rejected" as const },
+      bullets: [{ id: "0-2", original: "üç", sourceRef: "üç", rewritten: "ÜÇ", verification: { status: "ok" as const, issues: [] }, decision: "accepted" as const }],
+      skillOrder: [],
+      omitted: ["0-1"],
+    }
+    expect(applyAdaptation(profile, draft).experience[0]!.bullets.map((b) => b.text)).toEqual(["bir", "ÜÇ"])
+  })
+})

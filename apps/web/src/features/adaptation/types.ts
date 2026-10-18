@@ -43,6 +43,9 @@ export interface Draft {
   addedSkills?: string[]
   /** Kullanıcı katkıları (DOG-94); eski taslaklarda yok. */
   contributions?: Contribution[]
+  /** Belge stratejisi ve tek sayfa için çıkarılan maddeler (DOG-93). */
+  layout?: "full" | "onePage"
+  omitted?: string[]
 }
 
 /** Belge görünümünün bir hâli; sunucudaki DocumentOutline ile aynı (DOG-93). */
@@ -68,4 +71,6 @@ export interface AdaptationState {
   document?: { before: DocumentOutline; after: DocumentOutline } | null
   /** Analizde karşılanmayan zorunlu gereksinimler; "AI ile yaz" bunlar için (DOG-94). */
   missingRequirements?: Array<{ index: number; text: string }>
+  /** Tek sayfa planının sonucu (DOG-93); yalnızca strateji seçildiği yanıtta. */
+  onePage?: { fits: boolean; pages: number }
 }

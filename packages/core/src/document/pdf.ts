@@ -8,6 +8,9 @@ const MARGIN = 56
 const TEXT = "#000"
 const MUTED = "#444"
 const LINK = "#1f4e9c"
+/** Sıkı yerleşimde dikey aralıkların çarpanı ve üst/alt kenar boşluğu (~1,3 cm). */
+const COMPACT_SPACING = 0.55
+const COMPACT_VERTICAL_MARGIN = 36
 
 /**
  * ATS dostu tek sütunlu PDF (spec §9).
@@ -17,13 +20,39 @@ const LINK = "#1f4e9c"
  * onu gerektirmiyor. pdfkit ile doğrudan yazmak metnin seçilebilir olmasını
  * da garantiliyor — taranmış PDF'e benzer bir sonuç riski yok.
  */
-export async function renderPdf(model: DocumentModel): Promise<Buffer> {
+export interface PdfOptions {
+  /**
+   * Sıkı yerleşim (DOG-93, tek sayfa stratejisi): üst ve alt kenar boşluğu
+   * ile satır aralıkları daralıyor; yazı boyutu ve içerik aynı. Değerlendirme
+   * CV'lerinden ikisi bir sayfayı yalnızca birkaç satırla aşıyordu.
+   */
+  compact?: boolean
+}
+
+export async function renderPdf(model: DocumentModel, options: PdfOptions = {}): Promise<Buffer> {
+  return (await layoutPdf(model, options)).buffer
+}
+
+/** Belgenin kaç sayfa tuttuğu; tek sayfa planı (adapt/onePage.ts) bunu soruyor. */
+export async function pdfPageCount(model: DocumentModel, options: PdfOptions = {}): Promise<number> {
+  return (await layoutPdf(model, options)).pages
+}
+
+async function layoutPdf(model: DocumentModel, options: PdfOptions): Promise<{ buffer: Buffer; pages: number }> {
   const fontList = fontPaths()
+  const scale = options.compact ? COMPACT_SPACING : 1
+  const vertical = options.compact ? COMPACT_VERTICAL_MARGIN : MARGIN
   // Varsayılan font bizim gövde fontumuz: pdfkit aksi hâlde açılışta kendi
   // Helvetica'sını `#standard-fonts` iç importuyla yüklüyor. Üretimde Sentry'nin
   // modül kancası o importu çözemiyor ve indirme 500 veriyordu (15 Ekim 2026);
   // Helvetica'yı zaten kullanmıyoruz (Türkçe harfleri yok).
-  const doc = new PDFDocument({ size: "A4", margin: MARGIN, font: fontList.regular })
+  const doc = new PDFDocument({
+    size: "A4",
+    margins: { top: vertical, bottom: vertical, left: MARGIN, right: MARGIN },
+    font: fontList.regular,
+  })
+  let pages = 1
+  doc.on("pageAdded", () => pages++)
   doc.registerFont("govde", fontList.regular)
   doc.registerFont("kalin", fontList.bold)
 
@@ -38,13 +67,13 @@ export async function renderPdf(model: DocumentModel): Promise<Buffer> {
   }
 
   if (model.summary) {
-    doc.moveDown(0.8)
+    doc.moveDown(0.8 * scale)
     writeParts(doc, linkParts(model.summary), { font: "govde", size: 10, color: TEXT })
   }
 
   for (const section of model.sections) {
     keepWithNext(doc, 60)
-    doc.moveDown(1).font("kalin").fontSize(11).fillColor(TEXT).text(section.title, MARGIN, doc.y, { characterSpacing: 0.6 })
+    doc.moveDown(1 * scale).font("kalin").fontSize(11).fillColor(TEXT).text(section.title, MARGIN, doc.y, { characterSpacing: 0.6 })
 
     // İnce bir çizgi; grafik değil, bölüm ayracı. Metin katmanını
     // etkilemiyor, ATS tarafında görünmez.
@@ -54,12 +83,12 @@ export async function renderPdf(model: DocumentModel): Promise<Buffer> {
       .strokeColor("#999")
       .lineWidth(0.5)
       .stroke()
-    doc.moveDown(0.5)
+    doc.moveDown(0.5 * scale)
 
     for (const entry of section.entries) {
       if (entry.heading || entry.organization || entry.date) writeEntryHeader(doc, entry)
-      for (const line of entry.lines) writeBullet(doc, line)
-      doc.moveDown(0.5)
+      for (const line of entry.lines) writeBullet(doc, line, scale)
+      doc.moveDown(0.5 * scale)
     }
 
     for (const row of section.rows ?? []) {
@@ -69,20 +98,20 @@ export async function renderPdf(model: DocumentModel): Promise<Buffer> {
         size: 10,
         color: TEXT,
       })
-      doc.moveDown(0.25)
+      doc.moveDown(0.25 * scale)
     }
   }
 
   doc.end()
   await finished
-  return Buffer.concat(fragments)
+  return { buffer: Buffer.concat(fragments), pages }
 }
 
 type Doc = PDFKit.PDFDocument
 
 /** Sayfanın sonuna bu kadar yer kalmadıysa başlığı yeni sayfaya taşır. */
 function keepWithNext(doc: Doc, height: number) {
-  if (doc.y + height > doc.page.height - MARGIN) doc.addPage()
+  if (doc.y + height > doc.page.height - doc.page.margins.bottom) doc.addPage()
 }
 
 /**
@@ -137,7 +166,7 @@ function writeEntryHeader(doc: Doc, entry: DocumentEntry) {
 }
 
 /** Asılı girintili madde: satır kaydığında metin imin hizasında kalmıyor. */
-function writeBullet(doc: Doc, line: string) {
+function writeBullet(doc: Doc, line: string, scale = 1) {
   // İm ile metin aynı y'ye açık konumla yazılıyor; sayfa sonunda im yeni
   // sayfaya taşıp metin eski y'de kalırsa, içinde yalnızca "•" olan bir sayfa
   // ve fazladan bir sayfa çıkıyordu. Maddenin ilk satırı sığmıyorsa önce
@@ -147,5 +176,5 @@ function writeBullet(doc: Doc, line: string) {
   const y = doc.y
   doc.font("govde").fontSize(10).fillColor(TEXT).text("•", MARGIN + 4, y)
   writeParts(doc, linkParts(line), { font: "govde", size: 10, color: TEXT, x: MARGIN + 14, y })
-  doc.moveDown(0.1)
+  doc.moveDown(0.1 * scale)
 }

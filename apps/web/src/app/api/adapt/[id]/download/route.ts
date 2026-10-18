@@ -1,9 +1,10 @@
-import { applyAdaptation, hasPendingDecisions, toDocumentModel, withContact } from "@uyarla/core"
+import { applyAdaptation, hasPendingDecisions } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { loadAdaptation } from "@/server/adaptationDecision"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 import { downloadFileName } from "@/features/adaptation/fileName"
+import { documentModelFor } from "@/server/documentModel"
 
 export const runtime = "nodejs"
 
@@ -54,21 +55,7 @@ export async function GET(
   })
   await prisma.adaptation.update({ where: { id }, data: { resumeVersionId: version.id } })
 
-  // İletişim satırı: CV'de e-posta/telefon yoksa hesaptaki bilgi (DOG-58).
-  const owner = await prisma.user.findUnique({
-    where: { id: payload.ownerId! },
-    select: { email: true, phone: true, isAnonymous: true, goal: true },
-  })
-  // İlk işini arayanda eğitim deneyimden önce (DOG-55).
-  const baseModel = toDocumentModel(adapted, { educationFirst: owner?.goal === "first_job" })
-  const model = {
-    ...baseModel,
-    contact: withContact(baseModel.contact, {
-      // Anonim oturumun e-postası yer tutucu; belgeye yazılmıyor.
-      email: owner && !owner.isAnonymous ? owner.email : null,
-      phone: owner?.phone ?? null,
-    }),
-  }
+  const model = (await documentModelFor(payload.ownerId!))(adapted)
 
   // Tembel import: pdfkit ve docx ağır bağımlılıklar. Sprint 1'de pdf-parse'ın
   // Next sunucu katmanında üst seviyeden yüklenemediğini görmüştük; yalnızca
@@ -76,7 +63,10 @@ export async function GET(
   const { renderPdf } = await import("@uyarla/core/document/pdf")
   const { renderDocx } = await import("@uyarla/core/document/docx")
 
-  const buffer = format === "docx" ? await renderDocx(model) : await renderPdf(model)
+  // Tek sayfa stratejisinde sıkı yerleşim (DOG-93). DOCX'te Word yeniden
+  // dizdiği için yalnızca çıkarılan maddeler etkili.
+  const compact = payload.draft.layout === "onePage"
+  const buffer = format === "docx" ? await renderDocx(model) : await renderPdf(model, { compact })
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {

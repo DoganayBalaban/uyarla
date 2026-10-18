@@ -33,6 +33,9 @@ export function applyAdaptation(
   const accepted = new Map(
     draft.bullets.filter((b) => b.decision === "accepted").map((b) => [b.id, b.rewritten]),
   )
+  // Tek sayfa için çıkarılan maddeler (DOG-93). Kimlik konumdan geldiği için
+  // süzme, kimlik eşlendikten sonra yapılıyor.
+  const omitted = new Set(draft.omitted ?? [])
 
   return {
     ...profile,
@@ -45,11 +48,17 @@ export function applyAdaptation(
     experience: profile.experience.map((job, i) => ({
       ...job,
       bullets: [
-        ...job.bullets.map((bullet, j) => ({
-          ...bullet,
-          text: accepted.get(bulletId(i, j)) ?? bullet.text,
-          // sourceRef asla değişmez: doğrulamanın tek kaynağı bu.
-        })),
+        ...job.bullets.flatMap((bullet, j) =>
+          omitted.has(bulletId(i, j))
+            ? []
+            : [
+                {
+                  ...bullet,
+                  text: accepted.get(bulletId(i, j)) ?? bullet.text,
+                  // sourceRef asla değişmez: doğrulamanın tek kaynağı bu.
+                },
+              ],
+        ),
         // Kullanıcının anlattığı deneyimden yazılanlar o işin sonuna (DOG-94).
         // Dayanak kullanıcının cevabı; sourceRef olarak o saklanıyor.
         ...(draft.contributions ?? [])
@@ -62,10 +71,11 @@ export function applyAdaptation(
       ? {
           projects: profile.projects.map((project, i) => ({
             ...project,
-            bullets: project.bullets.map((bullet, j) => ({
-              ...bullet,
-              text: accepted.get(projectBulletId(i, j)) ?? bullet.text,
-            })),
+            bullets: project.bullets.flatMap((bullet, j) =>
+              omitted.has(projectBulletId(i, j))
+                ? []
+                : [{ ...bullet, text: accepted.get(projectBulletId(i, j)) ?? bullet.text }],
+            ),
           })),
         }
       : {}),

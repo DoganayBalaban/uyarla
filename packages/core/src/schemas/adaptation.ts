@@ -98,6 +98,17 @@ export const AdaptationDraftSchema = z.object({
   addedSkills: z.array(z.string()).optional(),
   /** Kullanıcı katkıları (DOG-94); eski taslaklarda yok. */
   contributions: z.array(ContributionSchema).optional(),
+  /**
+   * Belge stratejisi (DOG-93): "full" olduğu gibi, "onePage" sıkı yerleşim
+   * ve gerekirse `omitted`. Eski taslaklarda yok (= full).
+   */
+  layout: z.enum(["full", "onePage"]).optional(),
+  /**
+   * Tek sayfa için belgeden çıkarılan madde kimlikleri (bullets'taki id).
+   * Plan önerir (adapt/onePage.ts); kullanıcı her birini geri alabilir.
+   * Skor ve indirme bu maddeler olmadan hesaplanıyor.
+   */
+  omitted: z.array(z.string()).optional(),
 })
 
 export type TermAlignment = z.infer<typeof TermAlignmentSchema>

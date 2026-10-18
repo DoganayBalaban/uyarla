@@ -2640,3 +2640,36 @@ metinler:
 - "Eksik kavramlar" başlığı "CV'nde görünmeyen kavramlar" oldu.
 - Eksik gereksinimin işareti kırmızıdan kehribara döndü: başarısızlık değil,
   kapatılabilecek bir şey.
+
+## K-66 · Tek sayfa stratejisi: önce sıkı yerleşim, sonra skoru düşürmeyen çıkarma
+
+**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-93
+
+**Bağlam:** Jobscan uyarlamadan önce "hafif" ya da "sıkıştır (tek sayfa)"
+seçtiriyor. Sıkıştırma içeriği kırpıyor ve "skor düşebilir" diye uyarıyor.
+Değerlendirme CV'lerinden 3'ü bir sayfayı aşıyordu. İkisi yalnızca birkaç
+satırla (cv-a'nın 2. sayfası 131 karakter), cv-b ise 24 maddeyle.
+
+**Karar:** Uyarlama ekranında "Belge düzeni: Tam / Tek sayfa" seçimi.
+Uyarlamadan önce sorulmuyor: yeniden yazımı etkilemiyor, istendiğinde
+hesaplanıyor.
+- Önce sıkı yerleşim: üst/alt kenar boşluğu ve satır aralıkları daralıyor;
+  yazı boyutu ve içerik aynı. PDF'te uygulanıyor; DOCX'te Word yeniden
+  dizdiği için yalnızca çıkarılan maddeler etkili.
+- Yetmezse maddeler ilana en az benzeyeninden başlayarak çıkarılıyor
+  (adapt/onePage.ts). Çıkarılınca skoru düşüren madde bir gereksinimin
+  kanıtıdır ve kalıyor. Bir işin son maddesi kalıyor. Belge tek sayfaya inince
+  duruluyor. Hiçbir şey yazılmıyor ya da kısaltılmıyor, uydurma riski yok.
+- Çıkarılanlar taslakta (`omitted`). Belge görünümünde üstü çizili ve tek
+  tek geri alınabilir. Skor ve indirme onlarsız hesaplanıyor. "Tam"a dönmek
+  hepsini geri getiriyor.
+- Plan, indirmenin kurduğu belgeyle (iletişim satırı, bölüm sırası) ölçüyor.
+
+**Ölçüm (`pnpm eval:onepage`, 20 çift, yeniden yazımsız taslak):**
+- 17 çift sıkı yerleşimle tek sayfa.
+- cv-b'nin dört çiftinde 24 maddeden 5–9'u çıkıyor ve her seferinde skor
+  aynı (0 → 0, 13 → 13, 78 → 78).
+- Süre (Redis gömme önbelleğiyle, en uzun CV): soğuk 1,0 sn, sıcak 0,4 sn.
+
+Aynı işte: harf ya da rakam taşımayan tarih belgede yok sayılıyor. Kırık
+model çıktısı ("},{") eğitim tarihine girmişti.

@@ -26,9 +26,12 @@ const MODES: { mode: Mode; label: string }[] = [
 export function DocumentView({
   document,
   draft,
+  onRestore,
 }: {
   document: { before: DocumentOutline; after: DocumentOutline }
-  draft: Pick<Draft, "bullets">
+  draft: Pick<Draft, "bullets" | "omitted">
+  /** Tek sayfa için çıkarılan maddeyi geri alır (DOG-93). */
+  onRestore?: (bulletId: string) => void
 }) {
   const [mode, setMode] = useState<Mode>("diff")
   const s = documentSections(document, draft)
@@ -97,14 +100,7 @@ export function DocumentView({
                   {job.dates && <p className="m-0 text-xs text-muted">{job.dates}</p>}
                   <ul className="mt-2 list-disc space-y-1.5 pl-5">
                     {job.bullets.map((b, j) => (
-                      <li key={j}>
-                        {text(b)}
-                        {b.pending && mode !== "before" && (
-                          <span className="mt-0.5 block text-xs font-medium text-brand-blue">
-                            Karar bekliyor; yeni hâlini seçmezsen bu madde eski hâliyle kalır.
-                          </span>
-                        )}
-                      </li>
+                      <BulletItem key={j} line={b} mode={mode} text={text} onRestore={onRestore} />
                     ))}
                   </ul>
                 </div>
@@ -127,14 +123,7 @@ export function DocumentView({
                   {p.bullets.length > 0 && (
                     <ul className="mt-2 list-disc space-y-1.5 pl-5">
                       {p.bullets.map((b, j) => (
-                        <li key={j}>
-                          {text(b)}
-                          {b.pending && mode !== "before" && (
-                            <span className="mt-0.5 block text-xs font-medium text-brand-blue">
-                              Karar bekliyor; yeni hâlini seçmezsen bu madde eski hâliyle kalır.
-                            </span>
-                          )}
-                        </li>
+                        <BulletItem key={j} line={b} mode={mode} text={text} onRestore={onRestore} />
                       ))}
                     </ul>
                   )}
@@ -175,5 +164,49 @@ export function DocumentView({
         ))}
       </div>
     </section>
+  )
+}
+
+function BulletItem({
+  line,
+  mode,
+  text,
+  onRestore,
+}: {
+  line: DocumentLine
+  mode: Mode
+  text: (l: DocumentLine) => React.ReactNode
+  onRestore?: (bulletId: string) => void
+}) {
+  // Tek sayfa için çıkarılan madde (DOG-93): "Önce"de olduğu gibi, diğer
+  // kiplerde üstü çizili ve geri alınabilir.
+  if (line.omitted && mode !== "before") {
+    return (
+      <li className="text-muted">
+        <p className="m-0 leading-relaxed line-through decoration-muted/60">{line.after}</p>
+        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs">
+          Tek sayfa için çıkarıldı.
+          {onRestore && line.id && (
+            <button
+              type="button"
+              onClick={() => onRestore(line.id!)}
+              className="font-semibold text-brand-blue underline-offset-2 hover:underline"
+            >
+              Geri al
+            </button>
+          )}
+        </span>
+      </li>
+    )
+  }
+  return (
+    <li>
+      {text(line)}
+      {line.pending && mode !== "before" && (
+        <span className="mt-0.5 block text-xs font-medium text-brand-blue">
+          Karar bekliyor; yeni hâlini seçmezsen bu madde eski hâliyle kalır.
+        </span>
+      )}
+    </li>
   )
 }
