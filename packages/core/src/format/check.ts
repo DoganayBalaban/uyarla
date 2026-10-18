@@ -1,6 +1,7 @@
 import JSZip from "jszip"
 import { sectionHeading, segmentResume, type ResumeSection } from "../extract/segment.js"
 import { measurableResults } from "./measurable.js"
+import { structureChecks } from "./structure.js"
 
 /**
  * CV'nin ATS tarafından okunabilirliğini kontrol eder.
@@ -83,6 +84,7 @@ export async function checkFormat(input: {
   textChecks(input.text, docx, findings, passed)
   if (docx) docxChecks(docx, findings, passed)
   contentChecks(input.text, findings, passed)
+  structureChecks(input.text, findings, passed)
 
   // Önce sorunlar, sonra uyarılar: arayüz sırayı olduğu gibi gösteriyor.
   findings.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === "problem" ? -1 : 1))
