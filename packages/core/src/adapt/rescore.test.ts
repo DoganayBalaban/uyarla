@@ -124,3 +124,22 @@ describe("guardSummaryScore", () => {
   })
 })
 
+
+describe("rescore · excluded requirements (DOG-90)", () => {
+  it("leaves requirements marked as not in the posting out of the score", async () => {
+    const embedding: EmbeddingProvider = { embed: vi.fn(async (t: string[]) => t.map(() => [1, 0])) }
+    const posting: JobPostingData = {
+      ...testPosting,
+      requirements: [
+        ...testPosting.requirements,
+        { text: "Kubernetes", type: "skill", importance: "must", concepts: [{ term: "Kubernetes", synonyms: [] }] },
+      ],
+    }
+    const draft = { summary: { original: null, rewritten: "", verification: { status: "ok", issues: [] }, decision: "rejected" }, bullets: [], skillOrder: [] } as unknown as AdaptationDraft
+    const profile = { ...resumeProfile, skills: ["React"] }
+    const all = await rescore({ profile, posting, draft }, embedding)
+    const withoutK8s = await rescore({ profile, posting, draft, excluded: [posting.requirements.length - 1] }, embedding)
+    expect(all).toBeGreaterThan(0)
+    expect(withoutK8s).toBeGreaterThan(all)
+  })
+})

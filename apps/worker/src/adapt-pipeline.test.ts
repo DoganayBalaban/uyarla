@@ -375,6 +375,20 @@ describe("runAdaptation", () => {
     expect(bulletInputs[0]).not.toContain("konteyner")
   })
 
+  it("does not target a requirement the user marked as not in the posting (DOG-90)", async () => {
+    const { store } = fakeStore()
+    // "konteyner yönetimi" (sıra 1) ilanda yok diye işaretli.
+    store.getAdaptationContext = vi.fn(async () => ({ profile: testProfile, posting: testPosting, result: { ...testScore, excluded: [1] } }))
+    const llm = echoLlm()
+
+    await runAdaptation({ llm, embedding: fakeEmbedding, store }, { adaptationId: "a1" })
+
+    const inputs = vi.mocked(llm.extract).mock.calls.map((c) => c[0].input)
+    expect(inputs.some((g) => g.includes("konteyner"))).toBe(false)
+    // İşaretsiz gereksinim hâlâ hedef.
+    expect(inputs.some((g) => g.includes("süreç iyileştirme"))).toBe(true)
+  })
+
   it("if one bullet fails it stays original; the others are unaffected", async () => {
     // spec §13: madde başına izolasyon.
     let counter = 0

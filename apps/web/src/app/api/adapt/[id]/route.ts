@@ -22,16 +22,16 @@ export async function GET(
 
     ensureOwner(payload.ownerId, await getSession())
 
-    const { adaptation, profile, posting, draft, scoreBefore, scoringRevision } = payload
+    const { adaptation, profile, posting, draft, scoreBefore, scoringRevision, excluded } = payload
 
     return NextResponse.json({
       status: adaptation.status,
       draft,
       // Eski formülle kaydedilmiş analizde "önce" de bugünkü formülle (DOG-103).
-      scoreBefore: scoringRevision >= 2 ? scoreBefore : ((await computeScoreBefore(profile, posting, draft)) ?? scoreBefore),
+      scoreBefore: scoringRevision >= 2 ? scoreBefore : ((await computeScoreBefore(profile, posting, draft, excluded)) ?? scoreBefore),
       // Yeni skor yalnızca taslak varken hesaplanıyor; çalışırken boşuna
       // gömme çağrısı yapılmaz.
-      scoreAfter: await computeScoreAfter(profile, posting, draft),
+      scoreAfter: await computeScoreAfter(profile, posting, draft, excluded),
       errorClass: adaptation.errorClass,
       coverLetter: adaptation.coverLetter ?? null,
       document: adaptationDocument(profile, draft),
