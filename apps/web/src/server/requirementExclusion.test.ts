@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { setRequirementExcluded } from "@/server/requirementExclusion"
+import { scoreWithExclusions, setRequirementExcluded } from "@/server/requirementExclusion"
 
 const result = { requirements: [{}, {}, {}] }
 
@@ -18,5 +18,20 @@ describe("setRequirementExcluded", () => {
     expect(() => setRequirementExcluded(result, 3, true)).toThrow(RangeError)
     expect(() => setRequirementExcluded(result, -1, true)).toThrow(RangeError)
     expect(() => setRequirementExcluded(result, 1.5, true)).toThrow(RangeError)
+  })
+})
+
+describe("scoreWithExclusions (DOG-90, ikinci adım)", () => {
+  const req = (type: string, confidence: number) => ({ requirement: { text: "x", importance: "must", type }, confidence })
+  const result = { score: 33, requirements: [req("skill", 1), req("skill", 0), req("skill", 0)], scoringRevision: 2 }
+
+  it("keeps the first score when nothing is marked", () => {
+    expect(scoreWithExclusions(result, [])).toBe(33)
+  })
+
+  it("is the adjusted score the dashboard and board show", () => {
+    expect(scoreWithExclusions(result, [2])).toBe(50)
+    // Unvan da sonucun formülüyle katılıyor (DOG-103).
+    expect(scoreWithExclusions({ ...result, titleMatch: { level: "none" } }, [2])).toBe(33)
   })
 })

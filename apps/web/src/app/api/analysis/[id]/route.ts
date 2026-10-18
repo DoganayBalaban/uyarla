@@ -1,7 +1,7 @@
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
-import { setRequirementExcluded } from "@/server/requirementExclusion"
+import { scoreWithExclusions, setRequirementExcluded } from "@/server/requirementExclusion"
 
 export const runtime = "nodejs"
 
@@ -67,7 +67,13 @@ export async function PATCH(
       return NextResponse.json({ error: "Analiz henüz tamamlanmadı." }, { status: 409 })
     }
 
-    const result = analysis!.result as { requirements: unknown[]; excluded?: number[] }
+    const result = analysis!.result as {
+      score: number
+      requirements: Array<{ requirement: { text: string; importance: string; type: string }; confidence: number }>
+      excluded?: number[]
+      titleMatch?: { level: string } | null
+      scoringRevision?: number
+    }
     let excluded: number[]
     try {
       excluded = setRequirementExcluded(result, body.requirementIndex, body.excluded)
@@ -75,12 +81,15 @@ export async function PATCH(
       return NextResponse.json({ error: "Gereksinim bulunamadı." }, { status: 404 })
     }
 
-    // Yalnızca işaretler saklanıyor; düzeltilmiş skoru ekran hesaplıyor
-    // (features/analysis/exclusion.ts). Bu dosya @uyarla/core içe aktarmıyor:
+    // İlk skor sonucun içinde (result.score) kalıyor; Analysis.score
+    // düzeltilmiş skor oluyor: pano, başvuru kartları ve uyarlamanın "önce"
+    // skoru onu okuyor (DOG-90, ikinci adım). Hesap web'deki eşten
+    // (features/analysis/exclusion.ts): bu dosya @uyarla/core içe aktarmıyor,
     // aktarınca Vercel route'u ayrı bir fonksiyona taşıyor ve Hobby'nin 12
-    // fonksiyon sınırı aşılıyor (DOG-90, PR 117'nin ilk denemesi).
+    // fonksiyon sınırı aşılıyor (PR 117'nin ilk denemesi).
     const updated = { ...result, excluded }
-    await prisma.analysis.update({ where: { id }, data: { result: updated as object } })
+    const score = scoreWithExclusions(result, excluded)
+    await prisma.analysis.update({ where: { id }, data: { result: updated as object, score } })
     return NextResponse.json({ result: updated })
   } catch (error) {
     const reply = authErrorResponse(error)

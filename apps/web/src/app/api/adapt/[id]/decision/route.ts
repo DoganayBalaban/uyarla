@@ -58,7 +58,13 @@ export async function PATCH(
   if (isLayout) {
     if (!payload.profile) return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
     ;({ draft: fresh, onePage } = await applyLayout(
-      { profile: payload.profile, posting: payload.posting, draft: payload.draft, ownerId: payload.ownerId! },
+      {
+        profile: payload.profile,
+        posting: payload.posting,
+        draft: payload.draft,
+        ownerId: payload.ownerId!,
+        excluded: payload.excluded,
+      },
       layout,
     ))
   } else {
@@ -82,7 +88,7 @@ export async function PATCH(
   return NextResponse.json({
     status,
     draft: fresh,
-    scoreAfter: await computeScoreAfter(payload.profile, payload.posting, fresh),
+    scoreAfter: await computeScoreAfter(payload.profile, payload.posting, fresh, payload.excluded),
     // Belge görünümü kararla birlikte güncelleniyor (DOG-93).
     document: adaptationDocument(payload.profile, fresh),
     // Tek sayfa planının sonucu; yalnızca strateji seçildiğinde.

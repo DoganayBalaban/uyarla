@@ -46,6 +46,8 @@ export async function planOnePage(
     posting: JobPostingData
     draft: AdaptationDraft
     toModel?: (profile: ResumeProfile) => DocumentModel
+    /** "İlanda yok" işaretleri (DOG-90); skor bunlar olmadan korunuyor. */
+    excluded?: readonly number[]
   },
   embedding: EmbeddingProvider,
 ): Promise<OnePagePlan> {
@@ -54,7 +56,10 @@ export async function planOnePage(
   const pagesOf = (omitted: string[]) =>
     pdfPageCount(toModel(applyAdaptation(input.profile, withOmitted(omitted))), { compact: true })
   const scoreOf = (omitted: string[]) =>
-    rescore({ profile: input.profile, posting: input.posting, draft: withOmitted(omitted) }, embedding)
+    rescore(
+      { profile: input.profile, posting: input.posting, draft: withOmitted(omitted), excluded: input.excluded },
+      embedding,
+    )
 
   const pagesBefore = await pagesOf([])
   const scoreBefore = await scoreOf([])

@@ -70,6 +70,11 @@ export async function buildAdaptationDraft(
 ): Promise<{ draft: AdaptationDraft; tokens: number }> {
   const { llm, embedding, profile, posting, result } = input
   const alignmentCfg = input.alignmentConfig ?? DEFAULT_ALIGNMENT_CONFIG
+  // Kullanıcının "ilanda yok, yanlış okunmuş" dediği gereksinimler (DOG-90)
+  // hedef, özet terimi, eklenen beceri ve beceri sırası olmuyor. Doğrulama tam
+  // ilanla kalıyor: model işaretli bir terimi kendiliğinden eklerse yine
+  // yakalanmalı. result.requirements ilanın gereksinimleriyle sıra sıra eşli.
+  const { posting: wanted, result: wantedResult } = withoutExcluded(posting, result)
 
   const bulletList: Array<{
     id: string
@@ -108,8 +113,8 @@ export async function buildAdaptationDraft(
   // Diller farklıysa hedef seçimi kavramın CV dilindeki karşılıklarıyla:
   // karışık "terim (karşılıklar)" metni maddeye eşikten uzak kalıyordu.
   const conceptTextList = sameLanguage
-    ? conceptTexts(posting, lang)
-    : posting.requirements.flatMap((r) => r.concepts.map(equivalentText))
+    ? conceptTexts(wanted, lang)
+    : wanted.requirements.flatMap((r) => r.concepts.map(equivalentText))
   const targetVectors = await embedding.embed([
     ...bulletList.map((m) => m.original),
     ...conceptTextList,
@@ -118,9 +123,9 @@ export async function buildAdaptationDraft(
     {
       bullets: bulletList.map((m) => m.original),
       bulletVectors: targetVectors.slice(0, bulletList.length),
-      posting,
+      posting: wanted,
       conceptVectors: targetVectors.slice(bulletList.length),
-      result,
+      result: wantedResult,
     },
     input.targetOptions ?? DEFAULT_TARGET_OPTIONS,
   )
@@ -145,8 +150,8 @@ export async function buildAdaptationDraft(
     profile.summary
       ? rewriteSummary(llm, {
           summary: profile.summary,
-          posting,
-          supportedTerms: supportedConceptTerms(posting, fullResumeText),
+          posting: wanted,
+          supportedTerms: supportedConceptTerms(wanted, fullResumeText),
           // Doğrulama da aynı listeyi istiyor (preservesSource bases).
           keepTerms: summaryAnchors(profile.summary, profile.skills),
           language: lang,
@@ -290,7 +295,7 @@ export async function buildAdaptationDraft(
     })
   }
 
-  const addedSkillList = skillsFromBullets(profile, posting)
+  const addedSkillList = skillsFromBullets(profile, wanted)
   const draft = AdaptationDraftSchema.parse({
     summary: {
       original: profile.summary,
@@ -301,12 +306,12 @@ export async function buildAdaptationDraft(
     bullets,
     // Eklenenler başta: ilanın doğrudan istediği terimler ve ATS'ler listenin
     // başını daha çok tartıyor.
-    skillOrder: [...addedSkillList, ...orderSkillsForPosting(profile.skills, result)],
+    skillOrder: [...addedSkillList, ...orderSkillsForPosting(profile.skills, wantedResult)],
     addedSkills: addedSkillList,
   })
 
   // Özet yazımı skoru düşürüyorsa özgün özet kalıyor (kullanıcı kararı).
-  const guarded = await guardSummaryScore({ profile, posting, draft }, embedding)
+  const guarded = await guardSummaryScore({ profile, posting: wanted, draft }, embedding)
   if (guarded.dropped) {
     input.onDiscard?.({
       id: "summary",
@@ -333,4 +338,14 @@ function toResumeLanguage(targets: AlignmentTarget[]): AlignmentTarget[] {
     const label = t.concept.equivalents?.find((e) => e.trim())
     return label ? [{ ...t, label }] : []
   })
+}
+
+/** İşaretli gereksinimler çıkarılmış ilan ve sonuç (DOG-90); işaret yoksa olduğu gibi. */
+function withoutExcluded(posting: JobPostingData, result: ScoreResult): { posting: JobPostingData; result: ScoreResult } {
+  const excluded = new Set(result.excluded ?? [])
+  if (excluded.size === 0) return { posting, result }
+  return {
+    posting: { ...posting, requirements: posting.requirements.filter((_, i) => !excluded.has(i)) },
+    result: { ...result, requirements: result.requirements.filter((_, i) => !excluded.has(i)) },
+  }
 }

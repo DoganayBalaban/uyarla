@@ -2673,3 +2673,33 @@ hesaplanıyor.
 
 Aynı işte: harf ya da rakam taşımayan tarih belgede yok sayılıyor. Kırık
 model çıktısı ("},{") eğitim tarihine girmişti.
+
+## K-67 · "İlanda yok" işaretleri her yerde: pano skoru ve uyarlama
+
+**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-90 (ikinci adım)
+
+**Bağlam:** İlk adımda (PR 117) işaretler yalnızca sonuç ekranındaki skoru
+değiştiriyordu. `Analysis.score` bilerek değişmiyordu: uyarlamanın "önce"
+skoru oradan okunuyor, "sonra" skoru tüm ilana göre hesaplanıyordu.
+Sonuçlar:
+- Pano ve başvuru kartları ilk skoru gösteriyordu; sonuç ekranı düzeltilmişi.
+- Uyarlama işaretli gereksinimi hedefleyebiliyordu: kullanıcının "ilanda yok"
+  dediği terimi maddesine yazdırmak.
+
+**Karar:**
+- `Analysis.score` artık düzeltilmiş skor. İlk skor sonucun içinde
+  (`result.score`) duruyor ve sonuç ekranı "ilk skor" olarak göstermeye devam
+  ediyor. Hesap web'deki eşten; route core içe aktarmıyor (Vercel sınırı).
+- Uyarlamanın "sonra" ve (eski analizlerde yeniden hesaplanan) "önce" skoru
+  aynı işaretlerle hesaplanıyor (`rescore({ excluded })`). Önce/sonra aynı
+  gereksinim kümesine bakıyor. Tek sayfa planı da skoru bunlar olmadan koruyor.
+- Taslak işaretli gereksinimleri hedef, özet terimi, eklenen beceri ve beceri
+  sırası olarak kullanmıyor. Doğrulama tam ilanla kalıyor: model işaretli bir
+  terimi kendiliğinden eklerse yine yakalanıyor.
+
+**Açık:**
+- Kalıcı (kullanıcı bazında) hariç tutma yeni bir tablo ve canlı
+  veritabanında migrasyon istiyor. Kullanıcı onayı bekliyor.
+- Eğitim ve deneyim şartının elle düzeltilmesi ayrı bir ekran işi.
+- Bu değişiklikten önce işaret konmuş analizlerin `Analysis.score`'u, bir
+  işaret değişene kadar ilk skor olarak kalıyor.

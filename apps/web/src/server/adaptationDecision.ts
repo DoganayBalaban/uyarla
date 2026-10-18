@@ -153,6 +153,8 @@ export async function loadAdaptation(id: string) {
     scoreBefore: analysis.score,
     /** Skor formülünün sürümü (DOG-103); eski analizlerde 1. */
     scoringRevision: (analysis.result as { scoringRevision?: number } | null)?.scoringRevision ?? 1,
+    /** "İlanda yok" işaretleri (DOG-90); önce/sonra skoru bunlar olmadan. */
+    excluded: (analysis.result as { excluded?: number[] } | null)?.excluded ?? [],
     /** Yetki kontrolü için; Adaptation'ın kendi userId'si yok (spec §5). */
     ownerId: analysis.userId,
     /** Nihai ResumeVersion'ın bağlanacağı CV; indirme route'u kullanıyor. */
@@ -172,9 +174,10 @@ export async function computeScoreAfter(
   profile: ResumeProfile | null,
   posting: JobPostingData,
   draft: AdaptationDraft | null,
+  excluded: readonly number[] = [],
 ): Promise<number | null> {
   if (!profile || !draft) return null
-  return rescore({ profile, posting, draft }, cachedEmbedding())
+  return rescore({ profile, posting, draft, excluded }, cachedEmbedding())
 }
 
 /** Worker'la ortak önbellekli gömme sağlayıcısı (DOG-57). */
@@ -190,7 +193,13 @@ function cachedEmbedding(): CachedEmbeddingProvider {
  * kararlarla maddelerin uzunluğu değişmiş olabilir.
  */
 export async function applyLayout(
-  input: { profile: ResumeProfile; posting: JobPostingData; draft: AdaptationDraft; ownerId: string },
+  input: {
+    profile: ResumeProfile
+    posting: JobPostingData
+    draft: AdaptationDraft
+    ownerId: string
+    excluded?: readonly number[]
+  },
   layout: "full" | "onePage",
 ): Promise<{ draft: AdaptationDraft; onePage: { fits: boolean; pages: number } | null }> {
   if (layout === "full") return { draft: { ...input.draft, layout: "full", omitted: [] }, onePage: null }
@@ -202,6 +211,7 @@ export async function applyLayout(
       posting: input.posting,
       draft: { ...input.draft, omitted: [] },
       toModel: await documentModelFor(input.ownerId),
+      excluded: input.excluded,
     },
     cachedEmbedding(),
   )
@@ -227,6 +237,7 @@ export async function computeScoreBefore(
   profile: ResumeProfile | null,
   posting: JobPostingData,
   draft: AdaptationDraft | null,
+  excluded: readonly number[] = [],
 ): Promise<number | null> {
   if (!draft) return null
   const untouched: AdaptationDraft = {
@@ -236,7 +247,7 @@ export async function computeScoreBefore(
     addedSkills: [],
     contributions: [],
   }
-  return computeScoreAfter(profile, posting, untouched)
+  return computeScoreAfter(profile, posting, untouched, excluded)
 }
 
 /** Belge görünümünün bir hâli (DOG-93): yalnızca ekranın gösterdiği alanlar. */

@@ -4,7 +4,8 @@ import type { AdaptationDraft } from "../schemas/adaptation.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { collectEvidence } from "../score/evidence.js"
-import { conceptTexts, score } from "../score/score.js"
+import { DEFAULT_SCORING_CONFIG } from "../score/config.js"
+import { conceptTexts, score, weightedScore } from "../score/score.js"
 import { applyAdaptation } from "./profile.js"
 
 /**
@@ -17,7 +18,16 @@ import { applyAdaptation } from "./profile.js"
  * gerçekten eşleşme kazandırmadıysa skor da değişmiyor.
  */
 export async function rescore(
-  input: { profile: ResumeProfile; posting: JobPostingData; draft: AdaptationDraft },
+  input: {
+    profile: ResumeProfile
+    posting: JobPostingData
+    draft: AdaptationDraft
+    /**
+     * Kullanıcının "ilanda yok" dediği gereksinimlerin sırası (DOG-90). Önce
+     * skoru (Analysis.score) bunlar olmadan; sonra skoru da öyle olmalı.
+     */
+    excluded?: readonly number[]
+  },
   embedding: EmbeddingProvider,
 ): Promise<number> {
   const adapted = applyAdaptation(input.profile, input.draft)
@@ -28,13 +38,15 @@ export async function rescore(
   // Tek toplu çağrı: kanıtlar önce, kavramlar sonra (Sprint 1'deki sıra).
   const vecs = await embedding.embed([...evidenceTexts, ...conceptTextList])
 
-  return score({
+  const outcome = score({
     profile: adapted,
     posting: input.posting,
     evidence: evidenceList,
     evidenceVectors: vecs.slice(0, evidenceTexts.length),
     conceptVectors: vecs.slice(evidenceTexts.length),
-  }).score
+  })
+  if (!input.excluded?.length) return outcome.score
+  return weightedScore(outcome.requirements, DEFAULT_SCORING_CONFIG, input.excluded, outcome.titleMatch ?? null)
 }
 
 /**
