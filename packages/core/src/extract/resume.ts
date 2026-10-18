@@ -157,7 +157,8 @@ export async function extractResumeProfile(
 // 3: Projeler ve diğer bölümler artık kaybolmuyor (DOG-105).
 // 4: Beceri kategorileri ve bölüm sırası saklanıyor (DOG-106).
 // 5: İki sütunlu şablonda özet ve iletişim satırı kaybolmuyor (DOG-107).
-const RESUME_PARSER_REVISION = 5
+// 6: Beceri bloğuna düşen başlıksız iş kaydı deneyime taşınıyor (DOG-109).
+const RESUME_PARSER_REVISION = 6
 
 /**
  * Kayıtlı bir CV'nin ayrıştırılmış profili, aynı anahtarla üretildiyse yeniden

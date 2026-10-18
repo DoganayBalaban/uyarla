@@ -2551,3 +2551,26 @@ Doğru özet eşleşmesi (cv-g__ilan-9) korundu. cv-a__ilan-5'in skoru 28 → 27
 **Açık:** Karar üç veriye dayanıyor; tür ayrımı eşikten daha ilkeli olduğu
 için alındı. Değerlendirme setine özet ağırlıklı çiftler eklendiğinde yeniden
 sınanmalı.
+
+## K-63 · Beceri bloğuna düşen başlıksız iş kaydı deneyime taşınıyor
+
+**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-109
+
+**Bağlam:** İki sütunlu şablonda (cv-c) bir deneyim kaydı sertifika
+listesinin ardına, başlıksız düşüyordu: "EĞİTMEN _ MENTOR BURSİYERİ / Bir
+Eğitim Vakfı" ve dört madde. Bölümleme kaydı beceri bloğuna koyuyordu. Unvan
+ile kurum beceri sanılıyor ve belgenin beceri satırına yazılıyordu. Cümle
+oldukları için maddeler atılıyordu.
+
+**Karar (bölümleme, kodda):** Beceri bloğunda en az iki ardışık cümle
+maddesi (madde imi + en az beş kelime) varsa ve bunlardan hemen önce 1–2
+kısa, imsiz, başlık olmayan satır duruyorsa, bu satırlar maddelerle birlikte
+deneyim bloğuna taşınıyor. Ek şart: maddelerin en az yarısı yapılmış bir işi
+anlatmalı (Türkçe birinci şahıs geçmiş zaman, İngilizce geçmiş zaman fiiliyle
+başlangıç). Böylece "• İletişimi güçlü biriyim." gibi kişisel özellik
+cümleleri ve "• İleri düzey Excel" gibi kısa beceri maddeleri yerinde kalıyor.
+
+**Ölçüm:** Yedi değerlendirme CV'sinden yalnızca cv-c'nin bölümlemesi değişti,
+o da yalnızca hedeflenen 6 satırla. cv-c yeniden okununca kayıt dört maddesiyle
+deneyimde görünüyor, beceri listesi de temizlendi. Skor eval'i değişmedi
+(%94,3 · 5 · 1). Ayrıştırıcı revizyonu 6.

@@ -317,3 +317,64 @@ describe("segmentResume · two-column leftovers (DOG-107)", () => {
     expect(s.otherSections).toEqual([{ heading: "REFERENCES", lines: ["ali@ornek.com"] }])
   })
 })
+
+describe("segmentResume · untitled entry in the skills block (DOG-109)", () => {
+  it("moves an entry that fell after the certificates into experience", () => {
+    // cv-c: iki sütunlu şablonda bir iş kaydı sertifika listesinin ardına düşüyor.
+    const s = segmentResume(
+      [
+        "Ad",
+        "DENEYİM",
+        "Yapay Zeka Eğitmeni",
+        "SERTİFİKALAR",
+        "AWS Cloud Practitioner",
+        "EĞİTMEN _ MENTOR BURSİYERİ",
+        "Bir Eğitim Vakfı - Teknoloji Atölyesi",
+        "• Robotik kodlama, tasarım ve üretim eğitimleri verdim.",
+        "• Öğrencilere proje geliştirme süreçlerinde mentorluk yaptım.",
+        "BECERİLER",
+        "Python",
+      ].join("\n"),
+    )
+    expect(s.experienceBlock.split("\n").slice(-4)).toEqual([
+      "EĞİTMEN _ MENTOR BURSİYERİ",
+      "Bir Eğitim Vakfı - Teknoloji Atölyesi",
+      "• Robotik kodlama, tasarım ve üretim eğitimleri verdim.",
+      "• Öğrencilere proje geliştirme süreçlerinde mentorluk yaptım.",
+    ])
+    expect(s.skillsBlock).toContain("AWS Cloud Practitioner")
+    expect(s.skillsBlock).toContain("Python")
+    expect(s.skillsBlock).not.toContain("BURSİYERİ")
+  })
+
+  it("leaves a bulleted skill list alone", () => {
+    const block = ["BECERİLER", "Teknik", "• İleri düzey Excel", "• SAP FI/CO modülü", "• Power BI raporlama"]
+    const s = segmentResume(["Ad", ...block].join("\n"))
+    expect(s.skillsBlock).toBe(block.join("\n"))
+  })
+
+  it("leaves personal-trait sentences alone even under an unknown subheading", () => {
+    const block = [
+      "BECERİLER",
+      "Kişisel Özellikler",
+      "• İletişimi güçlü ve takım çalışmasına yatkın biriyim.",
+      "• Yeni teknolojileri öğrenmeye her zaman açığım.",
+    ]
+    const s = segmentResume(["Ad", ...block].join("\n"))
+    expect(s.skillsBlock).toBe(block.join("\n"))
+  })
+
+  it("moves an English entry whose bullets start with past-tense verbs", () => {
+    const s = segmentResume(
+      "Ad\nSKILLS\nPython\nTeaching Assistant\nState University\n• Led weekly lab sessions for 40 students.\n• Graded assignments and held office hours.",
+    )
+    expect(s.experienceBlock).toContain("Teaching Assistant")
+    expect(s.skillsBlock).toBe("SKILLS\nPython")
+  })
+
+  it("leaves a single sentence bullet alone", () => {
+    const block = ["BECERİLER", "Yazılım", "• Python ve SQL ile veri analizi yapabilirim."]
+    const s = segmentResume(["Ad", ...block].join("\n"))
+    expect(s.skillsBlock).toBe(block.join("\n"))
+  })
+})
