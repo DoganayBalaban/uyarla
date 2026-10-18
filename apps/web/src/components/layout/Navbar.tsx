@@ -12,8 +12,10 @@ import {
   Settings,
   ShieldCheck,
 } from "lucide-react"
+import { motion } from "motion/react"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
+import { activeSection } from "@/components/layout/activeSection"
 import { signOut, useSession } from "@/lib/authClient"
 import { cn } from "@/lib/cn"
 import { displayName } from "@/features/account/displayName"
@@ -88,15 +90,7 @@ export function Navbar() {
                 )
               })
             : onLanding
-              ? MARKETING_LINKS.map(({ href, label }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="hidden rounded-button px-3 py-2 text-sm font-medium text-muted no-underline transition-colors hover:text-foreground md:inline-flex"
-                  >
-                    {label}
-                  </Link>
-                ))
+              ? <MarketingLinks />
               : null}
         </nav>
 
@@ -134,6 +128,76 @@ export function Navbar() {
       </div>
     </header>
   )
+}
+
+/**
+ * Tanıtım sayfasının bölüm bağlantıları. Kaydırırken okunan bölümün sekmesi
+ * yanıyor; vurgu sekmeden sekmeye kayarak geçiyor.
+ */
+function MarketingLinks() {
+  const current = useActiveSection(MARKETING_LINKS.map((l) => l.href.slice(2)))
+  return (
+    <>
+      {MARKETING_LINKS.map(({ href, label }) => {
+        const isActive = current === href.slice(2)
+        return (
+          <Link
+            key={href}
+            href={href}
+            aria-current={isActive ? "location" : undefined}
+            className={cn(
+              "relative hidden rounded-button px-3 py-2 text-sm font-medium no-underline transition-colors md:inline-flex",
+              isActive ? "text-brand-blue" : "text-muted hover:text-foreground",
+            )}
+          >
+            {isActive && (
+              <motion.span
+                layoutId="marketing-nav-active"
+                className="absolute inset-0 rounded-button bg-brand-blue/10"
+                transition={{ type: "spring", stiffness: 420, damping: 36 }}
+              />
+            )}
+            <span className="relative">{label}</span>
+          </Link>
+        )
+      })}
+    </>
+  )
+}
+
+/** Okuma çizgisi: üst çubuğun (64px) biraz altı, ekranın üçte biri. */
+function useActiveSection(ids: string[]): string | null {
+  const [current, setCurrent] = useState<string | null>(null)
+  const key = ids.join(",")
+
+  useEffect(() => {
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const sections = key
+        .split(",")
+        .map((id) => document.getElementById(id))
+        .filter((el): el is HTMLElement => el !== null)
+        .map((el) => ({ id: el.id, top: el.getBoundingClientRect().top + window.scrollY }))
+      const line = window.scrollY + Math.min(window.innerHeight / 3, 240)
+      // Sayfanın dibine inilince kısa son bölüm (SSS) çizgiye hiç ulaşamayabilir.
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4
+      setCurrent(atBottom ? (sections.at(-1)?.id ?? null) : activeSection(sections, line))
+    }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener("scroll", schedule, { passive: true })
+    window.addEventListener("resize", schedule)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener("scroll", schedule)
+      window.removeEventListener("resize", schedule)
+    }
+  }, [key])
+
+  return current
 }
 
 /**

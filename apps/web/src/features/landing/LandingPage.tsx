@@ -1,15 +1,13 @@
-import Image from "next/image"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { UyarlaLogo } from "@/components/brand/UyarlaMark"
 import { Photo } from "@/features/landing/components/Photo"
 import { Icon, type IconName } from "@/features/landing/components/Icon"
-import {
-  FileChips,
-  RequirementList,
-  BeforeAfter,
-  WarningCard,
-} from "@/features/landing/components/Mockups"
+import { FileChips } from "@/features/landing/components/Mockups"
+import { HeroDemo } from "@/features/landing/demos/HeroDemo"
+import { RequirementDemo } from "@/features/landing/demos/RequirementDemo"
+import { AdaptDemo } from "@/features/landing/demos/AdaptDemo"
+import { CheckDemo } from "@/features/landing/demos/CheckDemo"
 import { LANDING_FAQ } from "@/features/landing/faq"
 import { Pricing } from "@/features/landing/components/Pricing"
 import { JobSitesStrip } from "@/features/landing/components/JobSitesStrip"
@@ -64,7 +62,7 @@ const FEATURES: {
       "Eş anlamlıları ve Türkçe–İngilizce karşılıkları tanır",
       "“CV'ni geliştir” yerine “şu 4 kelime eksik”",
     ],
-    visual: <RequirementList />,
+    visual: <RequirementDemo />,
   },
   {
     label: "Uyarlama",
@@ -76,7 +74,7 @@ const FEATURES: {
       "Her maddenin kaynağı gösterilir",
       "Beğenmediğini eski hâline döndür",
     ],
-    visual: <BeforeAfter />,
+    visual: <AdaptDemo />,
   },
   {
     label: "Uydurma kontrolü",
@@ -88,7 +86,7 @@ const FEATURES: {
       "Son kararı sen verirsin",
       "Karar vermeden indirme açılmaz",
     ],
-    visual: <WarningCard />,
+    visual: <CheckDemo />,
   },
 ]
 
@@ -199,28 +197,11 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
             </ul>
           </div>
 
-          {/* Ürünün kendisi: uyarlama ekranının gerçek görüntüsü (kurgusal demo
-              hesap, 8 Ekim 2026). Arkasında kobalt ışıma, altı zemine eriyor. */}
+          {/* Ürünün kendisi, oynarken: yükle → yapıştır → skor → uyarla döngüsü.
+              Video dosyası değil, ürün ekranlarının Motion'la oynayan kopyası. */}
           <div className={`${s.container} ${s.heroShot}`}>
             <div className={s.heroGlow} aria-hidden="true" />
-            <figure className={s.heroFrame}>
-              <div className={s.heroFrameBar} aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </div>
-              {/* unoptimized: görüntü zaten boyutlu ve sıkıştırılmış (3x WebP);
-                  Next'in yeniden sıkıştırması yazıları bulanıklaştırıyordu. */}
-              <Image
-                src="/landing/hero-adaptation-3x.webp"
-                alt="uyarla'nın uyarlama ekranı: skor 45'ten 64'e çıkmış, deneyim maddelerinin eski hâlinin üstü çizili ve yeni hâli vurgulu."
-                width={3615}
-                height={2640}
-                priority
-                unoptimized
-                className={s.heroImage}
-              />
-            </figure>
+            <HeroDemo />
           </div>
         </section>
 

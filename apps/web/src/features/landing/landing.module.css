@@ -190,7 +190,11 @@
   font-size: clamp(2.9rem, 8vw, 6.25rem);
   line-height: 0.98;
   letter-spacing: -0.04em;
-  margin: 0;
+  /* background-clip: text zemini satır kutusuna kırpıyor; sıkı satır
+     aralığında "ğ"nin kuyruğu kesiliyordu. Alt dolgu kuyruğa yer açıyor,
+     eksi kenar boşluğu da alttaki metnin yerini koruyor. */
+  margin: 0 0 -0.12em;
+  padding-bottom: 0.12em;
   text-wrap: balance;
 }
 
@@ -305,17 +309,94 @@
   border-radius: 50%;
   background: #e2e2e5;
 }
-.heroImage {
-  display: block;
-  width: 100%;
-  height: auto;
+
+/* Hero filmi: tam görünsün diye ekran görüntüsündeki alt erime kapalı. */
+.heroFilmFrame {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.heroFilmControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+.heroFilmPause {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--foreground);
+  cursor: pointer;
+}
+.heroFilmPause:hover {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
+}
+.heroChapters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+}
+.heroChapter {
+  position: relative;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+.heroChapter:hover {
+  color: var(--foreground);
+}
+.heroChapterActive,
+.heroChapterActive:hover {
+  color: #fff;
+}
+.heroChapterPill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--brand-blue);
+}
+.heroChapterText {
+  position: relative;
+}
+@media (max-width: 560px) {
+  .heroFilmControls {
+    gap: 0.4rem;
+  }
+  .heroChapters {
+    flex-wrap: nowrap;
+    gap: 0;
+  }
+  .heroChapter {
+    padding: 0.3rem 0.45rem;
+    font-size: 0.6875rem;
+    white-space: nowrap;
+  }
 }
 
 /* ——— Sorun şeridi ——— */
 
 .problem {
   padding: 4.5rem 0;
-  border-bottom: 1px solid var(--border);
 }
 .problemText {
   font-family: Geist, system-ui, sans-serif;
@@ -962,30 +1043,6 @@
   margin: 0;
 }
 
-.ring {
-  position: relative;
-  flex: none;
-}
-.ringInner {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  text-align: center;
-}
-.ringNumber {
-  font-family: Geist, system-ui, sans-serif;
-  font-weight: 800;
-  font-size: 2.1em;
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-.ringStatus {
-  font-size: 0.6875em;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
 
 .scoreSentence {
   font-family: Geist, system-ui, sans-serif;
@@ -1025,21 +1082,6 @@
   background: color-mix(in srgb, var(--brand-green) 7%, transparent);
 }
 
-.requirements {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.requirements li {
-  display: flex;
-  gap: 0.85rem;
-  padding: 0.9rem 0;
-  border-bottom: 1px solid var(--border);
-}
-.requirements li:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
 .statusMatched,
 .statusMissing {
   display: grid;
@@ -1071,57 +1113,6 @@
   padding: 0.05rem 0.4rem;
   margin-left: 0.35rem;
   vertical-align: 1px;
-}
-
-.beforeAfter {
-  display: grid;
-  gap: 0.75rem;
-}
-.beforeAfterBlock {
-  position: relative;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.1rem 1.1rem 1rem;
-}
-.beforeAfterBlock p {
-  margin: 0.35rem 0 0;
-  line-height: 1.6;
-}
-.beforeAfterNew {
-  border-color: color-mix(in srgb, var(--brand-blue) 35%, var(--border));
-  background: color-mix(in srgb, var(--brand-blue) 4%, transparent);
-}
-.beforeAfterBadge {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.beforeAfterBadgeNew {
-  color: var(--blue-text);
-}
-.beforeAfterArrow {
-  display: grid;
-  place-items: center;
-  color: var(--muted);
-  transform: rotate(90deg);
-  height: 18px;
-}
-.source,
-.lockLine {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1.1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-  font-size: 0.8125rem;
-  color: var(--muted);
-}
-.source svg,
-.lockLine svg {
-  flex: none;
 }
 
 .warningText {

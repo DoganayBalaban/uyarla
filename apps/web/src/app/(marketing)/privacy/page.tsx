@@ -39,7 +39,7 @@ export default function PrivacyPage() {
         <h2>1. Veri sorumlusu</h2>
         <p>
           6698 sayılı Kişisel Verilerin Korunması Kanunu (&quot;KVKK&quot;) kapsamında veri sorumlusu{" "}
-          {LEGAL.dataController}&apos;dır ({LEGAL.address}). Bize {LEGAL.contact} adresinden
+          {LEGAL.dataController}&apos;dır. Bize {LEGAL.contact} adresinden
           ulaşabilirsin.
         </p>
       </section>
