@@ -50,6 +50,26 @@ export interface ScoringConfig {
    * mavi yaka ekiplerle", 0,544, doğru). Kelime eşleşmesi her türde açık.
    */
   summarySemanticTypes: readonly Requirement["type"][]
+  /**
+   * Skora katılmayan gereksinim türleri (DOG-103). Eşleşmeleri hâlâ
+   * hesaplanıyor ve ekranda ayrı gösteriliyor; yalnızca skoru etkilemiyorlar.
+   *
+   * Kişisel nitelikler ("ekiple çalışmaya uygun") CV'den lafzen
+   * kanıtlanamıyor: değerlendirme setinde iyi uyumlu 7 çiftteki 17 soft
+   * gereksinimden 1'i karşılandı ve skoru aşağı çekiyorlardı (cv-f×ilan-8: 34,
+   * soft hariç 77). K2'de iki katılımcı bunların haksız yere "eksik"
+   * sayıldığını söyledi: "Kimse CV'sinde 'ekiple çalışmaya uygun biriyim'
+   * yazmaz." İlanda yalnızca bu türden gereksinim varsa sayılıyorlar.
+   */
+  unscoredTypes: readonly Requirement["type"][]
+  /**
+   * İlan unvanının CV'de geçmesinin ağırlığı (DOG-103); zorunlu bir
+   * gereksinimle aynı. Tam eşleşme 1, kısmi 0,5, yok 0 katkı. İşe alımcılar
+   * ATS'de unvanla arıyor (DOG-87) ve unvanı skora katmayınca ekran aynı anda
+   * "Yüksek uyum" ve "ilandaki unvan CV'nde geçmiyor" diyordu (muhasebe CV'si
+   * × İK ilanı: 42).
+   */
+  titleWeight: number
 }
 
 const ALL_EVIDENCE_KINDS: readonly Evidence["kind"][] = [
@@ -92,4 +112,13 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   },
   summaryWeight: 0.75,
   summarySemanticTypes: ["experience", "soft"],
+  unscoredTypes: ["soft"],
+  titleWeight: 2,
 }
+
+/**
+ * Skor formülünün sürümü; analiz sonucuna yazılıyor. 2: soft gereksinimler
+ * skordan çıktı, unvan girdi (DOG-103). Eski sonuçların kayıtlı skoru eski
+ * formülle; yenisiyle karşılaştırılacaksa yeniden hesaplanmalı.
+ */
+export const SCORING_REVISION = 2

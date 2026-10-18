@@ -94,12 +94,24 @@ export function applyBulkDecision(draft: AdaptationDraft, action: BulkDecision):
  * (DOG-90) listede yok.
  */
 export function missingMustRequirements(result: unknown): Array<{ index: number; text: string }> {
-  const r = result as { requirements?: Array<{ requirement: { text: string; importance: string }; status: string }>; excluded?: number[] } | null
+  const r = result as {
+    requirements?: Array<{ requirement: { text: string; importance: string; type?: string }; status: string }>
+    excluded?: number[]
+    scoringRevision?: number
+  } | null
   if (!r?.requirements) return []
   const excluded = new Set(r.excluded ?? [])
+  // Kişisel nitelikler skordan çıktığı analizlerde eksik sayılmıyor (DOG-103).
+  const skipSoft = (r.scoringRevision ?? 1) >= 2
   return r.requirements
     .map((x, index) => ({ x, index }))
-    .filter(({ x, index }) => x.status === "missing" && x.requirement.importance === "must" && !excluded.has(index))
+    .filter(
+      ({ x, index }) =>
+        x.status === "missing" &&
+        x.requirement.importance === "must" &&
+        !excluded.has(index) &&
+        !(skipSoft && x.requirement.type === "soft"),
+    )
     .map(({ x, index }) => ({ index, text: x.requirement.text }))
 }
 
@@ -138,6 +150,8 @@ export async function loadAdaptation(id: string) {
     posting,
     draft,
     scoreBefore: analysis.score,
+    /** Skor formülünün sürümü (DOG-103); eski analizlerde 1. */
+    scoringRevision: (analysis.result as { scoringRevision?: number } | null)?.scoringRevision ?? 1,
     /** Yetki kontrolü için; Adaptation'ın kendi userId'si yok (spec §5). */
     ownerId: analysis.userId,
     /** Nihai ResumeVersion'ın bağlanacağı CV; indirme route'u kullanıyor. */
@@ -166,6 +180,28 @@ export async function computeScoreAfter(
     config.model,
   )
   return rescore({ profile, posting, draft }, embedding)
+}
+
+/**
+ * Uyarlama öncesi skor, bugünkü formülle (DOG-103). Formül değişmeden önce
+ * kaydedilmiş analizlerin skoru eski formülle; "sonra" yenisiyle
+ * hesaplandığı için fark şişkin ya da eksik görünürdü. Hiçbir kararın kabul
+ * edilmediği taslakla yeniden puanlanıyor; gömmeler önbellekten.
+ */
+export async function computeScoreBefore(
+  profile: ResumeProfile | null,
+  posting: JobPostingData,
+  draft: AdaptationDraft | null,
+): Promise<number | null> {
+  if (!draft) return null
+  const untouched: AdaptationDraft = {
+    ...draft,
+    bullets: draft.bullets.map((b) => ({ ...b, decision: "rejected" })),
+    summary: { ...draft.summary, decision: "rejected" },
+    addedSkills: [],
+    contributions: [],
+  }
+  return computeScoreAfter(profile, posting, untouched)
 }
 
 /** Belge görünümünün bir hâli (DOG-93): yalnızca ekranın gösterdiği alanlar. */

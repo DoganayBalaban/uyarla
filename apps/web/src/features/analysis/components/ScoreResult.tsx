@@ -41,6 +41,14 @@ export interface ScoreResultView {
   titleMatch?: TitleMatch | null
   /** "İlanda yok, yanlış okunmuş" işaretleri (DOG-90). */
   excluded?: number[]
+  /** Skor formülünün sürümü (DOG-103); eski analizlerde yok. */
+  scoringRevision?: number
+}
+
+const TITLE_LINE: Record<TitleMatch["level"], string> = {
+  exact: "İlandaki unvan CV'nde geçiyor",
+  partial: "İlandaki unvan CV'nde kısmen geçiyor",
+  none: "İlandaki unvan CV'nde geçmiyor",
 }
 
 type FilterBar = "all" | "missing" | "satisfied"
@@ -138,6 +146,12 @@ export function ScoreResult({
                 {partialNote(summary)}
               </p>
             )}
+            {result.titleMatch && (result.scoringRevision ?? 1) >= 2 && (
+              <p className="mt-1 text-sm text-muted">
+                {TITLE_LINE[result.titleMatch.level]} ({result.titleMatch.position}); unvan skora bir zorunlu gereksinim
+                gibi katılıyor.
+              </p>
+            )}
             {exclusion.excludedCount > 0 && (
               <p className="mt-1 text-sm text-muted">
                 İlanda olmadığını işaretlediğin {exclusion.excludedCount} gereksinim skora katılmıyor (ilk skor{" "}
@@ -206,7 +220,7 @@ export function ScoreResult({
           <div role="tablist" aria-label="Gereksinimleri süz" className="inline-flex rounded-button bg-background p-1 text-sm">
             {(
               [
-                ["all", `Hepsi · ${result.requirements.length}`],
+                ["all", `Hepsi · ${exclusion.rows.length}`],
                 ["missing", `Eksik · ${missing}`],
                 ["satisfied", `Karşılanan · ${satisfiedCount}`],
               ] as const
@@ -243,6 +257,30 @@ export function ScoreResult({
           </ul>
         )}
       </motion.div>
+
+      {/* Kişisel nitelikler (DOG-103): skora katılmıyor, eksik sayılmıyor. */}
+      {exclusion.softRows.length > 0 && (
+        <motion.div {...entrance(0.17)} className="rounded-card border border-border bg-card p-5 sm:p-6">
+          <h2 className="m-0 text-lg">Mülakatta anlaşılacaklar</h2>
+          <p className="mt-1 text-sm text-muted">
+            Bu kişisel nitelikler CV&apos;den değil görüşmede anlaşılır; skora katılmıyor ve eksik sayılmıyor.
+            Deneyimlerinde örneği varsa mülakatta anlatmaya hazırlan.
+          </p>
+          <ul className="mt-3 space-y-1.5 text-sm">
+            {exclusion.softRows.map(({ item, index }) => (
+              <li key={index} className="flex items-start gap-2">
+                <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-muted" />
+                <span className="min-w-0">
+                  {item.requirement.text}
+                  {item.status === "matched" && item.evidence && (
+                    <span className="text-muted"> · CV&apos;nde: {item.evidence.text}</span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      )}
 
       {/* Eksik kavramlar. */}
       <motion.div {...entrance(0.2)} className="rounded-card border border-border bg-card p-5 sm:p-6">

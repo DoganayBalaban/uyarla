@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { conceptTexts, isProperNoun, score, weightedScore } from "./score.js"
-import { DEFAULT_SCORING_CONFIG } from "./config.js"
+import { DEFAULT_SCORING_CONFIG, SCORING_REVISION } from "./config.js"
 import type { Evidence } from "./evidence.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import type { JobPostingData, Requirement } from "../schemas/job.js"
@@ -33,8 +33,10 @@ const synonymRequirement = (
   synonyms: string[],
 ): Requirement => ({ text, type: "skill", importance, concepts: [{ term, synonyms }] })
 
+// Unvansız: testler gereksinim ağırlığını ölçüyor; unvanın skora katkısı
+// ayrı testte (DOG-103).
 const testPosting = (requirements: Requirement[]): JobPostingData => ({
-  position: "Geliştirici", company: null, seniority: null, language: "tr", requirements,
+  position: "", company: null, seniority: null, language: "tr", requirements,
 })
 
 /** Sahte vektörler: yakın=birbirine benzer, uzak=dik. */
@@ -849,5 +851,53 @@ describe("conceptTexts · cross-language (DOG-104)", () => {
       "kişisel veri koruma (personal data protection; Personal data privacy; KVKK)",
       "React",
     ])
+  })
+})
+
+describe("weightedScore · soft requirements and title (DOG-103)", () => {
+  const req = (type: Requirement["type"], importance: "must" | "nice", confidence: number) => ({
+    requirement: { text: type, type, importance, concepts: [{ term: type, synonyms: [] }] } as Requirement,
+    confidence,
+  })
+
+  it("soft requirements do not count toward the score", () => {
+    // K2: "Kimse CV'sinde 'ekiple çalışmaya uygun biriyim' yazmaz."
+    expect(weightedScore([req("skill", "must", 1), req("soft", "must", 0)])).toBe(100)
+  })
+
+  it("counts soft requirements when the posting has nothing else", () => {
+    expect(weightedScore([req("soft", "must", 1), req("soft", "must", 0)])).toBe(50)
+  })
+
+  it("the title weighs like a must requirement: exact 1, partial half, none 0", () => {
+    const reqs = [req("skill", "must", 1)]
+    expect(weightedScore(reqs, DEFAULT_SCORING_CONFIG, [], { level: "exact" })).toBe(100)
+    expect(weightedScore(reqs, DEFAULT_SCORING_CONFIG, [], { level: "partial" })).toBe(75)
+    expect(weightedScore(reqs, DEFAULT_SCORING_CONFIG, [], { level: "none" })).toBe(50)
+  })
+
+  it("an unrelated short posting no longer looks like a strong match", () => {
+    // Muhasebe CV'si × kısa İK ilanı (canlıda 42, "Yüksek uyum"): iki genel
+    // şart karşılanmış, rolün iki şartı eksik, unvan yok.
+    const reqs = [req("education", "must", 1), req("skill", "must", 1), req("experience", "must", 0), req("skill", "must", 0)]
+    expect(weightedScore(reqs)).toBe(50)
+    expect(weightedScore(reqs, DEFAULT_SCORING_CONFIG, [], { level: "none" })).toBe(40)
+  })
+
+  it("is 0 when every requirement is excluded, even with a matching title", () => {
+    expect(weightedScore([req("skill", "must", 1)], DEFAULT_SCORING_CONFIG, [0], { level: "exact" })).toBe(0)
+  })
+
+  it("score() records the title and the formula revision", () => {
+    const outcome = score({
+      profile: { ...PROFILE, headline: "Muhasebe Uzmanı" },
+      posting: { ...testPosting([req("skill", "must", 0).requirement]), position: "İnsan Kaynakları Uzmanı" },
+      evidence: [{ text: "skill", matchText: "skill", kind: "skill", sourceRef: null }],
+      evidenceVectors: [V.far],
+      conceptVectors: [V.near],
+    })
+    expect(outcome.scoringRevision).toBe(SCORING_REVISION)
+    expect(outcome.titleMatch?.level).not.toBe("exact")
+    expect(outcome.score).toBeLessThan(100)
   })
 })

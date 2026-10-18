@@ -11,6 +11,7 @@ import type { ResumeProfile } from "../src/schemas/resume.js"
 import { DEFAULT_SCORING_CONFIG } from "../src/score/config.js"
 import { collectEvidence } from "../src/score/evidence.js"
 import { conceptTexts, score } from "../src/score/score.js"
+import { scoreStatus } from "../../../apps/web/src/lib/scoreStatus.js"
 import { compareToExpectations } from "./compare.js"
 import { cacheDir, type EvalPair, type EvalTotals, type PairMetrics } from "./types.js"
 
@@ -101,11 +102,25 @@ async function main() {
   const check = total.hits + total.misses + total.fabrications
   const accuracyRate = check === 0 ? 0 : total.hits / check
 
+  // Etiket isabeti (DOG-103): ekrandaki etiket, çiftin beklenen seviyesiyle
+  // aynı mı. Eşikler web'de (scoreStatus); bağımlılığı olmayan bir modül,
+  // buradan doğrudan okunuyor ki ölçülen eşik ekrandakinin kendisi olsun.
+  const levels = expectedLevels()
+  const LABEL_LEVEL: Record<string, string> = { "Yüksek uyum": "yüksek", "Orta uyum": "orta", "Düşük uyum": "düşük" }
+  const labelRows = metrics
+    .filter((m) => levels.has(m.id))
+    .map((m) => ({ id: m.id, expected: levels.get(m.id)!, got: LABEL_LEVEL[scoreStatus(m.score).label]!, score: m.score }))
+  const labelHits = labelRows.filter((r) => r.expected === r.got).length
+
   console.log("\n--- Toplam ---")
   console.log(`İsabet oranı   : ${(accuracyRate * 100).toFixed(1)}%`)
   console.log(`Kaçırma        : ${total.misses}`)
   console.log(`Uydurma        : ${total.fabrications}   <- en zararlısı`)
   console.log(`Çıkarılmayan   : ${total.notExtracted}   <- ilan çıkarımı sorunu`)
+  console.log(`Etiket isabeti : ${labelHits}/${labelRows.length}`)
+  for (const r of labelRows.filter((x) => x.expected !== x.got)) {
+    console.log(`  ✗ ${r.id}: skor ${r.score} → ${r.got}, beklenen ${r.expected}`)
+  }
   console.log(`Eşleşme kaynağı: kelime ${total.byKeyword} · anlamsal ${total.bySemantic}`)
   console.log(`Model          : ${llmConfig.model} · embedding: ${embeddingConfig.model}`)
   console.log(`Eşik / ağırlık : ${JSON.stringify(DEFAULT_SCORING_CONFIG)}`)
@@ -115,11 +130,28 @@ async function main() {
   writeFileSync(
     join(RUNS, `${timestamp}.json`),
     JSON.stringify(
-      { model: llmConfig.model, config: DEFAULT_SCORING_CONFIG, totals: total, accuracy: accuracyRate, metrics },
+      {
+        model: llmConfig.model,
+        config: DEFAULT_SCORING_CONFIG,
+        totals: total,
+        accuracy: accuracyRate,
+        labels: { hits: labelHits, total: labelRows.length },
+        metrics,
+      },
       null, 2,
     ),
   )
   console.log(`\nSonuç yazıldı: runs/${timestamp}.json`)
+}
+
+/** sources/pairs.json'daki beklenen seviye, çift kimliğiyle ("cv-a__ilan-1"). */
+function expectedLevels(): Map<string, string> {
+  const file = JSON.parse(readFileSync(join(KOK, "sources", "pairs.json"), "utf8")) as {
+    pairs: Array<{ resumeId: string; postingId: string; expectation: string }>
+  }
+  return new Map(
+    file.pairs.map((p) => [`${p.resumeId.split("-").slice(0, 2).join("-")}__${p.postingId}`, p.expectation]),
+  )
 }
 
 void main()

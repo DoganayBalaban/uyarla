@@ -3,7 +3,7 @@ import { cosineSimilarity } from "../llm/embedding.js"
 import { containsKeyword } from "../normalize/turkish.js"
 import type { JobPostingData, Requirement } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { DEFAULT_SCORING_CONFIG, type ScoringConfig } from "./config.js"
+import { DEFAULT_SCORING_CONFIG, SCORING_REVISION, type ScoringConfig } from "./config.js"
 import { experienceMonths, requiredYears } from "./duration.js"
 import type { Evidence } from "./evidence.js"
 import { titleMatch, type TitleMatch } from "./title.js"
@@ -89,10 +89,13 @@ export interface ScoreResult {
   /** Eksik gereksinimlerin anahtar kelimeleri; kullanıcıya gösterilen liste. */
   missingKeywords: string[]
   /**
-   * İlan unvanı CV'de geçiyor mu (DOG-87). Skora katılmıyor. Bu alandan önce
-   * kaydedilmiş analizlerde yok; ilanda unvan yoksa null.
+   * İlan unvanı CV'de geçiyor mu (DOG-87). Skorda bir zorunlu gereksinim
+   * ağırlığında (DOG-103). Bu alandan önce kaydedilmiş analizlerde yok;
+   * ilanda unvan yoksa null.
    */
   titleMatch?: TitleMatch | null
+  /** Skor formülünün sürümü (SCORING_REVISION); eski analizlerde yok (= 1). */
+  scoringRevision?: number
   /**
    * Kullanıcının "ilanda yok, yanlış okunmuş" diye işaretlediği gereksinimlerin
    * `requirements` içindeki sırası (DOG-90). Analizin kendi skoru değişmiyor;
@@ -133,11 +136,13 @@ export function score(
   // kullanıcı "React'in var ama Docker'ın yok" bilgisini görmeli.
   const missingWords = [...new Set(results.flatMap((r) => r.missingConcepts))]
 
+  const title = titleMatch(input.posting.position, input.profile)
   return {
-    score: weightedScore(results, cfg),
+    score: weightedScore(results, cfg, [], title),
     requirements: results,
     missingKeywords: missingWords,
-    titleMatch: titleMatch(input.posting.position, input.profile),
+    titleMatch: title,
+    scoringRevision: SCORING_REVISION,
   }
 }
 
@@ -153,18 +158,32 @@ export function weightedScore(
   results: Pick<RequirementResult, "requirement" | "confidence">[],
   cfg: ScoringConfig = DEFAULT_SCORING_CONFIG,
   excluded: readonly number[] = [],
+  title: Pick<TitleMatch, "level"> | null = null,
 ): number {
   const skip = new Set(excluded)
+  const counted = results.filter((_, i) => !skip.has(i))
+  // Kişisel nitelikler skora girmiyor; ilanda yalnızca onlar varsa giriyor.
+  const scored = counted.filter((r) => !cfg.unscoredTypes.includes(r.requirement.type))
+  const pool = scored.length > 0 ? scored : counted
+  if (pool.length === 0) return 0
+
   let weightedSum = 0
   let totalWeight = 0
-  results.forEach((result, i) => {
-    if (skip.has(i)) return
+  for (const result of pool) {
     const weight = result.requirement.importance === "must" ? cfg.mustWeight : cfg.niceWeight
     totalWeight += weight
     weightedSum += weight * result.confidence
-  })
-  return totalWeight === 0 ? 0 : Math.round((weightedSum / totalWeight) * 100)
+  }
+  // Unvan bir zorunlu gereksinim gibi (DOG-103). Bu alandan önceki
+  // analizlerde ve unvansız ilanlarda yok.
+  if (title) {
+    totalWeight += cfg.titleWeight
+    weightedSum += cfg.titleWeight * TITLE_CREDIT[title.level]
+  }
+  return Math.round((weightedSum / totalWeight) * 100)
 }
+
+const TITLE_CREDIT: Record<TitleMatch["level"], number> = { exact: 1, partial: 0.5, none: 0 }
 
 /**
  * Kavram bir özel ad mı: teknoloji, ürün, marka. Her kelimesi büyük harfle

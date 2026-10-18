@@ -53,4 +53,66 @@ describe("adjustedScore", () => {
       expect(adjustedScore(reqs, excluded)).toBe(weightedScore(reqs, undefined, excluded))
     }
   })
+
+  it("matches core with soft requirements and every title level (DOG-103)", () => {
+    const mk = (type: "skill" | "soft" | "experience", importance: "must" | "nice", confidence: number) => ({
+      requirement: { text: "x", type, importance, concepts: [] },
+      confidence,
+    })
+    const reqs = [mk("skill", "must", 1), mk("soft", "must", 0), mk("experience", "nice", 0.5), mk("soft", "nice", 1)]
+    const onlySoft = [mk("soft", "must", 1), mk("soft", "nice", 0)]
+    for (const list of [reqs, onlySoft]) {
+      for (const title of [null, { level: "exact" as const }, { level: "partial" as const }, { level: "none" as const }]) {
+        for (const excluded of [[], [0], [0, 2]]) {
+          expect(adjustedScore(list, excluded, { title, revision: 2 })).toBe(weightedScore(list, undefined, excluded, title))
+        }
+      }
+    }
+  })
+
+  it("keeps the old formula for analyses saved before the change", () => {
+    const mk = (type: "skill" | "soft", confidence: number) => ({
+      requirement: { text: "x", type, importance: "must", concepts: [] },
+      confidence,
+    })
+    // Eski formül soft dahil, unvansız: 0 ve 1 → 50. Yenisi soft'u ve unvanı
+    // ayırırdı: (0 + 0) / (2 + 2) → 0.
+    const reqs = [mk("skill", 0), mk("soft", 1)]
+    expect(adjustedScore(reqs, [], { title: { level: "none" } })).toBe(50)
+    expect(adjustedScore(reqs, [], { title: { level: "none" }, revision: 2 })).toBe(0)
+  })
+})
+
+describe("applyExclusions · soft requirements (DOG-103)", () => {
+  const soft = (text: string, status: "matched" | "missing", missingConcepts: string[] = []) => ({
+    ...req(text, status, missingConcepts),
+    requirement: { text, importance: "must", type: "soft" },
+  })
+  const result = {
+    score: 50,
+    requirements: [req("Excel", "matched"), soft("Takım çalışması", "missing", ["takım çalışması"]), req("İş hukuku", "missing", ["İş hukuku"])],
+    missingKeywords: ["takım çalışması", "İş hukuku"],
+    scoringRevision: 2,
+  }
+
+  it("lists soft requirements apart and leaves them out of counts and missing concepts", () => {
+    const v = applyExclusions(result)
+    expect(v.rows.map((r) => r.item.requirement.text)).toEqual(["Excel", "İş hukuku"])
+    expect(v.softRows).toEqual([{ item: result.requirements[1], index: 1 }])
+    expect(v.active).toHaveLength(2)
+    expect(v.missingKeywords).toEqual(["İş hukuku"])
+  })
+
+  it("keeps old analyses as they were: soft counted in the list", () => {
+    const v = applyExclusions({ ...result, scoringRevision: undefined })
+    expect(v.rows).toHaveLength(3)
+    expect(v.softRows).toEqual([])
+    expect(v.missingKeywords).toEqual(["takım çalışması", "İş hukuku"])
+  })
+
+  it("keeps soft requirements in the list when the posting has nothing else", () => {
+    const v = applyExclusions({ ...result, requirements: [soft("İletişim", "missing")] })
+    expect(v.rows).toHaveLength(1)
+    expect(v.softRows).toEqual([])
+  })
 })
