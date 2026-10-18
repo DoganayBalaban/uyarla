@@ -1,4 +1,4 @@
-import { AdaptationDraftSchema } from "@uyarla/core"
+import { AdaptationDraftSchema } from "@uyarla/core/schemas/adaptation"
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import {

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { ChevronDown, CircleCheck, OctagonAlert, ScanText, TriangleAlert, Wand2 } from "lucide-react"
-import type { FormatFinding, FormatReport } from "@uyarla/core"
+import type { FormatFinding, FormatReport } from "@uyarla/core/format/check"
 import { cn } from "@/lib/cn"
 import { fixHint } from "@/features/analysis/formatFixes"
 

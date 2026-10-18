@@ -2,7 +2,7 @@ import { mkdtemp, writeFile, access } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, it, expect, afterEach, beforeAll } from "vitest"
-import { LocalFileStore } from "@uyarla/core"
+import { LocalFileStore } from "@uyarla/core/storage/fileStore"
 import { prisma } from "@uyarla/db"
 import { deleteUsers, deletionOperations } from "@/server/deleteAccount"
 

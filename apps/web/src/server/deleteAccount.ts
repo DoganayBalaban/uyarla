@@ -1,4 +1,4 @@
-import { fileStoreFromEnv, type FileStore } from "@uyarla/core"
+import { fileStoreFromEnv, type FileStore } from "@uyarla/core/storage/fileStore"
 import type { prisma } from "@uyarla/db"
 
 /**

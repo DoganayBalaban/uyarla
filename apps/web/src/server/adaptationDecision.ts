@@ -1,16 +1,10 @@
-import {
-  AdaptationDraftSchema,
-  applyAdaptation,
-  CachedEmbeddingProvider,
-  OpenAiCompatibleEmbeddingProvider,
-  embeddingConfigFromEnv,
-  hasPendingDecisions,
-  redisVectorStore,
-  rescore,
-  type AdaptationDraft,
-  type JobPostingData,
-  type ResumeProfile,
-} from "@uyarla/core"
+import { AdaptationDraftSchema, hasPendingDecisions, type AdaptationDraft } from "@uyarla/core/schemas/adaptation"
+import { applyAdaptation } from "@uyarla/core/adapt/profile"
+import { CachedEmbeddingProvider, redisVectorStore } from "@uyarla/core/llm/embeddingCache"
+import { OpenAiCompatibleEmbeddingProvider, embeddingConfigFromEnv } from "@uyarla/core/llm/embedding"
+import { rescore } from "@uyarla/core/adapt/rescore"
+import type { JobPostingData } from "@uyarla/core/schemas/job"
+import type { ResumeProfile } from "@uyarla/core/schemas/resume"
 import { prisma } from "@uyarla/db"
 import { documentModelFor } from "@/server/documentModel"
 import { redis } from "@/server/redis"

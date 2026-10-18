@@ -1,4 +1,4 @@
-import type { CoverLetterRecord } from "@uyarla/core"
+import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 
 /** `GET /api/adapt/[id]` yanıtının arayüzün kullandığı kısmı. */
 

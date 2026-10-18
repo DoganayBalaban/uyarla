@@ -1,4 +1,6 @@
-import { toDocumentModel, withContact, type DocumentModel, type ResumeProfile } from "@uyarla/core"
+import { toDocumentModel, type DocumentModel } from "@uyarla/core/document/model"
+import { withContact } from "@uyarla/core/document/contact"
+import type { ResumeProfile } from "@uyarla/core/schemas/resume"
 import { prisma } from "@uyarla/db"
 
 /**

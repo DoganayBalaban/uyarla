@@ -12,7 +12,7 @@ import {
   Sparkles,
   TriangleAlert,
 } from "lucide-react"
-import type { CoverLetterRecord } from "@uyarla/core"
+import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/cn"
 import { adaptationQueryKey, requestCoverLetter } from "@/features/adaptation/api"

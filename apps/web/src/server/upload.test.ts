@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { PermanentError } from "@uyarla/core"
+import { PermanentError } from "@uyarla/core/errors"
 import { validateJobText, validateResumeFile, validateUpload } from "./upload.js"
 
 const MB = 1024 * 1024

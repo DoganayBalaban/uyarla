@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto"
-import { AdaptationDraftSchema, hasPendingDecisions, type CoverLetterRecord } from "@uyarla/core"
+import { AdaptationDraftSchema, hasPendingDecisions } from "@uyarla/core/schemas/adaptation"
+import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 import { prisma } from "@uyarla/db"
 import { ADAPT_JOB_OPTIONS, CONTRIBUTION_JOB, COVER_LETTER_JOB } from "@uyarla/worker/adapt-queue"
 import { NextResponse } from "next/server"

@@ -1,4 +1,5 @@
-import { fileStoreFromEnv, PermanentError } from "@uyarla/core"
+import { fileStoreFromEnv } from "@uyarla/core/storage/fileStore"
+import { PermanentError } from "@uyarla/core/errors"
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { labelSchema } from "@/features/resumes/schema"

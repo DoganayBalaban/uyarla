@@ -2703,3 +2703,31 @@ Sonuçlar:
 - Eğitim ve deneyim şartının elle düzeltilmesi ayrı bir ekran işi.
 - Bu değişiklikten önce işaret konmuş analizlerin `Analysis.score`'u, bir
   işaret değişene kadar ilk skor olarak kalıyor.
+
+## K-68 · Web core'u alt yollardan içe aktarıyor; Vercel fonksiyonu 13 → 4
+
+**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** apps/web, packages/core
+
+**Bağlam:** Vercel Hobby, Next.js route'larını toplayıp en çok 12 fonksiyona
+izin veriyor. Yerel `vercel build` ölçümü: hafif route'lar tek fonksiyonda
+toplanıyordu ama `@uyarla/core` ana girişini içe aktaran 9 route'un her biri
+ayrı fonksiyondu (toplam 13). Ana giriş pdfjs, pdfkit, docx, S3 ve OpenAI
+istemcisini de çekiyor; izlenen dosya kümesi büyüyen route gruba girmiyor.
+Sonuçlar: PR 117'nin ilk denemesi `exceeded_serverless_functions_per_deployment`
+ile düştü, uç birleştirmeler ("ayrı route değil") ve web'de skor formülünün
+kopyası (`features/analysis/exclusion.ts`) bu sınır yüzünden var.
+
+**Karar:**
+- Core `"./*": "./src/*.ts"` alt yolunu yayımlıyor. Web yalnızca alt
+  yollardan içe aktarıyor (`@uyarla/core/errors`, `@uyarla/core/score/score` …).
+  `lib/coreImports.test.ts` ana giriş içe aktarılırsa kırılıyor.
+- Ölçüm sonrası: 4 fonksiyon; 17 API route'unun hepsi tek fonksiyonda.
+
+**Değerlendirilen alternatifler:** Next'in tamamını Railway'de `next start`
+ile çalıştırmak (sınır kalkar, Vercel önizlemeleri ve CDN gider) · API'yi
+Railway'de ayrı servise taşımak (K-08'in reddettiği ayrı servis; kullanıcı
+ileride FastAPI gibi bir backend'i olası görüyor) · Vercel Pro ($20/ay).
+
+**Not:** Yerel `vercel build`, aynı anda `next dev` çalışırken `.next`
+paylaşıldığı için prerender'da "reading 'call'" hatasıyla düşebiliyor; dev
+sunucusunu durdurup `.next`'i silerek derle.
