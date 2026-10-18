@@ -95,4 +95,14 @@ describe("application reminders · real database (DOG-98)", () => {
     expect(result).toMatchObject({ sent: 0, failed: 1 })
     expect((await prisma.analysis.findUnique({ where: { id: a.id } }))!.reminderSentAt).toBeNull()
   })
+
+  it("does not need an e-mail key on a day with nothing to send", async () => {
+    const key = process.env.RESEND_API_KEY
+    delete process.env.RESEND_API_KEY
+    try {
+      await expect(sendApplicationReminders(prisma, { now: NOW, dryRun: false })).resolves.toMatchObject({ sent: 0 })
+    } finally {
+      if (key !== undefined) process.env.RESEND_API_KEY = key
+    }
+  })
 })
