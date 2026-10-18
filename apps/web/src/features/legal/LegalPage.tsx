@@ -18,12 +18,6 @@ export function YasalSayfa({
   return (
     <>
       <PageShell width="narrow">
-        {LEGAL.draftData && (
-          <p className="mb-10 rounded-card border border-brand-amber/40 bg-brand-amber/10 px-5 py-4 text-sm text-foreground">
-            <strong className="font-semibold">Taslak.</strong> Bu metin henüz hukuki olarak gözden
-            geçirilmedi ve köşeli parantezli bilgiler doldurulmadı.
-          </p>
-        )}
         <p className="text-sm text-muted">Son güncelleme: {LEGAL.lastUpdated}</p>
         <h1 className="mt-2 font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">{title}</h1>
         <p className="mt-5 text-lg leading-relaxed text-muted">{summary}</p>
