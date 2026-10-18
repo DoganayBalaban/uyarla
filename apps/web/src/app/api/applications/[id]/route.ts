@@ -7,7 +7,7 @@ import { firstIssue } from "@/lib/validation"
 
 export const runtime = "nodejs"
 
-/** Kartın aşamasını ve/veya notunu günceller. */
+/** Kartın aşamasını, notunu ve/veya mülakat gününü günceller. */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -26,6 +26,12 @@ export async function PATCH(
     if (body.stage !== undefined) {
       patchData.stage = body.stage
       patchData.stageChangedAt = new Date()
+      // Yeniden "Başvuruldu"ya alınan kart için takip hatırlatması yeniden
+      // kurulsun (DOG-98).
+      if (body.stage === "applied") patchData.reminderSentAt = null
+    }
+    if (body.interviewAt !== undefined) {
+      patchData.interviewAt = body.interviewAt ? new Date(`${body.interviewAt}T00:00:00Z`) : null
     }
     if (body.note !== undefined) {
       patchData.note = body.note || null

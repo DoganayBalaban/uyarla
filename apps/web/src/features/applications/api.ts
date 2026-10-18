@@ -5,6 +5,8 @@ import type { BoardCard, Stage } from "@/features/applications/board"
 export interface CardChange {
   stage?: Stage
   note?: string
+  /** "YYYY-AA-GG"; null tarihi siler (DOG-98). */
+  interviewAt?: string | null
 }
 
 export const applicationsQueryKey = ["applications"] as const
@@ -25,6 +27,7 @@ export function applyCardChange(cards: BoardCard[], analysisId: string, change: 
           ...k,
           ...(change.stage && { stage: change.stage, stageChangedAt: now.toISOString() }),
           ...(change.note !== undefined && { noteText: change.note || null }),
+          ...(change.interviewAt !== undefined && { interviewAt: change.interviewAt }),
         }
       : k,
   )

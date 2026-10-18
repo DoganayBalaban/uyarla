@@ -95,6 +95,8 @@ export function AnalyzeView() {
   const queryClient = useQueryClient()
   const [state, setState] = useState<AnalysisResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Aynı ilan daha önce analiz edilmiş (DOG-98); "yine de" için son değerler.
+  const [duplicate, setDuplicate] = useState<{ analysisId: string; createdAt: string; values: AnalyzeFormValues } | null>(null)
   const [busy, setBusy] = useState(false)
   const {
     register,
@@ -349,8 +351,14 @@ export function AnalyzeView() {
   }
 
   /** Şemadan geçmiş değerlerle çağrılıyor; sunucu aynı şemayla bir kez daha doğruluyor. */
-  async function onSubmit(values: AnalyzeFormValues) {
+  /** Form gönderimi. handleSubmit ikinci argüman olarak olayı geçtiği için ayrı. */
+  function onSubmit(values: AnalyzeFormValues) {
+    return submitAnalysis(values, false)
+  }
+
+  async function submitAnalysis(values: AnalyzeFormValues, allowDuplicate: boolean) {
     setError(null)
+    setDuplicate(null)
     setState(null)
     setBusy(true)
     setLibraryNote(null)
@@ -363,6 +371,7 @@ export function AnalyzeView() {
       if (registered && values.saveToLibrary) body.append("saveToLibrary", "true")
     }
     body.append("jobText", values.jobText)
+    if (allowDuplicate) body.append("allowDuplicate", "true")
 
     try {
       const { jobId, savedToLibrary } = await startAnalysis(body)
@@ -376,6 +385,12 @@ export function AnalyzeView() {
       setState({ status: "running" })
       setPollJobId(jobId)
     } catch (error) {
+      const parsed = (await apiErrorBody(error)) as { code?: string; analysisId?: string; createdAt?: string }
+      if (parsed.code === "duplicate_posting" && parsed.analysisId && parsed.createdAt) {
+        setDuplicate({ analysisId: parsed.analysisId, createdAt: parsed.createdAt, values })
+        setBusy(false)
+        return
+      }
       // Seçili CV başka sekmede kaldırılmış olabilir (K-35: 404).
       if (values.resumeId && apiStatus(error) === 404) {
         setError("Bu CV artık kütüphanende değil. Listeyi yeniledik; başka bir CV seçebilirsin.")
@@ -461,6 +476,32 @@ export function AnalyzeView() {
         title="CV'ni ilanla karşılaştır"
         description="CV'ni yükle, ilanı yapıştır. Uyumunu ve eksik anahtar kelimeleri hemen gör. Ücretsiz, kayıt gerekmez."
       />
+
+      {duplicate && (
+        <div role="status" className="mb-6 rounded-card border border-brand-blue/30 bg-brand-blue/5 p-4 text-sm">
+          <p className="m-0 font-semibold">
+            Bu ilanı {new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long" }).format(new Date(duplicate.createdAt))}{" "}
+            tarihinde analiz ettin.
+          </p>
+          <p className="m-0 mt-1 text-muted">Önceki sonuç panonda duruyor; yeniden analiz panoya ikinci bir kart ekler.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href={resultPath(duplicate.analysisId)}
+              className="rounded-button bg-brand-blue px-4 py-2 font-semibold text-white no-underline hover:bg-brand-blue/90"
+            >
+              Önceki sonucu aç
+            </Link>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void submitAnalysis(duplicate.values, true)}
+              className="rounded-button border border-border bg-card px-4 py-2 font-semibold hover:border-brand-blue/40 disabled:opacity-50"
+            >
+              Yine de yeniden analiz et
+            </button>
+          </div>
+        </div>
+      )}
 
       {(error || state?.status === "failed") && (
         <div

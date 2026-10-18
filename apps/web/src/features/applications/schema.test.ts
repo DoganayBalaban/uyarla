@@ -41,3 +41,15 @@ describe("noteFormSchema", () => {
     expect(noteFormSchema.parse({ note: "  not  " }).note).toBe("not")
   })
 })
+
+describe("applicationPatchSchema · interview date (DOG-98)", () => {
+  it("accepts a date from the date input and null to clear it", () => {
+    expect(applicationPatchSchema.parse({ interviewAt: "2026-10-21" })).toEqual({ interviewAt: "2026-10-21" })
+    expect(applicationPatchSchema.parse({ interviewAt: null })).toEqual({ interviewAt: null })
+  })
+
+  it("rejects a malformed date", () => {
+    expect(applicationPatchSchema.safeParse({ interviewAt: "21.10.2026" }).success).toBe(false)
+    expect(applicationPatchSchema.safeParse({ interviewAt: "2026-13-45" }).success).toBe(false)
+  })
+})

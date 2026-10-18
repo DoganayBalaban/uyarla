@@ -21,6 +21,7 @@ import { PageHeader } from "@/components/layout/PageShell"
 import { ProfileSection } from "@/features/account/components/ProfileSection"
 import { ResumeLibrarySection } from "@/features/account/components/ResumeLibrarySection"
 import { ExcludedConceptsSection } from "@/features/account/components/ExcludedConceptsSection"
+import { NotificationsSection } from "@/features/account/components/NotificationsSection"
 import { PassSection } from "@/features/billing/components/PassSection"
 
 /** Marka rehberi §10.2'deki veri silme onay metni, birebir. */
@@ -126,6 +127,7 @@ export function AccountView() {
             <PassSection />
             <ResumeLibrarySection />
             <ExcludedConceptsSection />
+            <NotificationsSection />
           </>
         )}
 

@@ -315,7 +315,25 @@ function BoardCardView({
           <CalendarDays className="size-3.5" aria-hidden />
           {DATE_FORMAT.format(new Date(card.createdAt))}
         </span>
+        {card.interviewAt && (
+          <span className="rounded-full bg-brand-amber/10 px-2 py-0.5 text-xs font-semibold text-brand-amber">
+            Mülakat {DATE_FORMAT.format(new Date(`${card.interviewAt}T12:00:00`))}
+          </span>
+        )}
       </div>
+
+      {/* Mülakat günü (DOG-98): aşama "Mülakat" iken ya da tarih girildiyse. */}
+      {(card.stage === "interview" || card.interviewAt) && (
+        <label className="mt-3 flex items-center gap-2 text-xs text-muted">
+          Mülakat günü
+          <input
+            type="date"
+            value={card.interviewAt ?? ""}
+            onChange={(e) => onUpdate(card.analysisId, { interviewAt: e.target.value || null })}
+            className="rounded-button border border-border bg-card px-2 py-1 text-xs text-foreground"
+          />
+        </label>
+      )}
 
       {noteOpen ? (
         <>

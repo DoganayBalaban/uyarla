@@ -8,6 +8,7 @@ import { auth } from "@/server/auth"
 import { authErrorResponse, ensureRegistered, ensureSession, getSession } from "@/server/authz"
 import { analyzeQueue } from "@/server/queue"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
+import { findPreviousAnalysis } from "@/server/duplicatePosting"
 import { createResume, findLibraryResume } from "@/server/resumeLibrary"
 import { storeUploadedResume } from "@/server/storeUpload"
 import { validateJobText, validateUpload } from "@/server/upload"
@@ -49,6 +50,23 @@ export async function POST(request: Request) {
       session = fresh?.user ? { user: { id: fresh.user.id, isAnonymous: true } } : null
     }
     const { user } = libraryResumeId ? ensureRegistered(session) : ensureSession(session)
+
+    // Aynı ilan daha önce analiz edildiyse önce sor (DOG-98): panoda ikinci
+    // kart ve gereksiz LLM işi. Kullanıcı "yine de" derse allowDuplicate geliyor.
+    if (form.get("allowDuplicate") !== "true") {
+      const previous = await findPreviousAnalysis(prisma, { userId: user.id, jobText, resumeId: libraryResumeId })
+      if (previous) {
+        return NextResponse.json(
+          {
+            error: "Bu ilanı daha önce analiz ettin.",
+            code: "duplicate_posting",
+            analysisId: previous.id,
+            createdAt: previous.createdAt.toISOString(),
+          },
+          { status: 409 },
+        )
+      }
+    }
 
     // Pahalı uç: her çağrı ~60 saniyelik LLM işi başlatıyor (spec §9).
     await enforceRateLimit(
