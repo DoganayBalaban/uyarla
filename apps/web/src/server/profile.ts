@@ -13,10 +13,20 @@ export interface Profile {
   goal: Goal | null
   targetRole: string | null
   phone: string | null
+  /** Başvuru takip hatırlatması e-postası (DOG-98). */
+  applicationReminders: boolean
   onboardedAt: Date | null
 }
 
-const PROFILE_SELECT = { name: true, email: true, goal: true, targetRole: true, phone: true, onboardedAt: true } as const
+const PROFILE_SELECT = {
+  name: true,
+  email: true,
+  goal: true,
+  targetRole: true,
+  phone: true,
+  applicationReminders: true,
+  onboardedAt: true,
+} as const
 
 export function getProfile(db: Db, userId: string): Promise<Profile | null> {
   return db.user.findUnique({ where: { id: userId }, select: PROFILE_SELECT })
@@ -31,6 +41,7 @@ export async function updateProfile(db: Db, userId: string, patch: ProfilePatch)
       ...(patch.goal !== undefined ? { goal: patch.goal } : {}),
       ...(patch.targetRole !== undefined ? { targetRole: patch.targetRole } : {}),
       ...(patch.phone !== undefined ? { phone: patch.phone } : {}),
+      ...(patch.applicationReminders !== undefined ? { applicationReminders: patch.applicationReminders } : {}),
       // İlk tamamlanma tarihi korunuyor: ikinci "Şimdilik geç" onu kaydırmasın.
       ...(patch.completeOnboarding && !current.onboardedAt ? { onboardedAt: new Date() } : {}),
     },

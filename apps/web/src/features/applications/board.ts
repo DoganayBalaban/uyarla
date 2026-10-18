@@ -45,6 +45,8 @@ export interface BoardCard {
   stage: Stage
   stageChangedAt: string | null
   noteText: string | null
+  /** Mülakat günü (DOG-98), "YYYY-AA-GG"; girilmediyse null. */
+  interviewAt: string | null
   createdAt: string
   adaptation: { id: string; status: string } | null
 }
@@ -56,6 +58,7 @@ export const BOARD_SELECT = {
   stage: true,
   stageChangedAt: true,
   note: true,
+  interviewAt: true,
   createdAt: true,
   jobPosting: { select: { position: true, company: true, rawText: true } },
   adaptation: { select: { id: true, status: true } },
@@ -68,6 +71,7 @@ export interface BoardRow {
   stage: string
   stageChangedAt: Date | null
   note: string | null
+  interviewAt: Date | null
   createdAt: Date
   jobPosting: { position: string; company: string | null; rawText: string }
   adaptation: { id: string; status: string } | null
@@ -92,6 +96,7 @@ export function toBoardCard(s: BoardRow): BoardCard {
     stage: isStage(s.stage) ? s.stage : "saved",
     stageChangedAt: s.stageChangedAt?.toISOString() ?? null,
     noteText: s.note,
+    interviewAt: s.interviewAt?.toISOString().slice(0, 10) ?? null,
     createdAt: s.createdAt.toISOString(),
     adaptation: s.adaptation ? { id: s.adaptation.id, status: s.adaptation.status } : null,
   }

@@ -8,6 +8,7 @@ function row(suffix: Partial<BoardRow> = {}): BoardRow {
     stage: "saved",
     stageChangedAt: null,
     note: null,
+    interviewAt: null,
     createdAt: new Date("2026-09-20T10:00:00Z"),
     jobPosting: { position: "Frontend Geliştirici", company: null, rawText: "ilan" },
     adaptation: null,
@@ -66,5 +67,12 @@ describe("scoreBadge", () => {
     expect(scoreBadge(36).text).toBe("Yüksek")
     expect(scoreBadge(25).text).toBe("Orta")
     expect(scoreBadge(10).text).toBe("Düşük")
+  })
+})
+
+describe("board · interview date (DOG-98)", () => {
+  it("carries the interview day as YYYY-MM-DD", () => {
+    expect(toBoardCard(row({ interviewAt: new Date("2026-10-21T00:00:00Z") })).interviewAt).toBe("2026-10-21")
+    expect(toBoardCard(row()).interviewAt).toBeNull()
   })
 })

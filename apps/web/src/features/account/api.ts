@@ -18,6 +18,8 @@ export interface ProfileView {
   goal: Goal | null
   targetRole: string | null
   phone: string | null
+  /** Başvuru takip hatırlatması e-postası (DOG-98). */
+  applicationReminders: boolean
 }
 
 export const profileQueryKey = ["profile"] as const

@@ -2789,3 +2789,40 @@ eşiği (1100) zaten vardı.
 - cv-f: bağlantı yok.
 Tarih biçimi her CV'de tek biçim olarak tanınıyor (ay adı, sayısal ya da
 yalnız yıl).
+
+## K-71 · Başvuru takibi: mülakat günü, takip hatırlatması, kopya ilan uyarısı
+
+**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-98
+
+**Karar:**
+- **Mülakat günü** (`Analysis.interviewAt`). Panoda kart "Mülakat"
+  aşamasındayken ya da tarih girildiyse düzenleniyor; kartta rozet olarak
+  görünüyor. Notlar zaten vardı.
+- **Takip hatırlatması.** "Başvuruldu"ya alınıp 7 gün boyunca aşaması
+  değişmeyen başvurular için kullanıcıya tek e-posta, birden çok başvuru tek
+  e-postada. Her başvuru için bir kez (`reminderSentAt`); kart yeniden
+  "Başvuruldu"ya alınırsa sıfırlanıyor.
+  - 21 günden eski başvurular hatırlatılmıyor: özellik açıldığı gün
+    haftalar önceki kartlar için toplu e-posta gitmesin.
+  - Anonim hesaplara gönderilmiyor. Hesabım'daki "Bildirimler" bölümünden
+    kapatılabiliyor (`User.applicationReminders`); e-postanın alt bilgisi de
+    oraya bağlanıyor.
+  - Gönderilemeyen kullanıcının başvuruları işaretlenmiyor, ertesi gün
+    yeniden deneniyor.
+  - Anonim temizlikle aynı günlük Railway cron'unda çalışıyor
+    (`cleanup:cron`); ayrı servis yok. Betik öntanımlı olarak deneme kipinde,
+    göndermek `--send` istiyor. `BETTER_AUTH_URL` yoksa bağlantılar yanlış
+    olacağı için durup hata veriyor.
+- **Kopya ilan uyarısı.** Aynı kullanıcı aynı ilan metnini tamamlanmış bir
+  analizde zaten kullandıysa analiz başlamadan soruluyor: önceki sonucu aç ya
+  da yine de yeniden analiz et. Kayıtlı CV seçildiyse eşleşme o CV'yle
+  sınırlı; aynı ilanı farklı CV ile denemek meşru. LLM maliyetini de
+  koruyor.
+
+**Alınmayan:** "Şirket sitesinde başvur → Başvurdun mu?" akışı. İlan
+sayfasının bağlantısını açıp geri dönüşü izlemek ayrı bir iş.
+
+**Canlıya çıkış:** `20261018204132_basvuru_takibi` migrasyonu (yalnızca sütun
+ekliyor) kod yayına çıkmadan uygulanmalı; pano yeni sütunu okuyor. Cron
+servisinin ortamında `RESEND_API_KEY`, `EMAIL_FROM`, `BETTER_AUTH_URL`
+tanımlı olmalı.

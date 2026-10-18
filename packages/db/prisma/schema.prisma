@@ -29,6 +29,8 @@ model User {
   targetRole  String?
   // İndirilen CV'nin iletişim satırı için (DOG-58); boşsa eklenmiyor.
   phone       String?
+  // Başvuru takip hatırlatması e-postası (DOG-98); Hesabım'dan kapatılabiliyor.
+  applicationReminders Boolean @default(true)
 
   accessPasses AccessPass[]
   /// "Tüm ilanlarda hariç tut" listesi (DOG-90).
@@ -154,6 +156,11 @@ model Analysis {
   stage          ApplicationStage @default(saved)
   stageChangedAt DateTime?
   note           String?          @db.Text
+  // Mülakat tarihi (DOG-98); kullanıcı panodan giriyor.
+  interviewAt    DateTime?
+  // "Başvurdum"dan sonra durum değişmediyse gönderilen takip hatırlatması
+  // (DOG-98). Doluysa aynı başvuru için bir daha gönderilmiyor.
+  reminderSentAt DateTime?
 
   @@index([resumeVersionId, jobPostingId])
   @@index([userId])
