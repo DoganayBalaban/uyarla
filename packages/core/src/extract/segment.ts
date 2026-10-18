@@ -212,6 +212,11 @@ export function segmentResume(rawText: string): CodeSegments {
     }
   }
 
+  // Beceri bloğuna düşmüş başlıksız bir iş kaydı deneyime (DOG-109).
+  const stray = strayEntries(blockList.skills)
+  blockList.skills = stray.rest
+  blockList.experience.push(...stray.moved)
+
   return {
     headerBlock: blockList.header.join("\n").trim(),
     summaryBlock: blockList.summary.join("\n").trim(),
@@ -312,4 +317,72 @@ function isContactLine(t: string): boolean {
     .replace(CONTACT_LABEL, "")
     .replace(/[\s|•·,;:/()\-]+/g, "")
   return rest.length === 0
+}
+
+/** Madde iminin ardından en az bu kadar kelime: "• İleri düzey Excel" beceri, cümle değil. */
+const MIN_SENTENCE_WORDS = 5
+/** Bir kaydın başlık satırları (unvan, kurum) bundan uzun olmaz. */
+const MAX_ENTRY_HEADER_LENGTH = 70
+
+function isSentenceBullet(line: string): boolean {
+  const t = line.trim()
+  return BULLET.test(t) && t.replace(BULLET, "").trim().split(/\s+/).length >= MIN_SENTENCE_WORDS
+}
+
+/** Türkçe birinci tekil geçmiş zaman: "verdim", "yaptım", "aldım", "kurduk". */
+const PAST_TR = /\p{L}+(d|t)(ı|i|u|ü)(m|k)\.?$/u
+/** İngilizce madde geçmiş zaman fiiliyle başlar: "Built", "Led", "Managed". */
+const PAST_EN = /^(\p{L}+ed|built|led|ran|wrote|made|taught|won|drove|grew|set|took)\b/iu
+
+/**
+ * Maddelerin çoğu yapılmış bir işi anlatıyor mu: iş kaydının işareti. "•
+ * İletişimi güçlü biriyim." gibi kişisel özellik cümleleri deneyime
+ * taşınmasın.
+ */
+function describesWork(bullets: string[]): boolean {
+  const work = bullets.filter((b) => {
+    const t = b.trim().replace(BULLET, "").trim()
+    return PAST_TR.test(t) || PAST_EN.test(t)
+  })
+  return work.length * 2 >= bullets.length
+}
+
+/**
+ * Beceri bloğundaki başlıksız iş kayıtlarını ayırır (DOG-109).
+ *
+ * İki sütunlu şablonda bir deneyim kaydı sertifika listesinin ardına
+ * düşebiliyor: "EĞİTMEN _ MENTOR BURSİYERİ / Bir Eğitim Vakfı" ve dört madde.
+ * Unvan ve kurum beceri sanılıyor, cümle olan maddeler atılıyordu. İşaret
+ * yapısal: en az iki ardışık cümle maddesi ve hemen önlerinde 1–2 kısa,
+ * imsiz satır. Bu kalıp bir beceri listesinde görülmüyor; taşınan satırlar
+ * deneyim çıkarıcısına kayıt olarak gidiyor.
+ */
+function strayEntries(lines: string[]): { rest: string[]; moved: string[] } {
+  const rest: string[] = []
+  const moved: string[] = []
+  let i = 0
+  while (i < lines.length) {
+    let end = i
+    while (end < lines.length && isSentenceBullet(lines[end]!)) end++
+    if (end - i >= 2 && describesWork(lines.slice(i, end))) {
+      // Kaydın başlığı: hemen öndeki imsiz, kısa, başlık olmayan en fazla iki satır.
+      const header: string[] = []
+      while (header.length < 2 && rest.length > 0) {
+        const previous = rest.at(-1)!.trim()
+        if (!previous || BULLET.test(previous) || previous.length > MAX_ENTRY_HEADER_LENGTH || headingKind(previous)) break
+        header.unshift(rest.pop()!)
+      }
+      if (header.length > 0) {
+        moved.push(...header, ...lines.slice(i, end))
+        i = end
+        continue
+      }
+      rest.push(...lines.slice(i, end))
+      i = end
+      continue
+    }
+    rest.push(lines[i]!)
+    i++
+  }
+  return { rest, moved }
 }
