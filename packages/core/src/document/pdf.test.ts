@@ -2,6 +2,7 @@ import Module from "node:module"
 import { describe, it, expect } from "vitest"
 import { extractText } from "../documents/extractText.js"
 import type { DocumentModel } from "./model.js"
+import { PDFParse } from "pdf-parse"
 import { renderPdf } from "./pdf.js"
 
 const model: DocumentModel = {
@@ -116,5 +117,27 @@ describe("renderPdf", () => {
   it("produces a valid PDF for a model without sections", async () => {
     const pdf = await renderPdf({ ...model, sections: [] })
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-")
+  })
+
+  it("never leaves a bullet alone on a page at a page break", async () => {
+    // Sayfa sonuna denk gelen madde imi yeni sayfaya taşıyor, metni bir
+    // sonrakine kalıyordu: içinde yalnızca "•" olan sayfa (cv-c, 3 sayfa).
+    // Sayfa sonunun maddelere göre konumu özetin uzunluğuyla kaydırılıyor.
+    for (let words = 0; words <= 120; words += 6) {
+      const long: DocumentModel = {
+        ...model,
+        summary: words ? "kelime ".repeat(words).trim() : null,
+        sections: [
+          {
+            title: "DENEYİM",
+            entries: [{ heading: "Rol", organization: "Şirket", date: "2020 – 2021", lines: Array.from({ length: 60 }, (_, i) => `Madde ${i}`) }],
+          },
+        ],
+      }
+      const { pages } = await new PDFParse({ data: await renderPdf(long) }).getText()
+      for (const page of pages) expect(page.text.replace(/[\s•]/g, "").length).toBeGreaterThan(0)
+      expect(pages.length).toBeLessThanOrEqual(2)
+      expect(pages.at(-1)!.text).toContain("Madde 59")
+    }
   })
 })
