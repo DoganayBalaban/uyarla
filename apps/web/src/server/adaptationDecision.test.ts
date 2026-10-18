@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import type { AdaptationDraft } from "@uyarla/core"
+import type { AdaptationDraft } from "@uyarla/core/schemas/adaptation"
 import {
   adaptationDocument,
   applyBulkDecision,

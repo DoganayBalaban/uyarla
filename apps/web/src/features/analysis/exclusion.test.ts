@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { weightedScore } from "@uyarla/core"
+import { weightedScore } from "@uyarla/core/score/score"
 import { adjustedScore, applyExclusions } from "@/features/analysis/exclusion"
 
 const req = (text: string, status: "matched" | "missing", missingConcepts: string[] = []) => ({

@@ -1,4 +1,5 @@
-import type { FormatFinding, TitleMatch } from "@uyarla/core"
+import type { FormatFinding } from "@uyarla/core/format/check"
+import type { TitleMatch } from "@uyarla/core/score/title"
 import type { FormatReportView } from "@/features/analysis/components/FormatReport"
 
 /**

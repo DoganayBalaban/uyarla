@@ -1,4 +1,5 @@
-import { applyAdaptation, hasPendingDecisions } from "@uyarla/core"
+import { applyAdaptation } from "@uyarla/core/adapt/profile"
+import { hasPendingDecisions } from "@uyarla/core/schemas/adaptation"
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { loadAdaptation } from "@/server/adaptationDecision"

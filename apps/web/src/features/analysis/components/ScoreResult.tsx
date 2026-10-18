@@ -19,7 +19,7 @@ import { isPartial, partialNote, summarizeRequirements } from "@/features/analys
 import { scoreStatus } from "@/lib/scoreStatus"
 import { withTitleFinding } from "@/features/analysis/titleFinding"
 import { applyExclusions } from "@/features/analysis/exclusion"
-import type { TitleMatch } from "@uyarla/core"
+import type { TitleMatch } from "@uyarla/core/score/title"
 
 export interface RequirementResult {
   requirement: { text: string; importance: string; type: string }

@@ -1,11 +1,7 @@
-import {
-  MAX_ANSWER_LENGTH,
-  MIN_ANSWER_LENGTH,
-  type AdaptationDraft,
-  type Contribution,
-  type JobPostingData,
-  type ResumeProfile,
-} from "@uyarla/core"
+import { MAX_ANSWER_LENGTH, MIN_ANSWER_LENGTH } from "@uyarla/core/adapt/contribution"
+import type { AdaptationDraft, Contribution } from "@uyarla/core/schemas/adaptation"
+import type { JobPostingData } from "@uyarla/core/schemas/job"
+import type { ResumeProfile } from "@uyarla/core/schemas/resume"
 
 /** Bir uyarlamada en fazla bu kadar katkı; kötüye kullanıma karşı tavan. */
 export const MAX_CONTRIBUTIONS = 10

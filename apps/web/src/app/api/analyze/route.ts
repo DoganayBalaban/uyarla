@@ -1,4 +1,5 @@
-import { fileStoreFromEnv, PermanentError } from "@uyarla/core"
+import { fileStoreFromEnv } from "@uyarla/core/storage/fileStore"
+import { PermanentError } from "@uyarla/core/errors"
 import { prisma } from "@uyarla/db"
 import { ANALYZE_JOB_OPTIONS } from "@uyarla/worker/queue"
 import { headers } from "next/headers"

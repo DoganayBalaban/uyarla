@@ -1,4 +1,4 @@
-import { PermanentError } from "@uyarla/core"
+import { PermanentError } from "@uyarla/core/errors"
 import { analysisFormSchema, jobTextSchema, resumeFileSchema } from "@/features/analysis/schema"
 import { firstIssue } from "@/lib/validation"
 

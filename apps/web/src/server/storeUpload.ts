@@ -1,4 +1,4 @@
-import type { FileStore } from "@uyarla/core"
+import type { FileStore } from "@uyarla/core/storage/fileStore"
 
 /**
  * Yüklenen CV'yi depoya yazar ve kaydını oluşturur; kayıt düşerse dosyayı

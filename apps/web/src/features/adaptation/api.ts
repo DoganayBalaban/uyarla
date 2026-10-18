@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import type { CoverLetterRecord } from "@uyarla/core"
+import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 import { api } from "@/lib/api"
 import type { AdaptationState, Draft } from "@/features/adaptation/types"
 import { fileNameFromDisposition } from "@/features/adaptation/fileName"

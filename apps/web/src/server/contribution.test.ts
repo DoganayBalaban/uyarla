@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
-import type { AdaptationDraft, JobPostingData, ResumeProfile } from "@uyarla/core"
+import type { AdaptationDraft } from "@uyarla/core/schemas/adaptation"
+import type { JobPostingData } from "@uyarla/core/schemas/job"
+import type { ResumeProfile } from "@uyarla/core/schemas/resume"
 import { MAX_CONTRIBUTIONS, addContribution } from "@/server/contribution"
 
 const draft: AdaptationDraft = {

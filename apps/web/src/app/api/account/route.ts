@@ -1,4 +1,4 @@
-import { fileStoreFromEnv } from "@uyarla/core"
+import { fileStoreFromEnv } from "@uyarla/core/storage/fileStore"
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, ensureSession, getSession } from "@/server/authz"

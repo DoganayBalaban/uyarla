@@ -6,11 +6,7 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./document/pdf": "./src/document/pdf.ts",
-    "./document/docx": "./src/document/docx.ts",
-    "./observability/scrub": "./src/observability/scrub.ts",
-    "./jobPosting/extract": "./src/jobPosting/extract.ts",
-    "./adapt/onePage": "./src/adapt/onePage.ts"
+    "./*": "./src/*.ts"
   },
   "scripts": {
     "test": "vitest run",

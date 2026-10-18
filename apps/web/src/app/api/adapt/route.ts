@@ -1,4 +1,4 @@
-import { PermanentError } from "@uyarla/core"
+import { PermanentError } from "@uyarla/core/errors"
 import { prisma } from "@uyarla/db"
 import { ADAPT_JOB_OPTIONS } from "@uyarla/worker/adapt-queue"
 import { NextResponse } from "next/server"

@@ -1,4 +1,5 @@
-import { type FileStore, PermanentError } from "@uyarla/core"
+import type { FileStore } from "@uyarla/core/storage/fileStore"
+import { PermanentError } from "@uyarla/core/errors"
 import type { prisma } from "@uyarla/db"
 import { LIBRARY_MAX, type LibraryResume, type ResumePatch } from "@/features/resumes/schema"
 import { AuthError } from "@/server/authz"
