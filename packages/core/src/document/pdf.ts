@@ -138,6 +138,12 @@ function writeEntryHeader(doc: Doc, entry: DocumentEntry) {
 
 /** Asılı girintili madde: satır kaydığında metin imin hizasında kalmıyor. */
 function writeBullet(doc: Doc, line: string) {
+  // İm ile metin aynı y'ye açık konumla yazılıyor; sayfa sonunda im yeni
+  // sayfaya taşıp metin eski y'de kalırsa, içinde yalnızca "•" olan bir sayfa
+  // ve fazladan bir sayfa çıkıyordu. Maddenin ilk satırı sığmıyorsa önce
+  // sayfa çevriliyor.
+  doc.font("govde").fontSize(10)
+  keepWithNext(doc, doc.currentLineHeight(true) + 2)
   const y = doc.y
   doc.font("govde").fontSize(10).fillColor(TEXT).text("•", MARGIN + 4, y)
   writeParts(doc, linkParts(line), { font: "govde", size: 10, color: TEXT, x: MARGIN + 14, y })
