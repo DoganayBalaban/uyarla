@@ -158,9 +158,11 @@ export function ScoreResult({
                 {result.score}).
               </p>
             )}
+            {/* K2'de iki katılımcı düşük skoru "işe uygun değilim" diye okudu
+                (DOG-103). Skor CV ile ilanın örtüşmesi; çerçeve bunu söylüyor. */}
             <p className="mt-2 text-sm text-muted">
               {missing > 0
-                ? "Uyarladığımızda eksikleri deneyiminin izin verdiği ölçüde kapatıyoruz; olmayan bir şeyi eklemiyoruz."
+                ? "Bu skor CV'nin ilanla ne kadar örtüştüğünü ölçer, işe uygunluğunu değil. Eksiklerden deneyiminde olanları CV'nde görünür kılarsan skor yükselir. Uyarladığımızda bunu deneyiminin izin verdiği ölçüde yapıyoruz; olmayan bir şeyi eklemiyoruz."
                 : "CV'n bu ilanın istediklerini karşılıyor. Yine de anlatımı ilanın diline yaklaştırabilirsin."}
             </p>
 
@@ -284,10 +286,13 @@ export function ScoreResult({
 
       {/* Eksik kavramlar. */}
       <motion.div {...entrance(0.2)} className="rounded-card border border-border bg-card p-5 sm:p-6">
-        <h2 className="m-0 text-lg">Eksik kavramlar</h2>
-        <p className="mt-1 text-sm text-muted">İlanda geçen ama CV&apos;nde karşılığını bulamadığımız kavramlar.</p>
+        <h2 className="m-0 text-lg">CV&apos;nde görünmeyen kavramlar</h2>
+        <p className="mt-1 text-sm text-muted">
+          İlanda geçen ama CV&apos;nde karşılığını bulamadığımız kavramlar. Deneyiminde varsa açıkça yazmak skoru
+          yükseltir.
+        </p>
         {exclusion.missingKeywords.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">Eksik kavram yok.</p>
+          <p className="mt-3 text-sm text-muted">İlanın her kavramı CV&apos;nde görünüyor.</p>
         ) : (
           <ul className="mt-4 flex flex-wrap gap-2">
             {exclusion.missingKeywords.map((k) => (
@@ -376,11 +381,12 @@ function RequirementRow({
             "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full",
             done
               ? "bg-brand-green/15 text-brand-green dark:text-[#4ade80]"
-              : "bg-brand-red/10 text-brand-red dark:text-[#f87171]",
+              : // Kırmızı "başarısız" okunuyordu (DOG-103); eksik, kapatılabilecek bir şey.
+                "bg-brand-amber/10 text-brand-amber",
           )}
         >
           {done ? <Check className="size-3" strokeWidth={3} aria-hidden /> : <X className="size-3" strokeWidth={3} aria-hidden />}
-          <span className="sr-only">{partial ? "Kısmen karşılanıyor" : done ? "Karşılanıyor" : "Eksik"}</span>
+          <span className="sr-only">{partial ? "Kısmen karşılanıyor" : done ? "Karşılanıyor" : "CV'nde görünmüyor"}</span>
         </span>
         <span className="min-w-0 flex-1">
           <span className="font-medium">{item.requirement.text}</span>

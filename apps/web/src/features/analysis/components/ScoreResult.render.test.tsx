@@ -27,6 +27,8 @@ describe("ScoreResult", () => {
     expect(html).toContain("İlandaki unvan CV&#x27;nde geçmiyor")
     expect(html).toContain("Hepsi · 2")
     expect(html).toContain("Eksik · 1")
+    // K2: düşük skor "işe uygun değilim" diye okunuyordu.
+    expect(html).toContain("işe uygunluğunu değil")
   })
 
   it("draws an old analysis as before", () => {
