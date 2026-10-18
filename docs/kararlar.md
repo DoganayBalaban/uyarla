@@ -2623,3 +2623,20 @@ Beklenen seviye (yüksek/orta/düşük) ile ekrandaki etiketin uyuşması:
 Eski analizlerin kayıtlı skoru (soft dahil) yeni eşiklerde bir kademe düşük
 görünebilir. Etiket metinleri değişmedi; tonu K2'deki "uygun değilim"
 okumasına karşı ayrı bir yazım işi.
+
+## K-65 · Sonuç ekranı skoru "uygunluk" değil "örtüşme" olarak çerçeveliyor
+
+**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-103
+
+**Bağlam:** K2'de skorun anlamı iyi anlaşıldı (4,75/5), ama iki katılımcı düşük
+skoru "işe uygun olmadığımı anlatıyor" diye okudu.
+
+**Karar:** Etiketler ("Düşük uyum") değişmedi: doğru bir ifade ve halka
+içindeki kısa hâli 92 piksellik halkaya sığmalı. Değişen, yorumu yönlendiren
+metinler:
+- Eksik varken skor kartı skorun CV ile ilanın örtüşmesini ölçtüğünü, işe
+  uygunluğu ölçmediğini söylüyor. Deneyimde olanı görünür kılmanın skoru
+  yükselteceğini de ekliyor.
+- "Eksik kavramlar" başlığı "CV'nde görünmeyen kavramlar" oldu.
+- Eksik gereksinimin işareti kırmızıdan kehribara döndü: başarısızlık değil,
+  kapatılabilecek bir şey.
