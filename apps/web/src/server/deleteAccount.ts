@@ -47,6 +47,7 @@ export const DELETION_ORDER = [
   "session",
   "account",
   "accessPass",
+  "excludedConcept",
   "user",
 ] as const
 

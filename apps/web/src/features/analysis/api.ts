@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { api, apiStatus } from "@/lib/api"
+import type { ExclusionReason } from "@uyarla/core/score/exclusions"
 import type { ScoreResultView } from "@/features/analysis/components/ScoreResult"
 
 export type JobStatus = "running" | "completed" | "failed"
@@ -44,16 +45,21 @@ export async function getAnalysis(analysisId: string): Promise<AnalysisResponse>
   return (await api.get<AnalysisResponse>(`/analysis/${encodeURIComponent(analysisId)}`)).data
 }
 
-/** Gereksinimi "ilanda yok, yanlış okunmuş" diye işaretler ya da geri alır (DOG-90). */
-export async function setRequirementExcluded(
+/** Gereksinim satırındaki işlem (DOG-90): işaretle, işareti kaldır ya da ilanın şartını düzelt. */
+export type RequirementAction =
+  | { action: "exclude"; reason: ExclusionReason; always: boolean }
+  | { action: "include" }
+  | { action: "correct"; minYears?: number | null; terms?: string[] | null }
+
+export async function updateRequirement(
   analysisId: string,
   requirementIndex: number,
-  excluded: boolean,
-): Promise<{ result: ScoreResultView }> {
+  change: RequirementAction,
+): Promise<{ result: ScoreResultView; score: number }> {
   return (
-    await api.patch<{ result: ScoreResultView }>(`/analysis/${encodeURIComponent(analysisId)}`, {
+    await api.patch<{ result: ScoreResultView; score: number }>(`/analysis/${encodeURIComponent(analysisId)}`, {
       requirementIndex,
-      excluded,
+      ...change,
     })
   ).data
 }

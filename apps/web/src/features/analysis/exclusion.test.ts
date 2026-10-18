@@ -116,3 +116,13 @@ describe("applyExclusions · soft requirements (DOG-103)", () => {
     expect(v.softRows).toEqual([])
   })
 })
+
+describe("applyExclusions · corrections (DOG-90)", () => {
+  it("recomputes the score after a correction even with nothing marked", () => {
+    const req = (confidence: number) => ({
+      requirement: { text: "x", importance: "must", type: "skill" }, status: "matched" as const, confidence, method: null, evidence: null,
+    })
+    const view = applyExclusions({ score: 10, requirements: [req(1), req(1)], missingKeywords: [], scoringRevision: 2, corrections: { 0: { minYears: 1 } } })
+    expect(view.score).toBe(100)
+  })
+})

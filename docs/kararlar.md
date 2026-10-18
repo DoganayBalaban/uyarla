@@ -2731,3 +2731,30 @@ ileride FastAPI gibi bir backend'i olası görüyor) · Vercel Pro ($20/ay).
 **Not:** Yerel `vercel build`, aynı anda `next dev` çalışırken `.next`
 paylaşıldığı için prerender'da "reading 'call'" hatasıyla düşebiliyor; dev
 sunucusunu durdurup `.next`'i silerek derle.
+
+## K-69 · DOG-90 kapanışı: kalıcı hariç tutma, neden, şart düzeltme
+
+**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-90 (son adım)
+
+**Karar** (ayrıntı: `docs/superpowers/specs/2026-10-18-dog-90-kapanis-design.md`):
+- **Kalıcı hariç tutma:** `ExcludedConcept` tablosu (kullanıcı × kavram
+  anahtarı). Bir gereksinim, bütün kavramları listedeyse sonraki analizlerde
+  otomatik işaretli geliyor (`scope: "profile"`); eski analizler değişmiyor.
+  Liste hesap ayarlarından yönetiliyor (`/api/excluded-concepts`).
+- **Neden:** `not_in_posting`, `irrelevant`, `found_in_cv`. Sonuncusu hariç
+  tutmuyor, yalnızca bildirim: kanıtı göremediğimizi skordan silmek
+  uydurmanın skor tarafı olurdu. Kalıcı seçenek yalnız ilk ikisinde.
+- **Şart düzeltme:** Yalnız ilanın şartı: deneyimde en az yıl (`minYears`),
+  eğitimde kabul edilen terimler. CV hakkında beyan alınmıyor. Route kayıtlı
+  CV profiliyle core `scoreProfile`'ı senkron çalıştırıyor (K-68 sonrası
+  mümkün; tasarımdaki worker işi gereksiz kaldı). `result.score` ilk skor.
+- **Web'deki skor kopyası kalktı:** `cosineSimilarity` bağımlılıksız
+  `llm/vector.ts`'e taşındı; ekran ve route core `weightedScore`'u kullanıyor.
+- **Veri:** `exclusion-reports` betiği işaret ve bildirimleri JSONL'e döküyor
+  (CV metni yok); `backfill:excluded` K-67 öncesi işaretli analizlerin pano
+  skorunu düzeltiyor (varsayılan rapor, `--apply` yazar).
+
+**Bilinen sınır:** Kalıcı eşleşme kavram terimine bağlı ve kavramları LLM
+çıkarıyor. Aynı şart başka bir ilanda farklı terimlerle çıkarılırsa otomatik
+işaret gelmez; genel bir terim ("Raporlama") listeye girerse yalnız o kavramdan
+oluşan gereksinimleri de çıkarır. Etiket "listende" diyor, geri alması tek tık.

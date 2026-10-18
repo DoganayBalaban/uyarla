@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
+import { applicationsQueryKey } from "@/features/applications/api"
 import { useRouter } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
@@ -55,7 +56,8 @@ import {
   analysisQueryKey,
   fetchPostingFromUrl,
   getAnalysis,
-  setRequirementExcluded,
+  updateRequirement,
+  type RequirementAction,
   startAnalysis,
   useAnalysisJob,
   type AnalysisResponse,
@@ -299,17 +301,21 @@ export function AnalyzeView() {
     }
   }
 
-  /** Uyarlamayı başlatır ve uyarlama ekranına geçer. */
-  async function toggleExcluded(analysisId: string, index: number, excluded: boolean) {
+  /** Gereksinimi işaretler ya da şartını düzeltir (DOG-90). */
+  async function changeRequirement(analysisId: string, index: number, change: RequirementAction) {
     try {
-      const { result } = await setRequirementExcluded(analysisId, index, excluded)
+      const { result } = await updateRequirement(analysisId, index, change)
       setState((s) => (s ? { ...s, result } : s))
       queryClient.setQueryData<AnalysisResponse>(analysisQueryKey(analysisId), (d) => (d ? { ...d, result } : d))
+      // Pano skoru değişti.
+      void queryClient.invalidateQueries({ queryKey: applicationsQueryKey })
     } catch {
-      setError("İşaretleyemedik. Birazdan tekrar dener misin?")
+      setError(change.action === "correct" ? "Yeniden hesaplayamadık. Birazdan tekrar dener misin?" : "İşaretleyemedik. Birazdan tekrar dener misin?")
+      throw new Error("requirement change failed")
     }
   }
 
+  /** Uyarlamayı başlatır ve uyarlama ekranına geçer. */
   async function adapt(analysisId: string) {
     setBusy(true)
     let parsed: { error?: string; code?: string }
@@ -431,7 +437,7 @@ export function AnalyzeView() {
         onAdapt={state.analysisId ? () => adapt(state.analysisId!) : undefined}
         adaptNote={adaptNote}
         onYeniAnaliz={startOver}
-        onToggleExcluded={state.analysisId ? (index, excluded) => toggleExcluded(state.analysisId!, index, excluded) : undefined}
+        onRequirementChange={state.analysisId ? (index, change) => changeRequirement(state.analysisId!, index, change) : undefined}
       />
     )
   }
