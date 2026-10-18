@@ -121,7 +121,9 @@ export async function sendApplicationReminders(
   }
 
   const result: ReminderResult = { users: byUser.size, applications: rows.length, sent: 0, failed: 0 }
-  if (options.dryRun) return result
+  // Gönderilecek bir şey yoksa e-posta anahtarı da gerekmiyor: cron her gün
+  // çalışıyor ve boş günlerde hata vermemeli.
+  if (options.dryRun || byUser.size === 0) return result
 
   const key = process.env.RESEND_API_KEY
   if (!key && !options.client) throw new Error("RESEND_API_KEY yok; hatırlatma gönderilemez.")
