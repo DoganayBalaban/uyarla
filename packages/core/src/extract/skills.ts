@@ -83,6 +83,10 @@ function groupLines(data: SkillLines): SkillGroup[] {
   const others = new Set(
     [...data.languages, ...data.certifications].map((x) => normalizeText(x)),
   )
+  // Dil düzeyden ve sözcük sırasından bağımsız karşılaştırılıyor: beceri
+  // satırındaki "B1 seviye İngilizce" diller alanında "İngilizce B1" olarak
+  // duruyordu ve eşleşmediği için beceri listesine sızıyordu (cv-c).
+  const languages = new Set(data.languages.map(languageKey).filter(Boolean))
   // Aynı beceri iki grupta geçerse ilkinde kalıyor (düz liste de tekil).
   const seen = new Set<string>()
   return groups
@@ -90,7 +94,7 @@ function groupLines(data: SkillLines): SkillGroup[] {
       name: g.name,
       items: g.items.filter((b) => {
         const n = normalizeText(b)
-        if (n.length === 0 || others.has(n) || seen.has(b)) return false
+        if (n.length === 0 || others.has(n) || languages.has(languageKey(b)) || seen.has(b)) return false
         seen.add(b)
         return true
       }),
@@ -124,6 +128,17 @@ const LEVEL =
   "(?:başlangıç|temel|orta|iyi|çok|ileri|uzman|seviye|düzey|beginner|basic|elementary|intermediate|good|advanced|expert|fluent|native|[abc][12])"
 // normalizeText parantezleri siliyor: "B2 (iyi)" → "b2 iyi".
 const PROFICIENCY = new RegExp(`^${LEVEL}(?:\\s+${LEVEL})*$`)
+
+const LEVEL_WORD = new RegExp(`^${LEVEL}$`)
+
+/** Dilin düzeysiz, sıralı sözcükleri: "B1 seviye İngilizce" ve "İngilizce B1" → "ingilizce". */
+function languageKey(text: string): string {
+  return normalizeText(text)
+    .split(/\s+/)
+    .filter((w) => w && !LEVEL_WORD.test(w))
+    .sort()
+    .join(" ")
+}
 
 function looksLikeTerm(text: string): boolean {
   const t = text.trim()

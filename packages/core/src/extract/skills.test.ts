@@ -315,3 +315,26 @@ describe("skillGroups (DOG-106)", () => {
     expect(groups.flatMap((g) => g.items)).toEqual(flattenSkillLines(data))
   })
 })
+
+describe("flattenSkillLines · language leaking into skills", () => {
+  it("drops a language written with its level in a different order", () => {
+    // cv-c: beceri satırında "B1 seviye İngilizce", diller alanında "İngilizce B1".
+    expect(
+      flattenSkillLines({
+        lines: [{ label: "", items: ["B1 seviye İngilizce", "Python", "İngilizce", "Excel"] }],
+        languages: ["İngilizce B1"],
+        certifications: [],
+      }),
+    ).toEqual(["Python", "Excel"])
+  })
+
+  it("keeps a skill that only contains a language word", () => {
+    expect(
+      flattenSkillLines({
+        lines: [{ label: "", items: ["İngilizce teknik yazışma", "Python"] }],
+        languages: ["İngilizce (C1)"],
+        certifications: [],
+      }),
+    ).toEqual(["İngilizce teknik yazışma", "Python"])
+  })
+})
