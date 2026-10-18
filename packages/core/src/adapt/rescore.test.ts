@@ -16,8 +16,10 @@ const resumeProfile: ResumeProfile = {
   education: [], skills: [], languages: [], certifications: [],
 }
 
+// Unvansız: testler gereksinim ağırlığını ölçüyor; unvanın skora katkısı
+// ayrı testte (DOG-103).
 const testPosting: JobPostingData = {
-  position: "Geliştirici", company: null, seniority: null, language: "tr",
+  position: "", company: null, seniority: null, language: "tr",
   requirements: [
     {
       text: "React deneyimi", type: "skill", importance: "must",

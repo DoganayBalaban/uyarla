@@ -1,0 +1,11 @@
+{
+  "id": "cv-e__ilan-11",
+  "resumeId": "cv-e-muhasebe",
+  "postingId": "ilan-11",
+  "note": "Muhasebe CV'si × kısa İK ilanı (DOG-103). Canlıda 42 alıp \"Yüksek uyum\" göründü. İlan dört gereksinimden yeniden kuruldu; ikisi her muhasebecinin karşıladığı genel şartlar (mezuniyet, Excel). Rol uyumu yok: etiket düşük olmalı.",
+  "expectations": [
+    { "match": "İnsan kaynakları alanında en az 3 yıl", "shouldMatch": false },
+    { "match": "İş hukuku", "shouldMatch": false },
+    { "match": "MS Excel", "shouldMatch": true }
+  ]
+}

@@ -2574,3 +2574,52 @@ cümleleri ve "• İleri düzey Excel" gibi kısa beceri maddeleri yerinde kal�
 o da yalnızca hedeflenen 6 satırla. cv-c yeniden okununca kayıt dört maddesiyle
 deneyimde görünüyor, beceri listesi de temizlendi. Skor eval'i değişmedi
 (%94,3 · 5 · 1). Ayrıştırıcı revizyonu 6.
+
+## K-64 · Skor: kişisel nitelikler dışarıda, unvan içeride; eşikler yeniden
+
+**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-103 · **Değiştirdiği:** DOG-66 eşikleri
+
+**Bağlam:** Canlıda muhasebe CV'si kısa bir İK ilanında 42 alıp "Yüksek uyum"
+gördü. Aynı ekran "ilandaki unvan CV'nde geçmiyor" da diyordu. K2'de iki
+katılımcı kişisel nitelik gereksinimlerinin ("ekiple çalışmaya uygun")
+haksız yere eksik sayıldığını söyledi. "Eksikler doğruydu" maddesi genel
+değerlendirmenin en düşük puanlısıydı (4,0/5).
+
+**Ölçüm (20 çift; muhasebe × kısa İK ilanı "düşük" beklentisiyle sete
+eklendi):** Soft gereksinimler iyi uyumlu 7 çiftte 17 kez geçiyor, yalnızca
+1'i karşılanıyor ve skoru aşağı çekiyorlar (cv-f×ilan-8: 34, soft hariç 77).
+Beklenen seviye (yüksek/orta/düşük) ile ekrandaki etiketin uyuşması:
+- Eski formül, 20/30 eşiği: 15/20 (muhasebe × İK "Yüksek").
+- Soft hariç, 22/35 eşiği: 17/20, ama muhasebe × İK hâlâ "Yüksek" (42).
+- Soft hariç + unvan bir zorunlu gibi, 22/35 eşiği: **17/20**, muhasebe × İK
+  34 ve "Orta".
+- "Unvan yoksa ve zorunluların yarısı eksikse etiket en fazla Orta" tavanı
+  18/20 veriyordu, ama pano ve başvuru panosu etiketi yalnızca kayıtlı skor
+  sütunundan çiziyor. Tavan ekranlar arasında aynı skora farklı etiket
+  demekti (DOG-72'de düzeltilen türden) ya da şema değişikliği. Seçilmedi.
+
+**Karar:**
+- Soft gereksinimler skora katılmıyor (`unscoredTypes`). Ekranda ayrı blokta,
+  "mülakatta anlaşılacaklar" başlığıyla ve eksik sayılmadan gösteriliyor.
+  Uyarlamanın "eksik zorunlular" listesinde de yoklar. İlanda yalnızca bu
+  türden gereksinim varsa sayılıyorlar.
+- İlan unvanı bir zorunlu gereksinim ağırlığında skora giriyor (tam 1, kısmi
+  0,5, yok 0). İşe alımcılar unvanla arıyor (DOG-87). Ekran bunu skor
+  kartında söylüyor.
+- Eşikler: Orta ≥ 22, Yüksek ≥ 35.
+- Sonuçta `scoringRevision: 2`. Eski analizler eski formülle kalıyor. "İlanda
+  yok" işaretiyle yeniden hesaplanan skorları da eski formülle. Uyarlama
+  ekranında "önce" skoru yeni formülle yeniden hesaplanıyor; "sonra" ile aynı
+  formül.
+- `pnpm eval` artık etiket isabetini de raporluyor (eşikler web'deki
+  `scoreStatus`'tan okunuyor).
+
+**Açık:** Kalan üç etiket hatası:
+- cv-a×ilan-3: 36 → Yüksek, beklenen Orta. Unvan tam eşleşiyor ama
+  gereksinimlerin dörtte biri karşılanıyor.
+- cv-c×ilan-4: 15, beklenen Orta.
+- Muhasebe × İK: 34 → Orta, beklenen Düşük.
+
+Eski analizlerin kayıtlı skoru (soft dahil) yeni eşiklerde bir kademe düşük
+görünebilir. Etiket metinleri değişmedi; tonu K2'deki "uygun değilim"
+okumasına karşı ayrı bir yazım işi.

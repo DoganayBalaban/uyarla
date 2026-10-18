@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest"
 import { scoreStatus } from "@/lib/scoreStatus"
 
 describe("scoreStatus", () => {
-  // DOG-66: 18 çiftlik değerlendirme setinde yüksek uyum beklenen çiftler
-  // 24–59, düşük beklenenler 0–18 aldı; 40/70 eşiğinde hiçbiri "Yüksek" değildi.
+  // DOG-103: 20 çiftlik setde, formülün 2. sürümüyle (soft hariç, unvan
+  // dahil) düşük beklenenler 0–19, yüksek beklenenler 37–83 aldı.
   it("labels by the thresholds fitted on the evaluation set", () => {
-    expect(scoreStatus(19).label).toBe("Düşük uyum")
-    expect(scoreStatus(20).label).toBe("Orta uyum")
-    expect(scoreStatus(29).label).toBe("Orta uyum")
-    expect(scoreStatus(30).label).toBe("Yüksek uyum")
-    expect(scoreStatus(59).label).toBe("Yüksek uyum")
+    expect(scoreStatus(21).label).toBe("Düşük uyum")
+    expect(scoreStatus(22).label).toBe("Orta uyum")
+    expect(scoreStatus(34).label).toBe("Orta uyum")
+    expect(scoreStatus(35).label).toBe("Yüksek uyum")
+    expect(scoreStatus(83).label).toBe("Yüksek uyum")
   })
 })

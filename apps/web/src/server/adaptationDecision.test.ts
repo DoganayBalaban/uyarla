@@ -170,6 +170,14 @@ describe("missingMustRequirements", () => {
     expect(missingMustRequirements(result)).toEqual([{ index: 1, text: "SAP" }])
   })
 
+  it("leaves out soft requirements once they no longer count toward the score (DOG-103)", () => {
+    const soft = { requirement: { text: "Takım çalışması", importance: "must", type: "soft" }, status: "missing" }
+    const requirements = [req("SAP", "must", "missing"), soft]
+    expect(missingMustRequirements({ requirements, scoringRevision: 2 })).toEqual([{ index: 0, text: "SAP" }])
+    // Eski analizde soft da eksik sayılıyordu; ekran onunla tutarlı kalıyor.
+    expect(missingMustRequirements({ requirements })).toHaveLength(2)
+  })
+
   it("is empty for a missing or malformed result", () => {
     expect(missingMustRequirements(null)).toEqual([])
     expect(missingMustRequirements({})).toEqual([])

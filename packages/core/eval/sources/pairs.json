@@ -95,6 +95,11 @@
       "resumeId": "cv-b-test-engineer",
       "postingId": "ilan-10",
       "expectation": "yüksek"
+    },
+    {
+      "resumeId": "cv-e-muhasebe",
+      "postingId": "ilan-11",
+      "expectation": "düşük"
     }
   ]
 }

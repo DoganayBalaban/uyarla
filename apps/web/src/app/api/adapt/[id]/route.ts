@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server"
-import { adaptationDocument, computeScoreAfter, loadAdaptation, missingMustRequirements } from "@/server/adaptationDecision"
+import {
+  adaptationDocument,
+  computeScoreAfter,
+  computeScoreBefore,
+  loadAdaptation,
+  missingMustRequirements,
+} from "@/server/adaptationDecision"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 
 export const runtime = "nodejs"
@@ -16,12 +22,13 @@ export async function GET(
 
     ensureOwner(payload.ownerId, await getSession())
 
-    const { adaptation, profile, posting, draft, scoreBefore } = payload
+    const { adaptation, profile, posting, draft, scoreBefore, scoringRevision } = payload
 
     return NextResponse.json({
       status: adaptation.status,
       draft,
-      scoreBefore,
+      // Eski formülle kaydedilmiş analizde "önce" de bugünkü formülle (DOG-103).
+      scoreBefore: scoringRevision >= 2 ? scoreBefore : ((await computeScoreBefore(profile, posting, draft)) ?? scoreBefore),
       // Yeni skor yalnızca taslak varken hesaplanıyor; çalışırken boşuna
       // gömme çağrısı yapılmaz.
       scoreAfter: await computeScoreAfter(profile, posting, draft),
