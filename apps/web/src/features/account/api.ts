@@ -37,3 +37,29 @@ export function useSaveProfile() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: profileQueryKey }),
   })
 }
+
+/** "Tüm ilanlarda hariç tut" listesindeki bir kavram (DOG-90). */
+export interface ExcludedConceptView {
+  key: string
+  term: string
+  createdAt: string
+}
+
+export const excludedConceptsQueryKey = ["excluded-concepts"] as const
+
+export function useExcludedConcepts() {
+  return useQuery({
+    queryKey: excludedConceptsQueryKey,
+    queryFn: async () => (await api.get<{ concepts: ExcludedConceptView[] }>("/excluded-concepts")).data.concepts,
+  })
+}
+
+export function useRemoveExcludedConcept() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (key: string) => {
+      await api.delete("/excluded-concepts", { data: { key } })
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: excludedConceptsQueryKey }),
+  })
+}

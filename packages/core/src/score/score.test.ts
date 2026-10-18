@@ -737,6 +737,23 @@ describe("score · deneyim süresi şartı (DOG-75)", () => {
     const result = run([role("Software Testing Engineer", "", "")])
     expect(result.status).toBe("matched")
   })
+
+  it("uses the user's corrected years over the posting text (DOG-90)", () => {
+    // İlan "2 yıl" diye okunmuş, kullanıcı "1 yıl" diye düzeltti: 19 ay yetiyor.
+    const corrected = { ...testingReq, minYears: 1 }
+    const result = score({
+      profile: profileWith([
+        role("Software Testing Engineer", "Sep 2025", "Present"),
+        role("Software Testing Engineer Intern", "Apr 2025", "Aug 2025"),
+      ]),
+      posting: testPosting([corrected]),
+      evidence: [{ text: "Software Testing Engineer", matchText: "Software Testing Engineer", kind: "role", sourceRef: "r0" }],
+      evidenceVectors: [V.far],
+      conceptVectors: [V.near],
+      now: NOW,
+    }).requirements[0]!
+    expect(result.status).toBe("matched")
+  })
 })
 
 describe("score · 'veya ilgili bölümler' (DOG-75)", () => {

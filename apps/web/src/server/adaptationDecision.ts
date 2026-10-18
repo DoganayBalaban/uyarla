@@ -175,7 +175,7 @@ export async function computeScoreAfter(
 }
 
 /** Worker'la ortak önbellekli gömme sağlayıcısı (DOG-57). */
-function cachedEmbedding(): CachedEmbeddingProvider {
+export function cachedEmbedding(): CachedEmbeddingProvider {
   const config = embeddingConfigFromEnv()
   return new CachedEmbeddingProvider(new OpenAiCompatibleEmbeddingProvider(config), redisVectorStore(redis), config.model)
 }

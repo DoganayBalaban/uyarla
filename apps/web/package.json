@@ -12,7 +12,9 @@
     "migrate:json-keys": "dotenv -e ../../.env -- tsx scripts/migrate-json-keys.ts",
     "cleanup:anonymous": "dotenv -e ../../.env -- tsx scripts/cleanup-anonymous-users.ts",
     "cleanup:cron": "tsx scripts/cleanup-anonymous-users.ts --delete",
-    "funnel": "dotenv -e ../../.env -- tsx scripts/funnel.ts"
+    "funnel": "dotenv -e ../../.env -- tsx scripts/funnel.ts",
+    "exclusion-reports": "dotenv -e ../../.env -- tsx scripts/exclusion-reports.ts",
+    "backfill:excluded": "dotenv -e ../../.env -- tsx scripts/backfill-excluded-scores.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

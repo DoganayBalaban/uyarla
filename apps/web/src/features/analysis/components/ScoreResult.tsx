@@ -19,10 +19,22 @@ import { isPartial, partialNote, summarizeRequirements } from "@/features/analys
 import { scoreStatus } from "@/lib/scoreStatus"
 import { withTitleFinding } from "@/features/analysis/titleFinding"
 import { applyExclusions } from "@/features/analysis/exclusion"
+import type { ExclusionMark, RequirementCorrection, RequirementReport } from "@uyarla/core/score/exclusions"
 import type { TitleMatch } from "@uyarla/core/score/title"
+import type { RequirementAction } from "@/features/analysis/api"
+import { CorrectPanel, MarkPanel } from "@/features/analysis/components/RequirementFixes"
+import { correctionKind, exclusionLabel } from "@/features/analysis/requirementFix"
 
 export interface RequirementResult {
-  requirement: { text: string; importance: string; type: string }
+  requirement: {
+    text: string
+    importance: string
+    type: string
+    /** Kavramlar; eğitim şartı düzeltmesinin başlangıç değeri (DOG-90). */
+    concepts?: Array<{ term: string }>
+    /** Kullanıcının düzelttiği en az yıl (DOG-90). */
+    minYears?: number
+  }
   status: "matched" | "missing"
   confidence: number
   method: string | null
@@ -41,6 +53,12 @@ export interface ScoreResultView {
   titleMatch?: TitleMatch | null
   /** "İlanda yok, yanlış okunmuş" işaretleri (DOG-90). */
   excluded?: number[]
+  /** İşaretlerin nedeni ve kapsamı (DOG-90). */
+  exclusions?: Record<number, ExclusionMark>
+  /** "CV'mde var" bildirimleri; skoru değiştirmiyor (DOG-90). */
+  reports?: RequirementReport[]
+  /** İlanın düzeltilmiş şartları (DOG-90). */
+  corrections?: Record<number, RequirementCorrection>
   /** Skor formülünün sürümü (DOG-103); eski analizlerde yok. */
   scoringRevision?: number
 }
@@ -76,7 +94,7 @@ export function ScoreResult({
   onAdapt,
   adaptNote,
   onYeniAnaliz,
-  onToggleExcluded,
+  onRequirementChange,
 }: {
   result: ScoreResultView
   durationMs?: number | null
@@ -88,8 +106,8 @@ export function ScoreResult({
   /** Uyarla düğmesinin altında: bu uyarlamanın neyi harcayacağı (DOG-81). */
   adaptNote?: string | null
   onYeniAnaliz?: () => void
-  /** Gereksinimi "ilanda yok" diye işaretler ya da geri alır (DOG-90); yoksa düğme çıkmıyor. */
-  onToggleExcluded?: (requirementIndex: number, excluded: boolean) => Promise<void>
+  /** Gereksinimi işaretler, işareti kaldırır ya da şartını düzeltir (DOG-90); yoksa düğmeler çıkmıyor. */
+  onRequirementChange?: (requirementIndex: number, change: RequirementAction) => Promise<void>
 }) {
   const reducedMotion = useReducedMotion() ?? false
   const [activeFilter, setFilter] = useState<FilterBar>("all")
@@ -98,6 +116,7 @@ export function ScoreResult({
   const summary = summarizeRequirements(exclusion.active)
   const format = withTitleFinding(result.format, result.titleMatch)
   const satisfiedCount = summary.matched
+  const correctedCount = Object.keys(result.corrections ?? {}).length
   const missing = summary.total - satisfiedCount
   // İşaretli gereksinimler yalnızca "Hepsi"nde, soluk duruyor.
   const visible = exclusion.rows.filter(({ item, excluded }) =>
@@ -152,10 +171,11 @@ export function ScoreResult({
                 gibi katılıyor.
               </p>
             )}
-            {exclusion.excludedCount > 0 && (
+            {(exclusion.excludedCount > 0 || correctedCount > 0) && (
               <p className="mt-1 text-sm text-muted">
-                İlanda olmadığını işaretlediğin {exclusion.excludedCount} gereksinim skora katılmıyor (ilk skor{" "}
-                {result.score}).
+                {exclusion.excludedCount > 0 && `İşaretlediğin ${exclusion.excludedCount} gereksinim skora katılmıyor. `}
+                {correctedCount > 0 && `İlanın ${correctedCount} şartını düzelttin. `}
+                İlk skor {result.score}.
               </p>
             )}
             {/* K2'de iki katılımcı düşük skoru "işe uygun değilim" diye okudu
@@ -253,7 +273,10 @@ export function ScoreResult({
                 key={`${activeFilter}-${index}`}
                 item={item}
                 excluded={excluded}
-                onToggleExcluded={onToggleExcluded ? (ex) => onToggleExcluded(index, ex) : undefined}
+                mark={result.exclusions?.[index]}
+                reported={result.reports?.some((r) => r.index === index) ?? false}
+                correction={result.corrections?.[index]}
+                onChange={onRequirementChange ? (change) => onRequirementChange(index, change) : undefined}
               />
             ))}
           </ul>
@@ -327,23 +350,34 @@ export function ScoreResult({
 function RequirementRow({
   item,
   excluded = false,
-  onToggleExcluded,
+  mark,
+  reported,
+  correction,
+  onChange,
 }: {
   item: RequirementResult
   excluded?: boolean
-  onToggleExcluded?: (excluded: boolean) => Promise<void>
+  mark?: ExclusionMark
+  reported: boolean
+  correction?: RequirementCorrection
+  onChange?: (change: RequirementAction) => Promise<void>
 }) {
   const [open, setOpen] = useState(false)
+  const [panel, setPanel] = useState<"mark" | "correct" | null>(null)
   const [saving, setSaving] = useState(false)
-  const toggle = async (ex: boolean) => {
-    if (!onToggleExcluded) return
+  const send = async (change: RequirementAction) => {
+    if (!onChange) return
     setSaving(true)
     try {
-      await onToggleExcluded(ex)
+      await onChange(change)
+      setPanel(null)
+    } catch {
+      // Hata üstte gösteriliyor; panel açık kalsın, kullanıcı tekrar denesin.
     } finally {
       setSaving(false)
     }
   }
+  const kind = correctionKind(item.requirement.type)
   const done = item.status === "matched"
   const partial = isPartial(item)
   const importanceLabel = IMPORTANCE_LABEL[item.requirement.importance] ?? item.requirement.importance
@@ -352,12 +386,12 @@ function RequirementRow({
     return (
       <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3 text-muted">
         <span className="min-w-0 flex-1 line-through decoration-muted/60">{item.requirement.text}</span>
-        <span className="text-xs">İlanda yok olarak işaretlendi · skora katılmıyor</span>
-        {onToggleExcluded && (
+        <span className="text-xs">{exclusionLabel(mark)} · skora katılmıyor</span>
+        {onChange && (
           <button
             type="button"
             disabled={saving}
-            onClick={() => void toggle(false)}
+            onClick={() => void send({ action: "include" })}
             className="text-xs font-semibold text-brand-blue underline-offset-2 hover:underline disabled:opacity-50"
           >
             Geri al
@@ -411,17 +445,46 @@ function RequirementRow({
           <span className="font-semibold text-foreground">CV&apos;nde bunu karşılayan:</span> {item.evidence.text}
         </p>
       )}
+      {correction && (
+        <p className="mt-1 ml-8 text-xs text-muted">
+          Şartı düzelttin:{" "}
+          {correction.minYears !== undefined && `en az ${correction.minYears} yıl`}
+          {correction.terms && correction.terms.join(", ")}
+        </p>
+      )}
+      {reported && (
+        <p className="mt-1 ml-8 text-xs text-muted">
+          Bildirdin, teşekkürler. Bu ifadeyi CV&apos;nde ilanın kelimeleriyle yazarsan ATS de bulur.
+        </p>
+      )}
       {/* Kavram ayırma bazen ilanda olmayan bir şart üretiyor; kullanıcı
           düzeltebilsin, işaret de bize hata verisi olsun (DOG-90). */}
-      {onToggleExcluded && (
-        <button
-          type="button"
-          disabled={saving}
-          onClick={() => void toggle(true)}
-          className="mt-1 ml-8 text-xs text-muted underline-offset-2 hover:text-foreground hover:underline focus-visible:opacity-100 disabled:opacity-50 sm:opacity-0 sm:group-hover:opacity-100"
-        >
-          İlanda böyle bir şart yok mu? Yanlış okunmuş olarak işaretle
-        </button>
+      {onChange && panel === null && (
+        <div className="mt-1 ml-8 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+          <button type="button" onClick={() => setPanel("mark")} className="underline-offset-2 hover:text-foreground hover:underline">
+            Bu şartta sorun var
+          </button>
+          {kind && (
+            <button type="button" onClick={() => setPanel("correct")} className="underline-offset-2 hover:text-foreground hover:underline">
+              {correction ? "Düzeltmeyi değiştir" : "Şartı düzelt"}
+            </button>
+          )}
+        </div>
+      )}
+      {panel === "mark" && (
+        <MarkPanel saving={saving} onCancel={() => setPanel(null)} onSubmit={(m) => void send({ action: "exclude", ...m })} />
+      )}
+      {panel === "correct" && kind && (
+        <CorrectPanel
+          kind={kind}
+          initialYears={correction?.minYears ?? item.requirement.minYears}
+          initialTerms={correction?.terms ?? (item.requirement.concepts ?? []).map((c) => c.term)}
+          corrected={correction !== undefined}
+          saving={saving}
+          onCancel={() => setPanel(null)}
+          onRemove={() => void send({ action: "correct", minYears: null, terms: null })}
+          onSubmit={(c) => void send({ action: "correct", ...c })}
+        />
       )}
     </li>
   )

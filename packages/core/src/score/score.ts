@@ -1,11 +1,12 @@
 import type { Language } from "../normalize/language.js"
-import { cosineSimilarity } from "../llm/embedding.js"
+import { cosineSimilarity } from "../llm/vector.js"
 import { containsKeyword } from "../normalize/turkish.js"
 import type { JobPostingData, Requirement } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { DEFAULT_SCORING_CONFIG, SCORING_REVISION, type ScoringConfig } from "./config.js"
 import { experienceMonths, requiredYears } from "./duration.js"
 import type { Evidence } from "./evidence.js"
+import type { CorrectedRequirement, ExclusionMark, RequirementCorrection, RequirementReport } from "./exclusions.js"
 import { titleMatch, type TitleMatch } from "./title.js"
 
 export interface ScoreInput {
@@ -102,6 +103,15 @@ export interface ScoreResult {
    * ekran düzeltilmiş skoru weightedScore'un web'deki eşiyle hesaplıyor.
    */
   excluded?: number[]
+  /** İşaretlerin nedeni ve kapsamı, `requirements` sırasıyla (DOG-90). */
+  exclusions?: Record<number, ExclusionMark>
+  /** Hariç tutmayan "CV'mde var" bildirimleri (DOG-90). */
+  reports?: RequirementReport[]
+  /**
+   * Kullanıcının düzelttiği şartlar (DOG-90). Varsa `requirements` düzeltilmiş
+   * ilanla yeniden hesaplanmış; `score` yine ilk skor.
+   */
+  corrections?: Record<number, RequirementCorrection>
 }
 
 /**
@@ -356,7 +366,8 @@ function matchRequirement(
  */
 function checkDuration(result: RequirementResult, input: ScoreInput): RequirementResult {
   if (result.status !== "matched") return result
-  const years = requiredYears(result.requirement.text)
+  // Kullanıcının düzelttiği yıl (DOG-90) ilan metninden okunanın yerine geçiyor.
+  const years = (result.requirement as CorrectedRequirement).minYears ?? requiredYears(result.requirement.text)
   if (years === null) return result
 
   const now = input.now ?? new Date()

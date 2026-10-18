@@ -1,7 +1,19 @@
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
-import { scoreWithExclusions, setRequirementExcluded } from "@/server/requirementExclusion"
+import { conceptKey, correctPosting } from "@uyarla/core/score/exclusions"
+import { scoreProfile } from "@uyarla/core/score/live"
+import type { ScoreResult } from "@uyarla/core/score/score"
+import type { JobPostingData } from "@uyarla/core/schemas/job"
+import type { ResumeProfile } from "@uyarla/core/schemas/resume"
+import { cachedEmbedding } from "@/server/adaptationDecision"
+import {
+  markRequirement,
+  mergeCorrection,
+  parseAnalysisPatch,
+  scoreWithExclusions,
+  unmarkRequirement,
+} from "@/server/requirementExclusion"
 
 export const runtime = "nodejs"
 
@@ -48,53 +60,96 @@ export async function GET(
 }
 
 /**
- * Bir gereksinimi "ilanda yok, yanlış okunmuş" diye işaretler ya da geri alır
- * (DOG-90). Ayrı route değil: Vercel Hobby'de deploy başına 12 fonksiyon var.
+ * Gereksinim işaretleri ve şart düzeltmesi (DOG-90). Gövde `action` alanıyla:
+ * - `exclude`: nedenle işaretle; `always` ise kavramlar kalıcı listeye de
+ *   yazılıyor. "CV'mde var" (`found_in_cv`) hariç tutmuyor, bildirim.
+ * - `include`: işareti kaldır.
+ * - `correct`: ilanın şartını düzelt (deneyimde en az yıl, eğitimde terimler);
+ *   sonuç kayıtlı CV profiliyle yeniden hesaplanıyor (LLM yok, gömmeler
+ *   önbellekten).
+ * İlk skor sonucun içinde (result.score) kalıyor; Analysis.score düzeltilmiş
+ * skor (K-67).
  */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params
-  const body = (await request.json().catch(() => ({}))) as { requirementIndex?: unknown; excluded?: unknown }
-  if (typeof body.requirementIndex !== "number" || typeof body.excluded !== "boolean") {
-    return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 })
-  }
+  const patch = parseAnalysisPatch(await request.json().catch(() => null))
+  if (!patch) return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 })
+
   try {
-    const analysis = await prisma.analysis.findUnique({ where: { id } })
+    const analysis = await prisma.analysis.findUnique({
+      where: { id },
+      include: { jobPosting: true, resumeVersion: true },
+    })
     ensureOwner(analysis?.userId ?? null, await getSession())
     if (analysis!.status !== "done" || !analysis!.result) {
       return NextResponse.json({ error: "Analiz henüz tamamlanmadı." }, { status: 409 })
     }
 
-    const result = analysis!.result as {
-      score: number
-      requirements: Array<{ requirement: { text: string; importance: string; type: string }; confidence: number }>
-      excluded?: number[]
-      titleMatch?: { level: string } | null
-      scoringRevision?: number
-    }
-    let excluded: number[]
-    try {
-      excluded = setRequirementExcluded(result, body.requirementIndex, body.excluded)
-    } catch {
+    const result = analysis!.result as unknown as StoredResult
+    if (patch.requirementIndex >= result.requirements.length) {
       return NextResponse.json({ error: "Gereksinim bulunamadı." }, { status: 404 })
     }
 
-    // İlk skor sonucun içinde (result.score) kalıyor; Analysis.score
-    // düzeltilmiş skor oluyor: pano, başvuru kartları ve uyarlamanın "önce"
-    // skoru onu okuyor (DOG-90, ikinci adım). Hesap web'deki eşten
-    // (features/analysis/exclusion.ts): bu dosya @uyarla/core içe aktarmıyor,
-    // aktarınca Vercel route'u ayrı bir fonksiyona taşıyor ve Hobby'nin 12
-    // fonksiyon sınırı aşılıyor (PR 117'nin ilk denemesi).
-    const updated = { ...result, excluded }
-    const score = scoreWithExclusions(result, excluded)
-    await prisma.analysis.update({ where: { id }, data: { result: updated as object, score } })
-    return NextResponse.json({ result: updated })
+    let updated: StoredResult
+    let remember: string[] = []
+    if (patch.action === "exclude") {
+      ;({ result: updated, remember } = markRequirement(result, patch.requirementIndex, patch, new Date().toISOString()))
+    } else if (patch.action === "include") {
+      updated = unmarkRequirement(result, patch.requirementIndex)
+    } else {
+      const posting = postingOf(analysis!.jobPosting)
+      const type = posting.requirements[patch.requirementIndex]?.type
+      // Yıl yalnız deneyimde, terim yalnız eğitimde düzeltiliyor; CV hakkında beyan alınmıyor.
+      if ((patch.minYears != null && type !== "experience") || (patch.terms != null && type !== "education")) {
+        return NextResponse.json({ error: "Bu şart düzeltilemiyor." }, { status: 422 })
+      }
+      const profile = (analysis!.resumeVersion?.profile ?? null) as ResumeProfile | null
+      if (!profile) return NextResponse.json({ error: "Bu analizin CV'si bulunamadı." }, { status: 409 })
+
+      const corrections = mergeCorrection(result.corrections, patch.requirementIndex, patch)
+      const fresh = await scoreProfile({ profile, posting: correctPosting(posting, corrections) }, cachedEmbedding())
+      updated = {
+        ...result,
+        requirements: fresh.requirements,
+        missingKeywords: fresh.missingKeywords,
+        titleMatch: fresh.titleMatch,
+        // Yeniden hesap güncel formülle; eski analizde de sürüm onu söylemeli.
+        scoringRevision: fresh.scoringRevision,
+        corrections,
+      }
+    }
+
+    const score = scoreWithExclusions(updated, updated.excluded ?? [])
+    await prisma.$transaction([
+      ...remember.map((term) =>
+        prisma.excludedConcept.upsert({
+          where: { userId_key: { userId: analysis!.userId, key: conceptKey(term) } },
+          create: { userId: analysis!.userId, key: conceptKey(term), term },
+          update: {},
+        }),
+      ),
+      prisma.analysis.update({ where: { id }, data: { result: updated as object, score } }),
+    ])
+    return NextResponse.json({ result: updated, score })
   } catch (error) {
     const reply = authErrorResponse(error)
     if (reply) return reply
     console.error("[api/analysis/[id]] PATCH", error)
     return NextResponse.json({ error: "Bir şeyler ters gitti." }, { status: 500 })
+  }
+}
+
+type StoredResult = ScoreResult & { format?: unknown }
+
+function postingOf(row: { position: string; company: string | null; seniority: string | null; language: string; requirements: unknown }): JobPostingData {
+  return {
+    position: row.position,
+    company: row.company,
+    seniority: row.seniority as JobPostingData["seniority"],
+    language: row.language as JobPostingData["language"],
+    requirements: row.requirements as JobPostingData["requirements"],
   }
 }

@@ -93,6 +93,8 @@ describe("handleStatus", () => {
       passEndsAt: null,
       freeUsed: false,
       freeLeft: 1,
+      // Yöneticilere sınırsız hak (#121); test o PR'da güncellenmemişti.
+      unlimited: false,
       usedLast24h: 0,
       dailyCap: 30,
     })

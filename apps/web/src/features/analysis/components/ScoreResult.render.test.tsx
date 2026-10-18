@@ -36,4 +36,19 @@ describe("ScoreResult", () => {
     expect(html).not.toContain("Mülakatta anlaşılacaklar")
     expect(html).toContain("Hepsi · 3")
   })
+
+  it("shows why a requirement is out and what the user corrected (DOG-90)", () => {
+    const marked: ScoreResultView = {
+      ...result,
+      excluded: [1],
+      exclusions: { 1: { reason: "irrelevant", scope: "profile" } },
+      corrections: { 0: { terms: ["Excel", "Google Sheets"] } },
+      reports: [{ index: 0, reason: "found_in_cv", at: "2026-10-18T00:00:00.000Z" }],
+    }
+    const html = renderToStaticMarkup(<ScoreResult result={marked} adapting={false} onRequirementChange={async () => {}} />)
+    expect(html).toContain("Hariç tuttuğun kavramlar listende")
+    expect(html).toContain("Şartı düzelttin: Excel, Google Sheets")
+    expect(html).toContain("Bildirdin")
+    expect(html).toContain("İlk skor 34")
+  })
 })
