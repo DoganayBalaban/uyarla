@@ -238,3 +238,13 @@ describe("toDocumentModel · line breaks", () => {
     expect(m.sections[0]!.entries[0]!.lines).toEqual(["login, filtering and cart functionalities."])
   })
 })
+
+describe("toDocumentModel · broken dates", () => {
+  it("drops a date with no letter or digit (a broken model output)", () => {
+    const m = toDocumentModel({
+      ...resumeProfile,
+      education: [{ school: "İTÜ", degree: null, field: null, startDate: "2017", endDate: "},{" }],
+    })
+    expect(m.sections.find((s) => s.title === "EĞİTİM")!.entries[0]!.date).toBe("2017")
+  })
+})

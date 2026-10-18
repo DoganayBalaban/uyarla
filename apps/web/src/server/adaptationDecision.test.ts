@@ -1,6 +1,14 @@
 import { describe, it, expect } from "vitest"
 import type { AdaptationDraft } from "@uyarla/core"
-import { applyBulkDecision, applyDecision, missingMustRequirements, nextStatus } from "@/server/adaptationDecision"
+import {
+  adaptationDocument,
+  applyBulkDecision,
+  applyDecision,
+  applyLayout,
+  missingMustRequirements,
+  nextStatus,
+  restoreBullet,
+} from "@/server/adaptationDecision"
 
 const draftData: AdaptationDraft = {
   summary: {
@@ -181,5 +189,31 @@ describe("missingMustRequirements", () => {
   it("is empty for a missing or malformed result", () => {
     expect(missingMustRequirements(null)).toEqual([])
     expect(missingMustRequirements({})).toEqual([])
+  })
+})
+
+describe("one-page layout (DOG-93)", () => {
+  const omittedDraft: AdaptationDraft = { ...draftData, layout: "onePage", omitted: ["0-0", "0-1"] }
+
+  it("restores one omitted bullet and leaves the others", () => {
+    expect(restoreBullet(omittedDraft, "0-0").omitted).toEqual(["0-1"])
+    expect(() => restoreBullet(omittedDraft, "9-9")).toThrow()
+  })
+
+  it("going back to the full layout brings every omitted bullet back", async () => {
+    const { draft, onePage } = await applyLayout(
+      { profile: null as never, posting: null as never, draft: omittedDraft, ownerId: "u" },
+      "full",
+    )
+    expect(draft).toMatchObject({ layout: "full", omitted: [] })
+    expect(onePage).toBeNull()
+  })
+
+  it("the document view keeps omitted bullets so positions still pair", () => {
+    const profile = {
+      fullName: null, headline: null, summary: "eski", education: [], skills: [], languages: [], certifications: [],
+      experience: [{ company: "A", title: "T", startDate: "", endDate: "", bullets: [{ text: "a", sourceRef: "a" }, { text: "b", sourceRef: "b" }] }],
+    }
+    expect(adaptationDocument(profile, omittedDraft)!.after.experience[0]!.bullets).toEqual(["A", "b"])
   })
 })

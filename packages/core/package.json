@@ -9,7 +9,8 @@
     "./document/pdf": "./src/document/pdf.ts",
     "./document/docx": "./src/document/docx.ts",
     "./observability/scrub": "./src/observability/scrub.ts",
-    "./jobPosting/extract": "./src/jobPosting/extract.ts"
+    "./jobPosting/extract": "./src/jobPosting/extract.ts",
+    "./adapt/onePage": "./src/adapt/onePage.ts"
   },
   "scripts": {
     "test": "vitest run",
@@ -24,7 +25,8 @@
     "eval:adapt": "dotenv -e ../../.env -- tsx eval/adapt.ts",
     "eval:cover": "dotenv -e ../../.env -- tsx eval/cover.ts",
     "eval:jobs": "dotenv -e ../../.env -- tsx eval/jobs.ts",
-    "eval:contribution": "dotenv -e ../../.env -- tsx eval/contribution.ts"
+    "eval:contribution": "dotenv -e ../../.env -- tsx eval/contribution.ts",
+    "eval:onepage": "dotenv -e ../../.env -- tsx eval/onePage.ts"
   },
   "devDependencies": {
     "@types/pdfkit": "^0.17.6",

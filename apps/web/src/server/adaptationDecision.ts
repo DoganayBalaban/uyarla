@@ -12,6 +12,7 @@ import {
   type ResumeProfile,
 } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
+import { documentModelFor } from "@/server/documentModel"
 import { redis } from "@/server/redis"
 
 /**
@@ -173,13 +174,47 @@ export async function computeScoreAfter(
   draft: AdaptationDraft | null,
 ): Promise<number | null> {
   if (!profile || !draft) return null
+  return rescore({ profile, posting, draft }, cachedEmbedding())
+}
+
+/** Worker'la ortak önbellekli gömme sağlayıcısı (DOG-57). */
+function cachedEmbedding(): CachedEmbeddingProvider {
   const config = embeddingConfigFromEnv()
-  const embedding = new CachedEmbeddingProvider(
-    new OpenAiCompatibleEmbeddingProvider(config),
-    redisVectorStore(redis),
-    config.model,
+  return new CachedEmbeddingProvider(new OpenAiCompatibleEmbeddingProvider(config), redisVectorStore(redis), config.model)
+}
+
+/**
+ * Belge stratejisi (DOG-93). "onePage": sıkı yerleşim ve gerekirse ilana en az
+ * ilgili maddelerin çıkarılması; plan skoru düşürmüyor (core adapt/onePage).
+ * "full": çıkarılanlar geri geliyor. Plan her seçimde baştan kuruluyor: önceki
+ * kararlarla maddelerin uzunluğu değişmiş olabilir.
+ */
+export async function applyLayout(
+  input: { profile: ResumeProfile; posting: JobPostingData; draft: AdaptationDraft; ownerId: string },
+  layout: "full" | "onePage",
+): Promise<{ draft: AdaptationDraft; onePage: { fits: boolean; pages: number } | null }> {
+  if (layout === "full") return { draft: { ...input.draft, layout: "full", omitted: [] }, onePage: null }
+  // Tembel import: plan pdfkit'le sayfa ölçüyor (indirme route'u gibi).
+  const { planOnePage } = await import("@uyarla/core/adapt/onePage")
+  const plan = await planOnePage(
+    {
+      profile: input.profile,
+      posting: input.posting,
+      draft: { ...input.draft, omitted: [] },
+      toModel: await documentModelFor(input.ownerId),
+    },
+    cachedEmbedding(),
   )
-  return rescore({ profile, posting, draft }, embedding)
+  return {
+    draft: { ...input.draft, layout: "onePage", omitted: plan.omitted },
+    onePage: { fits: plan.fits, pages: plan.pages },
+  }
+}
+
+/** Kullanıcı tek sayfa için çıkarılan bir maddeyi geri alıyor (DOG-93). */
+export function restoreBullet(draft: AdaptationDraft, bulletId: string): AdaptationDraft {
+  if (!(draft.omitted ?? []).includes(bulletId)) throw new Error(`Çıkarılmış madde yok: ${bulletId}`)
+  return { ...draft, omitted: draft.omitted!.filter((id) => id !== bulletId) }
 }
 
 /**
@@ -227,7 +262,9 @@ export function adaptationDocument(
   draft: AdaptationDraft | null,
 ): { before: DocumentOutline; after: DocumentOutline } | null {
   if (!profile || !draft) return null
-  return { before: outline(profile), after: outline(applyAdaptation(profile, draft)) }
+  // Tek sayfa için çıkarılanlar (DOG-93) burada düşmüyor: ekran maddeleri
+  // konumla eşliyor ve onları üstü çizili, geri alınabilir gösteriyor.
+  return { before: outline(profile), after: outline(applyAdaptation(profile, { ...draft, omitted: [] })) }
 }
 
 function outline(p: ResumeProfile): DocumentOutline {

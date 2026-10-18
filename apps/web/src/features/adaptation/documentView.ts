@@ -9,11 +9,15 @@ import type { DocumentOutline, Draft } from "@/features/adaptation/types"
  * eşleşiyor.
  */
 export interface DocumentLine {
+  /** Maddenin kimliği; özetin kimliği yok. */
+  id: string | null
   before: string
   after: string
   changed: boolean
   /** Karar bekliyor: indirilecek hâlde eski metin duruyor. */
   pending: boolean
+  /** Tek sayfa için çıkarıldı (DOG-93): indirilecek belgede yok, geri alınabilir. */
+  omitted: boolean
 }
 
 export interface DocumentSections {
@@ -27,15 +31,18 @@ export interface DocumentSections {
 
 export function documentSections(
   document: { before: DocumentOutline; after: DocumentOutline },
-  draft: Pick<Draft, "bullets">,
+  draft: Pick<Draft, "bullets" | "omitted">,
 ): DocumentSections {
   const { before, after } = document
   const pending = new Set(draft.bullets.filter((b) => b.decision === "pending").map((b) => b.id))
-  const line = (b: string, a: string, isPending = false): DocumentLine => ({
+  const omitted = new Set(draft.omitted ?? [])
+  const line = (b: string, a: string, id: string | null = null): DocumentLine => ({
+    id,
     before: b,
     after: a,
     changed: b !== a,
-    pending: isPending,
+    pending: id !== null && pending.has(id),
+    omitted: id !== null && omitted.has(id),
   })
   const beforeSkills = new Set(before.skills)
 
@@ -48,7 +55,7 @@ export function documentSections(
       dates: [job.startDate, job.endDate].filter(Boolean).join(" – "),
       bullets: job.bullets.map((text, j) =>
         // Önceki hâlde olmayan madde kullanıcının katkısı (DOG-94): tamamı eklenmiş.
-        line(before.experience[i]?.bullets[j] ?? "", text, pending.has(`${i}-${j}`)),
+        line(before.experience[i]?.bullets[j] ?? "", text, `${i}-${j}`),
       ),
     })),
     projects: (after.projects ?? []).map((p, i) => ({
@@ -56,7 +63,7 @@ export function documentSections(
       role: p.role,
       dates: p.dates,
       bullets: p.bullets.map((text, j) =>
-        line(before.projects?.[i]?.bullets[j] ?? "", text, pending.has(`p${i}-${j}`)),
+        line(before.projects?.[i]?.bullets[j] ?? "", text, `p${i}-${j}`),
       ),
     })),
     skills: after.skills.map((name) => ({ name, added: !beforeSkills.has(name) })),

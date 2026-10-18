@@ -31,6 +31,20 @@ export async function decideAll(
   return (await api.patch<Partial<AdaptationState>>(`/adapt/${encodeURIComponent(id)}/decision`, { bulk })).data
 }
 
+/**
+ * Belge stratejisi (DOG-93): "onePage" sıkı yerleşim ve gerekirse ilana en az
+ * ilgili maddeleri çıkarır; "full" hepsini geri getirir.
+ */
+export async function setLayout(id: string, layout: "full" | "onePage"): Promise<Partial<AdaptationState>> {
+  return (await api.patch<Partial<AdaptationState>>(`/adapt/${encodeURIComponent(id)}/decision`, { layout })).data
+}
+
+/** Tek sayfa için çıkarılan bir maddeyi belgeye geri alır (DOG-93). */
+export async function restoreBullet(id: string, bulletId: string): Promise<Partial<AdaptationState>> {
+  return (await api.patch<Partial<AdaptationState>>(`/adapt/${encodeURIComponent(id)}/decision`, { restore: bulletId }))
+    .data
+}
+
 export async function requestCoverLetter(id: string): Promise<{ coverLetter: CoverLetterRecord }> {
   return (await api.post<{ coverLetter: CoverLetterRecord }>(`/adapt/${encodeURIComponent(id)}/cover-letter`)).data
 }

@@ -11,12 +11,21 @@ const document = {
 describe("documentSections", () => {
   it("pairs each bullet with its original and marks what changed", () => {
     const s = documentSections(document, { bullets: [] })
-    expect(s.experience[0]!.bullets).toEqual([
+    expect(s.experience[0]!.bullets).toMatchObject([
       { before: "a", after: "A", changed: true, pending: false },
       { before: "b", after: "b", changed: false, pending: false },
     ])
     expect(s.experience[0]!.dates).toBe("2023 – Halen")
     expect(s.summary).toMatchObject({ before: "Eski özet", after: "Yeni özet", changed: true })
+  })
+
+  it("marks bullets omitted for one page by their id, keeping positions paired (DOG-93)", () => {
+    const s = documentSections(document, { bullets: [], omitted: ["0-0"] })
+    expect(s.experience[0]!.bullets.map((b) => [b.id, b.omitted])).toEqual([
+      ["0-0", true],
+      ["0-1", false],
+    ])
+    expect(s.experience[0]!.bullets[0]).toMatchObject({ before: "a", after: "A" })
   })
 
   it("marks bullets still waiting for a decision by their positional id", () => {
@@ -40,7 +49,7 @@ describe("documentSections", () => {
 describe("documentSections · contributions", () => {
   it("shows a bullet that exists only in the after state as fully added", () => {
     const withAdded = { ...document, after: { ...document.after, experience: [job(["A", "b", "Yeni madde"])] } }
-    expect(documentSections(withAdded, { bullets: [] }).experience[0]!.bullets[2]).toEqual({
+    expect(documentSections(withAdded, { bullets: [] }).experience[0]!.bullets[2]).toMatchObject({
       before: "",
       after: "Yeni madde",
       changed: true,
@@ -58,7 +67,7 @@ describe("documentSections · projects (DOG-105)", () => {
 
   it("pairs project bullets with their originals and marks pending ones by project id", () => {
     const pendingBullet = { id: "p0-0", original: "belge asistanı", rewritten: "RAG ile belge asistanı", verification: { status: "ok" as const, issues: [] }, decision: "pending" as const }
-    expect(documentSections(withProjects, { bullets: [pendingBullet] }).projects[0]!.bullets[0]).toEqual({
+    expect(documentSections(withProjects, { bullets: [pendingBullet] }).projects[0]!.bullets[0]).toMatchObject({
       before: "belge asistanı",
       after: "RAG ile belge asistanı",
       changed: true,

@@ -23,7 +23,15 @@ import { DecisionToggle, VerificationWarning } from "@/features/adaptation/compo
 import { ContributionsSection } from "@/features/adaptation/components/ContributionsSection"
 import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/cn"
-import { adaptationQueryKey, decide, decideAll, downloadAdaptation, useAdaptation } from "@/features/adaptation/api"
+import {
+  adaptationQueryKey,
+  decide,
+  decideAll,
+  downloadAdaptation,
+  restoreBullet,
+  setLayout,
+  useAdaptation,
+} from "@/features/adaptation/api"
 import { deriveStageStates } from "@/features/analysis/stageStates"
 import { CoverLetterSection } from "@/features/adaptation/components/CoverLetterSection"
 import type { AdaptationState, Verification } from "@/features/adaptation/types"
@@ -73,6 +81,37 @@ export function AdaptationView({ id }: { id: string }) {
       queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
     } catch {
       // Tek karardaki gibi: kaydedilemediyse ekran eski hâlinde kalıyor.
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  // Tek sayfa planının son sonucu (DOG-93); yalnızca seçim yapılan oturumda.
+  const [onePage, setOnePage] = useState<{ fits: boolean; pages: number } | null>(null)
+
+  async function changeLayout(layout: "full" | "onePage") {
+    setErrorMessage(null)
+    setIsBusy(true)
+    try {
+      const { onePage: plan, ...parsed } = await setLayout(id, layout)
+      setOnePage(plan ?? null)
+      queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
+    } catch (error) {
+      setErrorMessage(await apiErrorMessage(error, "Belge düzeni değiştirilemedi."))
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  async function restore(bulletId: string) {
+    setIsBusy(true)
+    try {
+      const parsed = await restoreBullet(id, bulletId)
+      // Geri alınan madde belgeyi yeniden bir sayfanın üstüne taşıyabilir.
+      setOnePage(null)
+      queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
+    } catch {
+      // Kaydedilemediyse madde çıkarılmış olarak kalıyor; tekrar denenebilir.
     } finally {
       setIsBusy(false)
     }
@@ -310,7 +349,7 @@ export function AdaptationView({ id }: { id: string }) {
           )}
 
           {view === "document" && state.document ? (
-            <DocumentView document={state.document} draft={draft} />
+            <DocumentView document={state.document} draft={draft} onRestore={(b) => void restore(b)} />
           ) : (
             <>
               {draft.summary.original && (
@@ -473,6 +512,14 @@ export function AdaptationView({ id }: { id: string }) {
                 {errorMessage}
               </p>
             )}
+            <LayoutChoice
+              layout={draft.layout ?? "full"}
+              omittedCount={draft.omitted?.length ?? 0}
+              onePage={onePage}
+              busy={busy}
+              onChange={(l) => void changeLayout(l)}
+              onShow={() => setView("document")}
+            />
             <div className="mt-4 grid gap-2">
               <button
                 type="button"
@@ -516,6 +563,75 @@ export function AdaptationView({ id }: { id: string }) {
           </p>
         </motion.aside>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Belge stratejisi (DOG-93): tam ya da tek sayfa. Tek sayfada önce sıkı
+ * yerleşim deneniyor; yetmezse ilana en az ilgili maddeler çıkarılıyor, skor
+ * düşmüyor. Çıkarılanlar belge görünümünde, geri alınabilir.
+ */
+function LayoutChoice({
+  layout,
+  omittedCount,
+  onePage,
+  busy,
+  onChange,
+  onShow,
+}: {
+  layout: "full" | "onePage"
+  omittedCount: number
+  onePage: { fits: boolean; pages: number } | null
+  busy: boolean
+  onChange: (layout: "full" | "onePage") => void
+  onShow: () => void
+}) {
+  return (
+    <div className="mt-4">
+      <p className="m-0 text-xs font-semibold tracking-wider text-muted uppercase">Belge düzeni</p>
+      <div role="radiogroup" aria-label="Belge düzeni" className="mt-1.5 inline-flex rounded-button bg-background p-1 text-sm">
+        {(
+          [
+            ["full", "Tam"],
+            ["onePage", "Tek sayfa"],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={layout === value}
+            disabled={busy}
+            onClick={() => layout !== value && onChange(value)}
+            className={cn(
+              "rounded-[8px] px-3 py-1.5 font-semibold transition disabled:opacity-50",
+              layout === value ? "bg-card text-brand-blue shadow-sm" : "text-muted hover:text-foreground",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {layout === "onePage" && (
+        <p className="mt-2 text-sm text-muted">
+          {omittedCount === 0
+            ? "Sıkı yerleşimle tek sayfaya sığıyor; içerikten bir şey çıkmadı."
+            : (
+                <>
+                  Tek sayfaya sığması için ilana en az ilgili {omittedCount} madde çıkarıldı; skor düşmedi.{" "}
+                  <button type="button" onClick={onShow} className="font-semibold text-brand-blue underline-offset-2 hover:underline">
+                    Belgede gör
+                  </button>
+                </>
+              )}
+          {onePage && !onePage.fits && (
+            <span className="mt-1 block">
+              Yine de {onePage.pages} sayfa: kalan maddeler ilanın gereksinimlerine kanıt, onları çıkarmadık.
+            </span>
+          )}
+        </p>
+      )}
     </div>
   )
 }

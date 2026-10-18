@@ -81,8 +81,13 @@ export interface DocumentOptions {
 export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions = {}): DocumentModel {
   const language = resumeLanguage(profile)
   const b = HEADINGS[language]
-  const range = (start: string | null | undefined, end: string | null | undefined) =>
-    start && end ? `${start} – ${end}` : end || start || null
+  // Harf ya da rakam taşımayan tarih yok sayılıyor: model JSON'u kırık
+  // yazdığında alana "},{" girebiliyor ve belgede tarih yerine çıkıyordu.
+  const clean = (d: string | null | undefined) => (d && /[\p{L}\p{N}]/u.test(d) ? d : null)
+  const range = (start: string | null | undefined, end: string | null | undefined) => {
+    const [s, e] = [clean(start), clean(end)]
+    return s && e ? `${s} – ${e}` : e || s || null
+  }
 
   // Bölümler türüne göre kuruluyor, sonra CV'deki sıraya diziliyor.
   const built: Partial<Record<StructuredSection, DocumentSection[]>> = {}
