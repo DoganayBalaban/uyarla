@@ -4,7 +4,7 @@ import { checkFormat } from "./check.js"
 
 const GOOD_RESUME = `Elif Yılmaz
 Frontend Geliştirici
-elif@ornek.com · +90 532 111 22 33
+elif@ornek.com · +90 532 111 22 33 · linkedin.com/in/elif
 
 Özet
 React ve TypeScript ile arayüz geliştiren bir geliştiriciyim.

@@ -2758,3 +2758,34 @@ sunucusunu durdurup `.next`'i silerek derle.
 çıkarıyor. Aynı şart başka bir ilanda farklı terimlerle çıkarılırsa otomatik
 işaret gelmez; genel bir terim ("Raporlama") listeye girerse yalnız o kavramdan
 oluşan gereksinimleri de çıkarır. Etiket "listende" diyor, geri alması tek tık.
+
+## K-70 · CV yapı kontrolleri: özet, amaç bölümü, tarih biçimi, web bağlantısı, referans ibaresi
+
+**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-88
+
+**Bağlam:** Biçim kontrolü ATS'in CV'yi okuyup okuyamadığını söylüyordu
+(sütun, tablo, iletişim, başlıklar). Jobscan'in kataloğundaki yapı ve içerik
+kontrolleri eksikti.
+
+**Karar:** Altı yeni kontrol (`format/structure.ts`), hepsi "content"
+grubunda ve her biri bir "neden" açıklamasıyla:
+- **Özet yok** (uyarı).
+- **"Kariyer hedefi / Objective" bölümü var** (uyarı): özete çevrilmeli.
+- **Deneyim başlığı var, altı boş** (sorun).
+- **Deneyim tarihleri farklı biçimlerde** (uyarı), CV'deki yazımlarla
+  örnek gösteriliyor. Yalnızca deneyim bölümünde ve yalnızca tarih
+  satırlarında bakılıyor: deneyimde "Mart 2023", eğitimde "2017" yazmak
+  yaygın ve sorun değil. Madde içindeki yıl ("2023'te…") ve not ortalaması
+  ("3.25") tarih sayılmıyor.
+- **LinkedIn ya da web bağlantısı yok** (uyarı).
+- **"Referanslar istek üzerine" ibaresi** (uyarı).
+
+Not ortalaması kontrolü alınmadı: 4'lük ve 100'lük ölçek ile "mezuniyetten
+kaç yıl sonra kaldır" eşiği Türkiye için ayrıca ölçülmeli. Kelime sayısı
+eşiği (1100) zaten vardı.
+
+**Ölçüm:** 7 değerlendirme CV'sinde yanlış alarm yok. Bulunanlar:
+- cv-e: özet yok, bağlantı yok (Europass, gerçekten ikisi de yok).
+- cv-f: bağlantı yok.
+Tarih biçimi her CV'de tek biçim olarak tanınıyor (ay adı, sayısal ya da
+yalnız yıl).
