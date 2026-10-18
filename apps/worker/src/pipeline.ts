@@ -7,10 +7,12 @@ import {
   conceptTexts,
   extractJobPosting,
   extractResumeProfile,
+  profileExclusions,
   resumeParserKey,
   score,
+  weightedScore,
 } from "@uyarla/core"
-import type { FormatReport, ResumeProfile } from "@uyarla/core"
+import type { FormatReport, JobPostingData, ResumeProfile, ScoreResult } from "@uyarla/core"
 import type { AnalysisStore, PipelineDeps, PipelineInput } from "./types.js"
 
 /**
@@ -72,10 +74,12 @@ export async function runAnalysis(
       conceptVectors: vectors.slice(evidenceTexts.length),
     })
 
+    const marked = await applyProfileExclusions(deps.store, input.userId, posting.data, result)
+
     await deps.store.completeAnalysis({
       analysisId,
-      score: result.score,
-      result,
+      score: marked.score,
+      result: marked.result,
       format: resume.format,
       durationMs: now() - startedAt,
       tokenUsage: profile.tokens + posting.tokens,
@@ -144,4 +148,27 @@ function classify(error: unknown): string {
     return error.code
   }
   return "unknown"
+}
+
+/**
+ * Kullanıcının "tüm ilanlarda hariç tut" listesi (DOG-90): bütün kavramları
+ * listede olan gereksinimler işaretli geliyor. `result.score` ilk skor olarak
+ * kalıyor; Analysis.score işaretlerle hesaplanıyor (K-67).
+ */
+async function applyProfileExclusions(
+  store: AnalysisStore,
+  userId: string,
+  posting: JobPostingData,
+  result: ScoreResult,
+): Promise<{ score: number; result: ScoreResult }> {
+  const excluded = profileExclusions(posting, await store.getExcludedConceptKeys(userId))
+  if (excluded.length === 0) return { score: result.score, result }
+  return {
+    score: weightedScore(result.requirements, undefined, excluded, result.titleMatch ?? null),
+    result: {
+      ...result,
+      excluded,
+      exclusions: Object.fromEntries(excluded.map((i) => [i, { reason: "irrelevant", scope: "profile" } as const])),
+    },
+  }
 }

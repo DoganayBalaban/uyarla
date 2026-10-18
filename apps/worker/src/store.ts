@@ -104,6 +104,11 @@ export const prismaStore: AnalysisStore = {
     })
   },
 
+  async getExcludedConceptKeys(userId) {
+    const rows = await prisma.excludedConcept.findMany({ where: { userId }, select: { key: true } })
+    return rows.map((r) => r.key)
+  },
+
   async failAnalysis(analysisId, errorClass) {
     await prisma.analysis.update({
       where: { id: analysisId },

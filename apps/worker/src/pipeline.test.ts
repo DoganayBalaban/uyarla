@@ -32,6 +32,7 @@ function fakeStore(overrides: Partial<AnalysisStore> = {}): AnalysisStore {
     attachResumeVersion: async () => {},
     completeAnalysis: async () => {},
     failAnalysis: async () => {},
+    getExcludedConceptKeys: async () => [],
     ...overrides,
   }
 }
@@ -279,5 +280,30 @@ describe("runAnalysis · error handling", () => {
     })
 
     await expect(runAnalysis(deps, INPUT)).rejects.toThrow("asıl sebep")
+  })
+})
+
+describe("runAnalysis · kalıcı hariç tutma (DOG-90)", () => {
+  it("marks requirements whose concepts are all on the user's list", async () => {
+    const completeAnalysis = vi.fn()
+    const getExcludedConceptKeys = vi.fn(async () => ["react"])
+    await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis, getExcludedConceptKeys }) }), INPUT)
+    expect(getExcludedConceptKeys).toHaveBeenCalledWith("u-1")
+    const arg = completeAnalysis.mock.calls[0]![0]
+    expect(arg.result.excluded).toEqual([0])
+    expect(arg.result.exclusions).toEqual({ 0: { reason: "irrelevant", scope: "profile" } })
+    // İlk skor sonucun içinde kalıyor; Analysis.score düzeltilmiş (K-67).
+    expect(arg.score).not.toBe(arg.result.score)
+  })
+
+  it("leaves the analysis alone when the list does not cover a requirement", async () => {
+    const completeAnalysis = vi.fn()
+    await runAnalysis(
+      fakeDeps({ store: fakeStore({ completeAnalysis, getExcludedConceptKeys: async () => ["vue"] }) }),
+      INPUT,
+    )
+    const arg = completeAnalysis.mock.calls[0]![0]
+    expect(arg.result.excluded).toBeUndefined()
+    expect(arg.score).toBe(arg.result.score)
   })
 })

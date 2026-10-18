@@ -31,6 +31,8 @@ model User {
   phone       String?
 
   accessPasses AccessPass[]
+  /// "Tüm ilanlarda hariç tut" listesi (DOG-90).
+  excludedConcepts ExcludedConcept[]
 }
 
 model Resume {
@@ -278,4 +280,20 @@ model AccessPass {
   createdAt       DateTime         @default(now())
 
   @@index([userId, endsAt])
+}
+
+/// Kullanıcının bütün ilanlarda hariç tuttuğu kavramlar (DOG-90). Bir
+/// gereksinimin bütün kavramları listedeyse sonraki analizlerde otomatik
+/// işaretli geliyor; eski analizlere dokunulmuyor.
+model ExcludedConcept {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// conceptKey(term): Türkçe küçük harf, boşluk sadeleştirilmiş.
+  key       String
+  /// Ekranda gösterilen hâli.
+  term      String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, key])
 }

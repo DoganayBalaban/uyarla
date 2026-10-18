@@ -1,4 +1,8 @@
 import type { RequirementResult } from "@/features/analysis/components/ScoreResult"
+import { DEFAULT_SCORING_CONFIG, SCORING_REVISION } from "@uyarla/core/score/config"
+import { weightedScore } from "@uyarla/core/score/score"
+import type { RequirementResult as CoreRequirementResult } from "@uyarla/core/score/score"
+import type { TitleMatch } from "@uyarla/core/score/title"
 
 /**
  * "İlanda yok, yanlış okunmuş" işaretlerinin ekrana yansıması (DOG-90).
@@ -6,45 +10,32 @@ import type { RequirementResult } from "@/features/analysis/components/ScoreResu
  * İşaretli gereksinim ne eksik ne karşılanmış sayılıyor: özet sayılardan ve
  * eksik kavramlardan çıkıyor, listede soluk duruyor ve geri alınabiliyor.
  *
- * Düzeltilmiş skor burada hesaplanıyor: core/score weightedScore ile aynı
- * formül ve ağırlıklar. İstemci core'u içe aktaramıyor (PDF/LLM kodu pakete
- * sızar); sunucu route'u da aktaramıyor (Vercel fonksiyon sınırı). İki kopya
- * exclusion.test.ts'teki eşlik testiyle bağlı: biri değişirse test kırılır.
+ * Düzeltilmiş skor core'un weightedScore'u. Eskiden burada formülün bir
+ * kopyası vardı: route core'u içe aktarınca Vercel fonksiyon sınırı aşılıyor,
+ * istemci de skor modülü üzerinden OpenAI istemcisini çekiyordu. Alt yollar
+ * (K-68) ve bağımlılıksız vektör modülüyle ikisi de kalktı.
  */
-const MUST_WEIGHT = 2
-const NICE_WEIGHT = 1
-/** Skora katılmayan türler ve unvan ağırlığı: core/score/config.ts (DOG-103). */
-const UNSCORED_TYPES = ["soft"]
-const TITLE_WEIGHT = 2
-const TITLE_CREDIT: Record<string, number> = { exact: 1, partial: 0.5, none: 0 }
-/** core SCORING_REVISION; bundan eski analizler eski formülle (soft dahil, unvansız). */
-const SCORING_REVISION = 2
+const UNSCORED_TYPES: readonly string[] = DEFAULT_SCORING_CONFIG.unscoredTypes
+
+/** Eski formül (sürüm 1): kişisel nitelikler skorda, unvan yok. */
+const LEGACY_CONFIG = { ...DEFAULT_SCORING_CONFIG, unscoredTypes: [] }
 
 export function adjustedScore(
   requirements: Pick<RequirementResult, "requirement" | "confidence">[],
   excluded: readonly number[],
   context: { title?: { level: string } | null; revision?: number } = { revision: SCORING_REVISION },
 ): number {
-  const skip = new Set(excluded)
   const current = (context.revision ?? 1) >= SCORING_REVISION
-  const counted = requirements.filter((_, i) => !skip.has(i))
-  const scored = current ? counted.filter((r) => !UNSCORED_TYPES.includes(r.requirement.type)) : counted
-  const pool = scored.length > 0 ? scored : counted
-  if (pool.length === 0) return 0
-
-  let weightedSum = 0
-  let totalWeight = 0
-  for (const r of pool) {
-    const weight = r.requirement.importance === "must" ? MUST_WEIGHT : NICE_WEIGHT
-    totalWeight += weight
-    weightedSum += weight * r.confidence
-  }
-  if (current && context.title) {
-    totalWeight += TITLE_WEIGHT
-    weightedSum += TITLE_WEIGHT * (TITLE_CREDIT[context.title.level] ?? 0)
-  }
-  return Math.round((weightedSum / totalWeight) * 100)
+  // Kayıtlı sonuç JSON'dan geliyor; alanlar core tipinin dar birleşimlerini
+  // taşıyor ama derleyici bunu bilmiyor.
+  return weightedScore(
+    requirements as unknown as Pick<CoreRequirementResult, "requirement" | "confidence">[],
+    current ? DEFAULT_SCORING_CONFIG : LEGACY_CONFIG,
+    excluded,
+    current ? ((context.title as Pick<TitleMatch, "level"> | null | undefined) ?? null) : null,
+  )
 }
+
 export interface ExclusionView<T extends RequirementResult> {
   /** Skora katılan gereksinimler, işaretliler dahil (soluk gösteriliyor). */
   rows: Array<{ item: T; index: number; excluded: boolean }>

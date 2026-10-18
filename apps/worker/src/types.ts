@@ -42,6 +42,8 @@ export interface AnalysisStore {
     tokenUsage: number
   }): Promise<void>
   failAnalysis(analysisId: string, errorClass: string): Promise<void>
+  /** Kullanıcının "tüm ilanlarda hariç tut" listesi, conceptKey biçiminde (DOG-90). */
+  getExcludedConceptKeys(userId: string): Promise<string[]>
 }
 
 /** Arayüzdeki ilerleme metinleri bu aşamalara karşılık geliyor (spec §8). */
