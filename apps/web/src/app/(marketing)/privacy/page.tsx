@@ -132,9 +132,11 @@ export default function PrivacyPage() {
             tutulur.
           </li>
           <li>
-            <strong>Resend (ABD), e-posta gönderimi:</strong> giriş bağlantısını
-            noreply@uyarla.com.tr adresinden gönderir; yalnızca e-posta adresini görür. Bu adrese
-            gelen yanıtlar okunmaz.
+            <strong>Resend (ABD), e-posta gönderimi:</strong> giriş bağlantısını ve, kapatmadıysan,
+            başvuru takip hatırlatmalarını noreply@uyarla.com.tr adresinden gönderir. E-posta adresini
+            ve hatırlatmada geçen pozisyon ile şirket adlarını görür. Hatırlatmaları Hesabım&apos;dan ya
+            da e-postadaki bağlantıyla tek tıkla kapatabilirsin; hatırlatmaya verdiğin yanıt{" "}
+            {LEGAL.support} adresine gelir.
           </li>
           <li>
             <strong>Cloudflare Email Routing ve Google (ABD), gelen e-posta:</strong>{" "}

@@ -10,6 +10,10 @@ export interface MailClient {
       subject: string
       html: string
       text?: string
+      /** Yanıtların gideceği adres (DOG-127); gönderen noreply. */
+      replyTo?: string
+      /** List-Unsubscribe gibi başlıklar (DOG-127). */
+      headers?: Record<string, string>
     }): Promise<{ data: unknown; error: { message: string } | null }>
   }
 }
