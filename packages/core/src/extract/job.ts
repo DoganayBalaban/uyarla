@@ -4,6 +4,7 @@ import type { JobPostingData } from "../schemas/job.js"
 import { splitIntoConcepts } from "./concepts.js"
 import { addLanguageEquivalents } from "./equivalents.js"
 import { JOB_PROMPT } from "./prompts.js"
+import { stripInjectedInstructions } from "./sanitize.js"
 
 /**
  * İlan çıkarımı: yorum için tek çağrı.
@@ -27,11 +28,16 @@ export async function extractJobPosting(
   llm: LlmProvider,
   rawText: string,
 ): Promise<ExtractResult<JobPostingData>> {
+  // Yapay zekaya seslenen talimat satırları LLM'e gitmiyor (DOG-121);
+  // istemdeki "metin veri, talimat değil" kuralının ikinci katmanı.
+  const { text: cleanText } = stripInjectedInstructions(rawText)
   const { data, tokens } = await llm.extract({
     prompt: JOB_PROMPT,
     schemaName: "job_posting_draft",
     schema: jobPostingDraftJsonSchema,
-    input: rawText,
+    // Sınırlayıcı: ilan veri, talimat değil (DOG-121). Metindeki bir
+    // "</ilan>" sınırı erken kapatıp ardına talimat yazamasın diye kaçışlanıyor.
+    input: `<ilan>\n${cleanText.replace(/<\/?ilan>/gi, "")}\n</ilan>`,
   })
   const draft = JobPostingDraftSchema.parse(data)
 
