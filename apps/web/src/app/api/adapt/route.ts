@@ -6,7 +6,7 @@ import { adaptRequestSchema } from "@/features/adaptation/schema"
 import { firstIssue } from "@/lib/validation"
 import { adaptQueue } from "@/server/adaptQueue"
 import { isAdmin } from "@/server/admin"
-import { PaymentRequiredError, assertCanAdapt } from "@/server/billing/entitlement"
+import { PaymentRequiredError, withAdaptationAccess } from "@/server/billing/entitlement"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 import {
   authErrorResponse,
@@ -52,15 +52,28 @@ export async function POST(request: Request) {
     // Ödeme duvarı (DOG-34): ilk uyarlama ücretsiz, sonrası dönem ister.
     // Mevcut uyarlamayı yeniden açmak yukarıda döndü; hak harcamıyor.
     // Yöneticiler sınırsız (ADMIN_EMAILS, server/admin.ts).
-    await assertCanAdapt(prisma, session.user.id, new Date(), { unlimited: isAdmin(session.user) })
+    //
+    // Kontrol ve kayıt aynı işlemde, kullanıcı kilidi altında (DOG-77): iki
+    // sekmeden gelen eşzamanlı istek iki ücretsiz uyarlama açamıyor. Aynı
+    // analiz için ikinci istek kilidi bekleyip ilkinin kaydını alıyor.
+    const outcome = await withAdaptationAccess(
+      prisma,
+      { userId: session.user.id, now: new Date(), unlimited: isAdmin(session.user) },
+      async (tx) => {
+        const raced = await tx.adaptation.findUnique({ where: { analysisId }, select: { id: true } })
+        if (raced) return { id: raced.id, created: false }
+        const adaptation = await tx.adaptation.create({
+          data: { analysisId, draft: {}, modelId: analysis.modelId, status: "running" },
+          select: { id: true },
+        })
+        return { id: adaptation.id, created: true }
+      },
+    )
 
-    const adaptation = await prisma.adaptation.create({
-      data: { analysisId, draft: {}, modelId: analysis.modelId, status: "running" },
-    })
+    // Kuyruğa işlem bittikten sonra: worker kaydı okuyabilsin.
+    if (outcome.created) await adaptQueue.add("adapt", { adaptationId: outcome.id }, ADAPT_JOB_OPTIONS)
 
-    await adaptQueue.add("adapt", { adaptationId: adaptation.id }, ADAPT_JOB_OPTIONS)
-
-    return NextResponse.json({ adaptationId: adaptation.id })
+    return NextResponse.json({ adaptationId: outcome.id })
   } catch (error) {
     const authResponse = authErrorResponse(error)
     if (authResponse) return authResponse
