@@ -109,10 +109,16 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
     // beceri satırı "Yazılım Geliştirme" köprüyü kuruyor (K-36).
     education: ALL_EVIDENCE_KINDS,
     soft: ALL_EVIDENCE_KINDS,
+    // Koşul anlamsal eşleşmez (semanticTypes'ta yok); ehliyet, askerlik, şehir
+    // CV'nin herhangi bir yerinde yazabilir (score/conditions.ts).
+    condition: ALL_EVIDENCE_KINDS,
   },
   summaryWeight: 0.75,
   summarySemanticTypes: ["experience", "soft"],
-  unscoredTypes: ["soft"],
+  // Koşullar (DOG-115) da skora girmiyor: CV'den çoğu zaman anlaşılamıyorlar
+  // ("seyahat engeli olmayan") ve evet/hayır sorusu oldukları için ayrı
+  // kutuda gösteriliyorlar.
+  unscoredTypes: ["soft", "condition"],
   titleWeight: 2,
 }
 

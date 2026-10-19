@@ -2882,3 +2882,65 @@ düşürüyor**. Eski önbellek modelin daha önceki bir çıktısı. Ayrıca il
 kaynağında yazım hatası var ("CI/C"); eski çıktı onu düzeltiyormuş. Eval
 karşılaştırılabilir kalsın diye önbellekler geri yüklendi; model kayması ayrı
 takip edilmeli.
+
+## K-74 · Evet/hayır şartları ayrı tür; dil seviyesi ayrıca kontrol ediliyor
+
+**Tarih:** 19 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-115
+
+**Bağlam:** İlanların şartlarının bir kısmı yetkinlik değil, evet/hayır sorusu:
+"İstanbul'da ikamet eden", "seyahat engeli olmayan", "askerliğini yapmış",
+"aktif araç kullanabilen", "ofisten haftada 3 gün". Çıkarıcı bunları soft ya
+da skill sayıyordu. Sonuçları:
+- Skora giriyorlardı.
+- "Eksik zorunlular" listesine düşüyorlardı.
+- Uyarlama bu kavramları CV maddelerine yazmaya çalışıyordu.
+
+ai-job-search bunları ayrı bir "uygunluk kapısı" olarak ele alıyor (DOG-113).
+Dil gereksiniminin ise seviyesine bakılmıyordu: "akıcı İngilizce (C1)" isteyen
+ilanda CV'de "İngilizce (B1)" yazınca gereksinim karşılanmış görünüyordu.
+
+**Karar:**
+- **Yeni tür `condition`.** İlan istemi bu türü tanımlıyor; dil bilgisi
+  condition değil, skill.
+- **Skor ve uyarlama dışında.** Şart skora hiçbir durumda girmiyor; ilanda
+  yalnızca şart varsa skor 0. Eksik kavram üretmiyor, eksik zorunlu
+  sayılmıyor. Uyarlamanın ve ön yazının hedefi olmuyor; ön yazıda "ehliyetim
+  var" uydurma olurdu. Uydurma doğrulaması tam ilanla kalıyor.
+- **Eşleştirme kodda (`score/conditions.ts`).** Anlamsal eşleşme ve kavram
+  kelimesi araması yok: "seyahat engeli olmayan" şartı "seyahat acentesi"
+  maddesiyle karşılanmış görünürdü. Yalnızca CV'nin cevap verebildiği üç konu
+  aranıyor: ehliyet (yalnız "B sınıfı" da sayılıyor), askerlik, ikamet şehri.
+  Arama skor kanıtı olmayan sertifikalarda ve diğer bölümlerde de yapılıyor.
+  - CV'de cevap veren satır varsa "CV'nde görünüyor" ve satırın kendisi
+    gösteriliyor.
+  - Yoksa "Kontrol et". CV'ye bakarak hiçbir şart "karşılanmıyor" denmiyor.
+- **Dil kapısı (`score/languages.ts`).** İlan bir seviye söylüyorsa (CEFR
+  kodu, "iyi/ileri/akıcı", "fluent/advanced", LinkedIn basamakları) CV'deki
+  seviye CEFR'e çevrilip karşılaştırılıyor. Sonuç dört durumdan biri: istenen
+  seviyede, altında, seviye yazmıyor, dil yok. Skoru değiştirmiyor.
+- **Ekran.** Sonuç ekranında gereksinim listesinin üstünde "Şartlar" kutusu;
+  şartlar listede ve sayımlarda yok.
+
+**Ölçüm:**
+- Şart çıkarımı (`pnpm eval:conditions`, 7 ilan, 2'si yeni): 12/12 şart
+  yakalandı, yanlışlıkla şart sayılan gereksinim 0.
+- Skor değerlendirmesi önbellekteki ilanlarla aynı.
+- Yeni istemin şart saydığı gereksinimler önbellekte şarta çevrilince
+  (ilan-3'te PST saat dilimi; ilan-8'de ikamet, seyahat, araç kullanma)
+  değerler de aynı: isabet %94,5, kaçırma 5, uydurma 1, etiket 17/20. Skorlar
+  biraz değişiyor ama hiçbir etiket değişmiyor:
+
+| Çift | Önce | Sonra |
+|---|---|---|
+| cv-a × ilan-3 | 36 | 42 |
+| cv-d × ilan-8 | 14 | 18 |
+| cv-f × ilan-8 | 60 | 58 |
+
+İlk denemede kaçırma 6 oldu: cv-f'de "aktif araç kullanabilen" eşleşmesi
+düştü. Tablolu CV'de "Sürücü belgesi" etiketi ayrıştırmada kaybolmuş, becerilerde
+yalnızca "B sınıfı" kalmıştı. Ehliyet konusu bu satırı da tanıyacak şekilde
+genişletildi.
+
+**Bilinen sınır:** Profilde iletişim satırı tutulmuyor; şehir yalnızca diğer
+bölümlerde ya da şirket adının yanında yazıyorsa bulunuyor. Diğer durumlarda
+ikamet şartı "kontrol et"e düşüyor; bu güvenli yön.

@@ -29,8 +29,11 @@ export interface Evidence {
    * gereksinimi Diller bölümünde "İngilizce (ileri)" yazan adayda eksik
    * çıkıyordu, "3 yıllık performans pazarlaması deneyimi" özette yazdığı
    * hâlde görülmüyordu.
+   *
+   * `other` yalnızca şart eşleştirmesinde (DOG-115): sertifikalar ve diğer
+   * bölümlerin satırları. Skor kanıtı değil, collectEvidence üretmiyor.
    */
-  kind: "role" | "bullet" | "skill" | "education" | "language" | "summary"
+  kind: "role" | "bullet" | "skill" | "education" | "language" | "summary" | "other"
   /** Ham CV metnindeki karşılığı; Sprint 2 uydurma kontrolü için. */
   sourceRef: string | null
 }

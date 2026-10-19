@@ -27,7 +27,12 @@ export const ConceptSchema = z.object({
 export const RequirementSchema = z.object({
   /** Gereksinimin ilandaki hâli — kullanıcıya bu gösterilir. */
   text: z.string(),
-  type: z.enum(["skill", "experience", "education", "soft"]),
+  /**
+   * condition (DOG-115): evet/hayır şartı (ikamet, seyahat, askerlik, ehliyet,
+   * vatandaşlık ya da çalışma izni, çalışma düzeni). Skora girmiyor; ekranda
+   * "Şartlar" kutusunda, CV'de görünüyor ya da kontrol et olarak.
+   */
+  type: z.enum(["skill", "experience", "education", "soft", "condition"]),
   importance: z.enum(["must", "nice"]),
   /** Gereksinimin içerdiği kavramlar; güven bunların kaçının karşılandığıyla ölçülür. */
   concepts: z.array(ConceptSchema),

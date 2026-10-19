@@ -186,6 +186,11 @@ describe("missingMustRequirements", () => {
     expect(missingMustRequirements({ requirements })).toHaveLength(2)
   })
 
+  it("never lists conditions: the CV cannot answer them (DOG-115)", () => {
+    const condition = { requirement: { text: "Ankara'da ikamet", importance: "must", type: "condition" }, status: "missing" }
+    expect(missingMustRequirements({ requirements: [condition], scoringRevision: 2 })).toEqual([])
+  })
+
   it("is empty for a missing or malformed result", () => {
     expect(missingMustRequirements(null)).toEqual([])
     expect(missingMustRequirements({})).toEqual([])

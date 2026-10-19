@@ -918,3 +918,44 @@ describe("weightedScore · soft requirements and title (DOG-103)", () => {
     expect(outcome.score).toBeLessThan(100)
   })
 })
+
+describe("score · conditions (DOG-115)", () => {
+  const condition: Requirement = {
+    text: "Şehir dışı seyahat engeli bulunmayan",
+    type: "condition",
+    importance: "must",
+    concepts: [{ term: "seyahat", synonyms: ["travel"] }],
+  }
+
+  it("a condition stays out of the score and the missing keywords", () => {
+    const outcome = score({
+      profile: PROFILE,
+      posting: testPosting([req("React", "must", ["react"]), condition]),
+      // Maddede "seyahat" geçiyor; şartın cevabı değil.
+      evidence: [ev("React ile seyahat uygulaması geliştirdim")],
+      evidenceVectors: [V.near],
+      conceptVectors: [V.near, V.near],
+    })
+    expect(outcome.score).toBe(100)
+    expect(outcome.requirements[1]).toMatchObject({ status: "missing", evidence: null, missingConcepts: [] })
+    expect(outcome.missingKeywords).toEqual([])
+  })
+
+  it("a posting with only conditions scores 0 instead of scoring them", () => {
+    expect(weightedScore([{ requirement: condition, confidence: 1 }])).toBe(0)
+  })
+
+  it("reports the language level check", () => {
+    const outcome = score({
+      profile: { ...PROFILE, languages: ["English (B1)"] },
+      posting: testPosting([req("Fluent English (C1)", "must", ["english"])]),
+      evidence: [{ text: "English (B1)", matchText: "English (B1)", kind: "language", sourceRef: null }],
+      evidenceVectors: [V.far],
+      conceptVectors: [V.near],
+    })
+    expect(outcome.requirements[0]!.status).toBe("matched")
+    expect(outcome.languageChecks).toEqual([
+      { index: 0, language: "İngilizce", required: "C1", cvLine: "English (B1)", found: "B1", status: "below" },
+    ])
+  })
+})

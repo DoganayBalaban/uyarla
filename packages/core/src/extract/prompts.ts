@@ -98,7 +98,11 @@ Pozisyon adını, şirketi, kıdem seviyesini ve ilanın dilini belirle.
 
 İlandaki HER gereksinimi ayrı bir madde olarak çıkar:
 - text: gereksinimin ilandaki hâli
-- type: skill (teknik beceri), experience (deneyim), education (eğitim), soft (kişisel özellik)
+- type: skill (teknik beceri), experience (deneyim), education (eğitim), soft (kişisel özellik),
+  condition (yetkinlik değil, evet/hayır şartı: belirli bir şehirde ikamet, seyahat
+  ya da taşınma engeli olmaması, askerlik durumu, sürücü belgesi ve araç kullanma,
+  vatandaşlık ya da çalışma izni, ofiste çalışma günleri, vardiya, nöbet, hafta sonu
+  çalışma). Dil bilgisi condition değil, skill'dir.
 - importance: "aranan", "şart", "zorunlu", "olmalı" gibi ifadeler must; "tercihen",
   "artı olur", "avantaj", "nice to have" gibi ifadeler nice
 

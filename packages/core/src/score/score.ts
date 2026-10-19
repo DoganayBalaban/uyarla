@@ -6,6 +6,8 @@ import type { ResumeProfile } from "../schemas/resume.js"
 import { DEFAULT_SCORING_CONFIG, SCORING_REVISION, type ScoringConfig } from "./config.js"
 import { experienceMonths, requiredYears } from "./duration.js"
 import type { Evidence } from "./evidence.js"
+import { matchCondition } from "./conditions.js"
+import { checkLanguages, type LanguageCheck } from "./languages.js"
 import type { CorrectedRequirement, ExclusionMark, RequirementCorrection, RequirementReport } from "./exclusions.js"
 import { titleMatch, type TitleMatch } from "./title.js"
 
@@ -98,6 +100,11 @@ export interface ScoreResult {
   /** Skor formülünün sürümü (SCORING_REVISION); eski analizlerde yok (= 1). */
   scoringRevision?: number
   /**
+   * İlanın istediği dil seviyesi ile CV'deki seviye (DOG-115). Skoru
+   * değiştirmiyor; ekranda "Şartlar" kutusunda. Bu alandan önceki analizlerde yok.
+   */
+  languageChecks?: LanguageCheck[]
+  /**
    * Kullanıcının "ilanda yok, yanlış okunmuş" diye işaretlediği gereksinimlerin
    * `requirements` içindeki sırası (DOG-90). Analizin kendi skoru değişmiyor;
    * ekran düzeltilmiş skoru weightedScore'un web'deki eşiyle hesaplıyor.
@@ -153,6 +160,7 @@ export function score(
     missingKeywords: missingWords,
     titleMatch: title,
     scoringRevision: SCORING_REVISION,
+    languageChecks: checkLanguages(input.posting.requirements, input.profile),
   }
 }
 
@@ -173,8 +181,9 @@ export function weightedScore(
   const skip = new Set(excluded)
   const counted = results.filter((_, i) => !skip.has(i))
   // Kişisel nitelikler skora girmiyor; ilanda yalnızca onlar varsa giriyor.
+  // Şartlar (DOG-115) hiçbir durumda girmiyor: evet/hayır sorusu, örtüşme değil.
   const scored = counted.filter((r) => !cfg.unscoredTypes.includes(r.requirement.type))
-  const pool = scored.length > 0 ? scored : counted
+  const pool = scored.length > 0 ? scored : counted.filter((r) => r.requirement.type !== "condition")
   if (pool.length === 0) return 0
 
   let weightedSum = 0
@@ -233,6 +242,21 @@ function matchRequirement(
   input: ScoreInput,
   cfg: ScoringConfig,
 ): RequirementResult {
+  // Şartlar (DOG-115) kavram kavram aranmıyor; bulunamayan şart "kontrol
+  // et" demek, eksik kavram üretmiyor.
+  if (requirement.type === "condition") {
+    const found = matchCondition(requirement, input.profile, input.evidence)
+    return {
+      requirement,
+      status: found.status,
+      confidence: found.status === "matched" ? 1 : 0,
+      evidence: found.evidence,
+      method: found.evidence ? "keyword" : null,
+      matchedConcepts: [],
+      missingConcepts: [],
+    }
+  }
+
   const satisfied: string[] = []
   const unsatisfied: string[] = []
   let firstEvidence: Evidence | null = null
