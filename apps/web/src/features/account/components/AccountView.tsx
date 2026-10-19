@@ -21,6 +21,7 @@ import { PageHeader } from "@/components/layout/PageShell"
 import { ProfileSection } from "@/features/account/components/ProfileSection"
 import { ResumeLibrarySection } from "@/features/account/components/ResumeLibrarySection"
 import { ExcludedConceptsSection } from "@/features/account/components/ExcludedConceptsSection"
+import { FactsSection } from "@/features/account/components/FactsSection"
 import { NotificationsSection } from "@/features/account/components/NotificationsSection"
 import { PassSection } from "@/features/billing/components/PassSection"
 
@@ -127,6 +128,7 @@ export function AccountView() {
             <PassSection />
             <ResumeLibrarySection />
             <ExcludedConceptsSection />
+            <FactsSection />
             <NotificationsSection />
           </>
         )}

@@ -36,6 +36,11 @@ export interface Evidence {
   kind: "role" | "bullet" | "skill" | "education" | "language" | "summary" | "other"
   /** Ham CV metnindeki karşılığı; Sprint 2 uydurma kontrolü için. */
   sourceRef: string | null
+  /**
+   * Kanıt kullanıcının daha önce anlattığı bir deneyimden (DOG-116); yüklenen
+   * CV'de yok. adapt/facts.ts markFactEvidence işaretliyor.
+   */
+  fact?: boolean
 }
 
 export function collectEvidence(profile: ResumeProfile): Evidence[] {

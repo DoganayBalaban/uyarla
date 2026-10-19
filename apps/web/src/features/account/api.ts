@@ -65,3 +65,33 @@ export function useRemoveExcludedConcept() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: excludedConceptsQueryKey }),
   })
 }
+
+/** Anlattığın ve kabul ettiğin bir deneyim (DOG-116); core RememberedFact. */
+export interface RememberedFactView {
+  id: string
+  company: string
+  title: string
+  text: string
+  answer: string
+  requirement: string | null
+  createdAt: string
+}
+
+export const factsQueryKey = ["facts"] as const
+
+export function useFacts() {
+  return useQuery({
+    queryKey: factsQueryKey,
+    queryFn: async () => (await api.get<{ facts: RememberedFactView[] }>("/profile", { params: { facts: 1 } })).data.facts,
+  })
+}
+
+export function useForgetFact() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (factId: string) => {
+      await api.delete("/profile", { data: { factId } })
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: factsQueryKey }),
+  })
+}

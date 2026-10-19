@@ -52,6 +52,14 @@ describe("ScoreResult", () => {
     expect(html).toContain("Eksik · 1")
   })
 
+  it("tells evidence from a remembered fact apart from the CV (DOG-116)", () => {
+    const fromFact = { ...req("Docker", "skill", "matched"), evidence: { text: "Docker Compose ile kurdum", kind: "bullet", fact: true } }
+    const html = renderToStaticMarkup(
+      <ScoreResult result={{ ...result, requirements: [fromFact], facts: [{ id: "a:c" }] }} adapting={false} />,
+    )
+    expect(html).toContain("Daha önce anlattığın 1 deneyim bu analizde kanıt sayıldı")
+  })
+
   it("draws an old analysis as before", () => {
     const html = renderToStaticMarkup(<ScoreResult result={{ ...result, scoringRevision: undefined }} adapting={false} />)
     expect(html).not.toContain("Mülakatta anlaşılacaklar")

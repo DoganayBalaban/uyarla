@@ -1,5 +1,6 @@
 import { AdaptationDraftSchema, hasPendingDecisions, type AdaptationDraft } from "@uyarla/core/schemas/adaptation"
 import { applyAdaptation } from "@uyarla/core/adapt/profile"
+import { analysisProfile } from "@uyarla/core/adapt/facts"
 import { CachedEmbeddingProvider, redisVectorStore } from "@uyarla/core/llm/embeddingCache"
 import { OpenAiCompatibleEmbeddingProvider, embeddingConfigFromEnv } from "@uyarla/core/llm/embedding"
 import { rescore } from "@uyarla/core/adapt/rescore"
@@ -126,7 +127,10 @@ export async function loadAdaptation(id: string) {
   if (!adaptation) return null
 
   const { analysis } = adaptation
-  const profile = (analysis.resumeVersion?.profile ?? null) as ResumeProfile | null
+  const stored = (analysis.resumeVersion?.profile ?? null) as ResumeProfile | null
+  // Analize katılan olgularla (DOG-116): uyarlama, indirme ve önce/sonra skoru
+  // analizin gördüğü profille.
+  const profile = stored ? analysisProfile(stored, analysis.result) : null
   const posting: JobPostingData = {
     position: analysis.jobPosting.position,
     company: analysis.jobPosting.company,

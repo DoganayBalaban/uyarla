@@ -63,6 +63,12 @@ export default function PrivacyPage() {
             yazı ve maddelere verdiğin kararlar.
           </li>
           <li>
+            <strong>Anlattığın deneyimler:</strong> uyarlamada eksik bir gereksinim için kendi
+            sözlerinle yazdığın metin ve ondan yazılan madde. Maddeyi kabul ettiysen sonraki
+            analizlerinde, CV&apos;nde aynı iş varsa kanıt olarak kullanılır; Hesabım&apos;dan görebilir ve
+            unutabilirsin.
+          </li>
+          <li>
             <strong>Oturum ve güvenlik:</strong> oturum çerezi, IP adresi ve tarayıcı bilgisi
             (kötüye kullanımı ve aşırı istekleri engellemek için).
           </li>
