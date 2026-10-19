@@ -68,10 +68,21 @@ describe("downloaded resume round trip (DOG-106)", () => {
         format === "pdf" ? await renderPdf(toDocumentModel(profile)) : await renderDocx(toDocumentModel(profile)),
         `cikti.${format}`,
       )
-      const order = ["AI Engineer", "Acme Teknoloji", "2023-01 – halen", "RAG altyapısını", "Backend Developer", "Beta Yazılım", "2021-06 – 2022-12", "FastAPI ile"]
+      const order = ["AI Engineer", "Acme Teknoloji", "2023-01 - halen", "RAG altyapısını", "Backend Developer", "Beta Yazılım", "2021-06 - 2022-12", "FastAPI ile"]
       const positions = order.map((s) => text.indexOf(s, text.indexOf("DENEYİM")))
       expect(positions.every((p) => p >= 0)).toBe(true)
       expect([...positions].sort((a, b) => a - b)).toEqual(positions)
+    })
+  }
+
+  for (const format of ["pdf", "docx"] as const) {
+    it(`${format}: no year is joined to a Unicode dash in the text layer (DOG-114)`, async () => {
+      const text = await extractText(
+        format === "pdf" ? await renderPdf(toDocumentModel(profile)) : await renderDocx(toDocumentModel(profile)),
+        `cikti.${format}`,
+      )
+      expect(text).toContain("2017 - 2021")
+      expect(text).not.toMatch(/(19|20)\d{2}(-\d{2})?\s*[\u2010-\u2015\u2212]/)
     })
   }
 

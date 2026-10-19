@@ -41,7 +41,7 @@ describe("toDocumentModel", () => {
     const experienceEntry = toDocumentModel(resumeProfile).sections.find((s) => s.title === "DENEYİM")!
     expect(experienceEntry.entries[0]!.heading).toBe("Geliştirici")
     expect(experienceEntry.entries[0]!.organization).toBe("Acme")
-    expect(experienceEntry.entries[0]!.date).toBe("2022-01 – halen")
+    expect(experienceEntry.entries[0]!.date).toBe("2022-01 - halen")
     expect(experienceEntry.entries[0]!.lines).toEqual(["React ile panel geliştirdim", "Test yazdım"])
   })
 
@@ -246,5 +246,17 @@ describe("toDocumentModel · broken dates", () => {
       education: [{ school: "İTÜ", degree: null, field: null, startDate: "2017", endDate: "},{" }],
     })
     expect(m.sections.find((s) => s.title === "EĞİTİM")!.entries[0]!.date).toBe("2017")
+  })
+})
+
+describe("toDocumentModel · ASCII date ranges (DOG-114)", () => {
+  it("joins ranges with an ASCII hyphen and folds Unicode dashes inside a date field", () => {
+    // Workday "2016–2024" biçiminde bitiş tarihini ve eğitim girdilerini düşürmüş.
+    const m = toDocumentModel({
+      ...resumeProfile,
+      education: [{ school: "İTÜ", degree: null, field: null, startDate: null, endDate: "2017—2021" }],
+    })
+    expect(m.sections.find((s) => s.title === "DENEYİM")!.entries[0]!.date).toBe("2022-01 - halen")
+    expect(m.sections.find((s) => s.title === "EĞİTİM")!.entries[0]!.date).toBe("2017-2021")
   })
 })

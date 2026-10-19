@@ -2826,3 +2826,18 @@ sayfasının bağlantısını açıp geri dönüşü izlemek ayrı bir iş.
 ekliyor) kod yayına çıkmadan uygulanmalı; pano yeni sütunu okuyor. Cron
 servisinin ortamında `RESEND_API_KEY`, `EMAIL_FROM`, `BETTER_AUTH_URL`
 tanımlı olmalı.
+
+## K-72 · İndirilen CV'de tarih aralıkları ASCII kısa çizgiyle
+
+**Tarih:** 19 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-114
+
+**Bağlam:** ai-job-search'ün belgelediği bir ATS hatası (DOG-113): tarih
+aralığında Unicode tire ("2016–2024") olan bir CV'nin Workday içe aktarımında
+kısa bir işin bitiş tarihi ve bütün eğitim girdileri düşmüş. Birçok ayrıştırıcı
+aralığı yalnızca ASCII "-" ile bölüyor. Bizim belge modelimiz aralığı en-dash
+ile yazıyordu.
+
+**Karar:** Aralık " - " ile yazılıyor. Tarih alanlarının içindeki Unicode
+tireler (‐ ‑ ‒ – — ― ve eksi işareti) de "-" oluyor; LLM çıkarımı tek alana
+"2017—2021" yazabiliyor. Gidiş-dönüş testi PDF ve DOCX metin katmanında yıla
+bitişik Unicode tire kalmadığını denetliyor.

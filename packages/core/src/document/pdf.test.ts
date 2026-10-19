@@ -16,7 +16,7 @@ const model: DocumentModel = {
         {
           heading: "Geliştirici",
           organization: "Acme",
-          date: "2022-01 – halen",
+          date: "2022-01 - halen",
           lines: ["React ile panel geliştirdim", "Test altyapısını kurdum"],
         },
       ],
@@ -76,7 +76,7 @@ describe("renderPdf", () => {
       "DENEYİM",
       "BECERİLER",
       "Geliştirici · Acme",
-      "2022-01 – halen",
+      "2022-01 - halen",
       "Test altyapısını kurdum",
       "React, TypeScript",
     ]) {
@@ -104,7 +104,7 @@ describe("renderPdf", () => {
           entries: Array.from({ length: 40 }, (_, i) => ({
             heading: `Rol ${i}`,
             organization: `Şirket ${i}`,
-            date: "2020 – 2021",
+            date: "2020 - 2021",
             lines: ["Bir şeyler geliştirdim", "Başka şeyler geliştirdim"],
           })),
         },
@@ -130,7 +130,7 @@ describe("renderPdf", () => {
         sections: [
           {
             title: "DENEYİM",
-            entries: [{ heading: "Rol", organization: "Şirket", date: "2020 – 2021", lines: Array.from({ length: 60 }, (_, i) => `Madde ${i}`) }],
+            entries: [{ heading: "Rol", organization: "Şirket", date: "2020 - 2021", lines: Array.from({ length: 60 }, (_, i) => `Madde ${i}`) }],
           },
         ],
       }

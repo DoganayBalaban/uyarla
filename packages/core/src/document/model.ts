@@ -83,10 +83,14 @@ export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions
   const b = HEADINGS[language]
   // Harf ya da rakam taşımayan tarih yok sayılıyor: model JSON'u kırık
   // yazdığında alana "},{" girebiliyor ve belgede tarih yerine çıkıyordu.
-  const clean = (d: string | null | undefined) => (d && /[\p{L}\p{N}]/u.test(d) ? d : null)
+  // Unicode tireler ASCII kısa çizgiye çevriliyor (DOG-114): birçok ATS tarih
+  // aralığını yalnızca "-" ile bölüyor; Workday içe aktarımında "2016–2024"
+  // biçimi bitiş tarihini ve eğitim girdilerini düşürmüş (ai-job-search).
+  const clean = (d: string | null | undefined) =>
+    d && /[\p{L}\p{N}]/u.test(d) ? d.replace(UNICODE_DASH, "-") : null
   const range = (start: string | null | undefined, end: string | null | undefined) => {
     const [s, e] = [clean(start), clean(end)]
-    return s && e ? `${s} – ${e}` : e || s || null
+    return s && e ? `${s} - ${e}` : e || s || null
   }
 
   // Bölümler türüne göre kuruluyor, sonra CV'deki sıraya diziliyor.
@@ -183,6 +187,9 @@ export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions
     sections,
   }
 }
+
+/** Kısa çizgi dışındaki tireler: ‐ ‑ ‒ – — ― ve eksi işareti. */
+const UNICODE_DASH = /[\u2010-\u2015\u2212]/g
 
 const DEFAULT_ORDER: StructuredSection[] = ["experience", "projects", "education", "skills"]
 
