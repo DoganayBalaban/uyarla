@@ -62,6 +62,16 @@ describe("collectUserData", () => {
     expect(json).not.toContain("mehmet")
   })
 
+  it("includes the payment order number for refund or invoice requests (DOG-78)", async () => {
+    const ayse = await makeUserWithData("ayse")
+    const orderId = `polar-ord-${Math.random().toString(36).slice(2)}`
+    await prisma.accessPass.create({
+      data: { userId: ayse.id, plan: "week", providerOrderId: orderId, startsAt: new Date(), endsAt: new Date(Date.now() + 7 * 864e5) },
+    })
+    const data = await collectUserData(prisma, ayse.id)
+    expect(data.accessPasses).toEqual([expect.objectContaining({ plan: "week", providerOrderId: orderId, status: "active" })])
+  })
+
   it("leaves out session tokens and password hashes", async () => {
     const ayse = await makeUserWithData("ayse")
     const json = JSON.stringify(await collectUserData(prisma, ayse.id))
