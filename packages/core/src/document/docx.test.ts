@@ -15,7 +15,7 @@ const model: DocumentModel = {
         {
           heading: "Geliştirici",
           organization: "Acme",
-          date: "2022-01 – halen",
+          date: "2022-01 - halen",
           lines: ["React ile panel geliştirdim", "Test altyapısını kurdum"],
         },
       ],
@@ -53,7 +53,7 @@ describe("renderDocx", () => {
       "DENEYİM",
       "BECERİLER",
       "Geliştirici · Acme",
-      "2022-01 – halen",
+      "2022-01 - halen",
       "Test altyapısını kurdum",
       "React, TypeScript",
       "React odaklı geliştirici",
