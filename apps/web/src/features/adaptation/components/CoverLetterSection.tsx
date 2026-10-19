@@ -12,6 +12,7 @@ import {
   Sparkles,
   TriangleAlert,
 } from "lucide-react"
+import type { CoverLetterChecks } from "@uyarla/core/cover/checks"
 import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/cn"
@@ -27,9 +28,12 @@ import type { AdaptationState } from "@/features/adaptation/types"
 export function CoverLetterSection({
   adaptationId,
   letter: record,
+  checks = null,
 }: {
   adaptationId: string
   letter: CoverLetterRecord | null
+  /** Kontrol listesi (DOG-96); sunucu ön yazı bitince hesaplıyor. */
+  checks?: CoverLetterChecks | null
 }) {
   const queryClient = useQueryClient()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -167,6 +171,7 @@ export function CoverLetterSection({
               </div>
             ))}
           </div>
+          {checks && <LetterChecklist checks={checks} />}
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -192,5 +197,56 @@ export function CoverLetterSection({
         </>
       )}
     </section>
+  )
+}
+
+/**
+ * Ön yazının altında kısa kontrol listesi (DOG-96): şirket adı, unvan,
+ * uzunluk, klişe. Öneri; göndermeyi engellemiyor.
+ */
+export function LetterChecklist({ checks }: { checks: CoverLetterChecks }) {
+  const rows: Array<{ ok: boolean; text: string; examples?: string[] }> = []
+  if (checks.company) {
+    rows.push({
+      ok: checks.company.mentioned,
+      text: checks.company.mentioned ? `Şirket adı geçiyor (${checks.company.name})` : `Şirket adı geçmiyor (${checks.company.name})`,
+    })
+  }
+  if (checks.title) {
+    rows.push({
+      ok: checks.title.mentioned,
+      text: checks.title.mentioned ? "İlandaki unvan geçiyor" : `İlandaki unvan geçmiyor (${checks.title.position})`,
+    })
+  }
+  rows.push({
+    ok: checks.length === "ok",
+    text:
+      checks.length === "ok"
+        ? `Uzunluk uygun (${checks.words} kelime)`
+        : checks.length === "short"
+          ? `Kısa (${checks.words} kelime); 150–250 kelime öneriliyor`
+          : `Uzun (${checks.words} kelime); 150–250 kelime öneriliyor`,
+  })
+  rows.push(
+    checks.cliches.length === 0
+      ? { ok: true, text: "Klişe ya da olumsuz ifade yok" }
+      : {
+          ok: false,
+          text: `Klişe ya da olumsuz ifade: ${checks.cliches.map((c) => `“${c.phrase}”`).join(", ")}. Yerine somut bir deneyim yaz.`,
+        },
+  )
+  return (
+    <ul className="mt-4 space-y-1.5 text-sm" aria-label="Ön yazı kontrol listesi">
+      {rows.map((row, i) => (
+        <li key={i} className="flex items-start gap-2">
+          {row.ok ? (
+            <Check className="mt-0.5 size-4 shrink-0 text-brand-green" aria-hidden />
+          ) : (
+            <TriangleAlert className="mt-0.5 size-4 shrink-0 text-brand-amber" aria-hidden />
+          )}
+          <span className={row.ok ? "text-muted" : undefined}>{row.text}</span>
+        </li>
+      ))}
+    </ul>
   )
 }

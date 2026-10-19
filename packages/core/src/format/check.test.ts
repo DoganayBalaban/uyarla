@@ -165,6 +165,24 @@ describe("checkFormat · content", () => {
   })
 })
 
+describe("checkFormat · cliches (DOG-89)", () => {
+  it("passes a resume without cliches", async () => {
+    const r = await checkFormat({ filename: "cv.pdf", buffer: Buffer.from(""), text: GOOD_RESUME })
+    expect(r.passed).toContain("Klişe ifadeler")
+  })
+
+  it("warns about cliches and negative phrases with example lines", async () => {
+    const text = `${GOOD_RESUME}
+Özet
+Sonuç odaklı bir takım oyuncusuyum. Maalesef son işimden ayrılmak zorunda kaldım.`
+    const r = await checkFormat({ filename: "cv.pdf", buffer: Buffer.from(""), text })
+    const finding = r.findings.find((b) => b.code === "cliches")
+    expect(finding).toMatchObject({ severity: "warning", group: "content", title: "Klişe ya da olumsuz ifadeler var (4)" })
+    expect(finding!.examples).toContain("Sonuç odaklı bir takım oyuncusuyum.")
+    expect(r.passed).not.toContain("Klişe ifadeler")
+  })
+})
+
 describe("checkFormat · projects (DOG-105)", () => {
   it("accepts a projects section in place of an experience heading", async () => {
     const text = GOOD_RESUME.replace(/Deneyim\n/, "Projeler\n")

@@ -1,3 +1,4 @@
+import type { CoverLetterChecks } from "@uyarla/core/cover/checks"
 import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 
 /** `GET /api/adapt/[id]` yanıtının arayüzün kullandığı kısmı. */
@@ -67,6 +68,8 @@ export interface AdaptationState {
   scoreBefore: number | null
   scoreAfter: number | null
   coverLetter: CoverLetterRecord | null
+  /** Ön yazı kontrol listesi (DOG-96); ön yazı yokken ve eski yanıtlarda yok. */
+  coverLetterChecks?: CoverLetterChecks | null
   /** Önceki ve indirilecek hâl; profil yoksa ya da taslak hazır değilse null. */
   document?: { before: DocumentOutline; after: DocumentOutline } | null
   /** Analizde karşılanmayan zorunlu gereksinimler; "AI ile yaz" bunlar için (DOG-94). */

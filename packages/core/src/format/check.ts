@@ -1,5 +1,6 @@
 import JSZip from "jszip"
 import { sectionHeading, segmentResume, type ResumeSection } from "../extract/segment.js"
+import { findCliches } from "../text/cliches.js"
 import { measurableResults } from "./measurable.js"
 import { structureChecks } from "./structure.js"
 
@@ -84,6 +85,7 @@ export async function checkFormat(input: {
   textChecks(input.text, docx, findings, passed)
   if (docx) docxChecks(docx, findings, passed)
   contentChecks(input.text, findings, passed)
+  clicheChecks(input.text, findings, passed)
   structureChecks(input.text, findings, passed)
 
   // Önce sorunlar, sonra uyarılar: arayüz sırayı olduğu gibi gösteriyor.
@@ -242,6 +244,35 @@ function contentChecks(text: string, findings: FormatFinding[], passed: string[]
     description:
       "İşe alımcı “satışları artırdım” ile “satışları %20 artırdım” arasındaki farkı ilk okumada görüyor. Gerçekten bildiğin rakamları ekle: müşteri ya da ekip sayısı, yüzde, süre, bütçe. Uyarlama rakam uyduramaz; bunları ancak sen ekleyebilirsin.",
     examples: m.examples,
+  })
+}
+
+/** Örnek olarak gösterilen en fazla satır. */
+const CLICHE_EXAMPLES = 3
+
+/**
+ * Klişe ve olumsuz ifadeler (DOG-89). Ön yazı kontrolüyle aynı sözlük
+ * (text/cliches.ts). Uyarı, sorun değil: skoru ve okunabilirliği etkilemiyor.
+ */
+function clicheChecks(text: string, findings: FormatFinding[], passed: string[]): void {
+  const hits = findCliches(text)
+  if (hits.length === 0) {
+    passed.push("Klişe ifadeler")
+    return
+  }
+  const negative = hits.filter((h) => h.kind === "negative").length
+  findings.push({
+    code: "cliches",
+    severity: "warning",
+    group: "content",
+    title:
+      negative > 0
+        ? `Klişe ya da olumsuz ifadeler var (${hits.length})`
+        : `Klişe ifadeler var (${hits.length})`,
+    description:
+      "İşe alımcı “takım oyuncusuyum”, “stres altında çalışabilirim” gibi cümleleri hemen her CV'de okuyor ve bir şey öğrenmiyor. Aynı özelliği gösteren bir deneyim yaz: ne yaptın, kiminle, sonuç ne oldu." +
+      (negative > 0 ? " “Maalesef”, “zorunda kaldım” gibi ifadeler de seni savunmada gösteriyor; olanı düz anlat." : ""),
+    examples: hits.slice(0, CLICHE_EXAMPLES).map((h) => h.line),
   })
 }
 

@@ -7,6 +7,8 @@ import {
   missingMustRequirements,
 } from "@/server/adaptationDecision"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
+import { checkCoverLetter } from "@uyarla/core/cover/checks"
+import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 
 export const runtime = "nodejs"
 
@@ -23,6 +25,7 @@ export async function GET(
     ensureOwner(payload.ownerId, await getSession())
 
     const { adaptation, profile, posting, draft, scoreBefore, scoringRevision, excluded } = payload
+    const letter = (adaptation.coverLetter ?? null) as CoverLetterRecord | null
 
     return NextResponse.json({
       status: adaptation.status,
@@ -33,7 +36,11 @@ export async function GET(
       // gömme çağrısı yapılmaz.
       scoreAfter: await computeScoreAfter(profile, posting, draft, excluded),
       errorClass: adaptation.errorClass,
-      coverLetter: adaptation.coverLetter ?? null,
+      coverLetter: letter,
+      // Ön yazı kontrol listesi (DOG-96): her istekte hesaplanıyor, ucuz ve
+      // deterministik; böylece eski ön yazılarda da var.
+      coverLetterChecks:
+        letter?.status === "done" ? checkCoverLetter(letter.paragraphs.map((p) => p.text), posting) : null,
       document: adaptationDocument(profile, draft),
       missingRequirements: missingMustRequirements(adaptation.analysis.result),
     })

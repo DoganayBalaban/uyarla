@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto"
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
+import { checkCoverLetter } from "../src/cover/checks.js"
 import { generateCoverLetter, type CandidateIntent } from "../src/cover/letter.js"
 import { LmStudioProvider } from "../src/llm/lmstudio.js"
 import { llmConfigFromEnv, type ExtractOptions, type ExtractResult, type LlmProvider } from "../src/llm/types.js"
@@ -69,8 +70,14 @@ async function main() {
   const files = readdirSync(PAIRS).filter((f) => f.endsWith(".json")).sort()
   console.log(`[eval:cover] ${files.length} çift · ${VARIANTS.length} hâl · model: ${llmConfig.model}\n`)
 
-  const totals = new Map(VARIANTS.map((v) => [v.name, { flagged: 0, issues: 0, paragraphs: 0, words: 0 }]))
-  const letters: Array<{ pair: string; variant: string; paragraphs: unknown }> = []
+  const totals = new Map(
+    VARIANTS.map((v) => [
+      v.name,
+      // Kontrol listesi (DOG-96): şirket ve unvan geçmeyen, uzunluğu aralık dışı ve klişe taşıyan yazılar.
+      { flagged: 0, issues: 0, paragraphs: 0, words: 0, noCompany: 0, noTitle: 0, offLength: 0, cliches: 0 },
+    ]),
+  )
+  const letters: Array<{ pair: string; variant: string; paragraphs: unknown; checks: unknown }> = []
 
   for (const file of files) {
     const pair = JSON.parse(readFileSync(join(PAIRS, file), "utf8")) as EvalPair
@@ -87,17 +94,23 @@ async function main() {
       t.issues += data.paragraphs.reduce((n, p) => n + p.verification.issues.length, 0)
       t.paragraphs += data.paragraphs.length
       t.words += data.paragraphs.reduce((n, p) => n + p.text.split(/\s+/).length, 0)
-      letters.push({ pair: pair.id, variant: variant.name, paragraphs: data.paragraphs })
+      const checks = checkCoverLetter(data.paragraphs.map((p) => p.text), posting)
+      if (checks.company && !checks.company.mentioned) t.noCompany++
+      if (checks.title && !checks.title.mentioned) t.noTitle++
+      if (checks.length !== "ok") t.offLength++
+      t.cliches += checks.cliches.length
+      letters.push({ pair: pair.id, variant: variant.name, paragraphs: data.paragraphs, checks })
       row.push(`${variant.name}: ${flagged.length}/${data.paragraphs.length}`)
     }
     llm.save()
     console.log(`${pair.id.padEnd(16)} işaretli paragraf · ${row.join(" · ")}`)
   }
 
-  console.log("\nToplam (işaretli paragraf / paragraf · sorun · ort. kelime)")
+  console.log("\nToplam (işaretli paragraf / paragraf · sorun · ort. kelime · şirket yok · unvan yok · uzunluk dışı · klişe)")
   for (const [name, t] of totals) {
     console.log(
-      `  ${name.padEnd(20)} ${t.flagged}/${t.paragraphs} · ${t.issues} sorun · ${Math.round(t.words / files.length)} kelime`,
+      `  ${name.padEnd(20)} ${t.flagged}/${t.paragraphs} · ${t.issues} sorun · ${Math.round(t.words / files.length)} kelime` +
+        ` · ${t.noCompany} · ${t.noTitle} · ${t.offLength} · ${t.cliches}`,
     )
   }
 
