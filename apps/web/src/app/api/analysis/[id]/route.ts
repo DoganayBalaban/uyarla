@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 import { conceptKey, correctPosting } from "@uyarla/core/score/exclusions"
 import { scoreProfile } from "@uyarla/core/score/live"
+import { analysisProfile, markFactEvidence } from "@uyarla/core/adapt/facts"
 import type { ScoreResult } from "@uyarla/core/score/score"
 import type { JobPostingData } from "@uyarla/core/schemas/job"
 import type { ResumeProfile } from "@uyarla/core/schemas/resume"
@@ -106,11 +107,16 @@ export async function PATCH(
       if ((patch.minYears != null && type !== "experience") || (patch.terms != null && type !== "education")) {
         return NextResponse.json({ error: "Bu şart düzeltilemiyor." }, { status: 422 })
       }
-      const profile = (analysis!.resumeVersion?.profile ?? null) as ResumeProfile | null
-      if (!profile) return NextResponse.json({ error: "Bu analizin CV'si bulunamadı." }, { status: 409 })
+      const stored = (analysis!.resumeVersion?.profile ?? null) as ResumeProfile | null
+      if (!stored) return NextResponse.json({ error: "Bu analizin CV'si bulunamadı." }, { status: 409 })
+      // Analize katılan olgular (DOG-116) yeniden hesapta da kanıt.
+      const profile = analysisProfile(stored, result)
 
       const corrections = mergeCorrection(result.corrections, patch.requirementIndex, patch)
-      const fresh = await scoreProfile({ profile, posting: correctPosting(posting, corrections) }, cachedEmbedding())
+      const fresh = markFactEvidence(
+        await scoreProfile({ profile, posting: correctPosting(posting, corrections) }, cachedEmbedding()),
+        result.facts ?? [],
+      )
       updated = {
         ...result,
         requirements: fresh.requirements,

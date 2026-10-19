@@ -6,6 +6,7 @@ import type { ResumeProfile } from "../schemas/resume.js"
 import { DEFAULT_SCORING_CONFIG, SCORING_REVISION, type ScoringConfig } from "./config.js"
 import { experienceMonths, requiredYears } from "./duration.js"
 import type { Evidence } from "./evidence.js"
+import type { RememberedFact } from "../adapt/facts.js"
 import { matchCondition } from "./conditions.js"
 import { checkLanguages, type LanguageCheck } from "./languages.js"
 import type { CorrectedRequirement, ExclusionMark, RequirementCorrection, RequirementReport } from "./exclusions.js"
@@ -104,6 +105,12 @@ export interface ScoreResult {
    * değiştirmiyor; ekranda "Şartlar" kutusunda. Bu alandan önceki analizlerde yok.
    */
   languageChecks?: LanguageCheck[]
+  /**
+   * Analize kanıt olarak katılan, kullanıcının daha önce anlattığı deneyimler
+   * (DOG-116). Analizden sonraki adımlar profili bunlarla kuruyor
+   * (adapt/facts.ts analysisProfile).
+   */
+  facts?: RememberedFact[]
   /**
    * Kullanıcının "ilanda yok, yanlış okunmuş" diye işaretlediği gereksinimlerin
    * `requirements` içindeki sırası (DOG-90). Analizin kendi skoru değişmiyor;

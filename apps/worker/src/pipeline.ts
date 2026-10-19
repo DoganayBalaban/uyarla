@@ -7,10 +7,12 @@ import {
   conceptTexts,
   extractJobPosting,
   extractResumeProfile,
+  markFactEvidence,
   profileExclusions,
   resumeParserKey,
   score,
   weightedScore,
+  withFacts,
 } from "@uyarla/core"
 import type { FormatReport, JobPostingData, ResumeProfile, ScoreResult } from "@uyarla/core"
 import type { AnalysisStore, PipelineDeps, PipelineInput } from "./types.js"
@@ -54,8 +56,16 @@ export async function runAnalysis(
       await deps.store.saveJobPostingData(input.jobPostingId, extracted.data)
       return extracted
     }
-    const [resume, posting] = await Promise.all([readResume(), readPosting()])
-    const profile = { data: resume.profile, tokens: resume.tokens }
+    const [resume, posting, facts] = await Promise.all([
+      readResume(),
+      readPosting(),
+      deps.store.getRememberedFacts(input.userId),
+    ])
+    // Kullanıcının daha önce anlattığı deneyimler (DOG-116) anlatıldığı işin
+    // maddelerine ekleniyor; sonuç hangilerinin katıldığını taşıyor ki uyarlama
+    // aynı profille kurulsun.
+    const withRemembered = withFacts(resume.profile, facts)
+    const profile = { data: withRemembered.profile, tokens: resume.tokens }
 
     deps.onProgress?.("comparing")
     const evidence = collectEvidence(profile.data)
@@ -66,13 +76,16 @@ export async function runAnalysis(
     // dilimlemeyle eşleşmek zorunda.
     const vectors = await deps.embedding.embed([...evidenceTexts, ...conceptTerms])
 
-    const result = score({
-      profile: profile.data,
-      posting: posting.data,
-      evidence,
-      evidenceVectors: vectors.slice(0, evidenceTexts.length),
-      conceptVectors: vectors.slice(evidenceTexts.length),
-    })
+    const result = markFactEvidence(
+      score({
+        profile: profile.data,
+        posting: posting.data,
+        evidence,
+        evidenceVectors: vectors.slice(0, evidenceTexts.length),
+        conceptVectors: vectors.slice(evidenceTexts.length),
+      }),
+      withRemembered.applied,
+    )
 
     const marked = await applyProfileExclusions(deps.store, input.userId, posting.data, result)
 

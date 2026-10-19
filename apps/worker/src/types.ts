@@ -4,6 +4,7 @@ import type {
   JobPostingData,
   LlmProvider,
   ResumeProfile,
+  RememberedFact,
   ScoreResult,
 } from "@uyarla/core"
 
@@ -44,6 +45,8 @@ export interface AnalysisStore {
   failAnalysis(analysisId: string, errorClass: string): Promise<void>
   /** Kullanıcının "tüm ilanlarda hariç tut" listesi, conceptKey biçiminde (DOG-90). */
   getExcludedConceptKeys(userId: string): Promise<string[]>
+  /** Kullanıcının daha önce anlattığı ve kabul ettiği deneyimler (DOG-116). */
+  getRememberedFacts(userId: string): Promise<RememberedFact[]>
 }
 
 /** Arayüzdeki ilerleme metinleri bu aşamalara karşılık geliyor (spec §8). */

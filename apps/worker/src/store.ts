@@ -1,4 +1,5 @@
-import { PermanentError, extractText, fileStoreFromEnv } from "@uyarla/core"
+import { PermanentError, analysisProfile, extractText, factsFromAdaptations, fileStoreFromEnv } from "@uyarla/core"
+import type { Requirement, ResumeProfile } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import type { AnalysisStore } from "./types.js"
 
@@ -107,6 +108,34 @@ export const prismaStore: AnalysisStore = {
   async getExcludedConceptKeys(userId) {
     const rows = await prisma.excludedConcept.findMany({ where: { userId }, select: { key: true } })
     return rows.map((r) => r.key)
+  },
+
+  /**
+   * Olgular kullanıcının uyarlamalarındaki kabul edilmiş katkılardan
+   * türetiliyor (DOG-116, core adapt/facts.ts). Web'deki Hesabım listesi aynı
+   * sorguyu kullanıyor (apps/web server/facts.ts).
+   */
+  async getRememberedFacts(userId) {
+    const rows = await prisma.adaptation.findMany({
+      where: { analysis: { userId }, status: { in: ["draft", "ready"] } },
+      select: {
+        id: true,
+        createdAt: true,
+        draft: true,
+        analysis: { select: { result: true, resumeVersion: { select: { profile: true } }, jobPosting: { select: { requirements: true } } } },
+      },
+    })
+    return factsFromAdaptations(
+      rows.map((row) => ({
+        adaptationId: row.id,
+        createdAt: row.createdAt,
+        draft: row.draft,
+        profile: row.analysis.resumeVersion
+          ? analysisProfile(row.analysis.resumeVersion.profile as unknown as ResumeProfile, row.analysis.result)
+          : null,
+        requirements: (row.analysis.jobPosting.requirements ?? []) as unknown as Requirement[],
+      })),
+    )
   },
 
   async failAnalysis(analysisId, errorClass) {

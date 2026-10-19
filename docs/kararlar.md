@@ -2944,3 +2944,58 @@ genişletildi.
 **Bilinen sınır:** Profilde iletişim satırı tutulmuyor; şehir yalnızca diğer
 bölümlerde ya da şirket adının yanında yazıyorsa bulunuyor. Diğer durumlarda
 ikamet şartı "kontrol et"e düşüyor; bu güvenli yön.
+
+## K-75 · Olgu hafızası: kabul edilen katkılar sonraki analizlerde kanıt
+
+**Tarih:** 19 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-116
+
+**Bağlam:** "AI ile yaz"da (DOG-94) kullanıcı CV'sine yazmadığı bir deneyimi
+anlatıyor ve maddeye çevriliyor. Anlatılan yalnızca o uyarlamada kalıyordu:
+sonraki ilanda aynı gereksinim yine eksik çıkıyor, kullanıcı aynı şeyi yeniden
+anlatmak zorunda kalıyordu. ai-job-search'ün en çok vurguladığı kural da bu:
+kullanıcının verdiği olgu kaydedilmezse sonraki oturumda dayanaksız sayılıp
+siliniyor (DOG-113).
+
+**Karar:**
+- **Ayrı tablo yok.** Olgular kullanıcının uyarlamalarındaki kabul edilmiş
+  katkılardan türetiliyor (`core adapt/facts.ts`).
+  - Katkı uyarlamada reddedilir ya da uyarlama silinirse olgu da düşüyor; iki
+    kayıt arasında eşitleme gerekmiyor.
+  - Hesap silindiğinde uyarlamalarla birlikte gidiyor.
+  - Veritabanı göçü gerekmedi.
+- **Olgu anlatıldığı işe bağlı.** Analizde önce şirket ve unvanı aynı olan işin
+  maddelerinin sonuna ekleniyor; o iş yoksa yalnız şirketi aynı olanınkine.
+  sourceRef kullanıcının cevabı; kabul edilmiş katkı da belgeye böyle giriyordu.
+  - CV'de o şirket yoksa olgu eklenmiyor: başka bir işin altına yazmak adayın
+    anlatmadığı bir şey olurdu.
+  - CV'de aynı madde zaten varsa da eklenmiyor; kullanıcı uyarlanmış CV'yi
+    yeniden yüklemiş olabilir.
+- **Anlık görüntü.** Analize katılan olgular sonuca yazılıyor (`result.facts`).
+  Uyarlama, düzeltilmiş skor ve indirme profili bunlarla yeniden kuruyor
+  (`analysisProfile`); böylece madde kimlikleri ve skor analizdekiyle aynı
+  kalıyor.
+- **Ekran.**
+  - Olgudan gelen kanıt "Daha önce anlattığın deneyimde" diye gösteriliyor ve
+    yüklenen CV'de olmadığı söyleniyor.
+  - Skor kartında kaç olgunun katıldığı yazıyor.
+  - Hesabım'da "Anlattığın deneyimler" listesi var; "Unut" katkıya `forgotten`
+    yazıyor. O uyarlamanın kendi belgesi değişmiyor.
+  - Yeni route yok: `GET/DELETE /api/profile` kullanılıyor (Vercel fonksiyon
+    sınırı).
+- **Aydınlatma metni.** Anlatılan deneyimlerin sonraki analizlerde
+  kullanıldığı eklendi.
+
+**Ölçüm (`pnpm eval:facts`, 5 vaka):**
+- Her vakada anlatılan cevap gerçek "AI ile yaz" hattından maddeye çevrildi.
+  Aynı CV'nin bütün çiftleri olguyla ve olgusuz puanlandı.
+- **Hedef:** 4/5 vakada gereksinim karşılandı (FAISS, LLM gözlemlenebilirliği,
+  yapay zekâ araçları, Docker).
+  - "İş hukuku" kıdem/ihbar tazminatı anlatımıyla eşleşmedi; eşik sıkı, bu
+    dürüst yön.
+  - Docker vakasında Kubernetes anlatılmadığı için eksik kaldı.
+- **Yayılma ve uydurma:** öteki ilanlara olgu yüzünden yeni eşleşme
+  yayılmadı; uydurma sayısı değişmedi (0).
+- Skor artışları +2 ile +7 arasında.
+- FAISS maddesi doğrulamada işaretlendi (karar "pending"). İşaretli katkı,
+  kullanıcı kabul etmeden olgu olmuyor; ölçümde yine de eklendi ki etkisi
+  görülsün.

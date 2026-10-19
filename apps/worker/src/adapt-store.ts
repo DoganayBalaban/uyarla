@@ -1,4 +1,4 @@
-import { AdaptationDraftSchema, PermanentError, hasPendingDecisions } from "@uyarla/core"
+import { AdaptationDraftSchema, PermanentError, analysisProfile, hasPendingDecisions } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 import type { AdaptationStore } from "./adapt-types.js"
 
@@ -33,7 +33,8 @@ export const prismaAdaptationStore: AdaptationStore = {
     }
 
     return {
-      profile: analysis.resumeVersion.profile as never,
+      // Analize katılan olgularla (DOG-116): madde kimlikleri analizdekiyle aynı kalsın.
+      profile: analysisProfile(analysis.resumeVersion.profile as never, analysis.result),
       posting: {
         position: analysis.jobPosting.position,
         company: analysis.jobPosting.company,

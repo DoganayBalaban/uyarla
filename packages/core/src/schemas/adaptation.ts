@@ -83,6 +83,11 @@ export const ContributionSchema = z.object({
   alignments: z.array(TermAlignmentSchema).optional(),
   /** Uyarısız ve uyumsuzsa "accepted"; değilse "pending", indirmeyi bloklar (K-26). */
   decision: z.enum(["accepted", "rejected", "pending"]),
+  /**
+   * Kullanıcı Hesabım'dan "unut" dedi (DOG-116): sonraki analizlerde olgu
+   * sayılmıyor. Bu uyarlamanın kendi belgesi değişmiyor.
+   */
+  forgotten: z.boolean().optional(),
 })
 
 export const AdaptationDraftSchema = z.object({

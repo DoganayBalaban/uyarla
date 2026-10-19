@@ -39,7 +39,8 @@ export interface RequirementResult {
   status: "matched" | "missing"
   confidence: number
   method: string | null
-  evidence: { text: string; kind: string } | null
+  /** `fact`: kanıt daha önce anlatılan bir deneyimden (DOG-116), yüklenen CV'de yok. */
+  evidence: { text: string; kind: string; fact?: boolean } | null
   /** Eksik kavramlar; eski kayıtlarda yok (DOG-90 sayımı için). */
   missingConcepts?: string[]
 }
@@ -64,6 +65,8 @@ export interface ScoreResultView {
   scoringRevision?: number
   /** İlanın istediği dil seviyesi ile CV'deki (DOG-115); eski analizlerde yok. */
   languageChecks?: LanguageCheck[]
+  /** Analize katılan, daha önce anlattığın deneyimler (DOG-116). */
+  facts?: Array<{ id: string }>
 }
 
 const TITLE_LINE: Record<TitleMatch["level"], string> = {
@@ -172,6 +175,12 @@ export function ScoreResult({
               <p className="mt-1 text-sm text-muted">
                 {TITLE_LINE[result.titleMatch.level]} ({result.titleMatch.position}); unvan skora bir zorunlu gereksinim
                 gibi katılıyor.
+              </p>
+            )}
+            {(result.facts?.length ?? 0) > 0 && (
+              <p className="mt-1 text-sm text-muted">
+                Daha önce anlattığın {result.facts!.length} deneyim bu analizde kanıt sayıldı; Hesabım&apos;dan
+                görebilir, unutabilirsin.
               </p>
             )}
             {(exclusion.excludedCount > 0 || correctedCount > 0) && (
@@ -308,7 +317,10 @@ export function ScoreResult({
                 <span className="min-w-0">
                   {item.requirement.text}
                   {item.status === "matched" && item.evidence && (
-                    <span className="text-muted"> · CV&apos;nde: {item.evidence.text}</span>
+                    <span className="text-muted">
+                      {" "}
+                      · {item.evidence.fact ? "Anlattığın deneyimde" : "CV'nde"}: {item.evidence.text}
+                    </span>
                   )}
                 </span>
               </li>
@@ -452,7 +464,16 @@ function RequirementRow({
       </button>
       {item.evidence && open && (
         <p className="mt-2 ml-8 rounded-button border-l-2 border-brand-green/60 bg-background px-3 py-2 text-sm text-muted">
-          <span className="font-semibold text-foreground">CV&apos;nde bunu karşılayan:</span> {item.evidence.text}
+          {item.evidence.fact ? (
+            <>
+              <span className="font-semibold text-foreground">Daha önce anlattığın deneyimde:</span> {item.evidence.text}{" "}
+              (Yüklediğin CV&apos;de yok; uyarladığın CV&apos;ye eklenir.)
+            </>
+          ) : (
+            <>
+              <span className="font-semibold text-foreground">CV&apos;nde bunu karşılayan:</span> {item.evidence.text}
+            </>
+          )}
         </p>
       )}
       {correction && (

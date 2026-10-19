@@ -39,7 +39,8 @@ export function ContributionsSection({
       <h2 className="m-0 text-lg">Eksik kalan zorunlular</h2>
       <p className="mt-1 text-sm text-muted">
         Bu gereksinimler için CV&apos;nde kanıt bulamadık, o yüzden yazmadık. Gerçekten yaptığın bir şeyse anlat; senin
-        anlattığından bir madde yazalım. Anlatmadığın hiçbir şeyi eklemeyiz.
+        anlattığından bir madde yazalım. Anlatmadığın hiçbir şeyi eklemeyiz. Kabul ettiğin madde sonraki
+        analizlerinde de kanıt sayılır; Hesabım&apos;dan unutabilirsin.
       </p>
       <ul className="mt-4 divide-y divide-border">
         {missing.map((r) => (

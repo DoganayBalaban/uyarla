@@ -33,6 +33,7 @@ function fakeStore(overrides: Partial<AnalysisStore> = {}): AnalysisStore {
     completeAnalysis: async () => {},
     failAnalysis: async () => {},
     getExcludedConceptKeys: async () => [],
+    getRememberedFacts: async () => [],
     ...overrides,
   }
 }
@@ -305,5 +306,42 @@ describe("runAnalysis · kalıcı hariç tutma (DOG-90)", () => {
     const arg = completeAnalysis.mock.calls[0]![0]
     expect(arg.result.excluded).toBeUndefined()
     expect(arg.score).toBe(arg.result.score)
+  })
+})
+
+describe("runAnalysis · olgu hafızası (DOG-116)", () => {
+  const llm = () =>
+    fakeLlm({
+      job_posting_draft: { ...POSTING_DRAFT, requirements: [{ text: "Docker deneyimi", type: "skill", importance: "must" }] },
+      requirement_keywords: { items: [{ text: "Docker deneyimi", concepts: [{ term: "Docker", synonyms: [] }] }] },
+    })
+  const fact = {
+    id: "ad-1:c-1",
+    company: "Acme",
+    title: "Frontend Geliştirici",
+    text: "Uygulamayı Docker Compose ile ayağa kaldırdım.",
+    answer: "docker compose ile ayağa kaldırdım",
+    requirement: "Docker deneyimi",
+    createdAt: "2026-10-01T00:00:00.000Z",
+  }
+
+  it("counts a remembered fact as evidence and records it on the result", async () => {
+    const completeAnalysis = vi.fn()
+    const getRememberedFacts = vi.fn(async () => [fact])
+    await runAnalysis(fakeDeps({ llm: llm(), store: fakeStore({ completeAnalysis, getRememberedFacts }) }), INPUT)
+    expect(getRememberedFacts).toHaveBeenCalledWith("u-1")
+    const { result } = completeAnalysis.mock.calls[0]![0]
+    expect(result.requirements[0].status).toBe("matched")
+    expect(result.requirements[0].evidence).toMatchObject({ sourceRef: fact.answer, fact: true })
+    expect(result.facts).toEqual([fact])
+  })
+
+  it("leaves out a fact whose job is not on this CV", async () => {
+    const completeAnalysis = vi.fn()
+    const store = fakeStore({ completeAnalysis, getRememberedFacts: async () => [{ ...fact, company: "Başka Şirket" }] })
+    await runAnalysis(fakeDeps({ llm: llm(), store }), INPUT)
+    const { result } = completeAnalysis.mock.calls[0]![0]
+    expect(result.requirements[0].status).toBe("missing")
+    expect(result.facts).toBeUndefined()
   })
 })
