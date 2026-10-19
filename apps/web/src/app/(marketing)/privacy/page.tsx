@@ -108,7 +108,10 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Vercel (ABD), web uygulaması:</strong> siteyi ve sunucu tarafındaki istekleri
-            çalıştırır.
+            çalıştırır. Ayrıca çerez kullanmadan sayfa görüntülemelerini sayar (Web Analytics): hangi
+            sayfanın açıldığı, yönlendiren site, ülke, cihaz ve tarayıcı türü. Sorgu parametreleri ve
+            kişisel veri gönderilmez; ziyaretçi günlük olarak değişen, geri çevrilemeyen bir özetle
+            sayılır.
           </li>
           <li>
             <strong>Railway (AB, Hollanda), arka plan işleri:</strong> analiz ve uyarlama işlerini
@@ -224,7 +227,8 @@ export default function PrivacyPage() {
         <h2>9. Çerezler</h2>
         <p>
           Yalnızca oturumunu açık tutmak için zorunlu bir oturum çerezi kullanıyoruz. Reklam ya da
-          izleme çerezi kullanmıyoruz.
+          izleme çerezi kullanmıyoruz; sayfa görüntüleme sayımı (Vercel Web Analytics) çerezsiz
+          çalışıyor.
         </p>
       </section>
     </LegalPage>

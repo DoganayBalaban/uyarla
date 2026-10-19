@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { AnalysisNotice } from "@/features/analysis/components/AnalysisNotice"
 import { Navbar } from "@/components/layout/Navbar"
 import { QueryProvider } from "@/components/providers/QueryProvider"
+import { WebAnalytics } from "@/components/providers/WebAnalytics"
 import { siteUrl } from "@/lib/site"
 
 const TITLE = "uyarla · Her ilana, doğru CV."
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Süren analizi her sayfada izleyen sağ alt bildirimi. */}
           <AnalysisNotice />
         </QueryProvider>
+        <WebAnalytics />
       </body>
     </html>
   )
