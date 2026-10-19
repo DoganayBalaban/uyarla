@@ -45,7 +45,12 @@ async function makeApplication(userId: string, stage: "applied" | "interview", d
 
 function fakeClient() {
   return {
-    emails: { send: vi.fn(async (_args: { to: string; text?: string }) => ({ data: {}, error: null })) },
+    emails: {
+      send: vi.fn(async (_args: { to: string; text?: string; replyTo?: string; headers?: Record<string, string> }) => ({
+        data: {},
+        error: null,
+      })),
+    },
   }
 }
 
@@ -63,6 +68,8 @@ describe("application reminders · real database (DOG-98)", () => {
     expect(sent.to).toBe(user.email)
     expect(sent.text).toContain("Muhasebe Uzmanı · Atlas")
     expect(sent.text).toContain("Finans Uzmanı · Atlas")
+    // Yanıtlar destek adresine (DOG-127).
+    expect(sent.replyTo).toBe("iletisim@uyarla.com.tr")
 
     const rows = await prisma.analysis.findMany({ where: { id: { in: [a.id, b.id] } }, select: { reminderSentAt: true } })
     expect(rows.every((r) => r.reminderSentAt?.getTime() === NOW.getTime())).toBe(true)

@@ -6,8 +6,9 @@ import { sendApplicationReminders } from "../src/server/applicationReminders"
  * `src/server/applicationReminders.ts`'te test edilebilir duruyor.
  *
  * Üretimde anonim temizlikle aynı Railway cron servisi günde bir çalıştırıyor
- * (`cleanup:cron`); ayrı servis gerekmiyor. Servisin ortamında RESEND_API_KEY,
- * EMAIL_FROM ve BETTER_AUTH_URL (e-postadaki bağlantılar) tanımlı olmalı.
+ * (`cleanup:cron`, 07:00 UTC = 10:00 TR); ayrı servis gerekmiyor. Servisin
+ * ortamında RESEND_API_KEY, EMAIL_FROM, BETTER_AUTH_URL (e-postadaki
+ * bağlantılar) ve EMAIL_LINK_SECRET (tek tıkla çıkış, DOG-127) tanımlı olmalı.
  *
  *   pnpm --filter @uyarla/web reminders:applications          # dener, göndermez
  *   pnpm --filter @uyarla/web reminders:applications --send   # gönderir

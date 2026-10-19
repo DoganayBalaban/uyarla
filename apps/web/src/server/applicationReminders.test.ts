@@ -15,6 +15,14 @@ describe("reminderEmail (DOG-98)", () => {
     expect(text).toContain("/applications")
   })
 
+  it("links the signed one-click page when there is one (DOG-127)", () => {
+    const { html, text } = reminderEmail(items, "https://uyarla.com.tr/e-posta/cik?t=abc")
+    expect(html).toContain("tek tıkla kapatabilirsin")
+    expect(html).toContain("/e-posta/cik?t=abc")
+    expect(html).toContain("yanıtlarsan bize ulaşır")
+    expect(text).toContain("/e-posta/cik?t=abc")
+  })
+
   it("counts plural applications", () => {
     expect(reminderEmail([...items, ...items]).html).toContain("2 başvurun")
   })
