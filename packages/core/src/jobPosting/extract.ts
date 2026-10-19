@@ -55,11 +55,23 @@ function decodeEntities(text: string): string {
   })
 }
 
+/**
+ * `hidden` özniteliği, `aria-hidden="true"` ya da satır içi `display:none` /
+ * `visibility:hidden` taşıyan öğe ve içeriği. İç içe aynı etiket olursa en
+ * içteki kapanışa kadar siliniyor; kalan parça görünür metin olarak kalır,
+ * bu da güvenli yöndür.
+ */
+const HIDDEN_ELEMENT =
+  /<(\w+)\b[^>]*?(?:\shidden(?=[\s=>])|aria-hidden=["']true["']|style=["'][^"']*(?:display\s*:\s*none|visibility\s*:\s*hidden)[^"']*["'])[^>]*>[\s\S]*?<\/\1>/gi
+
 /** HTML'i okunur düz metne çevirir: paragraflar ve maddeler satır olarak. */
 export function htmlToText(html: string): string {
   const text = html
     .replace(/<(script|style|noscript|svg|template)\b[\s\S]*?<\/\1>/gi, " ")
     .replace(/<!--[\s\S]*?-->/g, " ")
+    // Görünmez öğeler (DOG-121): ekranda okunmayan metin ilanın parçası
+    // değil; içine yapay zekaya yönelik talimat gizlenebiliyor.
+    .replace(HIDDEN_ELEMENT, " ")
     .replace(/<li\b[^>]*>/gi, "\n- ")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/(p|div|ul|ol|h[1-6]|section|article|tr|header|footer)>/gi, "\n")
