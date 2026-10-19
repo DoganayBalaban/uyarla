@@ -2999,3 +2999,56 @@ siliniyor (DOG-113).
 - FAISS maddesi doğrulamada işaretlendi (karar "pending"). İşaretli katkı,
   kullanıcı kabul etmeden olgu olmuyor; ölçümde yine de eklendi ki etkisi
   görülsün.
+
+## K-76 · Ön yazıda eksik gereksinime dürüst köprü
+
+**Tarih:** 19 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-122
+
+**Bağlam:** Ön yazı kuralı "ilanın istediği bir şey CV'de yoksa ondan hiç
+bahsetme" idi. ai-job-search tersini öneriyor: her gereksinime değin,
+karşılanmıyorsa dürüst bir köprü kur; sessizce atlanan gereksinim mülakatta
+saklama gibi okunuyor (DOG-113). Yeni eval (`pnpm eval:cover-rules`, 20 çift,
+amaçsız hâl) iki kuralı karşılaştırdı. İşaretli her cümle elle okundu.
+
+**Bulgu: model "hiç bahsetme" kuralına uymuyordu.** Eksik gereksinimi
+sahipleniyordu:
+- "NoSQL veri tabanları ile çalışma deneyimim bulunmakta"
+- "MS Excel programını etkin kullanabiliyorum" (İK CV'si)
+
+Bunun yanında yanlış alarmlar vardı: "Muhasebe Uzmanı pozisyonuna
+başvuruyorum" cümlesindeki "muhasebe" CV'de yok diye işaretleniyordu.
+
+| | İşaretli paragraf | Somut beceri uydurması | Klişe |
+|---|---|---|---|
+| Hiç bahsetme (eski) | 20/60 | 4 | 1 |
+| Gevşek köprü | 15/60 | 2 | 5 ("öğrenmeye açığım") |
+| **Sıkı köprü (seçilen)** | **13/60** | **1 (+3 sınırda)** | **1** |
+
+Bir koşu, 20 yazı; rastgelelik payı var. Yine de yön iki köprüde de aynı.
+
+**Karar:**
+- **İstem (`MISSING_REQUIREMENT_RULE`):** eksik gereksinimi sahiplenme. En
+  önemli bir iki eksik için en fazla tek cümleyle dürüst köprü kur ("X ile
+  doğrudan çalışmadım; Y'de … yaptım"). Eksikleri sıralama, kalıp cümle kurma.
+  Ayrıca açık bir klişe yasağı var.
+- **Doğrulama:**
+  - Olumsuzlanan yan cümle ilan terimi kontrolünden çıkarılıyor
+    (`verify/negation.ts`). Dürüst köprü "CV'nde yok" uyarısı almıyor.
+  - Bağlaçtan sonraki iddia ("…kullanmadım ama Kubernetes ile çalıştım")
+    yine işaretleniyor. "Doğrudan" olumsuzluk sayılmıyor. "CV'de yer
+    almamakla birlikte… yetkinliğime işaret ediyor" gibi örtülü iddia da
+    işaretleniyor.
+  - İlandaki unvanın kendisi iddia sayılmıyor.
+- **Amaç hâlleri (`eval:cover`):** işaretli paragraf düştü.
+
+| Hâl | Önce | Sonra |
+|---|---|---|
+| Amaçsız | 21/60 | 13/60 |
+| Kariyer değişikliği | 21/60 | 16/60 |
+| İlk iş | 17/60 | 15/60 |
+| Terfi | 21/60 | 13/60 |
+
+**Açık kalanlar:**
+- Yazılar istemin istediği 150–250 kelimenin altında (ortalama ~138). İlk iş
+  hâlinde 8 yazı 120 kelimenin de altında.
+- DOG-122'deki başlık formülü ve "mülakatta geri adım testi" uygulanmadı.
