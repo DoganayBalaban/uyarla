@@ -5,7 +5,8 @@ import { siteUrl } from "@/lib/site"
 import { isAdmin } from "@/server/admin"
 import { authErrorResponse, ensureRegistered, getSession } from "@/server/authz"
 import { handleCheckout, handleStatus, handleWebhook } from "@/server/billing/handlers"
-import { polarProviderFromEnv } from "@/server/billing/polar"
+import * as Sentry from "@sentry/nextjs"
+import { BillingNotConfiguredError, polarProviderFromEnv } from "@/server/billing/polar"
 
 export const runtime = "nodejs"
 
@@ -35,6 +36,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
         userId: session.user.id,
         body: await request.json().catch(() => ({})),
         baseUrl: siteUrl(),
+        now: new Date(),
       })
       return NextResponse.json(reply.json, { status: reply.status })
     }
@@ -42,7 +44,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   } catch (error) {
     const authResponse = authErrorResponse(error)
     if (authResponse) return authResponse
+    // Ödeme ayarlanmamış (DOG-80): 503 ve Sentry. Bildirim ucunda Polar 2xx
+    // almadığı için yeniden deniyor; ayar düzelince olay kaybolmuyor.
+    if (error instanceof BillingNotConfiguredError) {
+      Sentry.captureException(error, { level: "error", tags: { billing: action } })
+      console.error("[api/billing] ödeme ayarlanmamış", action)
+      return action === "webhook"
+        ? NextResponse.json({ error: "billing_not_configured" }, { status: 503 })
+        : NextResponse.json(
+            { error: "Ödeme şu an kullanılamıyor. Birazdan tekrar dener misin?", code: "billing_not_configured" },
+            { status: 503 },
+          )
+    }
     console.error("[api/billing]", action, error)
+    // Bildirim ucunu Polar çağırıyor; ona kullanıcı metni anlamsız.
+    if (action === "webhook") return NextResponse.json({ error: "internal_error" }, { status: 500 })
     return NextResponse.json({ error: "Ödeme sayfasını açamadık. Birazdan tekrar dener misin?", code: "unknown" }, { status: 500 })
   }
 }

@@ -9,7 +9,14 @@ import { WebhookSignatureError, type BillingProvider } from "@/server/billing/pr
 type Db = typeof prisma
 type Reply = { status: number; json: unknown }
 
-/** Ödeme oturumu: paket listede olmalı; teşekkür sayfası `donus`u taşıyor. */
+/**
+ * Ödeme oturumu: paket listede olmalı; teşekkür sayfası `donus`u taşıyor.
+ *
+ * `odeme`: oturumun açıldığı an (DOG-80). Teşekkür sayfası yalnızca bundan
+ * sonra açılan dönemi yeni ödeme sayıyor; kullanıcının önceden aktif bir
+ * dönemi varsa eski bitiş tarihini "erişimin açıldı" diye göstermiyor.
+ * Sunucu saati: durum ucunun döndüğü dönem zamanıyla aynı saat.
+ */
 export async function handleCheckout(input: {
   db: Db
   provider: BillingProvider
@@ -17,18 +24,22 @@ export async function handleCheckout(input: {
   userId: string
   body: unknown
   baseUrl: string
+  now?: Date
 }): Promise<Reply> {
   const body = (input.body ?? {}) as { plan?: unknown; returnTo?: unknown }
   const offer = isPlanKey(body.plan) ? input.plans.find((p) => p.key === body.plan) : undefined
   if (!offer) return { status: 400, json: { error: "Bu paket şu an sunulmuyor.", code: "unknown_plan" } }
   const user = await input.db.user.findUniqueOrThrow({ where: { id: input.userId }, select: { email: true } })
-  const back = typeof body.returnTo === "string" ? plansPath(body.returnTo).replace(/^\/plans/, "") : ""
+  const query = new URLSearchParams(
+    typeof body.returnTo === "string" ? plansPath(body.returnTo).replace(/^\/plans\??/, "") : "",
+  )
+  query.set("odeme", String((input.now ?? new Date()).getTime()))
   const { url } = await input.provider.createCheckout({
     userId: input.userId,
     email: user.email,
     productId: offer.productId,
     plan: offer.key,
-    successUrl: `${input.baseUrl}/plans/tesekkurler${back}`,
+    successUrl: `${input.baseUrl}/plans/tesekkurler?${query}`,
   })
   return { status: 200, json: { url } }
 }
@@ -68,15 +79,26 @@ export async function handleWebhook(input: {
 
 export async function handleStatus(input: { db: Db; userId: string; now: Date; unlimited?: boolean }): Promise<{
   passEndsAt: string | null
+  /** En son açılan aktif dönemin oluşturulma zamanı; teşekkür sayfası için (DOG-80). */
+  lastPassAt: string | null
   freeUsed: boolean
   freeLeft: number
   usedLast24h: number
   dailyCap: number
   unlimited: boolean
 }> {
-  const snap = accessSnapshot({ ...(await loadAccess(input.db, input.userId, input.now)), now: input.now })
+  const [access, last] = await Promise.all([
+    loadAccess(input.db, input.userId, input.now),
+    input.db.accessPass.findFirst({
+      where: { userId: input.userId, status: "active" },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    }),
+  ])
+  const snap = accessSnapshot({ ...access, now: input.now })
   return {
     passEndsAt: snap.passEndsAt?.toISOString() ?? null,
+    lastPassAt: last?.createdAt.toISOString() ?? null,
     freeUsed: snap.freeLeft === 0,
     freeLeft: snap.freeLeft,
     usedLast24h: snap.usedLast24h,

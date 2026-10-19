@@ -250,20 +250,28 @@ function BoardCardView({
     values: { note: card.noteText ?? "" },
   })
   const [adapting, setAdapting] = useState(false)
+  const [adaptError, setAdaptError] = useState<string | null>(null)
   const router = useRouter()
   const labelText = card.score === null ? null : scoreBadge(card.score)
 
   async function adapt() {
     setAdapting(true)
+    setAdaptError(null)
     try {
       const { adaptationId } = await startAdaptation(card.analysisId)
       router.push(`/adapt/${adaptationId}`)
     } catch (error) {
+      const body = await apiErrorBody(error)
       // Ücretsiz hak bitti (DOG-34): paket ekranına, dönüşte uyarlama başlıyor.
-      if ((await apiErrorBody(error)).code === "payment_required") {
+      if (body.code === "payment_required") {
         router.push(plansPath(`/analyze?uyarla=${encodeURIComponent(card.analysisId)}`))
         return
       }
+      // Günlük sınır ve diğer hatalar kartta (DOG-80): önceden yutuluyordu,
+      // düğme sessizce eski hâline dönüyordu.
+      setAdaptError(
+        body.code === "daily_cap" && body.error ? body.error : "Uyarlamayı başlatamadık. Birazdan tekrar dener misin?",
+      )
       setAdapting(false)
     }
   }
@@ -402,6 +410,11 @@ function BoardCardView({
           </button>
         )}
       </div>
+      {adaptError && (
+        <p role="alert" className="mt-2 text-sm text-brand-red dark:text-[#f87171]">
+          {adaptError}
+        </p>
+      )}
     </article>
   )
 }

@@ -96,3 +96,11 @@ describe("polar provider", () => {
     await expect(createPolarProvider({ webhookSecret: "s" }, d).parseWebhook("{}", {})).rejects.toBeInstanceOf(WebhookSignatureError)
   })
 })
+
+describe("polarProviderFromEnv", () => {
+  it("throws a distinct error when Polar is not configured (DOG-80)", async () => {
+    const { BillingNotConfiguredError, polarProviderFromEnv } = await import("@/server/billing/polar")
+    expect(() => polarProviderFromEnv({})).toThrow(BillingNotConfiguredError)
+    expect(() => polarProviderFromEnv({ POLAR_ACCESS_TOKEN: "x" })).toThrow(BillingNotConfiguredError)
+  })
+})
