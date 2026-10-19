@@ -22,8 +22,14 @@ export type AdaptDecision =
   | { allowed: false; reason: "payment_required" | "daily_cap" }
 
 /**
- * Uyarlama hakkı. Dönem varsa dönem kullanılıyor (ücretsiz hak saklı kalır);
- * yoksa ücretsiz hak. Günlük tavan yalnızca dönemde: ücretsiz hak zaten bir.
+ * Uyarlama hakkı. Dönem varsa dönem kullanılıyor; yoksa ücretsiz hak. Günlük
+ * tavan yalnızca dönemde: ücretsiz hak zaten bir.
+ *
+ * Ücretsiz hak ayrı bir sayaç değil, başarısız olmayan bütün uyarlamaların
+ * sayısı (`adaptationsUsed`); dönem içindekiler de giriyor. Ücretsiz hakkını
+ * kullanmadan paket alan kullanıcının dönemdeki ilk uyarlaması onu da
+ * harcıyor ve dönem bitince ücretsiz hak kalmıyor (DOG-80: eski yorum "saklı
+ * kalır" diyordu).
  */
 export function canAdapt(input: {
   adaptationsUsed: number

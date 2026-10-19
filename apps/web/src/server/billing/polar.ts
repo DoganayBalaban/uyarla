@@ -71,10 +71,22 @@ export function createPolarProvider(config: { webhookSecret: string }, deps: Pol
 }
 
 /** Gerçek SDK ile. `POLAR_SERVER` öntanımlı sandbox: üretime geçiş açık bir karar. */
+/**
+ * Polar ortam değişkenleri eksik (DOG-80). Ayrı sınıf: route bunu ödeme
+ * sayfasının genel hatasından ayırıp anlamlı bir yanıt ve Sentry kaydı
+ * üretiyor. Bildirim ucunda sessiz kalırsa para alınıp dönem açılmaz.
+ */
+export class BillingNotConfiguredError extends Error {
+  constructor() {
+    super("POLAR_ACCESS_TOKEN ve POLAR_WEBHOOK_SECRET gerekli")
+    this.name = "BillingNotConfiguredError"
+  }
+}
+
 export function polarProviderFromEnv(env: Record<string, string | undefined> = process.env): BillingProvider {
   const accessToken = env.POLAR_ACCESS_TOKEN
   const webhookSecret = env.POLAR_WEBHOOK_SECRET
-  if (!accessToken || !webhookSecret) throw new Error("POLAR_ACCESS_TOKEN ve POLAR_WEBHOOK_SECRET gerekli")
+  if (!accessToken || !webhookSecret) throw new BillingNotConfiguredError()
   const polar = createPolar({ accessToken, environment: env.POLAR_SERVER === "production" ? "production" : "sandbox" })
   return createPolarProvider(
     { webhookSecret },

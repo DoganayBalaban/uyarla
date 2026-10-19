@@ -35,13 +35,15 @@ describe("handleCheckout", () => {
       userId: u.id,
       body: { plan: "month", returnTo: "/analyze?uyarla=a1" },
       baseUrl: "https://uyarla.com.tr",
+      now: NOW,
     })
     expect(res).toEqual({ status: 200, json: { url: "https://sandbox.polar.sh/c/1" } })
     expect(p.createCheckout).toHaveBeenCalledWith(
       expect.objectContaining({
         productId: "prod_m",
         plan: "month",
-        successUrl: "https://uyarla.com.tr/plans/tesekkurler?donus=%2Fanalyze%3Fuyarla%3Da1",
+        // `odeme`: teşekkür sayfası bundan sonra açılan dönemi bekliyor (DOG-80).
+        successUrl: `https://uyarla.com.tr/plans/tesekkurler?donus=%2Fanalyze%3Fuyarla%3Da1&odeme=${NOW.getTime()}`,
       }),
     )
   })
@@ -91,6 +93,7 @@ describe("handleStatus", () => {
     const u = await makeUser()
     expect(await handleStatus({ db: prisma, userId: u.id, now: NOW })).toEqual({
       passEndsAt: null,
+      lastPassAt: null,
       freeUsed: false,
       freeLeft: 1,
       // Yöneticilere sınırsız hak (#121); test o PR'da güncellenmemişti.
@@ -101,6 +104,9 @@ describe("handleStatus", () => {
     await prisma.accessPass.create({
       data: { userId: u.id, plan: "week", providerOrderId: `s-${u.id}`, startsAt: NOW, endsAt: new Date(NOW.getTime() + 7 * 864e5) },
     })
-    expect((await handleStatus({ db: prisma, userId: u.id, now: NOW })).passEndsAt).toBe(new Date(NOW.getTime() + 7 * 864e5).toISOString())
+    const status = await handleStatus({ db: prisma, userId: u.id, now: NOW })
+    expect(status.passEndsAt).toBe(new Date(NOW.getTime() + 7 * 864e5).toISOString())
+    // Teşekkür sayfası yeni ödemeyi bununla tanıyor (DOG-80).
+    expect(status.lastPassAt).not.toBeNull()
   })
 })
