@@ -45,7 +45,11 @@ export interface UserDataExport {
   resumes: ExportedResume[]
   jobPostings: Record<string, unknown>[]
   analyses: Record<string, unknown>[]
-  /** Erişim dönemleri (DOG-34); sipariş kimliği sağlayıcının iç anahtarı, yazılmıyor. */
+  /**
+   * Erişim dönemleri (DOG-34). Polar sipariş numarası da var (DOG-78): iade ya
+   * da fatura talebinde kullanıcının elindeki tek referans. Erişim anahtarı
+   * değil; Polar'ın gönderdiği makbuzda da yazıyor.
+   */
   accessPasses: Record<string, unknown>[]
   /** "Tüm ilanlarda hariç tut" listesi (DOG-90). */
   excludedConcepts: Record<string, unknown>[]
@@ -116,7 +120,7 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
     }),
     db.accessPass.findMany({
       where: { userId },
-      select: { plan: true, startsAt: true, endsAt: true, status: true, createdAt: true },
+      select: { plan: true, startsAt: true, endsAt: true, status: true, providerOrderId: true, createdAt: true },
       orderBy: { createdAt: "asc" },
     }),
     db.excludedConcept.findMany({

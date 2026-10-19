@@ -199,6 +199,17 @@ export default function PrivacyPage() {
             Yasal saklama yükümlülüğü olan kayıtlar, o yükümlülük süresince saklanır ve sonra
             silinir ya da anonim hâle getirilir.
           </li>
+          <li>
+            Paket satın aldıysan: hesabını sildiğinde uyarla&apos;daki erişim dönemi kayıtların da
+            silinir. Ödemeyi alan ve faturayı kesen Polar ise satıcı sıfatıyla ödeme ve fatura
+            kaydını kendi yasal saklama yükümlülüğü süresince tutar; bu kayıt bizim silmemizle
+            silinmez. Ayrıntısı{" "}
+            <a href="https://polar.sh/legal/privacy-policy" target="_blank" rel="noreferrer">
+              Polar&apos;ın gizlilik politikasında
+            </a>
+            . İade ya da fatura için gereken sipariş numaran &quot;Verilerimi indir&quot; dosyasında
+            yer alır.
+          </li>
         </ul>
       </section>
 
