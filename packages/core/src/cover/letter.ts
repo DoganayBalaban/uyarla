@@ -132,8 +132,11 @@ export function resumeFacts(profile: ResumeProfile): string {
 }
 
 function postingSummary(posting: JobPostingData): string {
-  const required = posting.requirements.filter((r) => r.importance === "must").map((r) => r.text)
-  const preferred = posting.requirements.filter((r) => r.importance !== "must").map((r) => r.text)
+  // Şartlar (DOG-115) mektuba girmiyor: "ehliyetim var", "Ankara'da
+  // yaşıyorum" CV'de yazmıyorsa uydurmadır, yazıyorsa da mektubun konusu değil.
+  const qualifications = posting.requirements.filter((r) => r.type !== "condition")
+  const required = qualifications.filter((r) => r.importance === "must").map((r) => r.text)
+  const preferred = qualifications.filter((r) => r.importance !== "must").map((r) => r.text)
   return [
     `Pozisyon: ${posting.position}`,
     posting.company ? `Şirket: ${posting.company}` : null,

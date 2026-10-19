@@ -117,6 +117,27 @@ describe("applyExclusions · soft requirements (DOG-103)", () => {
   })
 })
 
+describe("applyExclusions · conditions (DOG-115)", () => {
+  const condition = (text: string, status: "matched" | "missing") => ({
+    ...req(text, status),
+    requirement: { text, importance: "must", type: "condition" },
+  })
+
+  it("lists conditions apart, never in rows or counts, even when nothing else is there", () => {
+    const result = {
+      score: 100,
+      requirements: [req("Excel", "matched"), condition("Ankara'da ikamet", "missing")],
+      missingKeywords: [],
+      scoringRevision: 2,
+    }
+    const v = applyExclusions(result)
+    expect(v.rows.map((r) => r.item.requirement.text)).toEqual(["Excel"])
+    expect(v.conditionRows).toEqual([{ item: result.requirements[1], index: 1 }])
+    expect(v.active).toHaveLength(1)
+    expect(applyExclusions({ ...result, requirements: [condition("Ehliyet", "missing")] }).rows).toEqual([])
+  })
+})
+
 describe("applyExclusions · corrections (DOG-90)", () => {
   it("recomputes the score after a correction even with nothing marked", () => {
     const req = (confidence: number) => ({

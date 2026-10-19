@@ -31,9 +31,31 @@ describe("ScoreResult", () => {
     expect(html).toContain("işe uygunluğunu değil")
   })
 
+  it("draws conditions and language levels in their own box, outside the counts (DOG-115)", () => {
+    const withConditions: ScoreResultView = {
+      ...result,
+      requirements: [
+        ...result.requirements,
+        req("B sınıfı ehliyet", "condition", "matched"),
+        req("Seyahat engeli olmayan", "condition", "missing"),
+      ],
+      languageChecks: [
+        { index: 0, language: "İngilizce", required: "C1", cvLine: "İngilizce (B1)", found: "B1", status: "below" },
+      ],
+    }
+    const html = renderToStaticMarkup(<ScoreResult result={withConditions} adapting={false} />)
+    expect(html).toContain("Şartlar")
+    expect(html).toContain("CV&#x27;nde: Excel")
+    expect(html).toContain("Kontrol et")
+    expect(html).toContain("İngilizce: ilan C1 seviyesi istiyor")
+    expect(html).toContain("Hepsi · 2")
+    expect(html).toContain("Eksik · 1")
+  })
+
   it("draws an old analysis as before", () => {
     const html = renderToStaticMarkup(<ScoreResult result={{ ...result, scoringRevision: undefined }} adapting={false} />)
     expect(html).not.toContain("Mülakatta anlaşılacaklar")
+    expect(html).not.toContain("Şartlar")
     expect(html).toContain("Hepsi · 3")
   })
 

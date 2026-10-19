@@ -340,12 +340,17 @@ function toResumeLanguage(targets: AlignmentTarget[]): AlignmentTarget[] {
   })
 }
 
-/** İşaretli gereksinimler çıkarılmış ilan ve sonuç (DOG-90); işaret yoksa olduğu gibi. */
+/**
+ * Uyarlamanın hedef alacağı gereksinimler: işaretliler (DOG-90) ve şartlar
+ * (DOG-115) çıkarılmış ilan ve sonuç. Şart bir yetkinlik değil; "seyahat
+ * engeli olmayan" bir CV maddesine yazılacak bir kavram değil.
+ */
 function withoutExcluded(posting: JobPostingData, result: ScoreResult): { posting: JobPostingData; result: ScoreResult } {
   const excluded = new Set(result.excluded ?? [])
-  if (excluded.size === 0) return { posting, result }
+  const keep = (i: number) => !excluded.has(i) && posting.requirements[i]?.type !== "condition"
+  if (posting.requirements.every((_, i) => keep(i))) return { posting, result }
   return {
-    posting: { ...posting, requirements: posting.requirements.filter((_, i) => !excluded.has(i)) },
-    result: { ...result, requirements: result.requirements.filter((_, i) => !excluded.has(i)) },
+    posting: { ...posting, requirements: posting.requirements.filter((_, i) => keep(i)) },
+    result: { ...result, requirements: result.requirements.filter((_, i) => keep(i)) },
   }
 }

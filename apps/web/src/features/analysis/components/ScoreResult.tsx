@@ -21,6 +21,7 @@ import { withTitleFinding } from "@/features/analysis/titleFinding"
 import { applyExclusions } from "@/features/analysis/exclusion"
 import type { ExclusionMark, RequirementCorrection, RequirementReport } from "@uyarla/core/score/exclusions"
 import type { TitleMatch } from "@uyarla/core/score/title"
+import type { LanguageCheck } from "@uyarla/core/score/languages"
 import type { RequirementAction } from "@/features/analysis/api"
 import { CorrectPanel, MarkPanel } from "@/features/analysis/components/RequirementFixes"
 import { correctionKind, exclusionLabel } from "@/features/analysis/requirementFix"
@@ -61,6 +62,8 @@ export interface ScoreResultView {
   corrections?: Record<number, RequirementCorrection>
   /** Skor formülünün sürümü (DOG-103); eski analizlerde yok. */
   scoringRevision?: number
+  /** İlanın istediği dil seviyesi ile CV'deki (DOG-115); eski analizlerde yok. */
+  languageChecks?: LanguageCheck[]
 }
 
 const TITLE_LINE: Record<TitleMatch["level"], string> = {
@@ -234,6 +237,13 @@ export function ScoreResult({
           <FormatReport report={format} />
         </motion.div>
       )}
+
+      <ConditionsCard
+        conditions={exclusion.conditionRows.map(({ item }) => item)}
+        // Dil CV'de hiç yoksa gereksinim listesinde zaten eksik görünüyor.
+        languages={(result.languageChecks ?? []).filter((c) => c.status !== "absent" && !result.excluded?.includes(c.index))}
+        motionProps={entrance(0.11)}
+      />
 
       {/* Gereksinimler. */}
       <motion.div {...entrance(0.14)} className="rounded-card border border-border bg-card p-5 sm:p-6">
@@ -486,6 +496,73 @@ function RequirementRow({
           onSubmit={(c) => void send({ action: "correct", ...c })}
         />
       )}
+    </li>
+  )
+}
+
+/**
+ * Şartlar (DOG-115): ilanın evet/hayır soruları ve dil seviyesi. Skora
+ * katılmıyor; CV bunları çoğunlukla söylemiyor, kullanıcı başvurmadan önce
+ * kendisi bakıyor. CV'de cevap veren satır varsa o satır gösteriliyor, yoksa
+ * "kontrol et"; CV'ye bakarak hiçbir şart "karşılanmıyor" denmiyor.
+ */
+function ConditionsCard({
+  conditions,
+  languages,
+  motionProps,
+}: {
+  conditions: RequirementResult[]
+  languages: LanguageCheck[]
+  motionProps: object
+}) {
+  if (conditions.length === 0 && languages.length === 0) return null
+  return (
+    <motion.div {...motionProps} className="rounded-card border border-border bg-card p-5 sm:p-6">
+      <h2 className="m-0 text-lg">Şartlar</h2>
+      <p className="mt-1 text-sm text-muted">
+        İlanın yetkinlik dışındaki şartları. Skora katılmıyor; CV&apos;n çoğunu söylemez, başvurmadan önce kendin
+        kontrol et.
+      </p>
+      <ul className="mt-3 space-y-2 text-sm">
+        {conditions.map((item, i) => (
+          <ConditionLine
+            key={`c${i}`}
+            ok={item.status === "matched"}
+            text={item.requirement.text}
+            note={item.status === "matched" && item.evidence ? `CV'nde: ${item.evidence.text}` : "Kontrol et"}
+          />
+        ))}
+        {languages.map((check) => (
+          <ConditionLine
+            key={`l${check.index}`}
+            ok={check.status === "ok"}
+            text={`${check.language}: ilan ${check.required} seviyesi istiyor`}
+            note={
+              check.status === "unknown"
+                ? `CV'nde seviye yazmıyor (${check.cvLine})`
+                : check.status === "below"
+                  ? `CV'nde ${check.found} yazıyor (${check.cvLine}); ilanın istediğinin altında`
+                  : `CV'nde ${check.found} (${check.cvLine})`
+            }
+          />
+        ))}
+      </ul>
+    </motion.div>
+  )
+}
+
+function ConditionLine({ ok, text, note }: { ok: boolean; text: string; note: string }) {
+  return (
+    <li className="flex items-start gap-2">
+      {ok ? (
+        <Check className="mt-0.5 size-4 shrink-0 text-brand-green" aria-label="CV'nde görünüyor" />
+      ) : (
+        <CircleAlert className="mt-0.5 size-4 shrink-0 text-brand-coral" aria-label="Kontrol et" />
+      )}
+      <span className="min-w-0">
+        {text}
+        <span className="text-muted"> · {note}</span>
+      </span>
     </li>
   )
 }

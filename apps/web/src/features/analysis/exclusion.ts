@@ -44,6 +44,11 @@ export interface ExclusionView<T extends RequirementResult> {
    * sayılmadan gösteriliyor. Eski analizlerde boş; onların skoru soft dahil.
    */
   softRows: Array<{ item: T; index: number }>
+  /**
+   * Evet/hayır şartları (DOG-115): ikamet, ehliyet, askerlik, seyahat. Skora
+   * hiçbir durumda katılmıyor ve eksik sayılmıyor; "Şartlar" kutusunda.
+   */
+  conditionRows: Array<{ item: T; index: number }>
   /** Sayımlarda kullanılacak: skora katılan ve işaretli olmayan gereksinimler. */
   active: T[]
   missingKeywords: string[]
@@ -66,9 +71,11 @@ export function applyExclusions<T extends RequirementResult & { missingConcepts?
   const all = result.requirements.map((item, index) => ({ item, index, excluded: skip.has(index) }))
   // İlanda yalnızca kişisel nitelik varsa skora onlar giriyor (core ile aynı).
   const separateSoft = current && all.some((r) => !UNSCORED_TYPES.includes(r.item.requirement.type))
-  const isSoft = (r: { item: T }) => separateSoft && UNSCORED_TYPES.includes(r.item.requirement.type)
-  const rows = all.filter((r) => !isSoft(r))
+  const isCondition = (r: { item: T }) => r.item.requirement.type === "condition"
+  const isSoft = (r: { item: T }) => separateSoft && !isCondition(r) && UNSCORED_TYPES.includes(r.item.requirement.type)
+  const rows = all.filter((r) => !isSoft(r) && !isCondition(r))
   const softRows = all.filter(isSoft).map(({ item, index }) => ({ item, index }))
+  const conditionRows = all.filter(isCondition).map(({ item, index }) => ({ item, index }))
   const active = rows.filter((r) => !r.excluded).map((r) => r.item)
 
   // Bir kavram yalnızca işaretli ya da kişisel nitelik gereksinimlerinde
@@ -77,13 +84,14 @@ export function applyExclusions<T extends RequirementResult & { missingConcepts?
   const stillMissing = new Set(active.flatMap((r) => r.missingConcepts ?? []))
   const dropped = new Set(
     all
-      .filter((r) => r.excluded || isSoft(r))
+      .filter((r) => r.excluded || isSoft(r) || isCondition(r))
       .flatMap((r) => (r.item.missingConcepts ?? []).filter((k) => !stillMissing.has(k))),
   )
 
   return {
     rows,
     softRows,
+    conditionRows,
     active,
     missingKeywords: result.missingKeywords.filter((k) => !dropped.has(k)),
     // İşaret yoksa analizin kendi skoru; yeniden hesaplamak yuvarlama farkı

@@ -105,7 +105,9 @@ export function missingMustRequirements(result: unknown): Array<{ index: number;
         x.status === "missing" &&
         x.requirement.importance === "must" &&
         !excluded.has(index) &&
-        !(skipSoft && x.requirement.type === "soft"),
+        !(skipSoft && x.requirement.type === "soft") &&
+        // Şartlar (DOG-115) CV'den anlaşılmıyor; "kontrol et" eksik sayılmıyor.
+        x.requirement.type !== "condition",
     )
     .map(({ x, index }) => ({ index, text: x.requirement.text }))
 }

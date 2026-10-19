@@ -1,0 +1,18 @@
+Senior Backend Developer (Go)
+A Fintech Company · Istanbul (Hybrid)
+
+We are looking for a Senior Backend Developer to join our payments platform team.
+
+Requirements
+- 5+ years of backend development experience, at least 2 years with Go
+- Strong knowledge of PostgreSQL and distributed systems
+- Experience with Kafka or a similar message broker
+- Experience with Kubernetes and CI/CD pipelines
+- Fluent English (C1 or above); German is a plus
+- Must be a Turkish citizen or hold a valid work permit for Turkey
+- Willing to work from our Istanbul office 3 days a week
+- Able to join the on-call rotation once a month
+
+Nice to have
+- Experience in the payments or banking domain
+- Knowledge of PCI DSS
