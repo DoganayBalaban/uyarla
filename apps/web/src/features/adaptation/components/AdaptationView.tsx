@@ -489,7 +489,7 @@ export function AdaptationView({ id }: { id: string }) {
             </>
           )}
 
-          <CoverLetterSection adaptationId={id} letter={state.coverLetter} />
+          <CoverLetterSection adaptationId={id} letter={state.coverLetter} checks={state.coverLetterChecks ?? null} />
         </div>
 
         {/* İndirme paneli: masaüstünde yapışkan. */}

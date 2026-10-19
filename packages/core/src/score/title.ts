@@ -79,7 +79,8 @@ function resumeTitles(profile: ResumeProfile): string[] {
 
 const MAX_TITLE_WORDS = 6
 
-function coreTokens(title: string): string[] {
+/** Unvanın karşılaştırılan kelimeleri: kıdem ve parantez içi çıkarılmış (ön yazı kontrolü de kullanıyor). */
+export function coreTokens(title: string): string[] {
   // Parantez içi çoğunlukla çalışma biçimi, cinsiyet eki ya da LLM notu:
   // "(Remote)", "(m/w/d)", "(implied)".
   return normalizeTokens(title.replace(/\([^)]*\)/g, " ")).filter((t) => !NOISE.has(t))
