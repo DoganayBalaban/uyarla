@@ -65,6 +65,26 @@ describe("verifyCoverLetter", () => {
       ]),
     )
   })
+
+  it("does not flag an honest bridge for a missing requirement (DOG-122)", () => {
+    const [p] = verifyCoverLetter(
+      ["Kubernetes ile doğrudan çalışmadım; ancak Acme'de React ile müşteri paneli geliştirdim."],
+      sourceText,
+      POSTING,
+    )
+    expect(p!.verification.status).toBe("ok")
+  })
+
+  it("still flags a claim after the connector", () => {
+    const [p] = verifyCoverLetter(["React'i bırakmadım ama Kubernetes ile de çalıştım."], sourceText, POSTING)
+    expect(p!.verification.issues.map((i) => i.detail)).toContain('Bu paragrafta "kubernetes" geçiyor ama CV\'nde yok.')
+  })
+
+  it("does not take the posting title for a claim", () => {
+    const posting = { ...POSTING, position: "Kubernetes Uzmanı" }
+    const [p] = verifyCoverLetter(["Kubernetes Uzmanı pozisyonuna başvuruyorum."], sourceText, posting)
+    expect(p!.verification.status).toBe("ok")
+  })
 })
 
 describe("generateCoverLetter", () => {

@@ -25,7 +25,8 @@
     "eval:onepage": "dotenv -e ../../.env -- tsx eval/onePage.ts",
     "eval:injection": "dotenv -e ../../.env -- tsx eval/injection.ts",
     "eval:conditions": "dotenv -e ../../.env -- tsx eval/conditions.ts",
-    "eval:facts": "dotenv -e ../../.env -- tsx eval/facts.ts"
+    "eval:facts": "dotenv -e ../../.env -- tsx eval/facts.ts",
+    "eval:cover-rules": "dotenv -e ../../.env -- tsx eval/coverRules.ts"
   },
   "devDependencies": {
     "@types/pdfkit": "^0.17.6",

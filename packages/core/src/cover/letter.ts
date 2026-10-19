@@ -6,6 +6,7 @@ import type { ResumeProfile } from "../schemas/resume.js"
 import { toJsonSchema } from "../schemas/toJsonSchema.js"
 import { checkNumbers } from "../verify/numbers.js"
 import { checkPostingTermInjection } from "../verify/injection.js"
+import { withoutNegatedClauses } from "../verify/negation.js"
 
 /**
  * Ön yazı.
@@ -25,6 +26,24 @@ import { checkPostingTermInjection } from "../verify/injection.js"
  * katmanında yakalanıyor.
  */
 
+/**
+ * Eksik gereksinim kuralı (DOG-122, K-76). Önceki kural "hiç bahsetme"ydi;
+ * model buna uymayıp eksik gereksinimi sahipleniyordu ("NoSQL veri
+ * tabanlarıyla çalışma deneyimim bulunmakta"). Dürüst köprü izni bu eğilimi
+ * doğru yöne çekiyor: eval:cover-rules'da somut beceri uydurması 4'ten 1'e,
+ * işaretli paragraf 20/60'tan 13/60'a indi. Dürüst köprüyü doğrulama
+ * işaretlemiyor (verify/negation.ts).
+ */
+export const MISSING_REQUIREMENT_RULE = `- İlanın istediği bir şey CV'de yoksa onu SAHİPLENME: "deneyimim var",
+  "bilgim var", "kullanabiliyorum" gibi yazma. İlanın en önemli bir ya da iki
+  eksik gereksinimi için en fazla TEK bir cümleyle dürüst bir köprü
+  kurabilirsin: o konuda doğrudan deneyimin olmadığını söyle ve CV'deki en
+  yakın deneyimi yaz (ör. "X ile doğrudan çalışmadım; Y'de … yaptım").
+  Eksikleri sıralama, özür dileme, "öğrenmeye açığım" gibi kalıp cümle kurma.
+- Klişe kullanma: "takım oyuncusu", "dinamik", "sonuç odaklı", "motivasyonu
+  yüksek", "kendimi geliştirmeye açığım", "stres altında çalışabilirim" gibi
+  ifadeler yerine CV'deki somut bir deneyimi yaz.`
+
 export const COVER_LETTER_PROMPT = `Sana bir adayın CV bilgileri ve başvurduğu iş ilanı verilecek.
 Bu ilana özel, kısa bir ön yazı yaz.
 
@@ -33,8 +52,7 @@ Kesin kurallar:
 - CV'de olmayan bir teknoloji, araç, sertifika, unvan veya sorumluluk YAZMA.
   İlan istiyor olsa bile.
 - CV'de olmayan hiçbir sayı yazma (yıl, yüzde, adet, deneyim süresi).
-- İlanın istediği bir şey CV'de yoksa ondan hiç bahsetme; yalan söyleme,
-  özür de dileme.
+${MISSING_REQUIREMENT_RULE}
 - Abartma: "katkı sağladım" ise "yönettim" yazma.
 
 Biçim:
@@ -157,6 +175,22 @@ function paragraphMessage(detailText: string): string {
   return detailText.replace("Bu maddede", "Bu paragrafta").replace("senin yazdığın hâlinde", "CV'nde")
 }
 
+/**
+ * İlan terimi kontrolünün baktığı metin (DOG-122):
+ *   - İlandaki unvan çıkarılıyor: "Muhasebe Uzmanı pozisyonuna başvuruyorum"
+ *     cümlesindeki "muhasebe" bir iddia değil (eval:cover-rules'da yanlış alarm).
+ *   - Olumsuzlanan yan cümleler çıkarılıyor: "Perkotek'i kullanmadım" dürüst
+ *     bir köprü, uydurma değil (verify/negation.ts).
+ * Sayı kontrolü paragrafın tamamına bakıyor.
+ */
+function termCheckedText(paragraph: string, posting: JobPostingData): string {
+  let text = paragraph
+  for (const title of posting.position.split(/\s\/\s/).map((t) => t.trim()).filter((t) => t.length > 2)) {
+    text = text.replace(new RegExp(title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "giu"), " ")
+  }
+  return withoutNegatedClauses(text)
+}
+
 export function verifyCoverLetter(
   paragraphs: string[],
   sourceText: string,
@@ -165,7 +199,7 @@ export function verifyCoverLetter(
   return paragraphs.map((paragraph) => {
     const issues = [
       ...checkNumbers(paragraph, sourceText),
-      ...checkPostingTermInjection(paragraph, sourceText, posting),
+      ...checkPostingTermInjection(termCheckedText(paragraph, posting), sourceText, posting),
     ].map((i) => ({ ...i, detail: paragraphMessage(i.detail) }))
     return { text: paragraph, verification: { status: issues.length ? "flagged" : "ok", issues } }
   })
@@ -174,11 +208,13 @@ export function verifyCoverLetter(
 export async function generateCoverLetter(
   llm: LlmProvider,
   input: { profile: ResumeProfile; posting: JobPostingData; intent?: CandidateIntent },
+  /** Yalnızca değerlendirme: istem karşılaştırması (eval/coverRules.ts). */
+  options: { prompt?: string } = {},
 ): Promise<ExtractResult<CoverLetter>> {
   const sourceText = resumeFacts(input.profile)
   const situation = candidateLine(input.intent)
   const { data, tokens } = await llm.extract({
-    prompt: COVER_LETTER_PROMPT,
+    prompt: options.prompt ?? COVER_LETTER_PROMPT,
     schemaName: "cover_letter",
     schema: coverLetterJsonSchema,
     input: [
