@@ -3469,3 +3469,31 @@ doğrulamalı kısa metin.
 **Ölçüm (`pnpm eval:follow-up`, 8 çift × 4 tür, 32 taslak):** uydurma işareti
 0, klişe 0, uydurma ortak geçmiş 0, başvurmadan "başvurdum" 0 (ilk istemde
 çoğunda vardı). Alıcı adı yer tutucusu 16/16.
+
+## K-90 · "İlan bul": doğrulanmış arama bağlantıları, API ve kazıma yok
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-68
+
+**Bağlam:** DOG-67 denemesinde önerilen ilanlar özelliği açılmadı. Jooble ve
+Careerjet ilanın tam metnini sunucuya vermiyor, API'lerin kotası, IP kısıtı
+ve KVKK aktarımı var. Aynı değeri hafif bir yolla vermek: profilden kurulan
+sorguyla sitelerin kendi arama sayfaları.
+
+**Karar:**
+- **Gösterge panelinde "İlan bul" kartı.** Hiç analizi olmayan kullanıcıda
+  da var; ilk ilanı bulmak için.
+- **Sorgu `suggestionQuery`:** hedef rol, yoksa son unvan, yoksa iki beceri.
+  Profil kütüphanedeki varsayılan CV'den, yoksa son analizin CV'sinden
+  geliyor.
+- **Rol kartta değiştirilebiliyor** ve "hedef rolüm olarak kaydet" ile
+  profile yazılıyor. Şehir yalnızca o anki bağlantılar için, saklanmıyor.
+- **Bağlantı biçimleri 20 Ekim 2026'da tarayıcıda denendi** (core
+  `jobSuggest/links.ts`):
+  - Jooble `SearchResult?ukw&rgns`.
+  - Careerjet `arama/isler?s&l`.
+  - Kariyer.net `is-ilanlari?kw`. Şehir yolu bot korumasına takıldığı için
+    doğrulanamadı; şehir sitede seçiliyor.
+  - LinkedIn `jobs/search?keywords&location`. Konum "İstanbul, Türkiye"
+    biçiminde; yalnızca "İstanbul" ABD sonuçlarına düşüyordu.
+- **Yapılmayanlar:** API çağrısı, kazıma, dış ilan saklama, yeni uç.
+  Careerjet API ile kart içi liste ayrı bir karar (sabit çıkış IP'si ister).
