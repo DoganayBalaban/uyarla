@@ -3,7 +3,14 @@ import { NextResponse } from "next/server"
 import { jobUrlSchema } from "@/features/analysis/schema"
 import { firstIssue } from "@/lib/validation"
 import { authErrorResponse } from "@/server/authz"
-import { extractPostingText, isAllowedPath } from "@/server/jobPostingFromUrl"
+import {
+  LOGIN_REQUIRED,
+  canonicalPostingUrl,
+  extractPostingText,
+  isAllowedPath,
+  isLoginPath,
+  looksLikeLoginWall,
+} from "@/server/jobPostingFromUrl"
 import { enforceRateLimit, redisStore } from "@/server/rateLimit"
 
 export const runtime = "nodejs"
@@ -30,8 +37,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: firstIssue(parsed.error).message }, { status: 400 })
     }
 
-    let url = isAllowedPath(parsed.data.url)
-    if (!url) return NextResponse.json({ error: UNSUPPORTED, code: "unsupported" }, { status: 400 })
+    const allowed = isAllowedPath(parsed.data.url)
+    if (!allowed) return NextResponse.json({ error: UNSUPPORTED, code: "unsupported" }, { status: 400 })
+    let url = canonicalPostingUrl(allowed)
+    const loginRequired = () =>
+      NextResponse.json(
+        { error: url.hostname.endsWith("linkedin.com") ? LOGIN_REQUIRED.linkedin : LOGIN_REQUIRED.other, code: "login_required" },
+        { status: 422 },
+      )
 
     const requestHeaders = await headers()
     const ip = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() || requestHeaders.get("x-real-ip") || "bilinmiyor"
@@ -58,6 +71,8 @@ export async function POST(request: Request) {
       if (!next) {
         return NextResponse.json({ error: UNSUPPORTED, code: "unsupported" }, { status: 400 })
       }
+      // Giriş sayfasına yönlenen bağlantı: kutuya giriş ekranının metni gelmesin.
+      if (isLoginPath(next)) return loginRequired()
       url = next
       response = null
     }
@@ -90,6 +105,8 @@ export async function POST(request: Request) {
         { status: 422 },
       )
     }
+
+    if (looksLikeLoginWall(posting)) return loginRequired()
 
     return NextResponse.json(posting)
   } catch (error) {
