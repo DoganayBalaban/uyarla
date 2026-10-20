@@ -172,6 +172,10 @@ model Analysis {
   // "Başvurdum"dan sonra durum değişmediyse gönderilen takip hatırlatması
   // (DOG-98). Doluysa aynı başvuru için bir daha gönderilmiyor.
   reminderSentAt DateTime?
+  // Takip mesajı ve teşekkür notu taslakları (DOG-117): [{ id, kind,
+  // channel, status, subject, text, verification, createdAt }]. Taslak; biz
+  // göndermiyoruz. Eski kayıtlarda boş.
+  followUps      Json?
 
   @@index([resumeVersionId, jobPostingId])
   @@index([userId])

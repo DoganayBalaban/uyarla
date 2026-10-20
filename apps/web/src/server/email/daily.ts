@@ -59,7 +59,7 @@ export interface DailyResult {
 interface Candidate {
   userId: string
   email: string
-  reminders: ReminderBundle & { refs: Array<{ kind: string; refId: string }>; followupIds: string[] }
+  reminders: Required<ReminderBundle> & { refs: Array<{ kind: string; refId: string }>; followupIds: string[] }
   accessEnding: { passId: string; endsAt: Date } | null
   activation: "activation_no_analysis" | "activation_free_unused" | null
 }
@@ -76,7 +76,8 @@ export async function runDailyEmails(
   const reminders = { ...registered, applicationReminders: true } as const
 
   const posting = { select: { position: true, company: true, rawText: true, deadline: true } } as const
-  const [followups, interviews, deadlines, passes, newUsers] = await Promise.all([
+  const yesterday = addDays(today, -1)
+  const [followups, interviews, deadlines, passes, newUsers, thanks] = await Promise.all([
     db.analysis.findMany({
       where: reminderWhere(now),
       select: { id: true, stageChangedAt: true, user: { select: { id: true, email: true } }, jobPosting: posting },
@@ -130,13 +131,18 @@ export async function runDailyEmails(
           },
         })
       : Promise.resolve([]),
+    // Dünkü mülakat: teşekkür notu (DOG-117). Aşama hâlâ mülakattaysa.
+    db.analysis.findMany({
+      where: { interviewAt: yesterday, stage: "interview", user: reminders },
+      select: { id: true, user: { select: { id: true, email: true } }, jobPosting: posting },
+    }),
   ])
 
   const candidates = new Map<string, Candidate>()
   const candidate = (userId: string, email: string) => {
     let c = candidates.get(userId)
     if (!c) {
-      c = { userId, email, reminders: { followups: [], interviews: [], deadlines: [], refs: [], followupIds: [] }, accessEnding: null, activation: null }
+      c = { userId, email, reminders: { followups: [], interviews: [], deadlines: [], thanks: [], refs: [], followupIds: [] }, accessEnding: null, activation: null }
       candidates.set(userId, c)
     }
     return c
@@ -150,6 +156,7 @@ export async function runDailyEmails(
           OR: [
             { kind: "interview_reminder", refId: { in: interviews.map((a) => a.id) } },
             { kind: "deadline_reminder", refId: { in: deadlines.map((a) => a.id) } },
+            { kind: "thanks_reminder", refId: { in: thanks.map((a) => a.id) } },
             { kind: "access_ending", refId: { in: passes.map((p) => p.id) } },
             { kind: { in: ["activation_no_analysis", "activation_free_unused"] }, userId: { in: newUsers.map((u) => u.id) } },
           ],
@@ -192,6 +199,12 @@ export async function runDailyEmails(
       adaptationId: a.adaptation?.id ?? null,
     })
     c.reminders.refs.push({ kind: "deadline_reminder", refId: a.id })
+  }
+  for (const a of thanks) {
+    if (already(a.user.id, "thanks_reminder", a.id)) continue
+    const c = candidate(a.user.id, a.user.email)
+    c.reminders.thanks.push({ position: positionName(a.jobPosting.position, a.jobPosting.rawText), company: a.jobPosting.company?.trim() || null })
+    c.reminders.refs.push({ kind: "thanks_reminder", refId: a.id })
   }
   for (const pass of passes) {
     if (already(pass.userId, "access_ending", pass.id)) continue

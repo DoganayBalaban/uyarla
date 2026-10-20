@@ -71,10 +71,18 @@ export interface DeadlineItem {
   adaptationId: string | null
 }
 
+/** Dünkü mülakat: teşekkür notu için (DOG-117). */
+export interface ThanksItem {
+  position: string
+  company: string | null
+}
+
 export interface ReminderBundle {
   followups: FollowupItem[]
   interviews: InterviewItem[]
   deadlines: DeadlineItem[]
+  /** Eski çağıranlarda yok. */
+  thanks?: ThanksItem[]
 }
 
 /**
@@ -85,6 +93,7 @@ export interface ReminderBundle {
 export function applicationRemindersEmail(bundle: ReminderBundle, unsubscribe: string | null = null): EmailContent {
   const board = `${siteUrl()}/applications`
   const { followups, interviews, deadlines } = bundle
+  const thanks = bundle.thanks ?? []
   const subject =
     interviews.length === 1
       ? `Yarın ${interviews[0]!.company ?? interviews[0]!.position} mülakatın var`
@@ -92,11 +101,13 @@ export function applicationRemindersEmail(bundle: ReminderBundle, unsubscribe: s
         ? `Yarın ${interviews.length} mülakatın var`
         : deadlines.length > 0
           ? "Son başvuru günü yaklaşıyor"
-          : "Başvurularından haber var mı?"
+          : thanks.length > 0
+            ? "Mülakatın için teşekkür notu"
+            : "Başvurularından haber var mı?"
 
   // Tek bir uyarlanmış ilan varsa düğme doğrudan ona: CV ve ön yazı orada.
   const only = [...interviews, ...deadlines]
-  const target = only.length === 1 && followups.length === 0 && only[0]!.adaptationId ? `${siteUrl()}/adapt/${only[0]!.adaptationId}` : null
+  const target = only.length === 1 && followups.length === 0 && thanks.length === 0 && only[0]!.adaptationId ? `${siteUrl()}/adapt/${only[0]!.adaptationId}` : null
 
   const parts: string[] = [h1(subject)]
   const text: string[] = [subject, ""]
@@ -114,11 +125,21 @@ export function applicationRemindersEmail(bundle: ReminderBundle, unsubscribe: s
     parts.push(list(deadlines.map((d) => li(role(d.position, d.company), `Son gün ${escapeHtml(day(d.deadline))}`))))
     text.push("Son başvuru günü yaklaşanlar:", ...deadlines.map((d) => `- ${roleText(d.position, d.company)} (son gün ${day(d.deadline)})`), "")
   }
-  if (followups.length) {
-    if (interviews.length || deadlines.length) parts.push(h2("Bir haftadır ses çıkmayanlar"))
+  if (thanks.length) {
+    if (interviews.length || deadlines.length) parts.push(h2("Dünkü mülakatın"))
     parts.push(
       p(
-        `Bir haftadır aşaması değişmeyen ${followups.length === 1 ? "bir başvurun" : `${followups.length} başvurun`} var. Cevap geldiyse panoda güncelle; gelmediyse kısa bir takip e-postası atmanın tam zamanı.`,
+        "Görüşmenin ertesi günü kısa bir teşekkür notu göndermek için iyi bir an. Panoda kartındaki “Teşekkür notu” ile CV'ne dayanan bir taslak hazırlayabilirsin.",
+      ),
+    )
+    parts.push(list(thanks.map((t) => li(role(t.position, t.company), "dün mülakat"))))
+    text.push("Dünkü mülakatın için teşekkür notu:", ...thanks.map((t) => `- ${roleText(t.position, t.company)}`), "")
+  }
+  if (followups.length) {
+    if (interviews.length || deadlines.length || thanks.length) parts.push(h2("Bir haftadır ses çıkmayanlar"))
+    parts.push(
+      p(
+        `Bir haftadır aşaması değişmeyen ${followups.length === 1 ? "bir başvurun" : `${followups.length} başvurun`} var. Cevap geldiyse panoda güncelle; gelmediyse kısa bir takip e-postası atmanın tam zamanı. Panoda kartındaki “Takip mesajı” ile CV'ne dayanan bir taslak hazırlayabilirsin.`,
       ),
     )
     parts.push(list(followups.map((f) => li(role(f.position, f.company), `${escapeHtml(DATE.format(f.appliedAt))} tarihinde başvurdun`))))

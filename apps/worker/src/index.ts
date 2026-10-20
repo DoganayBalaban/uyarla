@@ -14,7 +14,9 @@ import { ADAPT_QUEUE, type AdaptJobData } from "./adapt-queue.js"
 import { prismaAdaptationStore } from "./adapt-store.js"
 import { COVER_LETTER_JOB, runCoverLetter } from "./cover-pipeline.js"
 import { CONTRIBUTION_JOB, runContribution } from "./contribution-pipeline.js"
-import type { ContributionJobData } from "./adapt-queue.js"
+import { FOLLOW_UP_JOB, type ContributionJobData, type FollowUpJobData } from "./adapt-queue.js"
+import { runFollowUp } from "./follow-up-pipeline.js"
+import { prismaFollowUpStore } from "./follow-up-store.js"
 import { initErrorTracking, reportJobFailure } from "./observability.js"
 import { runAnalysis } from "./pipeline.js"
 import { ANALYZE_QUEUE, type AnalyzeJobData } from "./queue.js"
@@ -94,6 +96,23 @@ const adaptWorker = new Worker<AdaptJobData, void>(
           await prismaAdaptationStore
             .updateContribution(data.adaptationId, data.contributionId, { status: "failed" })
             .catch(() => {})
+        }
+        if (error instanceof PermanentError) throw toUnrecoverable(error, "adapt")
+        throw error
+      }
+      return
+    }
+
+    // Takip mesajı ve teşekkür notu taslağı (DOG-117); aynı kuyruk, aynı model.
+    if (job.name === FOLLOW_UP_JOB) {
+      const data = job.data as unknown as FollowUpJobData
+      try {
+        await runFollowUp({ llm, store: prismaFollowUpStore }, data)
+      } catch (error) {
+        const lastAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1)
+        if (error instanceof PermanentError || lastAttempt) {
+          // Arayüz "yazılıyor"da takılı kalmasın.
+          await prismaFollowUpStore.update(data.analysisId, data.followUpId, { status: "failed" }).catch(() => {})
         }
         if (error instanceof PermanentError) throw toUnrecoverable(error, "adapt")
         throw error

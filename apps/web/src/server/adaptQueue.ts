@@ -1,9 +1,12 @@
-import { ADAPT_QUEUE, type AdaptJobData, type ContributionJobData } from "@uyarla/worker/adapt-queue"
+import { ADAPT_QUEUE, type AdaptJobData, type ContributionJobData, type FollowUpJobData } from "@uyarla/worker/adapt-queue"
 import { Queue } from "bullmq"
 import { redis } from "@/server/redis"
 
-/** Uyarlama ve ön yazı { adaptationId }, katkı ayrıca contributionId taşıyor (DOG-94). */
-type AdaptQueueData = AdaptJobData | ContributionJobData
+/**
+ * Uyarlama ve ön yazı { adaptationId }, katkı ayrıca contributionId taşıyor
+ * (DOG-94); takip mesajı { analysisId, followUpId } (DOG-117).
+ */
+type AdaptQueueData = AdaptJobData | ContributionJobData | FollowUpJobData
 
 const globalForQueue = globalThis as unknown as { adaptQueue?: Queue<AdaptQueueData, void> }
 

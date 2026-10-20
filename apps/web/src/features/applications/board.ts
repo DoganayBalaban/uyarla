@@ -4,6 +4,7 @@
  * uçlarından ayrı.
  */
 
+import { readFollowUps, type FollowUpRecord } from "@uyarla/core/cover/followUpRecord"
 import { scoreStatus } from "@/lib/scoreStatus"
 
 export const STAGES = ["saved", "applied", "interview", "offer", "rejected"] as const
@@ -49,6 +50,8 @@ export interface BoardCard {
   interviewAt: string | null
   /** İlanın son başvuru günü (DOG-120), "YYYY-AA-GG"; ilanda yazmıyorsa null. */
   deadline: string | null
+  /** Takip mesajı ve teşekkür notu taslakları (DOG-117), eskiden yeniye. */
+  followUps: FollowUpRecord[]
   createdAt: string
   adaptation: { id: string; status: string } | null
 }
@@ -61,6 +64,7 @@ export const BOARD_SELECT = {
   stageChangedAt: true,
   note: true,
   interviewAt: true,
+  followUps: true,
   createdAt: true,
   jobPosting: { select: { position: true, company: true, rawText: true, deadline: true } },
   adaptation: { select: { id: true, status: true } },
@@ -74,6 +78,7 @@ export interface BoardRow {
   stageChangedAt: Date | null
   note: string | null
   interviewAt: Date | null
+  followUps: unknown
   createdAt: Date
   jobPosting: { position: string; company: string | null; rawText: string; deadline: Date | null }
   adaptation: { id: string; status: string } | null
@@ -100,6 +105,7 @@ export function toBoardCard(s: BoardRow): BoardCard {
     noteText: s.note,
     interviewAt: s.interviewAt?.toISOString().slice(0, 10) ?? null,
     deadline: s.jobPosting.deadline?.toISOString().slice(0, 10) ?? null,
+    followUps: readFollowUps(s.followUps),
     createdAt: s.createdAt.toISOString(),
     adaptation: s.adaptation ? { id: s.adaptation.id, status: s.adaptation.status } : null,
   }
