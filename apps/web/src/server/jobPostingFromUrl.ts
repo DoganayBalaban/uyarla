@@ -45,5 +45,44 @@ export function isAllowedPath(raw: string): URL | null {
   return url
 }
 
+/**
+ * İlanın herkese açık adresi. LinkedIn'de giriş isteyen liste sayfalarından
+ * (`/jobs/collections/…?currentJobId=`, `/jobs/search/?currentJobId=`)
+ * kopyalanan bağlantı giriş sayfasına yönleniyordu ve kutuya giriş ekranının
+ * metni geliyordu; ilan numarası herkese açık `/jobs/view/<numara>`
+ * sayfasına çevriliyor.
+ */
+export function canonicalPostingUrl(url: URL): URL {
+  const host = url.hostname.toLowerCase()
+  if (host !== "linkedin.com" && !host.endsWith(".linkedin.com")) return url
+  const fromQuery = url.searchParams.get("currentJobId")
+  const fromPath = url.pathname.match(/\/jobs\/view\/(?:[^/]*-)?(\d{6,})\/?$/)?.[1]
+  const id = fromQuery && /^\d{6,}$/.test(fromQuery) ? fromQuery : fromPath
+  return id ? new URL(`https://www.linkedin.com/jobs/view/${id}`) : url
+}
+
+/** Yönlendirmenin gittiği yer bir giriş sayfası mı. */
+export function isLoginPath(url: URL): boolean {
+  return /^\/(uas\/login|login|authwall|checkpoint|signup|signin|sign-in|giris|uyelik\/giris)(\/|$|\?)/i.test(url.pathname)
+}
+
+/**
+ * Sayfa ilan değil giriş ekranı mı: başlığı ve ilk satırı ölçülüyor. Uzun
+ * bir ilan metninde "oturum aç" geçebilir; yalnızca başlıkta ve kısa
+ * sayfada sayılıyor ("Login Experience Engineer" ilanı elenmesin).
+ */
+export function looksLikeLoginWall(posting: { text: string; position: string | null }): boolean {
+  if (posting.text.length >= 2000) return false
+  const head = [posting.position ?? "", posting.text.split("\n")[0] ?? ""].join(" ")
+  return /oturum aç|giriş yap|sign ?in|log ?in|sign up|kayıt ol/i.test(head)
+}
+
+export const LOGIN_REQUIRED = {
+  linkedin:
+    "LinkedIn bu bağlantı için giriş istiyor, ilanı göremedik. İlanın kendi sayfasını aç (adreste /jobs/view/ geçsin) ve o bağlantıyı yapıştır; olmazsa ilan metnini kopyalayıp yapıştırabilirsin.",
+  other:
+    "Bu sayfa giriş istiyor, ilanı göremedik. İlanın herkese açık sayfasının bağlantısını dene ya da ilan metnini kopyalayıp yapıştır.",
+}
+
 // Çıkarma kodu core'da: tarayıcı eklentisi de kullanıyor (DOG-70).
 export { extractPostingText, htmlToText, type ExtractedPosting } from "@uyarla/core/jobPosting/extract"
