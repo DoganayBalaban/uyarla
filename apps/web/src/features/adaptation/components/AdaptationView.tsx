@@ -367,7 +367,7 @@ export function AdaptationView({ id }: { id: string }) {
           )}
 
           {view === "document" && state.document ? (
-            <DocumentView document={state.document} draft={draft} onRestore={(b) => void restore(b)} />
+            <DocumentView document={state.document} draft={draft} onRestore={(b) => void restore(b)} terms={state.postingTerms ?? []} />
           ) : (
             <>
               {draft.summary.original && (
@@ -387,6 +387,7 @@ export function AdaptationView({ id }: { id: string }) {
                     edited={draft.summary.edited}
                     busy={busy}
                     onSave={(text) => saveEdit("summary", text)}
+                    terms={state.postingTerms ?? []}
                   />
                 </motion.section>
               )}
@@ -437,6 +438,7 @@ export function AdaptationView({ id }: { id: string }) {
                           edited={bullet.edited}
                           busy={busy}
                           onSave={(text) => saveEdit(bullet.id, text)}
+                          terms={state.postingTerms ?? []}
                         />
                         {(bullet.alignments?.length ?? 0) > 0 && (
                           <ul className="mt-3 space-y-1.5">

@@ -3407,3 +3407,30 @@ metinler de üretiyor: kendini tanıtma, "140 karakterde neden sen", "neden bu
 
 Kalan tek işaret "document processing" (CV'de "document ingestion");
 kullanıcıya "kontrol et" olarak gösteriliyor.
+
+## K-88 · İlan terimlerini vurgulama: skorlamayla aynı eşleşme
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-92 (ikinci adım)
+
+**Bağlam:** Jobscan Power Edit metin üstünde vurgu yapıyor. DOG-92'nin ilk
+adımı (K-83) önerinin metnini düzenlemeydi; vurgulama "ucuz ve etkili"
+diye ikinci adıma kalmıştı.
+
+**Karar:**
+- **Eşleşme skorlamanın kuralıyla:** `core normalize/highlight`
+  `keywordSpans`, `containsKeyword` ile aynı ek soyma, eş anlamlı ve çok
+  kelimeli karşılıkları kullanıp karakter aralığı döndürüyor. Ekranda
+  vurgulanan terim skorda da sayılıyor, vurgulanmayan sayılmıyor; test
+  ikisini örneklerde karşılaştırıyor. Kesme işaretli ek vurguya dahil
+  ("API'leri").
+- **Terim listesi:** skora giren gereksinimlerin kavramları ve eş
+  anlamlıları. Şartlar, kişisel nitelikler ve "ilanda yok" işaretlenenler
+  hariç.
+- **Belge görünümü:** "İlanın terimlerini vurgula" seçeneği; seçili hâlde
+  kaç terimin geçtiği ve geçmeyen zorunlular. Geçmeyenler için "deneyiminde
+  varsa görünür kıl; yoksa eklemiyoruz".
+- **Düzenlerken:** metinde geçen ilan terimleri yazdıkça gösteriliyor.
+  Canlı skor değil, ucuz bir canlı geri bildirim. Skor kaydedince yeniden
+  hesaplanıyor.
+- Kalan: yazarken canlı skor ve serbest düzenleyici (DOG-22'deki testle
+  doğrulanmalı).

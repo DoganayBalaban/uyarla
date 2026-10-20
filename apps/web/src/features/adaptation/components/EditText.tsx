@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Pencil } from "lucide-react"
+import { termsIn, type PostingTerm } from "@/features/adaptation/postingTerms"
 
 /** Sunucuyla aynı sınır (core adapt/edit); istemciye core'u çekmemek için ayrı. */
 const EDIT_MAX_LENGTH = 1000
@@ -15,10 +16,13 @@ export function EditText({
   edited,
   busy,
   onSave,
+  terms = [],
 }: {
   text: string
   edited?: boolean
   busy: boolean
+  /** İlan terimleri (DOG-92): yazarken metinde geçenler canlı gösteriliyor. */
+  terms?: readonly PostingTerm[]
   onSave: (text: string) => Promise<string | null>
 }) {
   const [draft, setDraft] = useState<string | null>(null)
@@ -60,6 +64,7 @@ export function EditText({
         aria-label="Yeni hâlin metni"
         className="w-full rounded-button border border-border bg-background p-2 text-sm leading-relaxed"
       />
+      {terms.length > 0 && <LiveTerms text={draft} terms={terms} />}
       <p className="m-0 text-xs text-muted">
         CV&apos;nde olmayan bir sayı ya da ilan terimi eklersen &ldquo;kontrol et&rdquo; uyarısı çıkar; mülakatta
         savunabileceğin şeyleri yaz.
@@ -83,5 +88,26 @@ export function EditText({
         </p>
       )}
     </div>
+  )
+}
+
+/** Yazarken metinde geçen ilan terimleri; eşleşme skorlamayla aynı. */
+function LiveTerms({ text, terms }: { text: string; terms: readonly PostingTerm[] }) {
+  const found = termsIn(text, terms)
+  return (
+    <p className="m-0 text-xs text-muted" aria-live="polite">
+      {found.length === 0 ? (
+        "Bu metinde ilanın terimlerinden biri geçmiyor."
+      ) : (
+        <>
+          İlanın terimleri:{" "}
+          {found.map((t) => (
+            <span key={t.term} className="mr-1 inline-block rounded bg-brand-blue/15 px-1.5 py-0.5 text-foreground">
+              {t.term}
+            </span>
+          ))}
+        </>
+      )}
+    </p>
   )
 }

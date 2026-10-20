@@ -11,6 +11,7 @@ import { checkCoverLetter } from "@uyarla/core/cover/checks"
 import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 import { detectPlatform } from "@/features/analysis/platforms"
 import { readFormAnswers } from "@uyarla/core/cover/formAnswerRecord"
+import { postingTermsFrom } from "@/features/adaptation/postingTerms"
 
 export const runtime = "nodejs"
 
@@ -50,6 +51,8 @@ export async function GET(
       // Başvuru formu yanıtları (DOG-123); istek /api/applications/[analysisId] ucuna.
       analysisId: adaptation.analysisId,
       formAnswers: readFormAnswers(adaptation.analysis.formAnswers),
+      // İlan terimleri (DOG-92): belgede vurgu ve yazarken canlı gösterim.
+      postingTerms: postingTermsFrom(posting.requirements, { excluded, scoringRevision }),
     })
   } catch (error) {
     const reply = authErrorResponse(error)
