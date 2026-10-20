@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { ANSWER_MAX_LENGTH, ANSWER_MIN_LENGTH } from "@uyarla/core/interview/practiceRecord"
 import { LIMIT_RANGE, QUESTION_MAX_LENGTH, QUESTION_MIN_LENGTH } from "@uyarla/core/cover/formAnswerRecord"
+import { OUTREACH_NOTE_MAX_LENGTH } from "@uyarla/core/cover/followUpRecord"
 import { NOTE_MAX_LENGTH, STAGES } from "@/features/applications/board"
 
 /**
@@ -39,8 +40,16 @@ export const applicationPatchSchema = z
 
 /** `POST /api/applications/[id]` gövdesi: takip mesajı ya da teşekkür notu taslağı iste (DOG-117). */
 export const followUpRequestSchema = z.object({
-  kind: z.enum(["followup", "thanks"], { error: "Geçersiz tür." }),
+  kind: z.enum(["followup", "thanks", "outreach"], { error: "Geçersiz tür." }),
   channel: z.enum(["email", "linkedin"], { error: "Geçersiz kanal." }),
+  // Ağ kurma mesajı (DOG-99); diğer türlerde yok sayılıyor.
+  recipient: z.enum(["recruiter", "team", "contact"], { error: "Geçersiz alıcı." }).optional(),
+  purpose: z.enum(["introduce", "ask", "chat"], { error: "Geçersiz amaç." }).optional(),
+  note: z
+    .string()
+    .trim()
+    .max(OUTREACH_NOTE_MAX_LENGTH, `Bağlam en fazla ${OUTREACH_NOTE_MAX_LENGTH} karakter olabilir.`)
+    .optional(),
 })
 
 /** `POST /api/applications/[id]`: mülakat hazırlık paketi iste (DOG-118). */

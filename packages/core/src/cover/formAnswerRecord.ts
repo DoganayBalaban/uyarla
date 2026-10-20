@@ -34,9 +34,13 @@ export const FormAnswerRecordSchema = z.object({
 })
 export type FormAnswerRecord = z.infer<typeof FormAnswerRecordSchema>
 
+/** Kayıtlar tek tek okunuyor; tanınmayan kayıt yalnızca kendisi atlanıyor (bkz. readFollowUps). */
 export function readFormAnswers(value: unknown): FormAnswerRecord[] {
-  const parsed = z.array(FormAnswerRecordSchema).safeParse(value ?? [])
-  return parsed.success ? parsed.data : []
+  if (!Array.isArray(value)) return []
+  return value.flatMap((item) => {
+    const parsed = FormAnswerRecordSchema.safeParse(item)
+    return parsed.success ? [parsed.data] : []
+  })
 }
 
 export const countWords = (text: string) => text.split(/\s+/).filter(Boolean).length

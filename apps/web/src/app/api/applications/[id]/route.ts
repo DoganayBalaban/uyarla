@@ -96,7 +96,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const parsed = followUpRequestSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: firstIssue(parsed.error).message }, { status: 400 })
 
-    const existing = await prisma.analysis.findUnique({ where: { id }, select: { userId: true, status: true } })
+    const existing = await prisma.analysis.findUnique({ where: { id }, select: { userId: true, status: true, stage: true } })
     ensureOwner(existing?.userId ?? null, session)
     if (existing!.status !== "done") return NextResponse.json({ error: "Bu analiz henüz tamamlanmadı." }, { status: 409 })
 
@@ -108,7 +108,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       // Worker da diziye yazıyor; satır kilidiyle birbirini ezmiyorlar.
       await tx.$queryRaw`SELECT id FROM "Analysis" WHERE id = ${id} FOR UPDATE`
       const row = await tx.analysis.findUnique({ where: { id }, select: { followUps: true } })
-      const added = addFollowUp(row?.followUps, parsed.data, followUpId, new Date())
+      const added = addFollowUp(row?.followUps, { ...parsed.data, applied: existing!.stage !== "saved" }, followUpId, new Date())
       if ("error" in added) return added
       await tx.analysis.update({ where: { id }, data: { followUps: added.list as unknown as object } })
       return added

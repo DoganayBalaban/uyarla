@@ -22,5 +22,6 @@ export function addFormAnswer(
   if (live.some((a) => a.status === "running")) return { error: "already_running" }
   if (live.length >= MAX_FORM_ANSWERS) return { error: "too_many" }
   const record: FormAnswerRecord = { id, question: input.question, limit: input.limit, status: "running", createdAt: now.toISOString() }
-  return { list: [...list, record], record }
+  // Ham diziye ekleniyor: bu sürümün tanımadığı kayıtlar silinmesin.
+  return { list: [...(Array.isArray(current) ? (current as FormAnswerRecord[]) : []), record], record }
 }

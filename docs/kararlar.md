@@ -3434,3 +3434,38 @@ diye ikinci adıma kalmıştı.
   hesaplanıyor.
 - Kalan: yazarken canlı skor ve serbest düzenleyici (DOG-22'deki testle
   doğrulanmalı).
+
+## K-89 · Ağ kurma mesajı takip altyapısında; JSON dizileri kayıt kayıt
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-99
+
+**Bağlam:** Jobscan'de LinkedIn ağ kurma mesajı üreticisi var. Bizde takip
+mesajı ve teşekkür notu (DOG-117) aynı işi görüyor: gönderilen belgelerden,
+doğrulamalı kısa metin.
+
+**Karar:**
+- **Üçüncü tür `outreach`:** panoda "Kaydedildi" ve "Başvuruldu" aşamasında
+  "Ağ kurma mesajı". Seçimler:
+  - Alıcı: işe alım sorumlusu, ekipten biri ya da tanıdık.
+  - Amaç: ilgiyi iletmek, soru sormak ya da kısa görüşme istemek.
+  - Kanal: LinkedIn ya da e-posta.
+  - İsteğe bağlı bağlam (en çok 300 karakter).
+- **Uydurmaya karşı:**
+  - Alıcının adı yerine "[ad]".
+  - Kullanıcının verdiği bağlam doğrulamanın kaynağına giriyor.
+  - Bağlam yoksa ortak geçmiş yazılmıyor.
+  - Başvuru yapılmadıysa "başvurdum" yazılmıyor. Kayıt, istek anındaki
+    aşamadan `applied` taşıyor; ilk ölçümde model bağlamsız mesajların
+    çoğunda "başvuruda bulundum" diyordu.
+- **JSON dizileri kayıt kayıt okunuyor ve ham hâliyle yazılıyor**
+  (`followUps`, `formAnswers`). Eski kod diziyi tek parça doğruluyordu. Yeni
+  bir türü bilmeyen bir sürüm (ör. Railway derlemesi gecikmiş worker) bütün
+  diziyi boş sayar ve geri yazarken diğer taslakları silebilirdi. Artık
+  tanınmayan kayıt yalnızca okumada atlanıyor, yazmada korunuyor.
+- **Dağıtım sırası:** yeni türü web kabul ediyor, worker yazıyor. Railway
+  derlemeleri durmuşken merge edilmedi; worker güncellenmeden web'in yeni
+  türü kabul etmesi mesajı "yazılıyor"da bırakırdı.
+
+**Ölçüm (`pnpm eval:follow-up`, 8 çift × 4 tür, 32 taslak):** uydurma işareti
+0, klişe 0, uydurma ortak geçmiş 0, başvurmadan "başvurdum" 0 (ilk istemde
+çoğunda vardı). Alıcı adı yer tutucusu 16/16.

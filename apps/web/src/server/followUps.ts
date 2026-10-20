@@ -13,7 +13,15 @@ export const FOLLOW_UP_ERROR_MESSAGE: Record<FollowUpError, string> = {
  */
 export function addFollowUp(
   current: unknown,
-  input: { kind: FollowUpKind; channel: FollowUpChannel },
+  input: {
+    kind: FollowUpKind
+    channel: FollowUpChannel
+    recipient?: FollowUpRecord["recipient"]
+    purpose?: FollowUpRecord["purpose"]
+    note?: string
+    /** Ağ kurma mesajında: istek anında başvuru yapılmış mı (aşama "saved" değil). */
+    applied?: boolean
+  },
   id: string,
   now: Date,
 ): { list: FollowUpRecord[]; record: FollowUpRecord } | { error: FollowUpError } {
@@ -21,6 +29,12 @@ export function addFollowUp(
   const sameKind = list.filter((f) => f.kind === input.kind && f.status !== "failed")
   if (sameKind.some((f) => f.status === "running")) return { error: "already_running" }
   if (sameKind.length >= MAX_FOLLOW_UPS_PER_KIND) return { error: "too_many" }
-  const record: FollowUpRecord = { id, ...input, status: "running", createdAt: now.toISOString() }
-  return { list: [...list, record], record }
+  const { recipient, purpose, note, applied, ...base } = input
+  const extra =
+    input.kind === "outreach"
+      ? { recipient: recipient ?? "recruiter", purpose: purpose ?? "introduce", applied: applied ?? false, ...(note ? { note } : {}) }
+      : {}
+  const record: FollowUpRecord = { id, ...base, ...extra, status: "running", createdAt: now.toISOString() }
+  // Ham diziye ekleniyor: bu sürümün tanımadığı kayıtlar silinmesin.
+  return { list: [...(Array.isArray(current) ? (current as FollowUpRecord[]) : []), record], record }
 }

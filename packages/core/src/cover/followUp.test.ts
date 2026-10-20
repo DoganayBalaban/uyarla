@@ -56,3 +56,42 @@ describe("generateFollowUp (DOG-117)", () => {
     expect(source).toContain("Mülakat tarihi: 21 Ekim 2026")
   })
 })
+
+describe("outreach message (DOG-99)", () => {
+  it("treats the user's own context as source and tells the model whether they applied", async () => {
+    let seen = ""
+    const recording: LlmProvider = {
+      extract: async <T>(opts: { input: string }) => {
+        seen = opts.input
+        return { data: { konu: null, metin: "Merhaba [ad], aynı üniversiteden mezunuz. Acme'de React ile müşteri paneli geliştirdim. Rol hakkında kısa bir görüşme yapabilir miyiz?" } as T, tokens: 5 }
+      },
+    } as never
+    const { data } = await generateFollowUp(recording, {
+      profile: PROFILE,
+      posting: POSTING,
+      kind: "outreach",
+      channel: "linkedin",
+      recipient: "contact",
+      purpose: "chat",
+      note: "Aynı üniversiteden mezunuz",
+      applied: false,
+    })
+    expect(seen).toContain("ALICI: şirkette çalışan bir tanıdık")
+    expect(seen).toContain("BAŞVURU: henüz yapılmadı")
+    expect(seen).toContain("BAĞLAM: Aynı üniversiteden mezunuz")
+    expect(data.verification.status).toBe("ok")
+  })
+
+  it("leaves the context out of other kinds", () => {
+    expect(followUpSource({ profile: PROFILE, posting: POSTING, kind: "followup", channel: "email", note: "x" })).not.toContain("BAĞLAM")
+  })
+})
+
+describe("readFollowUps", () => {
+  it("skips an unknown record instead of dropping the whole list", async () => {
+    const { readFollowUps } = await import("./followUpRecord.js")
+    const ok = { id: "f1", kind: "followup", channel: "email", status: "done", createdAt: "" }
+    expect(readFollowUps([ok, { id: "x", kind: "gelecekteki-tür" }]).map((f) => f.id)).toEqual(["f1"])
+    expect(readFollowUps(null)).toEqual([])
+  })
+})

@@ -19,10 +19,16 @@ import { resumeFacts, verifyCoverLetter } from "./letter.js"
  * uydurmasın diye köşeli parantezli bir yer tutucu bırakıyor; kullanıcı
  * dolduruyor ya da siliyor.
  */
-export type { FollowUpChannel, FollowUpKind } from "./followUpRecord.js"
-import type { FollowUpChannel, FollowUpKind } from "./followUpRecord.js"
+export type { FollowUpChannel, FollowUpKind, OutreachPurpose, OutreachRecipient } from "./followUpRecord.js"
+import type { FollowUpChannel, FollowUpKind, OutreachPurpose, OutreachRecipient } from "./followUpRecord.js"
 
-export { MAX_FOLLOW_UPS_PER_KIND, FollowUpRecordSchema, readFollowUps, type FollowUpRecord } from "./followUpRecord.js"
+export {
+  MAX_FOLLOW_UPS_PER_KIND,
+  OUTREACH_NOTE_MAX_LENGTH,
+  FollowUpRecordSchema,
+  readFollowUps,
+  type FollowUpRecord,
+} from "./followUpRecord.js"
 
 export const FOLLOW_UP_PROMPT = `Sana bir adayın bir iş başvurusunda GÖNDERDİĞİ belgeler (CV ve varsa ön yazı)
 ve başvurduğu ilan verilecek. Adayın işverene göndereceği kısa bir mesajın
@@ -46,6 +52,13 @@ Tür:
   yinele, belgelerden ilanla en ilgili TEK bir noktayı an. Görüşmede ne
   konuşulduğunu BİLMİYORSUN: bir konu uydurma; onun yerine metne aynen
   "[görüşmede konuşulan bir konu]" yer tutucusunu koy. 50–100 kelime.
+- "ağ kurma": başvurmadan önce ya da başvurduktan sonra şirketten birine ilk
+  kez yazıyor (DOG-99). Alıcının adını BİLMİYORSUN: hitapta adın yerine aynen
+  "[ad]" yaz ("Merhaba [ad],"). "BAŞVURU: henüz yapılmadı" ise başvurduğunu
+  YAZMA. "ALICI" ve "AMAÇ" satırlarına göre yaz; tek
+  bir somut deneyim an, tek bir açık ve küçük istekle bitir. "BAĞLAM" satırı
+  varsa onu bir cümleyle kullan; yoksa ortak bir geçmiş, tanışıklık ya da
+  ilgi UYDURMA. İş isteme, iltifat etme. 50–100 kelime.
 
 Kanal:
 - "e-posta": "konu" alanına kısa bir konu satırı yaz. Metin hitapla başlasın
@@ -56,7 +69,17 @@ Kanal:
 const FollowUpSchema = z.object({ konu: z.string().nullable(), metin: z.string() })
 const followUpJsonSchema = toJsonSchema(FollowUpSchema)
 
-const KIND_LABEL: Record<FollowUpKind, string> = { followup: "takip", thanks: "teşekkür" }
+const KIND_LABEL: Record<FollowUpKind, string> = { followup: "takip", thanks: "teşekkür", outreach: "ağ kurma" }
+const RECIPIENT_LABEL: Record<OutreachRecipient, string> = {
+  recruiter: "işe alım sorumlusu",
+  team: "pozisyonun ekibinden biri (ör. yönetici)",
+  contact: "şirkette çalışan bir tanıdık ya da ortak bağlantı",
+}
+const PURPOSE_LABEL: Record<OutreachPurpose, string> = {
+  introduce: "ilgisini ve başvurusunu kısaca iletmek",
+  ask: "pozisyon ya da süreç hakkında bir soru sormak",
+  chat: "rol hakkında kısa bir görüşme rica etmek",
+}
 const CHANNEL_LABEL: Record<FollowUpChannel, string> = { email: "e-posta", linkedin: "linkedin" }
 const DATE = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
 
@@ -70,6 +93,13 @@ export interface FollowUpInput {
   channel: FollowUpChannel
   /** "YYYY-AA-GG"; takipte başvuru, teşekkürde mülakat günü. */
   date?: string | null
+  /** Ağ kurma mesajında (DOG-99). */
+  recipient?: OutreachRecipient
+  purpose?: OutreachPurpose
+  /** Kullanıcının verdiği bağlam; kaynağa giriyor, uydurma sayılmıyor. */
+  note?: string | null
+  /** Ağ kurma mesajında: başvuru yapıldı mı. Yapılmadıysa "başvurdum" yazılmaz. */
+  applied?: boolean
 }
 
 export interface FollowUpDraft {
@@ -88,6 +118,7 @@ export function followUpSource(input: FollowUpInput): string {
     `GÖNDERİLEN CV\n${resumeFacts(input.profile)}`,
     input.coverLetter?.length ? `GÖNDERİLEN ÖN YAZI\n${input.coverLetter.join("\n\n")}` : null,
     date ? `${input.kind === "thanks" ? "Mülakat" : "Başvuru"} tarihi: ${date}` : null,
+    input.kind === "outreach" && input.note?.trim() ? `ADAYIN VERDİĞİ BAĞLAM\n${input.note.trim()}` : null,
   ]
     .filter(Boolean)
     .join("\n\n")
@@ -102,7 +133,16 @@ export async function generateFollowUp(llm: LlmProvider, input: FollowUpInput): 
     input: [
       source,
       `İLAN\nPozisyon: ${input.posting.position}${input.posting.company ? `\nŞirket: ${input.posting.company}` : ""}\nDil: ${input.posting.language === "en" ? "İngilizce" : "Türkçe"}`,
-      `TÜR: ${KIND_LABEL[input.kind]}\nKANAL: ${CHANNEL_LABEL[input.channel]}`,
+      [
+        `TÜR: ${KIND_LABEL[input.kind]}`,
+        `KANAL: ${CHANNEL_LABEL[input.channel]}`,
+        input.kind === "outreach" ? `ALICI: ${RECIPIENT_LABEL[input.recipient ?? "recruiter"]}` : null,
+        input.kind === "outreach" ? `AMAÇ: ${PURPOSE_LABEL[input.purpose ?? "introduce"]}` : null,
+        input.kind === "outreach" ? `BAŞVURU: ${input.applied ? "yapıldı" : "henüz yapılmadı"}` : null,
+        input.kind === "outreach" && input.note?.trim() ? `BAĞLAM: ${input.note.trim()}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n"),
     ].join("\n\n"),
   })
   const parsed = FollowUpSchema.parse(data)
