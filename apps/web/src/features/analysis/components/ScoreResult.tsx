@@ -10,6 +10,7 @@ import {
   CircleCheck,
   LoaderCircle,
   RotateCcw,
+  ShieldAlert,
   Sparkles,
   Target,
   X,
@@ -107,10 +108,13 @@ export function ScoreResult({
   onYeniAnaliz,
   onRequirementChange,
   platform,
+  sourceWarning,
 }: {
   result: ScoreResultView
   /** İlan adresinden tanınan platform (DOG-95); ipuçları skor kartının altında. */
   platform?: PlatformId | null
+  /** İlan kaynağı uyarısı (DOG-125): bilinmeyen ya da taklit alan adı. */
+  sourceWarning?: { tone: "soft" | "strong"; text: string } | null
   durationMs?: number | null
   tokenUsage?: number | null
   modelId?: string | null
@@ -262,6 +266,23 @@ export function ScoreResult({
           </div>
         </div>
       </motion.div>
+
+      {sourceWarning && (
+        <motion.p
+          {...entrance(0.05)}
+          role={sourceWarning.tone === "strong" ? "alert" : undefined}
+          className={cn(
+            "m-0 flex gap-2 rounded-card border p-4 text-sm",
+            sourceWarning.tone === "strong" ? "border-brand-red/30 bg-brand-red/[0.06]" : "border-border bg-card text-muted",
+          )}
+        >
+          <ShieldAlert
+            className={cn("mt-0.5 size-4 shrink-0", sourceWarning.tone === "strong" ? "text-brand-red" : "text-brand-amber")}
+            aria-hidden
+          />
+          <span>{sourceWarning.text}</span>
+        </motion.p>
+      )}
 
       {platform && (
         <motion.div {...entrance(0.06)}>

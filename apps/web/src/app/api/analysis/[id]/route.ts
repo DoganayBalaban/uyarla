@@ -9,6 +9,7 @@ import type { JobPostingData } from "@uyarla/core/schemas/job"
 import type { ResumeProfile } from "@uyarla/core/schemas/resume"
 import { cachedEmbedding } from "@/server/adaptationDecision"
 import { detectPlatform } from "@/features/analysis/platforms"
+import { classifyPostingSource, postingSourceWarning } from "@/features/analysis/postingSource"
 import {
   markRequirement,
   mergeCorrection,
@@ -56,6 +57,8 @@ export async function GET(
       tokenUsage: analysis!.tokenUsage,
       // İlan adresinden tanınan platform (DOG-95); ipuçları istemcide.
       platform: detectPlatform(analysis!.jobPosting.sourceUrl),
+      // Bilinmeyen ya da taklit alan adında uyarı (DOG-125).
+      sourceWarning: postingSourceWarning(classifyPostingSource(analysis!.jobPosting.sourceUrl)),
       modelId: analysis!.modelId,
     })
   } catch (error) {

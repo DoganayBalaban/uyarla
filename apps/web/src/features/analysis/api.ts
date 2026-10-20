@@ -19,6 +19,8 @@ export interface AnalysisResponse {
   result?: ScoreResultView | null
   /** İlan adresinden tanınan platform (DOG-95). */
   platform?: PlatformId | null
+  /** Bilinmeyen ya da taklit ilan adresi uyarısı (DOG-125). */
+  sourceWarning?: { tone: "soft" | "strong"; text: string } | null
 }
 
 export interface PostingFromUrl {

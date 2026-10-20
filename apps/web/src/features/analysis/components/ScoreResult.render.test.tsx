@@ -60,6 +60,21 @@ describe("ScoreResult", () => {
     expect(html).toContain("Daha önce anlattığın 1 deneyim bu analizde kanıt sayıldı")
   })
 
+  it("shows platform tips and a look-alike source warning once (DOG-95, DOG-125)", () => {
+    const html = renderToStaticMarkup(
+      <ScoreResult
+        result={result}
+        adapting={false}
+        platform="greenhouse"
+        sourceWarning={{ tone: "strong", text: "Bu ilanın adresi (evil-greenhouse.io) Greenhouse gibi görünüyor" }}
+      />,
+    )
+    expect(html).toContain("evil-greenhouse.io")
+    expect(html).toContain('role="alert"')
+    expect(html).toContain("Bu ilan Greenhouse üzerinden")
+    expect(html.match(/Bu ilanın adresi/g)).toHaveLength(1)
+  })
+
   it("draws an old analysis as before", () => {
     const html = renderToStaticMarkup(<ScoreResult result={{ ...result, scoringRevision: undefined }} adapting={false} />)
     expect(html).not.toContain("Mülakatta anlaşılacaklar")

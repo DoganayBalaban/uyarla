@@ -449,6 +449,7 @@ export function AnalyzeView() {
       <ScoreResult
         result={state.result}
         platform={state.platform}
+        sourceWarning={state.sourceWarning}
         durationMs={state.durationMs}
         tokenUsage={state.tokenUsage}
         modelId={state.modelId}

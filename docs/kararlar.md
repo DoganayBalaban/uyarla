@@ -3336,3 +3336,30 @@ istemcideydi).
 - **Nerede:** sonuç sayfasında skor kartının altında, uyarlama sayfasında
   indirme panelinin altında. Adres yoksa ya da platform tanınmazsa hiçbir
   şey gösterilmiyor.
+
+## K-86 · İlan kaynağı uyarısı: beş sınıf, taklit etiketle
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-125
+
+**Bağlam:** ai-job-search ilan bağlantısını kurulu portal, bilinen ATS ve
+doğrulanmamış diye üçe ayırıp taklit alan adlarını reddediyor. DOG-95'ten
+beri ilan adresini saklıyoruz; sahte ilan dolandırıcılığına karşı ucuz bir
+koruma eklenebilir.
+
+**Karar:**
+- **Beş sınıf:** bilinen iş sitesi, bilinen ATS, resmî kurum (`gov.tr`,
+  `edu.tr`…), doğrulanmamış ve taklit. Eşleşme tam alan adı ya da `.alan`
+  sonekiyle.
+- **Taklit etiketle bulunuyor, düz metin aramasıyla değil:** tire nokta
+  sayılıyor. Bilinen bir alan adı başka bir adın içinde geçiyorsa taklit:
+  `greenhouse.io.evil.com`, `evil-greenhouse.io`, `kariyer-net.com`. Ayırt
+  edici bir marka etiketi taşıyorsa da taklit: `linkedin-jobs.com`. Kısa ya
+  da genel adlar ("lever", "eleman") tek başına aranmıyor; noktasız
+  aramada `clevercompany.com` Lever'in taklidi sayılıyordu.
+- `greenhouse.io@evil.com` gibi adreslerde kullanıcı kısmı ayrıştırmada
+  düşüyor, asıl alan adı `evil.com` ve doğrulanmamış uyarısı çıkıyor.
+- **Uyarının tonu:** doğrulanmamışta yumuşak, çünkü çoğunlukla şirketin
+  kendi sitesi. Taklitte güçlü: ücret, kimlik ya da banka bilgisi isteyen
+  sayfalara bilgi verme. İstatistik ya da korkutma yok.
+- Uyarı sonuç sayfasında. Adres yoksa hiçbir şey gösterilmiyor; "İlanı
+  getir" zaten yalnızca izinli sitelerden indiriyor.
