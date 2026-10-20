@@ -17,17 +17,20 @@ import { CONTRIBUTION_JOB, runContribution } from "./contribution-pipeline.js"
 import {
   FOLLOW_UP_JOB,
   FORM_ANSWER_JOB,
+  LINKEDIN_REPORT_JOB,
   INTERVIEW_PREP_JOB,
   PRACTICE_JOB,
   type ContributionJobData,
   type FollowUpJobData,
   type FormAnswerJobData,
+  type LinkedInReportJobData,
   type InterviewPrepJobData,
   type PracticeJobData,
 } from "./adapt-queue.js"
 import { runFollowUp } from "./follow-up-pipeline.js"
 import { prismaFollowUpStore, prismaFormAnswerStore, prismaInterviewPrepStore } from "./follow-up-store.js"
 import { runFormAnswer } from "./form-answer-pipeline.js"
+import { prismaLinkedInStore, runLinkedInReport } from "./linkedin-pipeline.js"
 import { runInterviewPrep, runPractice } from "./interview-prep-pipeline.js"
 import { initErrorTracking, reportJobFailure } from "./observability.js"
 import { runAnalysis } from "./pipeline.js"
@@ -116,6 +119,23 @@ const adaptWorker = new Worker<AdaptJobData, void>(
     }
 
     // Takip mesajı ve teşekkür notu taslağı (DOG-117); aynı kuyruk, aynı model.
+    // LinkedIn profil raporu (DOG-69): ayrıştırma ve ilan başına skor.
+    if (job.name === LINKEDIN_REPORT_JOB) {
+      const data = job.data as unknown as LinkedInReportJobData
+      try {
+        await runLinkedInReport({ llm, embedding, modelId: llmConfig.model, store: prismaLinkedInStore }, data)
+      } catch (error) {
+        const lastAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1)
+        if (error instanceof PermanentError || lastAttempt) {
+          const context = await prismaLinkedInStore.getContext(data.resumeId).catch(() => null)
+          if (context?.record) await prismaLinkedInStore.save(data.resumeId, { ...context.record, status: "failed" }).catch(() => {})
+        }
+        if (error instanceof PermanentError) throw toUnrecoverable(error, "adapt")
+        throw error
+      }
+      return
+    }
+
     // Başvuru formu yanıtı (DOG-123); takip mesajıyla aynı akış.
     if (job.name === FORM_ANSWER_JOB) {
       const data = job.data as unknown as FormAnswerJobData

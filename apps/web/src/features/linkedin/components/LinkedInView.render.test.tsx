@@ -1,0 +1,34 @@
+import { renderToStaticMarkup } from "react-dom/server"
+import { describe, expect, it } from "vitest"
+import { ReportView } from "@/features/linkedin/components/LinkedInView"
+import { linkedinReportRequestSchema } from "@/features/resumes/schema"
+
+describe("LinkedIn report (DOG-69)", () => {
+  it("shows checks and the common gaps with the honesty note", () => {
+    const html = renderToStaticMarkup(
+      <ReportView
+        report={{
+          postings: [
+            { analysisId: "a", position: "Frontend", company: "Beta", score: 40 },
+            { analysisId: "b", position: "Frontend", company: null, score: 50 },
+          ],
+          commonMissing: [{ term: "Docker", postings: 2, must: true }],
+          checks: [{ id: "headline_generic", status: "warn", text: "Başlığın yalnızca unvan" }],
+          headline: "Frontend Geliştirici",
+          about: null,
+        }}
+      />,
+    )
+    expect(html).toContain("Başlığın yalnızca unvan")
+    expect(html).toContain("Docker")
+    expect(html).toContain("2 ilanda")
+    expect(html).toContain("yoksa ekleme")
+  })
+
+  it("accepts one to three distinct postings", () => {
+    expect(linkedinReportRequestSchema.safeParse({ type: "linkedin-report", analysisIds: ["a"] }).success).toBe(true)
+    expect(linkedinReportRequestSchema.safeParse({ type: "linkedin-report", analysisIds: [] }).success).toBe(false)
+    expect(linkedinReportRequestSchema.safeParse({ type: "linkedin-report", analysisIds: ["a", "b", "c", "d"] }).success).toBe(false)
+    expect(linkedinReportRequestSchema.safeParse({ type: "linkedin-report", analysisIds: ["a", "a"] }).success).toBe(false)
+  })
+})

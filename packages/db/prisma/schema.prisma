@@ -61,6 +61,9 @@ model Resume {
   savedAt   DateTime?
   isDefault Boolean         @default(false)
   versions  ResumeVersion[]
+  // LinkedIn profil raporu (DOG-69): bu CV LinkedIn'den indirilen PDF'se,
+  // seçilen ilanlara göre ortak eksikler ve profil kontrolleri.
+  linkedinReport Json?
 }
 
 enum ResumeStatus {

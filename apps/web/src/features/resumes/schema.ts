@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { MAX_REPORT_POSTINGS } from "@uyarla/core/linkedin/reportRecord"
 
 /** CV kütüphanesi şemaları; arayüz ve `/api/resumes` uçları ortak kullanıyor. */
 
@@ -32,3 +33,13 @@ export interface LibraryResume {
   createdAt: string
   isDefault: boolean
 }
+
+/** `POST /api/resumes/[id]`: LinkedIn profil raporu iste (DOG-69). */
+export const linkedinReportRequestSchema = z.object({
+  type: z.literal("linkedin-report"),
+  analysisIds: z
+    .array(z.string().min(1), { error: "İlan seçer misin?" })
+    .min(1, "En az bir ilan seç.")
+    .max(MAX_REPORT_POSTINGS, `En fazla ${MAX_REPORT_POSTINGS} ilan seçebilirsin.`)
+    .refine((ids) => new Set(ids).size === ids.length, "Aynı ilan iki kez seçilmiş."),
+})
