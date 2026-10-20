@@ -3,6 +3,7 @@ import { ArrowRight, CircleCheck, FilePen, Inbox, ListChecks, Plus } from "lucid
 import { resultPath } from "@/features/analysis/paths"
 import { cn } from "@/lib/cn"
 import type { DashboardSummary, PendingItem, PendingKind } from "@/features/dashboard/summary"
+import type { SkillGap } from "@/features/dashboard/skillGaps"
 import { STAGES, STAGE_LABEL, STAGE_COLOR, type Stage } from "@/features/applications/board"
 import { scoreStatus } from "@/lib/scoreStatus"
 import { PageHeader, PageShell } from "@/components/layout/PageShell"
@@ -19,10 +20,13 @@ export function DashboardView({
   name,
   targetRole,
   summary: summaryData,
+  gaps = { list: [], analyses: 0 },
 }: {
   name: string | null
   targetRole: string | null
   summary: DashboardSummary
+  /** Beceri açığı raporu (DOG-119). */
+  gaps?: { list: SkillGap[]; analyses: number }
 }) {
   // Ad yoksa ya da e-postanın kendisiyse selamda kullanılmıyor.
   const userName = name?.trim()
@@ -85,7 +89,10 @@ export function DashboardView({
           {summaryData.pending.length > 0 && <PendingList list={summaryData.pending} />}
           <RecentAnalyses cards={summaryData.recentAnalyses} totalCount={summaryData.total} />
         </div>
-        <ApplicationStages counts={summaryData.stageCounts} totalCount={summaryData.total} />
+        <div className="space-y-6">
+          <ApplicationStages counts={summaryData.stageCounts} totalCount={summaryData.total} />
+          {gaps.list.length > 0 && <SkillGaps list={gaps.list} analyses={gaps.analyses} />}
+        </div>
       </div>
     </PageShell>
   )
@@ -220,6 +227,34 @@ function ApplicationStages({ counts, totalCount }: { counts: Record<Stage, numbe
         Panoya git
         <ArrowRight className="size-4" aria-hidden />
       </Link>
+    </section>
+  )
+}
+
+/**
+ * Sık eksik kalan kavramlar (DOG-119). Yalnızca kullanıcının kendi
+ * analizlerinden; öğrenme kaynağı önermiyoruz, ne yapacağını söylüyoruz.
+ */
+function SkillGaps({ list, analyses }: { list: SkillGap[]; analyses: number }) {
+  return (
+    <section aria-labelledby="eksik-kavramlar" className="rounded-card border border-border bg-card p-5">
+      <h2 id="eksik-kavramlar" className="m-0 text-base font-bold">
+        Sık eksik kalan kavramlar
+      </h2>
+      <p className="m-0 mt-1 text-sm text-muted">
+        Son {analyses} analizinde CV&apos;nde karşılığı bulunmayanlar. Deneyiminde varsa CV&apos;ne açıkça yaz; yoksa
+        öğrenme listene ekleyebilirsin.
+      </p>
+      <ul className="m-0 mt-4 list-none space-y-2 p-0">
+        {list.map((g) => (
+          <li key={g.term} className="flex items-baseline justify-between gap-3 text-sm">
+            <span className="min-w-0 font-medium">{g.term}</span>
+            <span className="shrink-0 text-xs text-muted tabular-nums">
+              {g.postings} ilanda{g.must > 0 ? ` · ${g.must} zorunlu` : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }
