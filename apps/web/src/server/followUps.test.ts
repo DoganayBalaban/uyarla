@@ -24,3 +24,24 @@ describe("addFollowUp (DOG-117)", () => {
     expect(addFollowUp(first.list, { kind: "thanks", channel: "linkedin" }, "t2", NOW)).toEqual({ error: "already_running" })
   })
 })
+
+describe("addFollowUp outreach (DOG-99)", () => {
+  it("keeps the outreach choices and defaults, and drops them from other kinds", () => {
+    const out = addFollowUp(null, { kind: "outreach", channel: "linkedin", purpose: "chat", note: "Aynı üniversite", applied: true }, "o1", NOW)
+    if ("error" in out) throw new Error("beklenmedik")
+    expect(out.record).toMatchObject({ kind: "outreach", recipient: "recruiter", purpose: "chat", note: "Aynı üniversite", applied: true })
+    const other = addFollowUp(null, { kind: "followup", channel: "email", note: "x", recipient: "team" }, "f1", NOW)
+    if ("error" in other) throw new Error("beklenmedik")
+    expect(other.record).not.toHaveProperty("note")
+    expect(other.record).not.toHaveProperty("recipient")
+  })
+})
+
+describe("addFollowUp keeps records it does not know", () => {
+  it("appends to the raw list", () => {
+    const unknown = { id: "x", kind: "gelecekteki-tür" }
+    const out = addFollowUp([unknown], { kind: "followup", channel: "email" }, "f1", NOW)
+    if ("error" in out) throw new Error("beklenmedik")
+    expect(out.list.map((f) => f.id)).toEqual(["x", "f1"])
+  })
+})

@@ -43,7 +43,7 @@ class ReadThroughLlm implements LlmProvider {
   }
 }
 
-const RANGE: Record<FollowUpKind, [number, number]> = { followup: [40, 100], thanks: [50, 100] }
+const RANGE: Record<FollowUpKind, [number, number]> = { followup: [40, 100], thanks: [50, 100], outreach: [40, 100] }
 
 async function main() {
   const llm = new LmStudioProvider(llmConfigFromEnv())
@@ -61,8 +61,15 @@ async function main() {
     const letter = await generateCoverLetter(new ReadThroughLlm(llm, join(CACHE, `onyazi-${pair.id}.json`)), { profile, posting })
     const coverLetter = letter.data.paragraphs.map((p) => p.text)
 
-    for (const [kind, channel] of [["followup", "email"], ["thanks", "email"]] as Array<[FollowUpKind, FollowUpChannel]>) {
-      const { data } = await generateFollowUp(llm, { profile, coverLetter, posting, kind, channel, date: "2026-10-10" })
+    const cases: Array<{ kind: FollowUpKind; channel: FollowUpChannel; extra?: Parameters<typeof generateFollowUp>[1] extends infer I ? Partial<I> : never }> = [
+      { kind: "followup", channel: "email" },
+      { kind: "thanks", channel: "email" },
+      // Ağ kurma (DOG-99): bağlamsız işe alım sorumlusuna soru, bağlamlı tanıdığa görüşme.
+      { kind: "outreach", channel: "linkedin", extra: { recipient: "recruiter", purpose: "ask", applied: false } },
+      { kind: "outreach", channel: "email", extra: { recipient: "contact", purpose: "chat", note: "Aynı üniversiteden mezunuz", applied: true } },
+    ]
+    for (const { kind, channel, extra } of cases) {
+      const { data } = await generateFollowUp(llm, { profile, coverLetter, posting, kind, channel, date: "2026-10-10", ...extra })
       total++
       const words = data.text.split(/\s+/).filter(Boolean).length
       const [min, max] = RANGE[kind]
@@ -80,6 +87,18 @@ async function main() {
       if (hits.length) issues.push(`klişe: ${hits.map((h) => h.phrase).join(", ")}`)
       const turkishGreeting = /^merhaba/i.test(data.text.trim())
       if ((posting.language === "en") === turkishGreeting) issues.push("dil karışık")
+      if (kind === "outreach") {
+        if (!data.text.includes("[ad]")) issues.push("alıcı adı yer tutucusu yok")
+        if (!extra?.applied && /başvur(dum|uda bulundum|um)|I (have )?applied|my application/i.test(data.text)) {
+          missingPlaceholder++
+          issues.push("başvurmadan 'başvurdum' diyor")
+        }
+        // Bağlam verilmediyse ortak geçmiş uydurulmamalı.
+        if (!extra?.note && /aynı (üniversite|okul|şirket)|tanıştık|ortak (bağlantı|tanıdık)|daha önce görüş/i.test(data.text)) {
+          missingPlaceholder++
+          issues.push("ortak geçmiş uydurulmuş olabilir")
+        }
+      }
       if (kind === "thanks" && !data.text.includes("[görüşmede konuşulan bir konu]")) {
         missingPlaceholder++
         issues.push("yer tutucu yok")
@@ -88,7 +107,7 @@ async function main() {
       console.log(`   konu : ${data.subject ?? "—"}\n   metin: ${data.text.replace(/\n+/g, " ⏎ ")}\n`)
     }
   }
-  console.log(`Taslak ${total} · işaretli ${flagged} · uzunluk dışı ${offLength} · klişe ${cliches} · yer tutucusuz teşekkür ${missingPlaceholder}`)
+  console.log(`Taslak ${total} · işaretli ${flagged} · uzunluk dışı ${offLength} · klişe ${cliches} · yer tutucusuz teşekkür ya da uydurma geçmiş ${missingPlaceholder}`)
 }
 
 void main()

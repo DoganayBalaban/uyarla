@@ -19,6 +19,11 @@ export async function runFollowUp(deps: { llm: LlmProvider; store: FollowUpStore
     kind: context.record.kind,
     channel: context.record.channel,
     date: context.date,
+    // Ağ kurma mesajı (DOG-99): kayıtta istek anındaki seçimler.
+    recipient: context.record.recipient,
+    purpose: context.record.purpose,
+    note: context.record.note,
+    applied: context.record.applied,
   })
   await deps.store.update(input.analysisId, input.followUpId, {
     status: "done",

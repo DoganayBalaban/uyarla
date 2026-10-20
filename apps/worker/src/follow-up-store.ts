@@ -61,6 +61,10 @@ export interface FormAnswerStore {
   update(analysisId: string, answerId: string, patch: Partial<FormAnswerRecord>): Promise<void>
 }
 
+/** JSON dizisini olduğu gibi okur; dizi değilse boş. */
+const rawList = (value: unknown): Array<{ id?: unknown } & Record<string, unknown>> =>
+  Array.isArray(value) ? (value.filter((x) => x && typeof x === "object") as Array<{ id?: unknown } & Record<string, unknown>>) : []
+
 const day = (d: Date | null) => d?.toISOString().slice(0, 10) ?? null
 
 const SENT_SELECT = {
@@ -162,7 +166,8 @@ export const prismaFollowUpStore: FollowUpStore = {
       // Web ucu da diziye ekliyor; satır kilidiyle birbirini ezmiyorlar.
       await tx.$queryRaw`SELECT id FROM "Analysis" WHERE id = ${analysisId} FOR UPDATE`
       const row = await tx.analysis.findUnique({ where: { id: analysisId }, select: { followUps: true } })
-      const list = readFollowUps(row?.followUps).map((f) => (f.id === followUpId ? { ...f, ...patch } : f))
+      // Ham dizi korunuyor: bu sürümün tanımadığı kayıtlar silinmesin.
+      const list = rawList(row?.followUps).map((f) => (f.id === followUpId ? { ...f, ...patch } : f))
       await tx.analysis.update({ where: { id: analysisId }, data: { followUps: list as unknown as object } })
     })
   },
@@ -182,7 +187,7 @@ export const prismaFormAnswerStore: FormAnswerStore = {
       // Web ucu da diziye ekliyor; satır kilidiyle birbirini ezmiyorlar.
       await tx.$queryRaw`SELECT id FROM "Analysis" WHERE id = ${analysisId} FOR UPDATE`
       const row = await tx.analysis.findUnique({ where: { id: analysisId }, select: { formAnswers: true } })
-      const list = readFormAnswers(row?.formAnswers).map((a) => (a.id === answerId ? { ...a, ...patch } : a))
+      const list = rawList(row?.formAnswers).map((a) => (a.id === answerId ? { ...a, ...patch } : a))
       await tx.analysis.update({ where: { id: analysisId }, data: { formAnswers: list as unknown as object } })
     })
   },

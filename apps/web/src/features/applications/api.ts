@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import type { BoardCard, Stage } from "@/features/applications/board"
+import type { FollowUpChannel, FollowUpKind, OutreachPurpose, OutreachRecipient } from "@uyarla/core/cover/followUpRecord"
 
 export interface CardChange {
   stage?: Stage
@@ -34,9 +35,18 @@ export function applyCardChange(cards: BoardCard[], analysisId: string, change: 
 }
 
 /** Takip mesajı ya da teşekkür notu taslağı ister (DOG-117); worker yazıyor. */
+/** Takip, teşekkür ya da ağ kurma mesajı isteği (DOG-117, DOG-99). */
+export interface FollowUpRequestBody {
+  kind: FollowUpKind
+  channel: FollowUpChannel
+  recipient?: OutreachRecipient
+  purpose?: OutreachPurpose
+  note?: string
+}
+
 export async function requestFollowUp(
   analysisId: string,
-  body: { kind: "followup" | "thanks"; channel: "email" | "linkedin" },
+  body: FollowUpRequestBody,
 ): Promise<void> {
   await api.post(`/applications/${encodeURIComponent(analysisId)}`, body)
 }
@@ -54,8 +64,7 @@ export function useApplicationCards() {
 export function useRequestFollowUp() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ analysisId, kind, channel }: { analysisId: string; kind: "followup" | "thanks"; channel: "email" | "linkedin" }) =>
-      requestFollowUp(analysisId, { kind, channel }),
+    mutationFn: ({ analysisId, ...body }: { analysisId: string } & FollowUpRequestBody) => requestFollowUp(analysisId, body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: applicationsQueryKey }),
   })
 }

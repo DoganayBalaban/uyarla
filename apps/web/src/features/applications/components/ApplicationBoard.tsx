@@ -37,7 +37,7 @@ import {
   type BoardCard,
 } from "@/features/applications/board"
 import { noteFormSchema, type NoteFormValues } from "@/features/applications/schema"
-import { FollowUpPanel } from "@/features/applications/components/FollowUpPanel"
+import { FollowUpPanel, OutreachPanel } from "@/features/applications/components/FollowUpPanel"
 
 /** Sürükle-bırak verisinin türü; başka sürüklemelerle karışmasın. */
 const DRAG_TYPE = "application/x-uyarla-kart"
@@ -513,6 +513,7 @@ function BoardCardView({
       )}
       {/* Takip mesajı ya da teşekkür notu taslağı (DOG-117). */}
       <FollowUpPanel card={card} />
+      <OutreachPanel card={card} />
     </article>
   )
 }
