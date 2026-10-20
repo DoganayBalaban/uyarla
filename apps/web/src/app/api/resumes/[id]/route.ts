@@ -48,7 +48,10 @@ export async function POST(request: Request, { params }: Params) {
       select: { linkedinReport: true },
     })
     if (!resume) return NextResponse.json({ error: "CV bulunamadı." }, { status: 404 })
-    if ((resume.linkedinReport as LinkedInReportRecord | null)?.status === "running") {
+    const prev = resume.linkedinReport as LinkedInReportRecord | null
+    // 10 dakikadan eski "running" takılmış sayılıyor (ör. worker dağıtımı sırasında
+    // düşen iş); kullanıcı yeniden başlatabiliyor.
+    if (prev?.status === "running" && Date.now() - Date.parse(prev.createdAt) < 10 * 60_000) {
       return NextResponse.json({ error: "Raporun hâlâ hazırlanıyor." }, { status: 400 })
     }
     const owned = await prisma.analysis.count({ where: { id: { in: parsed.data.analysisIds }, userId: user.id, status: "done" } })

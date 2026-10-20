@@ -42,7 +42,8 @@ export function LinkedInView() {
 
   const analyses = (cards.data ?? []).slice(0, 20)
   const record = report.data ?? null
-  const running = record?.status === "running"
+  // Uçla aynı kural: 10 dakikadan eski "running" takılmış sayılıyor.
+  const running = record?.status === "running" && Date.now() - Date.parse(record.createdAt) < 10 * 60_000
 
   function toggle(id: string) {
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length < MAX_REPORT_POSTINGS ? [...p, id] : p))
