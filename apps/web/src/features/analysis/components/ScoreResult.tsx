@@ -7,9 +7,11 @@ import {
   Check,
   ChevronDown,
   CircleAlert,
+  CircleCheck,
   LoaderCircle,
   RotateCcw,
   Sparkles,
+  Target,
   X,
 } from "lucide-react"
 import { cn } from "@/lib/cn"
@@ -17,6 +19,7 @@ import { FormatReportCard as FormatReport, type FormatReportView } from "@/featu
 import { ScoreRing } from "@/features/analysis/components/ScoreRing"
 import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
 import { scoreStatus } from "@/lib/scoreStatus"
+import { readiness, readinessHint } from "@/features/analysis/readiness"
 import { withTitleFinding } from "@/features/analysis/titleFinding"
 import { applyExclusions } from "@/features/analysis/exclusion"
 import type { ExclusionMark, RequirementCorrection, RequirementReport } from "@uyarla/core/score/exclusions"
@@ -120,6 +123,8 @@ export function ScoreResult({
   const exclusion = applyExclusions(result)
   const state = scoreStatus(exclusion.score)
   const summary = summarizeRequirements(exclusion.active)
+  // Kendi eşiğimiz (DOG-91): zorunluların tamamı ve unvan.
+  const ready = readiness(result)
   const format = withTitleFinding(result.format, result.titleMatch)
   const satisfiedCount = summary.matched
   const correctedCount = Object.keys(result.corrections ?? {}).length
@@ -169,6 +174,18 @@ export function ScoreResult({
                 )}
                 {summary.mustTotal > 0 && summary.partial > 0 && " · "}
                 {partialNote(summary)}
+              </p>
+            )}
+            {ready && (
+              <p
+                className={`mt-1.5 flex gap-1.5 text-sm font-medium ${ready.ready ? "text-brand-green dark:text-[#4ade80]" : "text-foreground"}`}
+              >
+                {ready.ready ? (
+                  <CircleCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
+                ) : (
+                  <Target className="mt-0.5 size-4 shrink-0 text-brand-amber" aria-hidden />
+                )}
+                <span>{readinessHint(ready)}</span>
               </p>
             )}
             {result.titleMatch && (result.scoringRevision ?? 1) >= 2 && (
