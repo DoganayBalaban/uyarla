@@ -12,6 +12,16 @@ export interface LinkedInCheck {
   text: string
 }
 
+/** Başlık ve "Hakkında" önerisi (DOG-69); doğrulama ön yazıyla aynı. */
+export interface LinkedInSuggestion {
+  text: string
+  verification: { status: "ok" | "flagged"; issues: Array<{ kind: string; detail: string }> }
+}
+
+/** Yönlendirme, LinkedIn kuralı değil: LinkedIn'in yardım sayfası sınır vermiyor. */
+export const HEADLINE_MAX_CHARS = 120
+export const ABOUT_TARGET_WORDS = { min: 60, max: 200 } as const
+
 export interface LinkedInReport {
   postings: Array<{ analysisId: string; position: string; company: string | null; score: number }>
   /** Seçilen ilanların en az ikisinde (tek ilanda: o ilanda) eksik kalan kavramlar. */
@@ -20,6 +30,10 @@ export interface LinkedInReport {
   /** Profilin başlığı ve "Hakkında" metni, PDF'ten okunduğu gibi. */
   headline: string | null
   about: string | null
+  /** Seçilen ilanlarda istenen ve profilde kanıtı olan kavramlar; öneri bunlarla. */
+  strengths?: string[]
+  /** LLM önerisi; üretilemediyse yok, rapor yine geçerli. */
+  suggestions?: { headline: LinkedInSuggestion; about: LinkedInSuggestion } | null
 }
 
 export type LinkedInReportRecord =

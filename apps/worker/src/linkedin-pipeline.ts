@@ -1,4 +1,4 @@
-import { extractResumeProfile, linkedinReport, resumeParserKey, type ScoredPosting } from "@uyarla/core"
+import { extractResumeProfile, linkedinReport, linkedinStrengths, resumeParserKey, suggestLinkedInText, type ScoredPosting } from "@uyarla/core"
 import type { EmbeddingProvider, JobPostingData, LinkedInReportRecord, LlmProvider, ResumeProfile } from "@uyarla/core"
 import { scoreProfile } from "@uyarla/core/score/live"
 import { prisma } from "@uyarla/db"
@@ -39,10 +39,25 @@ export async function runLinkedInReport(
     const result = await scoreProfile({ profile, posting: p.posting }, deps.embedding)
     scored.push({ analysisId: p.analysisId, position: p.position, company: p.company, result, excluded: p.excluded })
   }
+  const report = linkedinReport(profile, scored, { targetRole: context.targetRole })
+  // Başlık ve "Hakkında" önerisi (LLM). Patlarsa rapor yine kaydediliyor.
+  let suggestions = null
+  try {
+    suggestions = (
+      await suggestLinkedInText(deps.llm, {
+        profile,
+        scored,
+        postings: context.postings.map((p) => p.posting),
+        targetRole: context.targetRole,
+      })
+    ).data
+  } catch (error) {
+    console.error("[linkedin-report] öneri üretilemedi", error)
+  }
   await deps.store.save(input.resumeId, {
     ...context.record,
     status: "done",
-    report: linkedinReport(profile, scored, { targetRole: context.targetRole }),
+    report: { ...report, strengths: linkedinStrengths(scored, profile), suggestions },
   })
 }
 

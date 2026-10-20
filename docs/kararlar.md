@@ -3552,3 +3552,41 @@ puanlayabiliyor.
 - **Uç:** yeni API ucu yok; `/api/resumes/[id]` GET ve POST. Sayfa
   `/linkedin`; gösterge panelindeki "İlan bul" kartından bağlantı.
 - **Sonraki adım:** uydurma kontrollü başlık ve "Hakkında" önerisi (LLM).
+
+## K-93 · LinkedIn başlık ve "Hakkında" önerisi: unvan ve beceri profilden
+
+**Tarih:** 21 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-69 (ikinci adım)
+
+**Bağlam:** K-92'deki LinkedIn raporu kontrolleri LLM'sizdi. Jobscan raporunda
+"yeni başlık üret" ve "yeni özet üret" var.
+
+**Karar:**
+- **Aynı worker işinde tek LLM çağrısı:** başlık ve "Hakkında". Patlarsa
+  rapor öneri olmadan kaydediliyor. Doğrulama ön yazıyla aynı (sayı ve ilan
+  terimi), kaynak profil.
+- **Başlıktaki unvan profilden:** hedef rol ancak profilde zaten geçiyorsa
+  başlığa giriyor. Geçmiyorsa "o unvandayım" iddiası olurdu.
+- **Başlıktaki beceriler:** seçilen ilanlarda istenen, türü "beceri" olan ve
+  profilde kelimesi gerçekten geçen kavramlar. En çok ilanda istenen önce.
+  - İlk ölçümde eğitim, dil ve şartlar ("Üniversite mezunu", "İngilizce
+    bilen", "Aktif araç") beceri gibi başlığa girdi. Anlamsal eşleşme de
+    profilde yazmayan bir kavramı getiriyordu.
+  - "A / B / C" biçimindeki kavramlar parçalarına bölünüyor.
+- **"… rolleri arıyorum" cümlesi** yalnızca kullanıcı hedef rol verdiyse
+  kalıyor. Model ilan unvanından uyduruyordu; hedef yoksa kodda çıkarılıyor.
+- **Uzunluk yönlendirmesi:** başlık en fazla 120 karakter (kodda, fazlası son
+  ayraçtan kesiliyor), "Hakkında" 60–200 kelime. LinkedIn'in yardım sayfası
+  bir sınır vermiyor; "220" ve "2.600" yalnızca kullanıcı yazılarında geçiyor.
+  Bu yüzden LinkedIn kuralı diye sunulmuyor.
+
+**Ölçüm (`pnpm eval:linkedin`, 5 CV, 1–3 ilan):**
+
+| | İlk sürüm | Son |
+|---|---|---|
+| Uydurma işareti | 1/5 | 0/5 |
+| Başlıkta profil dışı unvan | 0 | 0 |
+| Başlıkta beceri olmayan kavram | 2 profil | 0 |
+| Hedef verilmeden "arıyorum" | 3 | 0 |
+
+Bir "Hakkında" metni 49 kelimeyle hedefin altında; ekranda kelime sayısı
+gösteriliyor.

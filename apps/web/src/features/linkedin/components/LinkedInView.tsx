@@ -3,8 +3,15 @@
 import Link from "next/link"
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { CircleCheck, LoaderCircle, TriangleAlert } from "lucide-react"
-import { MAX_REPORT_POSTINGS, type LinkedInReport, type LinkedInReportRecord } from "@uyarla/core/linkedin/reportRecord"
+import { Check, CircleCheck, Copy, LoaderCircle, TriangleAlert } from "lucide-react"
+import {
+  ABOUT_TARGET_WORDS,
+  HEADLINE_MAX_CHARS,
+  MAX_REPORT_POSTINGS,
+  type LinkedInReport,
+  type LinkedInReportRecord,
+  type LinkedInSuggestion,
+} from "@uyarla/core/linkedin/reportRecord"
 import { api, apiErrorMessage } from "@/lib/api"
 import { useLibrary } from "@/features/resumes/api"
 import { useApplicationCards } from "@/features/applications/api"
@@ -157,6 +164,27 @@ export function LinkedInView() {
 export function ReportView({ report }: { report: LinkedInReport }) {
   return (
     <>
+      {report.suggestions && (
+        <section className="rounded-card border border-border bg-card p-5 text-sm">
+          <h2 className="m-0 text-base">Öneriler</h2>
+          <p className="mt-1 text-muted">
+            Yalnızca profilinde yazanlarla; başlığa yalnızca profilinde geçen beceriler giriyor. Kopyalayıp LinkedIn'de kendin
+            güncelle.
+          </p>
+          <SuggestionBlock
+            title="Başlık"
+            current={report.headline}
+            suggestion={report.suggestions.headline}
+            measure={(t) => `${t.length}/${HEADLINE_MAX_CHARS} karakter`}
+          />
+          <SuggestionBlock
+            title="Hakkında"
+            current={report.about}
+            suggestion={report.suggestions.about}
+            measure={(t) => `${t.split(/\s+/).filter(Boolean).length} kelime · önerilen ${ABOUT_TARGET_WORDS.min}–${ABOUT_TARGET_WORDS.max}`}
+          />
+        </section>
+      )}
       <section className="rounded-card border border-border bg-card p-5 text-sm">
         <h2 className="m-0 text-base">Profil kontrolleri</h2>
         <ul className="mt-3 space-y-2 pl-0">
@@ -202,5 +230,43 @@ export function ReportView({ report }: { report: LinkedInReport }) {
         </p>
       </section>
     </>
+  )
+}
+
+function SuggestionBlock({
+  title,
+  current,
+  suggestion,
+  measure,
+}: {
+  title: string
+  current: string | null
+  suggestion: LinkedInSuggestion
+  measure: (text: string) => string
+}) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <div className="mt-4">
+      <h3 className="m-0 text-sm font-semibold">{title}</h3>
+      {current && <p className="m-0 mt-1 text-xs text-muted">Şu anki: {current}</p>}
+      <p className="m-0 mt-2 whitespace-pre-line rounded-button bg-background p-2.5 leading-relaxed">{suggestion.text}</p>
+      {suggestion.verification.status === "flagged" && (
+        <p className="m-0 mt-2 flex gap-1.5 text-brand-amber">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>Kontrol et: {suggestion.verification.issues.map((i) => i.detail).join(" ")}</span>
+        </p>
+      )}
+      <div className="mt-1.5 flex items-center gap-3 text-xs text-muted">
+        <span>{measure(suggestion.text)}</span>
+        <button
+          type="button"
+          onClick={() => void navigator.clipboard.writeText(suggestion.text).then(() => setCopied(true))}
+          className="inline-flex items-center gap-1 font-semibold text-brand-blue"
+        >
+          {copied ? <Check className="size-3.5" aria-hidden /> : <Copy className="size-3.5" aria-hidden />}
+          {copied ? "Kopyalandı" : "Kopyala"}
+        </button>
+      </div>
+    </div>
   )
 }
