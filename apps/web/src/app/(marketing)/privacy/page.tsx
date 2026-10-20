@@ -86,7 +86,19 @@ export default function PrivacyPage() {
             CV'ni ilanla karşılaştırmak, skor üretmek ve uyarlamak — hizmetin kendisi; sözleşmenin
             kurulması ve ifası (KVKK md. 5/2-c).
           </li>
-          <li>Giriş bağlantısı göndermek ve hesabını yönetmek — sözleşmenin ifası (md. 5/2-c).</li>
+          <li>
+            Giriş bağlantısı, ödeme onayı ve hesap silindi e-postalarını göndermek, hesabını yönetmek —
+            sözleşmenin ifası (md. 5/2-c).
+          </li>
+          <li>
+            Başvuru hatırlatmaları (takip, mülakat, son başvuru günü) ve erişim dönemi bilgisi göndermek
+            — sözleşmenin ifası (md. 5/2-c); Hesabım&apos;dan ya da e-postadaki bağlantıyla kapatabilirsin.
+          </li>
+          <li>
+            Ürün haberleri ve öneriler göndermek — yalnızca açık rızanla (md. 5/1). Varsayılan kapalı;
+            onayın ne zaman ve hangi metinle verildiği saklanır, istediğin an geri alabilirsin. Ticari
+            elektronik ileti onayın İleti Yönetim Sistemi&apos;ne (İYS) bildirilir.
+          </li>
           <li>
             Güvenliği sağlamak, kötüye kullanımı ve aşırı istekleri engellemek — meşru menfaat
             (md. 5/2-f).
@@ -132,11 +144,13 @@ export default function PrivacyPage() {
             tutulur.
           </li>
           <li>
-            <strong>Resend (ABD), e-posta gönderimi:</strong> giriş bağlantısını ve, kapatmadıysan,
-            başvuru takip hatırlatmalarını noreply@uyarla.com.tr adresinden gönderir. E-posta adresini
-            ve hatırlatmada geçen pozisyon ile şirket adlarını görür. Hatırlatmaları Hesabım&apos;dan ya
-            da e-postadaki bağlantıyla tek tıkla kapatabilirsin; hatırlatmaya verdiğin yanıt{" "}
-            {LEGAL.support} adresine gelir.
+            <strong>Resend (ABD), e-posta gönderimi:</strong> giriş bağlantısını, ödeme ve hesap
+            e-postalarını ve, kapatmadıysan, başvuru hatırlatmalarını, erişim dönemi bilgisini ve onay
+            verdiysen ürün haberlerini noreply@uyarla.com.tr adresinden gönderir. E-posta adresini ve
+            e-postada geçen pozisyon ile şirket adlarını görür. Kapatılabilen e-postaları Hesabım&apos;dan
+            ya da e-postadaki bağlantıyla tek tıkla kapatabilirsin; verdiğin yanıt {LEGAL.support}{" "}
+            adresine gelir. Hangi e-postanın ne zaman gittiği (içeriği değil) kaydedilir: aynı e-posta
+            iki kez gitmesin ve günde birden fazla e-posta almayasın.
           </li>
           <li>
             <strong>Cloudflare Email Routing ve Google (ABD), gelen e-posta:</strong>{" "}

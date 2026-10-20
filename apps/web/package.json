@@ -11,11 +11,11 @@
     "test:integration": "dotenv -e ../../.env -- vitest run --config vitest.integration.config.ts",
     "migrate:json-keys": "dotenv -e ../../.env -- tsx scripts/migrate-json-keys.ts",
     "cleanup:anonymous": "dotenv -e ../../.env -- tsx scripts/cleanup-anonymous-users.ts",
-    "cleanup:cron": "tsx scripts/cleanup-anonymous-users.ts --delete && tsx scripts/application-reminders.ts --send",
+    "cleanup:cron": "tsx scripts/cleanup-anonymous-users.ts --delete && tsx scripts/daily-emails.ts --send",
     "funnel": "dotenv -e ../../.env -- tsx scripts/funnel.ts",
     "exclusion-reports": "dotenv -e ../../.env -- tsx scripts/exclusion-reports.ts",
     "backfill:excluded": "dotenv -e ../../.env -- tsx scripts/backfill-excluded-scores.ts",
-    "reminders:applications": "dotenv -e ../../.env -- tsx scripts/application-reminders.ts"
+    "emails:daily": "dotenv -e ../../.env -- tsx scripts/daily-emails.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

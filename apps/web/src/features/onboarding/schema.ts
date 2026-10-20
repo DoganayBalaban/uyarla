@@ -41,8 +41,12 @@ export const profilePatchSchema = z
     goal: z.enum(GOALS, { error: "Geçersiz amaç." }).nullable().optional(),
     targetRole: targetRoleSchema.nullable().optional(),
     phone: phoneSchema.nullable().optional(),
-    /** Başvuru takip hatırlatması e-postası (DOG-98). */
+    /** Başvuru hatırlatmaları: takip, mülakat, son başvuru günü (DOG-98, DOG-128). */
     applicationReminders: z.boolean({ error: "Geçersiz ayar." }).optional(),
+    /** Erişim dönemi bilgileri (DOG-129). */
+    accessUpdates: z.boolean({ error: "Geçersiz ayar." }).optional(),
+    /** Ürün haberleri; açık onay, onay geçmişine yazılıyor (DOG-130). */
+    productNews: z.boolean({ error: "Geçersiz ayar." }).optional(),
     /** Onboarding bitti ya da atlandı. */
     completeOnboarding: z.literal(true).optional(),
   })

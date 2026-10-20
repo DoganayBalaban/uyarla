@@ -29,10 +29,18 @@ model User {
   targetRole  String?
   // İndirilen CV'nin iletişim satırı için (DOG-58); boşsa eklenmiyor.
   phone       String?
-  // Başvuru takip hatırlatması e-postası (DOG-98); Hesabım'dan kapatılabiliyor.
+  // Başvuru hatırlatmaları (DOG-98, DOG-128): takip, mülakat, son başvuru
+  // tarihi. Hesabım'dan ya da e-postadaki bağlantıyla kapatılabiliyor.
   applicationReminders Boolean @default(true)
+  // Erişim dönemi bilgileri (DOG-129): "dönemin bitmesine 2 gün kaldı".
+  accessUpdates        Boolean @default(true)
+  // Ürün haberleri ve öneriler (DOG-130): açık onayla, varsayılan kapalı.
+  // Onayın geçmişi EmailConsent'te.
+  productNews          Boolean @default(false)
 
   accessPasses AccessPass[]
+  emailLogs    EmailLog[]
+  emailConsents EmailConsent[]
   /// "Tüm ilanlarda hariç tut" listesi (DOG-90).
   excludedConcepts ExcludedConcept[]
 }
@@ -306,4 +314,43 @@ model ExcludedConcept {
   createdAt DateTime @default(now())
 
   @@unique([userId, key])
+}
+
+/// Gönderilen e-postalar (DOG-128). Aynı e-postanın iki kez gitmemesi
+/// (userId + kind + refId tekil) ve sıklık sınırı (işlem dışı e-postalarda
+/// günde 1, haftada 3) için. İçerik saklanmıyor.
+model EmailLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// interview_reminder, deadline_reminder, application_followup, access_ending, …
+  kind       String
+  /// transactional, applicationReminders, accessUpdates, productNews
+  category   String
+  /// Neyle ilgili: analiz ya da erişim dönemi kimliği; yoksa boş.
+  refId      String   @default("")
+  /// Resend'in ileti kimliği.
+  providerId String?
+  sentAt     DateTime @default(now())
+
+  @@unique([userId, kind, refId])
+  @@index([userId, sentAt])
+}
+
+/// Ürün haberleri onayının geçmişi (DOG-130). Yalnızca ekleniyor: verilen ve
+/// geri alınan her onay bir satır. 6563 sayılı Kanun ve İYS için onayın ne
+/// zaman, nereden ve hangi metinle verildiği kanıtlanabilmeli.
+model EmailConsent {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose     String   @default("productNews")
+  granted     Boolean
+  /// account (Hesabım), unsubscribe (e-postadaki bağlantı)
+  source      String
+  /// Onay metninin sürümü (server/email/consent.ts).
+  textVersion String
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
 }

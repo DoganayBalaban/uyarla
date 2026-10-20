@@ -17,12 +17,19 @@ import { siteUrl } from "@/lib/site"
  *   - `POST /api/email/unsubscribe`: sayfanın formu ve e-posta istemcisinin
  *     tek tıkla çıkışı (RFC 8058, `List-Unsubscribe-Post`).
  */
-export const EMAIL_CATEGORIES = ["applicationReminders"] as const
+/**
+ * Kapatılabilen kategoriler; her biri `User` üzerinde aynı adlı bir anahtar
+ * (DOG-126). İşlem e-postaları (giriş, ödeme, hesap silindi) burada yok:
+ * kapatılamıyorlar.
+ */
+export const EMAIL_CATEGORIES = ["applicationReminders", "accessUpdates", "productNews"] as const
 export type EmailCategory = (typeof EMAIL_CATEGORIES)[number]
 
 /** Hesabım'daki karşılığı; sayfa kullanıcıya bunu söylüyor. */
 export const CATEGORY_LABEL: Record<EmailCategory, string> = {
   applicationReminders: "başvuru hatırlatmaları",
+  accessUpdates: "erişim dönemi bilgileri",
+  productNews: "ürün haberleri",
 }
 
 function signature(payload: string, secret: string): string {

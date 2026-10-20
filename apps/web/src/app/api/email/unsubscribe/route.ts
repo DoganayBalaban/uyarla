@@ -1,6 +1,7 @@
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { verifyUnsubscribe } from "@/server/email/unsubscribe"
+import { setProductNews } from "@/server/email/consent"
 import { siteUrl } from "@/lib/site"
 
 export const runtime = "nodejs"
@@ -24,8 +25,10 @@ export async function POST(request: Request) {
       : NextResponse.redirect(`${siteUrl()}/e-posta/cik?hata=1`, 303)
   }
 
+  // Ürün haberleri onaya dayalı: geri alma onay geçmişine yazılıyor (DOG-130).
   // Silinmiş kullanıcı: yapılacak bir şey yok, yine başarılı.
-  await prisma.user.updateMany({ where: { id: target.userId }, data: { [target.category]: false } })
+  if (target.category === "productNews") await setProductNews(prisma, target.userId, false, "unsubscribe")
+  else await prisma.user.updateMany({ where: { id: target.userId }, data: { [target.category]: false } })
 
   return oneClick
     ? NextResponse.json({ unsubscribed: true })

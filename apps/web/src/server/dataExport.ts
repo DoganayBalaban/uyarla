@@ -27,6 +27,8 @@ export const EXPORTED_TABLES = [
   "adaptation",
   "accessPass",
   "excludedConcept",
+  "emailLog",
+  "emailConsent",
 ] as const satisfies readonly (typeof DELETION_ORDER)[number][]
 
 export interface ExportedResume {
@@ -53,10 +55,14 @@ export interface UserDataExport {
   accessPasses: Record<string, unknown>[]
   /** "Tüm ilanlarda hariç tut" listesi (DOG-90). */
   excludedConcepts: Record<string, unknown>[]
+  /** Gönderilen e-postalar: tür ve zaman, içerik yok (DOG-128). */
+  emailLogs: Record<string, unknown>[]
+  /** Ürün haberleri onayının geçmişi (DOG-130). */
+  emailConsents: Record<string, unknown>[]
 }
 
 export async function collectUserData(db: Db, userId: string, now = new Date()): Promise<UserDataExport> {
-  const [user, accounts, sessions, resumes, jobPostings, analyses, accessPasses, excludedConcepts] = await Promise.all([
+  const [user, accounts, sessions, resumes, jobPostings, analyses, accessPasses, excludedConcepts, emailLogs, emailConsents] = await Promise.all([
     db.user.findUniqueOrThrow({
       where: { id: userId },
       select: {
@@ -64,6 +70,8 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
         name: true,
         phone: true,
         applicationReminders: true,
+        accessUpdates: true,
+        productNews: true,
         goal: true,
         targetRole: true,
         emailVerified: true,
@@ -128,6 +136,16 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
       select: { term: true, createdAt: true },
       orderBy: { createdAt: "asc" },
     }),
+    db.emailLog.findMany({
+      where: { userId },
+      select: { kind: true, category: true, sentAt: true },
+      orderBy: { sentAt: "asc" },
+    }),
+    db.emailConsent.findMany({
+      where: { userId },
+      select: { purpose: true, granted: true, source: true, textVersion: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
   ])
 
   return {
@@ -140,6 +158,8 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
     analyses,
     accessPasses,
     excludedConcepts,
+    emailLogs,
+    emailConsents,
   }
 }
 

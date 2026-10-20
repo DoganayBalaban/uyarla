@@ -6,6 +6,9 @@ import { deleteAccountBodySchema } from "@/features/account/schema"
 import { buildExportZip, collectUserData } from "@/server/dataExport"
 import { deleteUsers } from "@/server/deleteAccount"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
+import { mailClientFromEnv } from "@/server/email/send"
+import { accountDeletedEmail } from "@/server/email/templates"
+import { LEGAL } from "@/features/legal/company"
 
 export const runtime = "nodejs"
 
@@ -34,7 +37,16 @@ export async function DELETE(request: Request) {
       ensureOwner(body.userId, { user })
     }
 
+    // Onay e-postası için adres silmeden önce okunuyor (DOG-129); yalnızca
+    // bellekte, gönderimden sonra hiçbir yerde kalmıyor. Anonim hesabın
+    // adresi yer tutucu.
+    const owner = await prisma.user.findUnique({ where: { id: user.id }, select: { email: true, isAnonymous: true } })
+
     const result = await deleteUsers(prisma, [user.id])
+
+    if (result.deletedUsers === 1 && owner && !owner.isAnonymous) {
+      await sendAccountDeleted(owner.email)
+    }
 
     // Oturum satırları da silindi, yani çerez artık hiçbir şeye açılmıyor;
     // ayrıca signOut çağırmak gerekmiyor.
@@ -47,6 +59,29 @@ export async function DELETE(request: Request) {
       { error: "Hesabını silemedik. Birazdan tekrar dener misin?", code: "unknown" },
       { status: 500 },
     )
+  }
+}
+
+/**
+ * "Hesabın silindi" (DOG-129, işlem e-postası). Kayıt yazılmıyor: kullanıcı
+ * artık yok. Gönderilemezse silme yine başarılı; kullanıcı ekranda görüyor.
+ */
+async function sendAccountDeleted(to: string): Promise<void> {
+  const mail = mailClientFromEnv()
+  if (!mail) return
+  const { subject, html, text } = accountDeletedEmail()
+  try {
+    const { error } = await mail.emails.send({
+      from: process.env.EMAIL_FROM ?? "Uyarla <onboarding@resend.dev>",
+      to,
+      replyTo: LEGAL.support,
+      subject,
+      html,
+      text,
+    })
+    if (error) console.error("[api/account] silme e-postası gönderilemedi", error.message)
+  } catch (error) {
+    console.error("[api/account] silme e-postası gönderilemedi", error)
   }
 }
 
