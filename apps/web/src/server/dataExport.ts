@@ -107,6 +107,8 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
         requirements: true,
         language: true,
         seniority: true,
+        // İlan adresi (DOG-95).
+        sourceUrl: true,
         createdAt: true,
       },
     }),

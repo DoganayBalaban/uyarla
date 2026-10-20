@@ -373,6 +373,8 @@ export function AnalyzeView() {
       if (registered && values.saveToLibrary) body.append("saveToLibrary", "true")
     }
     body.append("jobText", values.jobText)
+    // Platforma özel ipucu için (DOG-95); sunucu sorgu kısmını atıyor.
+    if (values.postingUrl?.trim()) body.append("postingUrl", values.postingUrl.trim())
     if (allowDuplicate) body.append("allowDuplicate", "true")
 
     try {
@@ -446,6 +448,7 @@ export function AnalyzeView() {
     return (
       <ScoreResult
         result={state.result}
+        platform={state.platform}
         durationMs={state.durationMs}
         tokenUsage={state.tokenUsage}
         modelId={state.modelId}

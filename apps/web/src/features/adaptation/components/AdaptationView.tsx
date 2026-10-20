@@ -21,6 +21,7 @@ import { DiffText } from "@/features/adaptation/components/DiffText"
 import { DocumentView } from "@/features/adaptation/components/DocumentView"
 import { DecisionToggle, VerificationWarning } from "@/features/adaptation/components/DecisionControls"
 import { EditText } from "@/features/adaptation/components/EditText"
+import { PlatformTips } from "@/features/analysis/components/PlatformTips"
 import { ContributionsSection } from "@/features/adaptation/components/ContributionsSection"
 import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/cn"
@@ -568,6 +569,8 @@ export function AdaptationView({ id }: { id: string }) {
               </button>
             </div>
           </div>
+
+          <PlatformTips platform={state.platform} />
 
           <Link
             href="/applications"

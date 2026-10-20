@@ -1,5 +1,6 @@
 import type { CoverLetterChecks } from "@uyarla/core/cover/checks"
 import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
+import type { PlatformId } from "@/features/analysis/platforms"
 
 /** `GET /api/adapt/[id]` yanıtının arayüzün kullandığı kısmı. */
 
@@ -77,6 +78,8 @@ export interface AdaptationState {
   document?: { before: DocumentOutline; after: DocumentOutline } | null
   /** Analizde karşılanmayan zorunlu gereksinimler; "AI ile yaz" bunlar için (DOG-94). */
   missingRequirements?: Array<{ index: number; text: string }>
+  /** İlan adresinden tanınan platform (DOG-95). */
+  platform?: PlatformId | null
   /** Tek sayfa planının sonucu (DOG-93); yalnızca strateji seçildiği yanıtta. */
   onePage?: { fits: boolean; pages: number }
 }

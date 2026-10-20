@@ -8,6 +8,7 @@ import type { ScoreResult } from "@uyarla/core/score/score"
 import type { JobPostingData } from "@uyarla/core/schemas/job"
 import type { ResumeProfile } from "@uyarla/core/schemas/resume"
 import { cachedEmbedding } from "@/server/adaptationDecision"
+import { detectPlatform } from "@/features/analysis/platforms"
 import {
   markRequirement,
   mergeCorrection,
@@ -35,7 +36,10 @@ export async function GET(
 ) {
   const { id } = await params
   try {
-    const analysis = await prisma.analysis.findUnique({ where: { id } })
+    const analysis = await prisma.analysis.findUnique({
+      where: { id },
+      include: { jobPosting: { select: { sourceUrl: true } } },
+    })
     ensureOwner(analysis?.userId ?? null, await getSession())
 
     if (analysis!.status === "running") return NextResponse.json({ status: "running" })
@@ -50,6 +54,8 @@ export async function GET(
       result: analysis!.result,
       durationMs: analysis!.durationMs,
       tokenUsage: analysis!.tokenUsage,
+      // İlan adresinden tanınan platform (DOG-95); ipuçları istemcide.
+      platform: detectPlatform(analysis!.jobPosting.sourceUrl),
       modelId: analysis!.modelId,
     })
   } catch (error) {

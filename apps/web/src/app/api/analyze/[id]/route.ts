@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 import { analysisErrorMessage } from "@/server/analysisErrorMessage"
 import { analyzeQueue } from "@/server/queue"
+import { detectPlatform } from "@/features/analysis/platforms"
 
 export const runtime = "nodejs"
 
@@ -22,7 +23,10 @@ export async function GET(
     if (state === "completed") {
       const analysisId = job.returnvalue
       const analysis = analysisId
-        ? await prisma.analysis.findUnique({ where: { id: analysisId } })
+        ? await prisma.analysis.findUnique({
+            where: { id: analysisId },
+            include: { jobPosting: { select: { sourceUrl: true } } },
+          })
         : null
 
       // Sahiplik analiz kaydında. Bu kontrol şart: BullMQ iş kimliği artan
@@ -39,7 +43,9 @@ export async function GET(
         result: analysis?.result ?? null,
         durationMs: analysis?.durationMs ?? null,
         tokenUsage: analysis?.tokenUsage ?? null,
-        modelId: analysis?.modelId ?? null,
+        // İlan adresinden tanınan platform (DOG-95); ipuçları istemcide.
+        platform: detectPlatform(analysis?.jobPosting.sourceUrl),
+      modelId: analysis?.modelId ?? null,
       })
     }
 
