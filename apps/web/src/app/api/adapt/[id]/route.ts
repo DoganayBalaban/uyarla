@@ -9,6 +9,7 @@ import {
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 import { checkCoverLetter } from "@uyarla/core/cover/checks"
 import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
+import { detectPlatform } from "@/features/analysis/platforms"
 
 export const runtime = "nodejs"
 
@@ -43,6 +44,8 @@ export async function GET(
         letter?.status === "done" ? checkCoverLetter(letter.paragraphs.map((p) => p.text), posting) : null,
       document: adaptationDocument(profile, draft),
       missingRequirements: missingMustRequirements(adaptation.analysis.result),
+      // İlanın platformuna özel ipuçları indirme panelinin altında (DOG-95).
+      platform: detectPlatform(adaptation.analysis.jobPosting.sourceUrl),
     })
   } catch (error) {
     const reply = authErrorResponse(error)

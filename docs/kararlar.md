@@ -3299,3 +3299,40 @@ yoktu.
   durdurulmuyor.
 - Kartın hazır olma bilgisi uyarlamadan önceki analize göre; uyarlanmış
   kartta soru çıkmıyor.
+
+## K-85 · İlan adresinden platform; yalnızca kaynağı okunmuş ipucu
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-95
+
+**Bağlam:** Jobscan ilan adresinden ATS'yi tanıyıp ATS'ye özel ipucu
+gösteriyor. Bizde ilan adresi saklanmıyordu ("İlanı getir" kutusu yalnızca
+istemcideydi).
+
+**Karar:**
+- **Adres saklanıyor:** `JobPosting.sourceUrl` (göç `ilan_adresi`). Formdaki
+  ya da eklentiden gelen adres yalnızca http(s) ise alınıyor. Sorgu, `#`
+  kısmı ve kullanıcı bilgisi atılıyor; sorgu izleme ya da aday kimliği
+  taşıyabiliyor. Veri dışa aktarımına eklendi.
+- **Tespit deterministik:** alan adı ve alt alan adları. Kariyer.net,
+  LinkedIn, Greenhouse, Lever, Workday, SAP SuccessFactors ve Kariyer Kapısı.
+  Benzer görünen alan adları (`kariyer.net.evil.com`) eşleşmiyor.
+- **İpucu yalnızca platformun kendi kaynağında okunan bilgiden;** her
+  ipucunun yanında kaynak bağlantısı var. Okunanlar (20 Ekim 2026):
+  - Greenhouse destek sayfası: doc, docx, pdf, rtf, txt.
+  - LinkedIn Yardım: Word ya da PDF, 2 MB altı önerisi, son dört CV saklanıyor.
+  - Kariyer.net Kariyer Rehberi: işverenler Kariyer.net formundan
+    filtreliyor; Word dosyası ek; ön yazı "Dosyalarım / Ön yazılarım"da.
+  - Lever'ın kendi Postings API belgesi: CV dosya alanı ve adayın ek bilgi
+    alanı.
+  - Workday HiredScore belgesi: DOC, DOCX, PDF, RTF, TXT. Şirket ayarı
+    farklı olabilir; ipucu bunu söylüyor.
+  - Kariyer Kapısı SSS: e-Devlet bütünleşik, belgeler kurumlara otomatik
+    iletiliyor.
+  - SAP Help Portal sayfası JavaScript'le açılıyor; kabul edilen türler
+    sayfanın arama dizinindeki metninden alındı.
+- **Bilerek yazılmayanlar:** okuyamadığımız şeyler. Örneğin Workday'in "CV'den
+  doldur" davranışı ve PDF ayrıştırma sorunları üçüncü taraf bloglarda var,
+  platformun kendi belgesinde yok.
+- **Nerede:** sonuç sayfasında skor kartının altında, uyarlama sayfasında
+  indirme panelinin altında. Adres yoksa ya da platform tanınmazsa hiçbir
+  şey gösterilmiyor.

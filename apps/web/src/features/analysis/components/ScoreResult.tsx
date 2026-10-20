@@ -20,6 +20,8 @@ import { ScoreRing } from "@/features/analysis/components/ScoreRing"
 import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
 import { scoreStatus } from "@/lib/scoreStatus"
 import { readiness, readinessHint } from "@/features/analysis/readiness"
+import { PlatformTips } from "@/features/analysis/components/PlatformTips"
+import type { PlatformId } from "@/features/analysis/platforms"
 import { withTitleFinding } from "@/features/analysis/titleFinding"
 import { applyExclusions } from "@/features/analysis/exclusion"
 import type { ExclusionMark, RequirementCorrection, RequirementReport } from "@uyarla/core/score/exclusions"
@@ -104,8 +106,11 @@ export function ScoreResult({
   adaptNote,
   onYeniAnaliz,
   onRequirementChange,
+  platform,
 }: {
   result: ScoreResultView
+  /** İlan adresinden tanınan platform (DOG-95); ipuçları skor kartının altında. */
+  platform?: PlatformId | null
   durationMs?: number | null
   tokenUsage?: number | null
   modelId?: string | null
@@ -257,6 +262,12 @@ export function ScoreResult({
           </div>
         </div>
       </motion.div>
+
+      {platform && (
+        <motion.div {...entrance(0.06)}>
+          <PlatformTips platform={platform} />
+        </motion.div>
+      )}
 
       {format && (
         <motion.div {...entrance(0.08)}>

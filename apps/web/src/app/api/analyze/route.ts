@@ -12,6 +12,7 @@ import { findPreviousAnalysis } from "@/server/duplicatePosting"
 import { createResume, findLibraryResume } from "@/server/resumeLibrary"
 import { storeUploadedResume } from "@/server/storeUpload"
 import { validateJobText, validateUpload } from "@/server/upload"
+import { sanitizeSourceUrl } from "@/features/analysis/platforms"
 
 export const runtime = "nodejs"
 
@@ -99,7 +100,8 @@ export async function POST(request: Request) {
     }
 
     const posting = await prisma.jobPosting.create({
-      data: { userId: user.id, rawText: jobText, requirements: [], language: "tr" },
+      // İlan adresi (DOG-95): platforma özel ipucu için, sorgusuz.
+      data: { userId: user.id, rawText: jobText, requirements: [], language: "tr", sourceUrl: sanitizeSourceUrl(form.get("postingUrl")) },
     })
 
     const job = await analyzeQueue.add(

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { api, apiStatus } from "@/lib/api"
 import type { ExclusionReason } from "@uyarla/core/score/exclusions"
 import type { ScoreResultView } from "@/features/analysis/components/ScoreResult"
+import type { PlatformId } from "@/features/analysis/platforms"
 
 export type JobStatus = "running" | "completed" | "failed"
 
@@ -16,6 +17,8 @@ export interface AnalysisResponse {
   modelId?: string | null
   error?: string
   result?: ScoreResultView | null
+  /** İlan adresinden tanınan platform (DOG-95). */
+  platform?: PlatformId | null
 }
 
 export interface PostingFromUrl {

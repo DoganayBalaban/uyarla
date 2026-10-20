@@ -125,6 +125,9 @@ model JobPosting {
   // Son başvuru tarihi (DOG-120): ilanda açıkça yazıyorsa, gün olarak.
   // Eski kayıtlarda ve tarih yazmayan ilanlarda boş.
   deadline     DateTime?  @db.Date
+  // İlanın adresi (DOG-95): platforma özel ipucu için. Sorgu kısmı atılmış;
+  // metni yapıştırılan ilanlarda boş.
+  sourceUrl    String?
   createdAt    DateTime   @default(now())
   analyses     Analysis[]
 }
