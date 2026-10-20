@@ -39,7 +39,11 @@ export interface InterviewPrepContext {
 
 export interface InterviewPrepStore {
   getPrepContext(analysisId: string): Promise<InterviewPrepContext>
-  savePrep(analysisId: string, record: InterviewPrepRecord): Promise<void>
+  /**
+   * Kaydı kilit altında okuyup günceller (DOG-97): paket ve pratik aynı
+   * JSON'da; web ucu da ekliyor, birbirini ezmesinler.
+   */
+  updatePrep(analysisId: string, change: (current: InterviewPrepRecord | null) => InterviewPrepRecord | null): Promise<void>
 }
 
 const day = (d: Date | null) => d?.toISOString().slice(0, 10) ?? null
@@ -112,8 +116,13 @@ export const prismaInterviewPrepStore: InterviewPrepStore = {
       record: (sent.analysis.interviewPrep ?? null) as InterviewPrepRecord | null,
     }
   },
-  async savePrep(analysisId, record) {
-    await prisma.analysis.update({ where: { id: analysisId }, data: { interviewPrep: record as unknown as object } })
+  async updatePrep(analysisId, change) {
+    await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Analysis" WHERE id = ${analysisId} FOR UPDATE`
+      const row = await tx.analysis.findUnique({ where: { id: analysisId }, select: { interviewPrep: true } })
+      const next = change((row?.interviewPrep ?? null) as InterviewPrepRecord | null)
+      if (next) await tx.analysis.update({ where: { id: analysisId }, data: { interviewPrep: next as unknown as object } })
+    })
   },
 }
 

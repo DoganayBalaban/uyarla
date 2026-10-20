@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { ANSWER_MAX_LENGTH, ANSWER_MIN_LENGTH } from "@uyarla/core/interview/practiceRecord"
 import { NOTE_MAX_LENGTH, STAGES } from "@/features/applications/board"
 
 /**
@@ -43,3 +44,16 @@ export const followUpRequestSchema = z.object({
 
 /** `POST /api/applications/[id]`: mülakat hazırlık paketi iste (DOG-118). */
 export const interviewPrepRequestSchema = z.object({ type: z.literal("interview-prep") })
+
+/** `POST /api/applications/[id]`: yazılı pratik cevabına geri bildirim iste (DOG-97). */
+export const practiceRequestSchema = z.object({
+  type: z.literal("practice"),
+  questionIndex: z.number({ error: "Geçersiz soru." }).int().min(0, "Geçersiz soru."),
+  answer: z
+    .string({ error: "Cevap gerekli." })
+    .trim()
+    .min(ANSWER_MIN_LENGTH, `Cevabın en az ${ANSWER_MIN_LENGTH} karakter olmalı.`)
+    .max(ANSWER_MAX_LENGTH, `Cevabın en fazla ${ANSWER_MAX_LENGTH} karakter olabilir.`),
+})
+
+export type PracticeRequest = z.infer<typeof practiceRequestSchema>

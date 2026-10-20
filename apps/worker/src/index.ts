@@ -14,10 +14,18 @@ import { ADAPT_QUEUE, type AdaptJobData } from "./adapt-queue.js"
 import { prismaAdaptationStore } from "./adapt-store.js"
 import { COVER_LETTER_JOB, runCoverLetter } from "./cover-pipeline.js"
 import { CONTRIBUTION_JOB, runContribution } from "./contribution-pipeline.js"
-import { FOLLOW_UP_JOB, INTERVIEW_PREP_JOB, type ContributionJobData, type FollowUpJobData, type InterviewPrepJobData } from "./adapt-queue.js"
+import {
+  FOLLOW_UP_JOB,
+  INTERVIEW_PREP_JOB,
+  PRACTICE_JOB,
+  type ContributionJobData,
+  type FollowUpJobData,
+  type InterviewPrepJobData,
+  type PracticeJobData,
+} from "./adapt-queue.js"
 import { runFollowUp } from "./follow-up-pipeline.js"
 import { prismaFollowUpStore, prismaInterviewPrepStore } from "./follow-up-store.js"
-import { runInterviewPrep } from "./interview-prep-pipeline.js"
+import { runInterviewPrep, runPractice } from "./interview-prep-pipeline.js"
 import { initErrorTracking, reportJobFailure } from "./observability.js"
 import { runAnalysis } from "./pipeline.js"
 import { ANALYZE_QUEUE, type AnalyzeJobData } from "./queue.js"
@@ -130,8 +138,31 @@ const adaptWorker = new Worker<AdaptJobData, void>(
         const lastAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1)
         if (error instanceof PermanentError || lastAttempt) {
           // Sayfa "hazırlanıyor"da takılı kalmasın; önceki paket varsa korunuyor.
-          const context = await prismaInterviewPrepStore.getPrepContext(data.analysisId).catch(() => null)
-          if (context?.record) await prismaInterviewPrepStore.savePrep(data.analysisId, { ...context.record, status: "failed" }).catch(() => {})
+          await prismaInterviewPrepStore
+            .updatePrep(data.analysisId, (current) => (current ? { ...current, status: "failed" } : null))
+            .catch(() => {})
+        }
+        if (error instanceof PermanentError) throw toUnrecoverable(error, "adapt")
+        throw error
+      }
+      return
+    }
+
+    // Yazılı mülakat pratiği (DOG-97); aynı kuyruk, aynı model.
+    if (job.name === PRACTICE_JOB) {
+      const data = job.data as unknown as PracticeJobData
+      try {
+        await runPractice({ llm, store: prismaInterviewPrepStore }, data)
+      } catch (error) {
+        const lastAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1)
+        if (error instanceof PermanentError || lastAttempt) {
+          await prismaInterviewPrepStore
+            .updatePrep(data.analysisId, (current) =>
+              current
+                ? { ...current, practice: (current.practice ?? []).map((p) => (p.id === data.practiceId ? { ...p, status: "failed" as const } : p)) }
+                : null,
+            )
+            .catch(() => {})
         }
         if (error instanceof PermanentError) throw toUnrecoverable(error, "adapt")
         throw error

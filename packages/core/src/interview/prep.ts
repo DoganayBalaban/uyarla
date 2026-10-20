@@ -101,10 +101,14 @@ export interface InterviewPrep {
 /** `Analysis.interviewPrep` kaydı. Yeniden yazma bir kez: iki deneme. */
 export const MAX_PREP_ATTEMPTS = 2
 
-export type InterviewPrepRecord =
+export { MAX_PRACTICE_PER_QUESTION, type PracticeEntry } from "./practiceRecord.js"
+import type { PracticeEntry } from "./practiceRecord.js"
+
+export type InterviewPrepRecord = (
   | { status: "running"; createdAt: string; attempts: number; prep?: InterviewPrep }
   | { status: "failed"; createdAt: string; attempts: number; prep?: InterviewPrep }
   | { status: "done"; createdAt: string; attempts: number; prep: InterviewPrep }
+) & { practice?: PracticeEntry[] }
 
 export interface InterviewPrepInput {
   /** Gönderilen CV: uyarlama varsa kabul edilenlerle. */

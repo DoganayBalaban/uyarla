@@ -3,8 +3,16 @@
 import Link from "next/link"
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, LoaderCircle, TriangleAlert } from "lucide-react"
+import { ArrowLeft, Check, LoaderCircle, TriangleAlert, X } from "lucide-react"
 import type { InterviewPrep, InterviewPrepRecord } from "@uyarla/core/interview/prep"
+import {
+  ANSWER_MAX_LENGTH,
+  ANSWER_MAX_WORDS,
+  ANSWER_MIN_LENGTH,
+  ANSWER_MIN_WORDS,
+  MAX_PRACTICE_PER_QUESTION,
+  type PracticeEntry,
+} from "@uyarla/core/interview/practiceRecord"
 import { api, apiErrorMessage, apiStatus } from "@/lib/api"
 
 interface PrepData {
@@ -33,7 +41,10 @@ export function InterviewPrepView({ analysisId }: { analysisId: string }) {
   const query = useQuery({
     queryKey: key(analysisId),
     queryFn: async () => (await api.get<PrepData>(`/applications/${encodeURIComponent(analysisId)}`)).data,
-    refetchInterval: (q) => (q.state.data?.interviewPrep?.status === "running" ? 2500 : false),
+    refetchInterval: (q) => {
+      const r = q.state.data?.interviewPrep
+      return r?.status === "running" || r?.practice?.some((p) => p.status === "running") ? 2500 : false
+    },
   })
   const start = useMutation({
     mutationFn: async () => {
@@ -115,7 +126,7 @@ export function InterviewPrepView({ analysisId }: { analysisId: string }) {
         </p>
       )}
 
-      {prep && <PrepSections prep={prep} />}
+      {prep && <PrepSections prep={prep} practice={{ analysisId, entries: record?.practice ?? [] }} />}
     </div>
   )
 }
@@ -132,7 +143,7 @@ function Flag({ issues }: { issues: Array<{ detail: string }> }) {
   )
 }
 
-export function PrepSections({ prep }: { prep: InterviewPrep }) {
+export function PrepSections({ prep, practice }: { prep: InterviewPrep; practice?: { analysisId: string; entries: PracticeEntry[] } }) {
   return (
     <>
       <section className="rounded-card border border-border bg-card p-5">
@@ -160,6 +171,9 @@ export function PrepSections({ prep }: { prep: InterviewPrep }) {
                 <dd className="m-0">{q.star.result}</dd>
               </dl>
               {q.verification.status === "flagged" && <Flag issues={q.verification.issues} />}
+              {practice && (
+                <PracticeBox analysisId={practice.analysisId} questionIndex={i} entries={practice.entries.filter((p) => p.questionIndex === i)} />
+              )}
             </li>
           ))}
         </ol>
@@ -211,5 +225,135 @@ export function PrepSections({ prep }: { prep: InterviewPrep }) {
         </section>
       )}
     </>
+  )
+}
+
+const STAR_LABEL = { situation: "Durum", task: "Görev", action: "Eylem", result: "Sonuç" } as const
+
+const countWords = (text: string) => text.split(/\s+/).filter(Boolean).length
+
+/**
+ * Yazılı pratik (DOG-97): kullanıcı cevabını yazıyor, geri bildirim STAR
+ * yapısı, güçlü ve geliştirilecek yanlar, uzunluk ve "kağıtta yok". Kağıtta
+ * yok kodla bulunuyor: cevaptaki sayı ya da ilan terimi CV'de yoksa.
+ */
+function PracticeBox({ analysisId, questionIndex, entries }: { analysisId: string; questionIndex: number; entries: PracticeEntry[] }) {
+  const queryClient = useQueryClient()
+  const [answer, setAnswer] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const send = useMutation({
+    mutationFn: async () => {
+      await api.post(`/applications/${encodeURIComponent(analysisId)}`, { type: "practice", questionIndex, answer })
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: key(analysisId) }),
+  })
+  const latest = entries.at(-1)
+  const running = latest?.status === "running"
+  const used = entries.filter((e) => e.status !== "failed").length
+  const left = MAX_PRACTICE_PER_QUESTION - used
+  const words = countWords(answer)
+
+  async function submit() {
+    setError(null)
+    try {
+      await send.mutateAsync()
+    } catch (e) {
+      setError(await apiErrorMessage(e, "Cevabını gönderemedik. Birazdan tekrar dener misin?"))
+    }
+  }
+
+  return (
+    <details className="mt-3 rounded-button border border-border p-3" open={entries.length > 0}>
+      <summary className="cursor-pointer font-medium text-brand-blue">Cevabını yaz, geri bildirim al</summary>
+      {latest?.status === "done" && latest.feedback && <PracticeResult answer={latest.answer} feedback={latest.feedback} />}
+      {latest?.status === "failed" && <p className="m-0 mt-2 text-brand-red">Cevabını değerlendiremedik. Tekrar dener misin?</p>}
+      {running ? (
+        <p className="m-0 mt-2 flex items-center gap-2 text-muted" role="status">
+          <LoaderCircle className="size-4 text-brand-blue motion-safe:animate-spin" aria-hidden />
+          Cevabını okuyoruz…
+        </p>
+      ) : left > 0 ? (
+        <div className="mt-3 space-y-2">
+          <textarea
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            maxLength={ANSWER_MAX_LENGTH}
+            rows={6}
+            aria-label="Cevabın"
+            placeholder="Mülakatta söyleyeceğin gibi yaz: durum, görev, ne yaptın, sonuç."
+            className="w-full rounded-button border border-border bg-background p-2 text-sm"
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void submit()}
+              disabled={send.isPending || answer.trim().length < ANSWER_MIN_LENGTH}
+              className="rounded-button bg-brand-blue px-4 py-2 font-semibold text-white disabled:opacity-50"
+            >
+              Geri bildirim al
+            </button>
+            <span className="text-xs text-muted">
+              {words} kelime · önerilen {ANSWER_MIN_WORDS}–{ANSWER_MAX_WORDS} · {left} hakkın kaldı
+            </span>
+          </div>
+        </div>
+      ) : (
+        <p className="m-0 mt-2 text-muted">Bu soru için geri bildirim hakkın doldu.</p>
+      )}
+      {error && (
+        <p role="alert" className="m-0 mt-2 text-brand-red dark:text-[#f87171]">
+          {error}
+        </p>
+      )}
+    </details>
+  )
+}
+
+function PracticeResult({ answer, feedback }: { answer: string; feedback: NonNullable<PracticeEntry["feedback"]> }) {
+  return (
+    <div className="mt-3 space-y-2">
+      <p className="m-0 whitespace-pre-line rounded-button bg-background p-2 text-muted">{answer}</p>
+      <ul className="m-0 flex list-none flex-wrap gap-3 p-0">
+        {(Object.keys(STAR_LABEL) as Array<keyof typeof STAR_LABEL>).map((k) => (
+          <li key={k} className={`flex items-center gap-1 ${feedback.star[k] ? "text-brand-green" : "text-muted"}`}>
+            {feedback.star[k] ? <Check className="size-4" aria-hidden /> : <X className="size-4" aria-hidden />}
+            {STAR_LABEL[k]}
+            <span className="sr-only">{feedback.star[k] ? " var" : " eksik"}</span>
+          </li>
+        ))}
+      </ul>
+      {feedback.length !== "ok" && (
+        <p className="m-0 text-muted">
+          {feedback.words} kelime;{" "}
+          {feedback.length === "short" ? "biraz kısa, bir örnek ya da sonuç ekleyebilirsin." : "uzun, mülakatta iki dakikayı geçer; kısalt."}
+        </p>
+      )}
+      {feedback.strengths.length > 0 && (
+        <div>
+          <span className="font-medium">İyi olan</span>
+          <ul className="m-0 mt-1 pl-5">
+            {feedback.strengths.map((t, i) => (
+              <li key={i}>{t}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {feedback.improvements.length > 0 && (
+        <div>
+          <span className="font-medium">Geliştir</span>
+          <ul className="m-0 mt-1 pl-5">
+            {feedback.improvements.map((t, i) => (
+              <li key={i}>{t}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {feedback.offPaper.map((t, i) => (
+        <p key={i} className="m-0 flex gap-1.5 text-brand-amber">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>{t}</span>
+        </p>
+      ))}
+    </div>
   )
 }

@@ -29,7 +29,8 @@
     "eval:cover-rules": "dotenv -e ../../.env -- tsx eval/coverRules.ts",
     "eval:deadline": "dotenv -e ../../.env -- tsx eval/deadline.ts",
     "eval:follow-up": "dotenv -e ../../.env -- tsx eval/followUp.ts",
-    "eval:interview-prep": "dotenv -e ../../.env -- tsx eval/interviewPrep.ts"
+    "eval:interview-prep": "dotenv -e ../../.env -- tsx eval/interviewPrep.ts",
+    "eval:practice": "dotenv -e ../../.env -- tsx eval/practice.ts"
   },
   "devDependencies": {
     "@types/pdfkit": "^0.17.6",

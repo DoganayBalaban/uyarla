@@ -3194,3 +3194,33 @@ boşluk mülakat.
   gösteriliyor.
 - Kalan köprü işaretleri tarihten hesaplanan süreler ("1 yıl 5 aydır");
   CV'de yazmadığı için doğru işaret.
+
+## K-81 · Yazılı mülakat pratiği: geri bildirim LLM'de, "kağıtta yok" kodda
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-97 (K-80'in devamı)
+
+**Bağlam:** Hazırlık paketi soruları ve STAR iskeletini veriyor; kullanıcının
+kendi cevabını denemesi eksikti. ai-job-search `/interview` pratik modu: cevap
+STAR'a göre okunuyor, kağıtta olmayan iddia işaretleniyor.
+
+**Karar:**
+- **Yazılı, soru başına.** Hazırlık sayfasındaki her sorunun altında bir cevap
+  kutusu. Sesli pratik yok.
+- **LLM yalnızca okuyor:** STAR'ın dört parçası var mı, en çok iki güçlü ve
+  üç geliştirilecek yan. Öneri yeni olgu getirmiyor: "sonucu bir ölçüyle
+  bitir" diyor, sayı uydurmuyor.
+- **"Kağıtta yok" kodda:** cevaptaki sayı ya da ilan terimi gönderilen CV'de
+  ve ön yazıda yoksa "sorulursa kanıtlayabilmelisin". Olumsuzlanan yan cümle
+  hariç (K-80). Kişisel nitelik ve şartlar ("dikkatli", "ehliyet")
+  sayılmıyor; kağıtla kanıtlanan bir iddia değiller.
+- **Uzunluk kodda:** önerilen 80–250 kelime; dışındaysa not. 30 karakterden
+  kısa cevap LLM'e gitmiyor.
+- **Kayıt hazırlık kaydının içinde** (`interviewPrep.practice`), yeni göç yok.
+  Web ve worker kaydı satır kilidiyle oku-değiştir-yaz yapıyor: paketin
+  yeniden yazılması pratik geçmişini silmiyor.
+- **Soru başına üç geri bildirim**; başarısız olan sayılmıyor, aynı soruda
+  ikinci bekleyen istek yok.
+
+**Ölçüm (`pnpm eval:practice`, muhasebe CV'si × İK ilanı):** iyi kurulmuş
+STAR, belirsiz kısa cevap ve CV'de olmayan sayı içeren cevap. STAR okumasında
+sapma 0, kaçırılan "kağıtta yok" 0, önerilerde uydurma sayı 0.
