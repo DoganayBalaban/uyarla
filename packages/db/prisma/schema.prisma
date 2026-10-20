@@ -176,6 +176,9 @@ model Analysis {
   // channel, status, subject, text, verification, createdAt }]. Taslak; biz
   // göndermiyoruz. Eski kayıtlarda boş.
   followUps      Json?
+  // Mülakat hazırlık paketi (DOG-118): { status, createdAt, attempts, prep }.
+  // Eski kayıtlarda boş.
+  interviewPrep  Json?
 
   @@index([resumeVersionId, jobPostingId])
   @@index([userId])

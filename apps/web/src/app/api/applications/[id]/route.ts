@@ -1,11 +1,12 @@
 import { type Prisma, prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, ensureRegistered, getSession } from "@/server/authz"
-import { BOARD_SELECT, toBoardCard } from "@/features/applications/board"
-import { applicationPatchSchema, followUpRequestSchema } from "@/features/applications/schema"
+import { BOARD_SELECT, positionName, toBoardCard } from "@/features/applications/board"
+import { applicationPatchSchema, followUpRequestSchema, interviewPrepRequestSchema } from "@/features/applications/schema"
 import { firstIssue } from "@/lib/validation"
 import { randomUUID } from "node:crypto"
-import { ADAPT_JOB_OPTIONS, FOLLOW_UP_JOB } from "@uyarla/worker/adapt-queue"
+import { ADAPT_JOB_OPTIONS, FOLLOW_UP_JOB, INTERVIEW_PREP_JOB } from "@uyarla/worker/adapt-queue"
+import { MAX_PREP_ATTEMPTS, type InterviewPrepRecord } from "@uyarla/core/interview/prep"
 import { adaptQueue } from "@/server/adaptQueue"
 import { FOLLOW_UP_ERROR_MESSAGE, addFollowUp } from "@/server/followUps"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
@@ -70,7 +71,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { id } = await params
   try {
     const session = ensureRegistered(await getSession())
-    const parsed = followUpRequestSchema.safeParse(await request.json().catch(() => ({})))
+    const body = await request.json().catch(() => ({}))
+    if (interviewPrepRequestSchema.safeParse(body).success) return startInterviewPrep(id, session)
+    const parsed = followUpRequestSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: firstIssue(parsed.error).message }, { status: 400 })
 
     const existing = await prisma.analysis.findUnique({ where: { id }, select: { userId: true, status: true } })
@@ -100,6 +103,72 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const reply = authErrorResponse(error)
     if (reply) return reply
     console.error("[api/applications/[id]] POST", error)
+    return NextResponse.json({ error: "Bir şeyler ters gitti." }, { status: 500 })
+  }
+}
+
+/**
+ * Mülakat hazırlık paketi (DOG-118). Kayıt "running" olarak yazılıyor, worker
+ * dolduruyor; sayfa GET ile yokluyor. Yeniden yazma bir kez; yazılırken
+ * önceki paket görünmeye devam ediyor.
+ */
+async function startInterviewPrep(id: string, session: Awaited<ReturnType<typeof getSession>> & object) {
+  const existing = await prisma.analysis.findUnique({ where: { id }, select: { userId: true, status: true } })
+  ensureOwner(existing?.userId ?? null, session)
+  if (existing!.status !== "done") return NextResponse.json({ error: "Bu analiz henüz tamamlanmadı." }, { status: 409 })
+  await enforceRateLimit(redisStore, `mulakat:${session.user.id}`, RATE_LIMITS.registered)
+
+  const outcome = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Analysis" WHERE id = ${id} FOR UPDATE`
+    const row = await tx.analysis.findUnique({ where: { id }, select: { interviewPrep: true } })
+    const prev = (row?.interviewPrep ?? null) as InterviewPrepRecord | null
+    if (prev?.status === "running") return { error: "Hazırlık paketin hâlâ hazırlanıyor." }
+    if ((prev?.attempts ?? 0) >= MAX_PREP_ATTEMPTS) return { error: "Bu başvuru için hazırlık paketini en fazla iki kez oluşturabiliyoruz." }
+    const record: InterviewPrepRecord = {
+      status: "running",
+      createdAt: new Date().toISOString(),
+      attempts: (prev?.attempts ?? 0) + 1,
+      ...(prev?.prep ? { prep: prev.prep } : {}),
+    }
+    await tx.analysis.update({ where: { id }, data: { interviewPrep: record as unknown as object } })
+    return { record }
+  })
+  if ("error" in outcome) return NextResponse.json({ error: outcome.error }, { status: 400 })
+
+  await adaptQueue.add(INTERVIEW_PREP_JOB, { analysisId: id }, ADAPT_JOB_OPTIONS)
+  return NextResponse.json({ interviewPrep: outcome.record }, { status: 202 })
+}
+
+/** Hazırlık sayfasının verisi (DOG-118): ilan, aşama ve paket. */
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  try {
+    const session = ensureRegistered(await getSession())
+    const row = await prisma.analysis.findUnique({
+      where: { id },
+      select: {
+        userId: true,
+        stage: true,
+        interviewAt: true,
+        interviewPrep: true,
+        jobPosting: { select: { position: true, company: true, rawText: true } },
+        adaptation: { select: { id: true, status: true } },
+      },
+    })
+    ensureOwner(row?.userId ?? null, session)
+    return NextResponse.json({
+      position: positionName(row!.jobPosting.position, row!.jobPosting.rawText),
+      company: row!.jobPosting.company,
+      stage: row!.stage,
+      interviewAt: row!.interviewAt?.toISOString().slice(0, 10) ?? null,
+      adaptationId: row!.adaptation && row!.adaptation.status !== "failed" ? row!.adaptation.id : null,
+      interviewPrep: row!.interviewPrep ?? null,
+      prepAttemptsLeft: MAX_PREP_ATTEMPTS - (((row!.interviewPrep ?? null) as InterviewPrepRecord | null)?.attempts ?? 0),
+    })
+  } catch (error) {
+    const reply = authErrorResponse(error)
+    if (reply) return reply
+    console.error("[api/applications/[id]] GET", error)
     return NextResponse.json({ error: "Bir şeyler ters gitti." }, { status: 500 })
   }
 }

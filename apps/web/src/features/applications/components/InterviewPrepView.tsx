@@ -1,0 +1,215 @@
+"use client"
+
+import Link from "next/link"
+import { useState } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { ArrowLeft, LoaderCircle, TriangleAlert } from "lucide-react"
+import type { InterviewPrep, InterviewPrepRecord } from "@uyarla/core/interview/prep"
+import { api, apiErrorMessage, apiStatus } from "@/lib/api"
+
+interface PrepData {
+  position: string
+  company: string | null
+  stage: string
+  interviewAt: string | null
+  adaptationId: string | null
+  interviewPrep: InterviewPrepRecord | null
+  prepAttemptsLeft: number
+}
+
+const key = (id: string) => ["interview-prep", id] as const
+
+const KIND_LABEL = { technical: "Teknik", behavioral: "Davranışsal", gap: "Boşluk" } as const
+const DATE = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", timeZone: "UTC" })
+
+/**
+ * Mülakat hazırlık paketi (DOG-118). Kaynak başvurunun gönderilen CV'si ve
+ * ön yazısı: kanıtlar CV'den birebir, köşeli parantezli yerleri kullanıcı
+ * kendi bildiğiyle dolduruyor. "Kağıtta olmayan iddia odada yok."
+ */
+export function InterviewPrepView({ analysisId }: { analysisId: string }) {
+  const queryClient = useQueryClient()
+  const [error, setError] = useState<string | null>(null)
+  const query = useQuery({
+    queryKey: key(analysisId),
+    queryFn: async () => (await api.get<PrepData>(`/applications/${encodeURIComponent(analysisId)}`)).data,
+    refetchInterval: (q) => (q.state.data?.interviewPrep?.status === "running" ? 2500 : false),
+  })
+  const start = useMutation({
+    mutationFn: async () => {
+      await api.post(`/applications/${encodeURIComponent(analysisId)}`, { type: "interview-prep" })
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: key(analysisId) }),
+  })
+
+  if (query.isPending) return <LoaderCircle className="size-5 text-muted motion-safe:animate-spin" aria-hidden />
+  if (query.isError) {
+    return (
+      <p className="text-muted">
+        {apiStatus(query.error) === 404 ? "Bu başvuruyu bulamadık." : "Yükleyemedik. Sayfayı yenileyebilir misin?"}
+      </p>
+    )
+  }
+  const data = query.data
+  const record = data.interviewPrep
+  const prep = record?.prep
+  const running = record?.status === "running"
+
+  async function create() {
+    setError(null)
+    try {
+      await start.mutateAsync()
+    } catch (e) {
+      setError(await apiErrorMessage(e, "Hazırlık paketini başlatamadık. Birazdan tekrar dener misin?"))
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Link href="/applications" className="inline-flex items-center gap-1 text-sm text-muted no-underline hover:text-foreground">
+        <ArrowLeft className="size-4" aria-hidden />
+        Başvuru panosu
+      </Link>
+      <div>
+        <h1 className="m-0 font-heading text-3xl font-extrabold tracking-tight">Mülakat hazırlığı</h1>
+        <p className="mt-2 text-muted">
+          {data.position}
+          {data.company ? ` · ${data.company}` : ""}
+          {data.interviewAt ? ` · ${DATE.format(new Date(`${data.interviewAt}T00:00:00Z`))}` : ""}
+        </p>
+        <p className="mt-2 text-sm text-muted">
+          Gönderdiğin CV&apos;den ve ön yazından hazırlandı. Kağıtta olmayan bir iddiayı mülakatta da kurma; köşeli
+          parantezli yerleri kendi bildiğinle doldur.
+          {data.adaptationId && (
+            <>
+              {" "}
+              <Link href={`/adapt/${data.adaptationId}`} className="font-medium text-brand-blue">
+                Gönderdiğin CV
+              </Link>
+            </>
+          )}
+        </p>
+      </div>
+
+      {running && (
+        <p className="flex items-center gap-2 text-sm text-muted" role="status">
+          <LoaderCircle className="size-4 text-brand-blue motion-safe:animate-spin" aria-hidden />
+          Hazırlık paketini yazıyoruz; bir dakika sürebilir…
+        </p>
+      )}
+      {record?.status === "failed" && <p className="text-sm text-brand-red">Hazırlık paketini yazamadık. Tekrar dener misin?</p>}
+
+      {!running && data.prepAttemptsLeft > 0 && (
+        <button
+          type="button"
+          onClick={() => void create()}
+          disabled={start.isPending}
+          className="rounded-button bg-brand-blue px-5 py-3 font-semibold text-white shadow-sm disabled:opacity-50"
+        >
+          {prep ? `Yeniden hazırla (${data.prepAttemptsLeft} hakkın kaldı)` : "Hazırlık paketini oluştur"}
+        </button>
+      )}
+      {error && (
+        <p role="alert" className="text-sm text-brand-red dark:text-[#f87171]">
+          {error}
+        </p>
+      )}
+
+      {prep && <PrepSections prep={prep} />}
+    </div>
+  )
+}
+
+function Flag({ issues }: { issues: Array<{ detail: string }> }) {
+  return (
+    <p className="m-0 mt-2 flex gap-1.5 text-sm text-brand-amber">
+      <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+      <span>
+        Kontrol et: {issues.map((i) => i.detail.replace("Bu paragrafta", "Burada")).join(" ")} Söyleyebileceğin bir şey
+        değilse çıkar.
+      </span>
+    </p>
+  )
+}
+
+export function PrepSections({ prep }: { prep: InterviewPrep }) {
+  return (
+    <>
+      <section className="rounded-card border border-border bg-card p-5">
+        <h2 className="m-0 text-lg">Olası sorular</h2>
+        <ol className="mt-4 space-y-5 pl-5">
+          {prep.questions.map((q, i) => (
+            <li key={i} className="text-sm">
+              <p className="m-0 font-semibold">
+                {q.question} <span className="ml-1 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted">{KIND_LABEL[q.kind]}</span>
+              </p>
+              <p className="m-0 mt-1 text-muted">{q.why}</p>
+              {q.evidence.length > 0 && (
+                <p className="m-0 mt-2">
+                  <span className="font-medium">CV&apos;ndeki dayanağın:</span> {q.evidence.join(" · ")}
+                </p>
+              )}
+              <dl className="m-0 mt-2 grid grid-cols-[6rem_1fr] gap-x-2 gap-y-1 rounded-button bg-background p-3">
+                <dt className="text-muted">Durum</dt>
+                <dd className="m-0">{q.star.situation}</dd>
+                <dt className="text-muted">Görev</dt>
+                <dd className="m-0">{q.star.task}</dd>
+                <dt className="text-muted">Eylem</dt>
+                <dd className="m-0">{q.star.action}</dd>
+                <dt className="text-muted">Sonuç</dt>
+                <dd className="m-0">{q.star.result}</dd>
+              </dl>
+              {q.verification.status === "flagged" && <Flag issues={q.verification.issues} />}
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {prep.consistency.length > 0 && (
+        <section className="rounded-card border border-border bg-card p-5">
+          <h2 className="m-0 text-lg">Savunmaya hazır ol</h2>
+          <p className="mt-1 text-sm text-muted">Görüşmeci CV&apos;ndeki bu iddiaların üstüne gidebilir.</p>
+          <ul className="mt-3 space-y-2 text-sm">
+            {prep.consistency.map((c, i) => (
+              <li key={i}>
+                <span className="font-medium">{c.claim}</span>
+                <span className="block text-muted">
+                  {c.reason === "quantity"
+                    ? "Bu sayıyı neye göre ölçtüğünü, başlangıç noktasını ve senin payını anlatabilmelisin."
+                    : "Bu maddeyi ilanın diliyle yeniden yazdık; kendi kelimelerinle ve bir örnekle anlatabilmelisin."}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {prep.bridges.length > 0 && (
+        <section className="rounded-card border border-border bg-card p-5">
+          <h2 className="m-0 text-lg">Eksik kalan gereksinimler</h2>
+          <p className="mt-1 text-sm text-muted">Soru gelirse sahiplenme; dürüst bir köprü kur.</p>
+          <ul className="mt-3 space-y-3 text-sm">
+            {prep.bridges.map((b, i) => (
+              <li key={i}>
+                <span className="font-medium">{b.requirement}</span>
+                <span className="block">{b.answer}</span>
+                {b.verification.status === "flagged" && <Flag issues={b.verification.issues} />}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {prep.askThem.length > 0 && (
+        <section className="rounded-card border border-border bg-card p-5">
+          <h2 className="m-0 text-lg">Senin soracakların</h2>
+          <ul className="mt-3 space-y-1.5 text-sm">
+            {prep.askThem.map((q, i) => (
+              <li key={i}>{q}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </>
+  )
+}

@@ -186,6 +186,7 @@ export async function runDailyEmails(
       company: a.jobPosting.company?.trim() || null,
       interviewAt: isoDay(a.interviewAt!),
       adaptationId: adaptation,
+      analysisId: a.id,
     })
     c.reminders.refs.push({ kind: "interview_reminder", refId: a.id })
   }

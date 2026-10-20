@@ -35,6 +35,11 @@ const DATE = /\b(0?[1-9]|1[0-2])[./](19|20)\d{2}\b|\b(19|20)\d{2}\b/g
 // rakam ("60 müşteri", "1,2 milyon", "3x"), yüzde ve para işareti sonuçtur.
 const QUANTITY = /(?<![\p{L}\d.,])\d+(?:[.,]\d+)?(?:x\b|(?!\p{L}))|%|₺|\$|€/u
 
+/** Cümlede ölçülebilir bir sonuç (sayı, yüzde, para) var mı; tarihler sayılmıyor. */
+export function hasQuantity(statement: string): boolean {
+  return QUANTITY.test(statement.replace(DATE, " "))
+}
+
 export function measurableResults(experienceBlock: string): MeasurableResults {
   const statements = splitStatements(experienceBlock)
   const missing: string[] = []

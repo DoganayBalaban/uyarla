@@ -17,7 +17,7 @@
  *   - "doğrudan" olumsuzluk değil ("doğrudan yönettim").
  */
 const NEGATION =
-  /(değil|yok\b|olmadı|olmamakla|olmamasına|olmasa da|bulunmamakta|bulunmuyor|bulunmamaktadır|çalışmadım|kullanmadım|yapmadım|edinmedim|sahip değil|have not|haven't|has not|hasn't|did not|didn't|do not have|don't have|no direct|not worked|not used)/i
+  /(değil|yok\b|olmadı|olmama|olmasa da|bulunmamakta|bulunmuyor|bulunmamaktadır|yer almıyor|yer almamakta|çalışmadım|kullanmadım|yapmadım|edinmedim|sahip değil|have not|haven't|has not|hasn't|did not|didn't|do not have|don't have|no direct|not worked|not used)/i
 
 const CONNECTOR = /\s*(?:;|\b(?:ancak|ama|fakat|lakin|buna karşın|yine de|but|however|yet)\b)\s*/i
 

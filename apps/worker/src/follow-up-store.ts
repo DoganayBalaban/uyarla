@@ -6,6 +6,7 @@ import {
   readFollowUps,
   type CoverLetterRecord,
   type FollowUpRecord,
+  type InterviewPrepRecord,
   type JobPostingData,
   type ResumeProfile,
 } from "@uyarla/core"
@@ -26,48 +27,108 @@ export interface FollowUpStore {
   update(analysisId: string, followUpId: string, patch: Partial<FollowUpRecord>): Promise<void>
 }
 
+/** Mülakat hazırlığının bağlamı (DOG-118): gönderilen belgeler ve eksikler. */
+export interface InterviewPrepContext {
+  profile: ResumeProfile
+  coverLetter: string[]
+  posting: JobPostingData
+  missingMust: string[]
+  rewritten: string[]
+  record: InterviewPrepRecord | null
+}
+
+export interface InterviewPrepStore {
+  getPrepContext(analysisId: string): Promise<InterviewPrepContext>
+  savePrep(analysisId: string, record: InterviewPrepRecord): Promise<void>
+}
+
 const day = (d: Date | null) => d?.toISOString().slice(0, 10) ?? null
+
+const SENT_SELECT = {
+  followUps: true,
+  interviewPrep: true,
+  result: true,
+  stageChangedAt: true,
+  interviewAt: true,
+  resumeVersion: { select: { profile: true } },
+  jobPosting: true,
+  adaptation: { select: { status: true, draft: true, coverLetter: true } },
+} as const
+
+/**
+ * Başvurunun gönderilen hâli (DOG-117, DOG-118): uyarlama varsa kabul
+ * edilenlerle CV ve ön yazı, yoksa analizdeki profil. Uyarlamada yeniden
+ * yazılıp kabul edilen maddeler de (tutarlılık özeti için).
+ */
+async function sentDocuments(analysisId: string) {
+  const analysis = await prisma.analysis.findUnique({ where: { id: analysisId }, select: SENT_SELECT })
+  if (!analysis?.resumeVersion) throw new PermanentError("Analiz bulunamadı", "analysis_not_found")
+  let profile = analysisProfile(analysis.resumeVersion.profile as unknown as ResumeProfile, analysis.result)
+  let rewritten: string[] = []
+  const adaptation = analysis.adaptation
+  if (adaptation && (adaptation.status === "draft" || adaptation.status === "ready")) {
+    const draft = AdaptationDraftSchema.safeParse(adaptation.draft)
+    if (draft.success) {
+      profile = applyAdaptation(profile, draft.data)
+      rewritten = draft.data.bullets.filter((b) => b.decision === "accepted" && b.rewritten.trim() && b.rewritten !== b.original).map((b) => b.rewritten)
+    }
+  }
+  const letter = adaptation?.coverLetter as CoverLetterRecord | null | undefined
+  const posting = analysis.jobPosting
+  return {
+    analysis,
+    profile,
+    rewritten,
+    coverLetter: letter?.status === "done" ? letter.paragraphs.map((p) => p.text) : [],
+    posting: {
+      position: posting.position,
+      company: posting.company,
+      seniority: posting.seniority as never,
+      language: posting.language as never,
+      requirements: posting.requirements as never,
+    } satisfies JobPostingData,
+  }
+}
+
+/** Analiz sonucundan CV'de karşılığı olmayan zorunlu gereksinimler; şart, kişisel nitelik ve işaretliler hariç. */
+function missingMustRequirements(result: unknown): string[] {
+  const r = result as { requirements?: Array<{ status: string; requirement: { text: string; importance: string; type: string } }>; excluded?: number[] } | null
+  const excluded = new Set(r?.excluded ?? [])
+  return (r?.requirements ?? [])
+    .filter((x, i) => !excluded.has(i) && x.status === "missing" && x.requirement.importance === "must" && !["soft", "condition"].includes(x.requirement.type))
+    .map((x) => x.requirement.text)
+}
+
+/** InterviewPrepStore'un Prisma uygulaması (DOG-118). */
+export const prismaInterviewPrepStore: InterviewPrepStore = {
+  async getPrepContext(analysisId) {
+    const sent = await sentDocuments(analysisId)
+    return {
+      profile: sent.profile,
+      coverLetter: sent.coverLetter,
+      posting: sent.posting,
+      missingMust: missingMustRequirements(sent.analysis.result),
+      rewritten: sent.rewritten,
+      record: (sent.analysis.interviewPrep ?? null) as InterviewPrepRecord | null,
+    }
+  },
+  async savePrep(analysisId, record) {
+    await prisma.analysis.update({ where: { id: analysisId }, data: { interviewPrep: record as unknown as object } })
+  },
+}
 
 /** FollowUpStore'un Prisma uygulaması (DOG-117). */
 export const prismaFollowUpStore: FollowUpStore = {
   async getContext(analysisId, followUpId) {
-    const analysis = await prisma.analysis.findUnique({
-      where: { id: analysisId },
-      select: {
-        followUps: true,
-        result: true,
-        stageChangedAt: true,
-        interviewAt: true,
-        resumeVersion: { select: { profile: true } },
-        jobPosting: true,
-        adaptation: { select: { status: true, draft: true, coverLetter: true } },
-      },
-    })
-    if (!analysis?.resumeVersion) throw new PermanentError("Analiz bulunamadı", "analysis_not_found")
-    const record = readFollowUps(analysis.followUps).find((f) => f.id === followUpId)
+    const sent = await sentDocuments(analysisId)
+    const record = readFollowUps(sent.analysis.followUps).find((f) => f.id === followUpId)
     if (!record) return null
-
-    // Gönderilen CV: kullanıcının uyarlamada kabul ettikleri (DOG-117).
-    let profile = analysisProfile(analysis.resumeVersion.profile as unknown as ResumeProfile, analysis.result)
-    const adaptation = analysis.adaptation
-    if (adaptation && (adaptation.status === "draft" || adaptation.status === "ready")) {
-      const draft = AdaptationDraftSchema.safeParse(adaptation.draft)
-      if (draft.success) profile = applyAdaptation(profile, draft.data)
-    }
-    const letter = adaptation?.coverLetter as CoverLetterRecord | null | undefined
-    const posting = analysis.jobPosting
     return {
-      profile,
-      coverLetter: letter?.status === "done" ? letter.paragraphs.map((p) => p.text) : [],
-      posting: {
-        position: posting.position,
-        company: posting.company,
-        seniority: posting.seniority as never,
-        language: posting.language as never,
-        requirements: posting.requirements as never,
-      },
+      profile: sent.profile,
+      coverLetter: sent.coverLetter,
+      posting: sent.posting,
       record,
-      date: record.kind === "thanks" ? day(analysis.interviewAt) : day(analysis.stageChangedAt),
+      date: record.kind === "thanks" ? day(sent.analysis.interviewAt) : day(sent.analysis.stageChangedAt),
     }
   },
 
