@@ -5,6 +5,8 @@ import { Check } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { DiffText } from "@/features/adaptation/components/DiffText"
 import { documentSections, type DocumentLine } from "@/features/adaptation/documentView"
+import { HighlightedText } from "@/features/adaptation/components/HighlightedText"
+import { termCoverage, type PostingTerm } from "@/features/adaptation/postingTerms"
 import type { DocumentOutline, Draft } from "@/features/adaptation/types"
 
 type Mode = "diff" | "after" | "before"
@@ -27,21 +29,39 @@ export function DocumentView({
   document,
   draft,
   onRestore,
+  terms = [],
 }: {
   document: { before: DocumentOutline; after: DocumentOutline }
+  /** İlan terimleri (DOG-92): vurgu ve belgede geçmeyen zorunlular. */
+  terms?: readonly PostingTerm[]
   draft: Pick<Draft, "bullets" | "omitted">
   /** Tek sayfa için çıkarılan maddeyi geri alır (DOG-93). */
   onRestore?: (bulletId: string) => void
 }) {
   const [mode, setMode] = useState<Mode>("diff")
+  const [highlight, setHighlight] = useState(false)
   const s = documentSections(document, draft)
+  const shown = (t: string) => (highlight ? <HighlightedText text={t} terms={terms} /> : t)
 
   const text = (l: DocumentLine) =>
     mode === "diff" && l.changed ? (
       <DiffText original={l.before} rewritten={l.after} />
     ) : (
-      <p className="m-0 leading-relaxed">{mode === "before" ? l.before : l.after}</p>
+      <p className="m-0 leading-relaxed">{shown(mode === "before" ? l.before : l.after)}</p>
     )
+
+  // Kapsama seçili hâlin metninden ("Farklar"da yeni hâl).
+  const outline = mode === "before" ? document.before : document.after
+  const lines = [
+    outline.headline,
+    outline.summary,
+    ...outline.experience.flatMap((e) => [e.title, ...e.bullets]),
+    ...(outline.projects ?? []).flatMap((p) => [p.name, ...p.bullets]),
+    ...(outline.otherSections ?? []).flatMap((o) => o.lines),
+    ...(outline.skills ?? []),
+  ].filter((x): x is string => !!x)
+  const coverage = terms.length ? termCoverage(lines, terms) : null
+  const missingMust = coverage?.missing.filter((t) => t.must) ?? []
 
   return (
     <section className="rounded-card border border-border bg-card p-5 sm:p-6">
@@ -76,6 +96,24 @@ export function DocumentView({
             ? "İndireceğin CV, seçtiğin hâllerle."
             : "Yüklediğin CV, uyarlamadan önce."}
       </p>
+      {coverage && (
+        <div className="mt-3 text-sm">
+          <label className="inline-flex items-center gap-2">
+            <input type="checkbox" checked={highlight} onChange={(e) => setHighlight(e.target.checked)} className="size-4 accent-brand-blue" />
+            İlanın terimlerini vurgula
+          </label>
+          <p className="m-0 mt-1 text-muted">
+            İlanın {coverage.found.length + coverage.missing.length} teriminden {coverage.found.length} tanesi bu hâlde geçiyor.
+            {missingMust.length > 0 && (
+              <>
+                {" "}
+                Geçmeyen zorunlular: <span className="text-foreground">{missingMust.map((t) => t.term).join(", ")}</span>. Deneyiminde
+                varsa görünür kıl; yoksa eklemiyoruz.
+              </>
+            )}
+          </p>
+        </div>
+      )}
 
       <div className="mt-5 flex flex-col gap-6 rounded-button border border-border bg-background/60 p-4 text-sm sm:p-6">
         {s.headline && <p className="m-0 font-semibold text-muted">{s.headline}</p>}
@@ -145,7 +183,7 @@ export function DocumentView({
                     mode === "diff" && k.added ? "border-brand-green/40 bg-brand-green/15" : "border-border bg-card",
                   )}
                 >
-                  {k.name}
+                  {shown(k.name)}
                 </li>
               ))}
             </ul>
@@ -157,7 +195,7 @@ export function DocumentView({
             <h3 className="m-0 mb-2 text-xs font-bold tracking-wider text-muted uppercase">{o.heading}</h3>
             {o.lines.map((l, j) => (
               <p key={j} className="m-0 leading-relaxed">
-                {l}
+                {shown(l)}
               </p>
             ))}
           </div>
