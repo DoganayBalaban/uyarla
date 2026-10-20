@@ -124,6 +124,11 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
         note: true,
         interviewAt: true,
         reminderSentAt: true,
+        // Kullanıcının istediği taslaklar ve yazdığı metinler (DOG-117, DOG-118,
+        // DOG-97, DOG-123).
+        followUps: true,
+        interviewPrep: true,
+        formAnswers: true,
         createdAt: true,
         adaptation: { select: { draft: true, coverLetter: true, status: true, createdAt: true } },
       },

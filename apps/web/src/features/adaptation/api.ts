@@ -75,7 +75,9 @@ export const adaptationQueryKey = (id: string) => ["adaptation", id] as const
  * İstek başarısızsa duruyor: uyarlama yok ya da kullanıcının değil.
  */
 export function adaptationPollDelay(
-  data: (Pick<AdaptationState, "status" | "coverLetter"> & { draft?: Pick<Draft, "contributions"> | null }) | undefined,
+  data:
+    | (Pick<AdaptationState, "status" | "coverLetter" | "formAnswers"> & { draft?: Pick<Draft, "contributions"> | null })
+    | undefined,
   error: unknown,
 ): number | false {
   if (error) return false
@@ -83,6 +85,8 @@ export function adaptationPollDelay(
   if (data.coverLetter?.status === "running") return 2000
   // Kullanıcının anlattığından madde yazılıyor (DOG-94).
   if (data.draft?.contributions?.some((c) => c.status === "running")) return 2000
+  // Başvuru formu yanıtı yazılıyor (DOG-123).
+  if (data.formAnswers?.some((a) => a.status === "running")) return 2000
   return false
 }
 

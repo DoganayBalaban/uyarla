@@ -149,7 +149,7 @@ export function resumeFacts(profile: ResumeProfile): string {
   return lineItems.join("\n")
 }
 
-function postingSummary(posting: JobPostingData): string {
+export function postingSummary(posting: JobPostingData): string {
   // Şartlar (DOG-115) mektuba girmiyor: "ehliyetim var", "Ankara'da
   // yaşıyorum" CV'de yazmıyorsa uydurmadır, yazıyorsa da mektubun konusu değil.
   const qualifications = posting.requirements.filter((r) => r.type !== "condition")

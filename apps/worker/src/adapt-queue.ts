@@ -36,6 +36,14 @@ export interface InterviewPrepJobData {
   analysisId: string
 }
 
+/** Başvuru formu yanıtı (DOG-123); yanıt `Analysis.formAnswers` içinde "running". */
+export const FORM_ANSWER_JOB = "form-answer"
+
+export interface FormAnswerJobData {
+  analysisId: string
+  answerId: string
+}
+
 /** Yazılı mülakat pratiği (DOG-97); deneme hazırlık kaydında "running". */
 export const PRACTICE_JOB = "practice"
 
