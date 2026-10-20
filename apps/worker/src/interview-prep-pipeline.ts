@@ -1,6 +1,6 @@
-import { generateInterviewPrep } from "@uyarla/core"
+import { generateInterviewPrep, reviewAnswer } from "@uyarla/core"
 import type { LlmProvider } from "@uyarla/core"
-import type { InterviewPrepJobData } from "./adapt-queue.js"
+import type { InterviewPrepJobData, PracticeJobData } from "./adapt-queue.js"
 import type { InterviewPrepStore } from "./follow-up-store.js"
 
 /**
@@ -18,5 +18,29 @@ export async function runInterviewPrep(deps: { llm: LlmProvider; store: Intervie
     missingMust: context.missingMust,
     rewritten: context.rewritten,
   })
-  await deps.store.savePrep(input.analysisId, { ...context.record, status: "done", prep: data })
+  // Bu arada eklenen pratik denemeleri korunuyor.
+  await deps.store.updatePrep(input.analysisId, (current) => (current ? { ...current, status: "done", prep: data } : null))
+}
+
+/**
+ * Yazılı pratik (DOG-97): bir cevaba geri bildirim. Kaynak yine gönderilen
+ * belgeler; "kağıtta yok" kodda.
+ */
+export async function runPractice(deps: { llm: LlmProvider; store: InterviewPrepStore }, input: PracticeJobData): Promise<void> {
+  const context = await deps.store.getPrepContext(input.analysisId)
+  const entry = context.record?.practice?.find((p) => p.id === input.practiceId)
+  const question = entry ? context.record?.prep?.questions[entry.questionIndex] : undefined
+  if (!entry || entry.status !== "running" || !question) return
+  const { data } = await reviewAnswer(deps.llm, {
+    question: question.question,
+    answer: entry.answer,
+    profile: context.profile,
+    coverLetter: context.coverLetter,
+    posting: context.posting,
+  })
+  await deps.store.updatePrep(input.analysisId, (current) =>
+    current
+      ? { ...current, practice: (current.practice ?? []).map((p) => (p.id === input.practiceId ? { ...p, status: "done" as const, feedback: data } : p)) }
+      : null,
+  )
 }

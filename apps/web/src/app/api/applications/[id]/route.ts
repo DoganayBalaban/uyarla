@@ -2,11 +2,18 @@ import { type Prisma, prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, ensureRegistered, getSession } from "@/server/authz"
 import { BOARD_SELECT, positionName, toBoardCard } from "@/features/applications/board"
-import { applicationPatchSchema, followUpRequestSchema, interviewPrepRequestSchema } from "@/features/applications/schema"
+import {
+  applicationPatchSchema,
+  followUpRequestSchema,
+  interviewPrepRequestSchema,
+  practiceRequestSchema,
+  type PracticeRequest,
+} from "@/features/applications/schema"
 import { firstIssue } from "@/lib/validation"
 import { randomUUID } from "node:crypto"
-import { ADAPT_JOB_OPTIONS, FOLLOW_UP_JOB, INTERVIEW_PREP_JOB } from "@uyarla/worker/adapt-queue"
+import { ADAPT_JOB_OPTIONS, FOLLOW_UP_JOB, INTERVIEW_PREP_JOB, PRACTICE_JOB } from "@uyarla/worker/adapt-queue"
 import { MAX_PREP_ATTEMPTS, type InterviewPrepRecord } from "@uyarla/core/interview/prep"
+import { addPractice, PRACTICE_ERROR_MESSAGE } from "@/server/practice"
 import { adaptQueue } from "@/server/adaptQueue"
 import { FOLLOW_UP_ERROR_MESSAGE, addFollowUp } from "@/server/followUps"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
@@ -73,6 +80,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const session = ensureRegistered(await getSession())
     const body = await request.json().catch(() => ({}))
     if (interviewPrepRequestSchema.safeParse(body).success) return startInterviewPrep(id, session)
+    if ((body as { type?: unknown })?.type === "practice") {
+      const practice = practiceRequestSchema.safeParse(body)
+      if (!practice.success) return NextResponse.json({ error: firstIssue(practice.error).message }, { status: 400 })
+      return startPractice(id, session, practice.data)
+    }
     const parsed = followUpRequestSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: firstIssue(parsed.error).message }, { status: 400 })
 
@@ -137,6 +149,30 @@ async function startInterviewPrep(id: string, session: Awaited<ReturnType<typeof
 
   await adaptQueue.add(INTERVIEW_PREP_JOB, { analysisId: id }, ADAPT_JOB_OPTIONS)
   return NextResponse.json({ interviewPrep: outcome.record }, { status: 202 })
+}
+
+/**
+ * Yazılı mülakat pratiği (DOG-97): cevap hazırlık kaydına "running" olarak
+ * ekleniyor, worker geri bildirimi yazıyor; sayfa GET ile yokluyor.
+ */
+async function startPractice(id: string, session: Awaited<ReturnType<typeof getSession>> & object, body: PracticeRequest) {
+  const existing = await prisma.analysis.findUnique({ where: { id }, select: { userId: true } })
+  ensureOwner(existing?.userId ?? null, session)
+  await enforceRateLimit(redisStore, `pratik:${session.user.id}`, RATE_LIMITS.registered)
+
+  const practiceId = randomUUID()
+  const outcome = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Analysis" WHERE id = ${id} FOR UPDATE`
+    const row = await tx.analysis.findUnique({ where: { id }, select: { interviewPrep: true } })
+    const added = addPractice((row?.interviewPrep ?? null) as InterviewPrepRecord | null, body, practiceId, new Date())
+    if ("error" in added) return added
+    await tx.analysis.update({ where: { id }, data: { interviewPrep: added.record as unknown as object } })
+    return added
+  })
+  if ("error" in outcome) return NextResponse.json({ error: PRACTICE_ERROR_MESSAGE[outcome.error], code: outcome.error }, { status: 400 })
+
+  await adaptQueue.add(PRACTICE_JOB, { analysisId: id, practiceId }, ADAPT_JOB_OPTIONS)
+  return NextResponse.json({ practice: outcome.entry }, { status: 202 })
 }
 
 /** Hazırlık sayfasının verisi (DOG-118): ilan, aşama ve paket. */

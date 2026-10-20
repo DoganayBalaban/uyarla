@@ -36,6 +36,14 @@ export interface InterviewPrepJobData {
   analysisId: string
 }
 
+/** Yazılı mülakat pratiği (DOG-97); deneme hazırlık kaydında "running". */
+export const PRACTICE_JOB = "practice"
+
+export interface PracticeJobData {
+  analysisId: string
+  practiceId: string
+}
+
 export interface AdaptJobData {
   /**
    * Uyarlama kaydı web katmanında oluşturuluyor ve kimliği buraya geliyor.
