@@ -92,6 +92,12 @@ export function JobSearchCard({ initialKeywords }: { initialKeywords: string }) 
         </Link>
         , uyumunu hemen ölçelim.
       </p>
+      <p className="m-0 mt-2 text-sm text-muted">
+        <Link href="/linkedin" className="font-medium text-brand-blue">
+          LinkedIn profilini
+        </Link>{" "}
+        de hedef ilanlarla karşılaştırabilirsin.
+      </p>
     </section>
   )
 }

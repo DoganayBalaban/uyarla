@@ -3519,3 +3519,36 @@ ilan terimleri görünüyordu (K-88).
 - **Ayrı uç yok** (Vercel'deki 12 fonksiyon sınırı).
 - **DOG-92'de kalan:** serbest düzenleyici (bölüm ve madde ekleme, taşıma).
   Önce DOG-22'deki kullanılabilirlik testiyle doğrulanmalı.
+
+## K-92 · LinkedIn profil raporu: kullanıcının PDF'i, analiz edilmiş ilanlar, LLM'siz
+
+**Tarih:** 21 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-69 (ilk adım)
+
+**Bağlam:** Jobscan LinkedIn taramasında profili en az 3 ilanla
+karşılaştırıyor, başlık ve "Hakkında" için yönlendirme veriyor. Bizde LinkedIn
+PDF'i DOG-60'tan beri doğru okunuyor ve skor motoru ilanları tek tek
+puanlayabiliyor.
+
+**Karar:**
+- **Girdi:** kullanıcının LinkedIn'den indirdiği PDF (kütüphanede) ve daha
+  önce analiz ettiği 1–3 ilan. Profil sayfası sunucudan çekilmiyor (kazıma,
+  DOG-67). Profile dokunmuyoruz; öneriyi kullanıcı LinkedIn'de uyguluyor.
+- **Worker işi `linkedin-report`:** PDF ayrıştırılıyor. Aynı model ve istemle
+  daha önce ayrıştırıldıysa o sürüm kullanılıyor ve LLM çağrılmıyor (DOG-59).
+  Profil her ilana karşı `scoreProfile` ile skorlanıyor ve rapor kodda
+  kuruluyor (core `linkedin/report.ts`). Kayıt `Resume.linkedinReport`
+  (göç `linkedin_raporu`).
+- **Rapor:**
+  - Ortak eksikler: seçilen ilanların en az ikisinde (tek ilanda o ilanda)
+    eksik kalan kavramlar. Şartlar, kişisel nitelikler ve işaretlenenler
+    hariç. "Deneyiminde varsa ekle; yoksa ekleme" notuyla.
+  - Başlık: boş mu; hedef unvan geçiyor mu; yalnızca unvan mı. Hedef rol
+    yoksa seçilen ilanların unvanlarından herhangi biri yetiyor. "A / B"
+    unvanları ayrı ayrı aranıyor; tek parça aranınca gerçek veride yanlış
+    alarm verdi. Eşleşme skorlamanın eş anlamlılarıyla ("Yapay Zeka Mühendisi"
+    ↔ "AI Engineer").
+  - "Hakkında": boş ya da 40 kelimenin altında. Beceri: 5'ten az.
+  - Eşikler yönlendirme, LinkedIn kuralı değil.
+- **Uç:** yeni API ucu yok; `/api/resumes/[id]` GET ve POST. Sayfa
+  `/linkedin`; gösterge panelindeki "İlan bul" kartından bağlantı.
+- **Sonraki adım:** uydurma kontrollü başlık ve "Hakkında" önerisi (LLM).
