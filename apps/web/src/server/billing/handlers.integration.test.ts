@@ -57,7 +57,7 @@ describe("handleCheckout", () => {
 
 describe("handleWebhook", () => {
   it("answers 403 to a bad signature and writes nothing", async () => {
-    const res = await handleWebhook({ db: prisma, provider: provider(new WebhookSignatureError()), rawBody: "{}", headers: {}, now: NOW })
+    const res = await handleWebhook({ mail: null, db: prisma, provider: provider(new WebhookSignatureError()), rawBody: "{}", headers: {}, now: NOW })
     expect(res.status).toBe(403)
   })
 
@@ -65,16 +65,33 @@ describe("handleWebhook", () => {
     // Review Focus 1.
     const u = await makeUser()
     const p = provider({ type: "paid", orderId: `w-${u.id}`, userId: u.id, plan: "month" })
-    expect((await handleWebhook({ db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW })).status).toBe(200)
-    expect((await handleWebhook({ db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW })).status).toBe(200)
+    expect((await handleWebhook({ mail: null, db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW })).status).toBe(200)
+    expect((await handleWebhook({ mail: null, db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW })).status).toBe(200)
     expect(await prisma.accessPass.count({ where: { userId: u.id } })).toBe(1)
+  })
+
+  it("sends the access-opened e-mail once for a new pass, and survives a failing send (DOG-129)", async () => {
+    const u = await makeUser()
+    const p = provider({ type: "paid", orderId: `m-${u.id}`, userId: u.id, plan: "month" })
+    const mail = { emails: { send: vi.fn(async (_a: { to: string; subject: string }) => ({ data: { id: "re_1" }, error: null })) } }
+    await handleWebhook({ mail, db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW })
+    await handleWebhook({ mail, db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW })
+    expect(mail.emails.send).toHaveBeenCalledTimes(1)
+    expect(mail.emails.send.mock.calls[0]![0]).toMatchObject({ to: u.email, subject: "Erişimin açıldı" })
+    expect(await prisma.emailLog.count({ where: { userId: u.id, kind: "access_opened", category: "transactional" } })).toBe(1)
+
+    const failing = { emails: { send: vi.fn(async () => { throw new Error("ağ") }) } }
+    const p2 = provider({ type: "paid", orderId: `n-${u.id}`, userId: u.id, plan: "week" })
+    const log = vi.fn()
+    expect((await handleWebhook({ mail: failing, db: prisma, provider: p2, rawBody: "{}", headers: {}, now: NOW, log })).status).toBe(200)
+    expect(log).toHaveBeenCalledWith("[billing] erişim e-postası gönderilemedi", expect.anything())
   })
 
   it("answers 200 but logs when the order cannot be applied", async () => {
     // Review Focus 3: Polar sonsuza dek denemesin, biz de fark edelim.
     const log = vi.fn()
     const p = provider({ type: "paid", orderId: "kayip", userId: "silinmis", plan: "month" })
-    const res = await handleWebhook({ db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW, log })
+    const res = await handleWebhook({ mail: null, db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW, log })
     expect(res.status).toBe(200)
     expect(log).toHaveBeenCalled()
   })
@@ -83,7 +100,7 @@ describe("handleWebhook", () => {
     // Spec §4: silinmiş hesap gibi durumlarda para alındı ama dönem açılmadı;
     // elle iade için birinin haberi olmalı. console.warn kimseye ulaşmıyordu.
     const p = provider({ type: "paid", orderId: "kayip-2", userId: "silinmis", plan: "month" })
-    await handleWebhook({ db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW })
+    await handleWebhook({ mail: null, db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW })
     expect(Sentry.captureMessage).toHaveBeenCalledWith(expect.stringContaining("uygulanamayan"), expect.objectContaining({ level: "warning" }))
   })
 })

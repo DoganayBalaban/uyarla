@@ -16,6 +16,8 @@ const DATA: UserDataExport = {
   analyses: [],
   accessPasses: [],
   excludedConcepts: [],
+  emailLogs: [],
+  emailConsents: [],
 }
 
 describe("data export", () => {

@@ -1,5 +1,6 @@
 import type { prisma } from "@uyarla/db"
 import type { Goal, ProfilePatch } from "@/features/onboarding/schema"
+import { setProductNews } from "@/server/email/consent"
 
 type Db = typeof prisma
 
@@ -13,8 +14,12 @@ export interface Profile {
   goal: Goal | null
   targetRole: string | null
   phone: string | null
-  /** Başvuru takip hatırlatması e-postası (DOG-98). */
+  /** Başvuru hatırlatmaları e-postası (DOG-98, DOG-128). */
   applicationReminders: boolean
+  /** Erişim dönemi bilgileri (DOG-129). */
+  accessUpdates: boolean
+  /** Ürün haberleri; açık onayla (DOG-130). */
+  productNews: boolean
   onboardedAt: Date | null
 }
 
@@ -25,6 +30,8 @@ const PROFILE_SELECT = {
   targetRole: true,
   phone: true,
   applicationReminders: true,
+  accessUpdates: true,
+  productNews: true,
   onboardedAt: true,
 } as const
 
@@ -34,6 +41,8 @@ export function getProfile(db: Db, userId: string): Promise<Profile | null> {
 
 export async function updateProfile(db: Db, userId: string, patch: ProfilePatch): Promise<Profile> {
   const current = await db.user.findUniqueOrThrow({ where: { id: userId }, select: { onboardedAt: true } })
+  // Ürün haberleri onaya dayalı: değişiklik onay geçmişine yazılıyor (DOG-130).
+  if (patch.productNews !== undefined) await setProductNews(db, userId, patch.productNews, "account")
   return db.user.update({
     where: { id: userId },
     data: {
@@ -42,6 +51,7 @@ export async function updateProfile(db: Db, userId: string, patch: ProfilePatch)
       ...(patch.targetRole !== undefined ? { targetRole: patch.targetRole } : {}),
       ...(patch.phone !== undefined ? { phone: patch.phone } : {}),
       ...(patch.applicationReminders !== undefined ? { applicationReminders: patch.applicationReminders } : {}),
+      ...(patch.accessUpdates !== undefined ? { accessUpdates: patch.accessUpdates } : {}),
       // İlk tamamlanma tarihi korunuyor: ikinci "Şimdilik geç" onu kaydırmasın.
       ...(patch.completeOnboarding && !current.onboardedAt ? { onboardedAt: new Date() } : {}),
     },

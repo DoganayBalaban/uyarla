@@ -5,6 +5,9 @@ import { isPlanKey, type PlanOffer } from "@/features/billing/plans"
 import { plansPath } from "@/features/billing/paywall"
 import { applyBillingEvent, loadAccess } from "@/server/billing/entitlement"
 import { WebhookSignatureError, type BillingProvider } from "@/server/billing/provider"
+import { mailClientFromEnv, sendLogged } from "@/server/email/send"
+import { accessOpenedEmail } from "@/server/email/templates"
+import type { MailClient } from "@/server/mail"
 
 type Db = typeof prisma
 type Reply = { status: number; json: unknown }
@@ -55,6 +58,8 @@ export async function handleWebhook(input: {
   headers: Record<string, string>
   now: Date
   log?: (message: string, extra: unknown) => void
+  /** "Erişimin açıldı" e-postası için (DOG-129); verilmezse ortamdan. */
+  mail?: MailClient | null
 }): Promise<Reply> {
   // Varsayılan: Sentry uyarısı. Para alındı ama dönem açılmadıysa (silinmiş
   // hesap, bilinmeyen paket) birinin elle iade etmesi gerekiyor (spec §4).
@@ -74,7 +79,41 @@ export async function handleWebhook(input: {
   if (!event) return { status: 200, json: { received: true } }
   const outcome = await applyBillingEvent(input.db, event, input.now)
   if (outcome === "ignored") log("[billing] uygulanamayan ödeme olayı", event)
+  if (outcome === "granted" && event.type === "paid") {
+    // İşlem e-postası (DOG-129). Hata bildirimi düşürmüyor: dönem açıldı,
+    // e-posta gitmese de kullanıcı erişimini ekranda görüyor.
+    await notifyAccessOpened(input.db, event.orderId, input.now, input.mail === undefined ? mailClientFromEnv() : input.mail).catch(
+      (error: unknown) => log("[billing] erişim e-postası gönderilemedi", { orderId: event.orderId, error: String(error) }),
+    )
+  }
   return { status: 200, json: { received: true, outcome } }
+}
+
+async function notifyAccessOpened(db: Db, orderId: string, now: Date, mail: MailClient | null): Promise<void> {
+  const pass = await db.accessPass.findUnique({
+    where: { providerOrderId: orderId },
+    select: { id: true, userId: true, user: { select: { email: true, isAnonymous: true } } },
+  })
+  if (!pass || pass.user.isAnonymous) return
+  // Üst üste alınan dönemde erişimin bittiği gün en son dönemin bitişi.
+  const last = await db.accessPass.findFirst({
+    where: { userId: pass.userId, status: "active" },
+    orderBy: { endsAt: "desc" },
+    select: { endsAt: true },
+  })
+  if (!last) return
+  await sendLogged(
+    db,
+    mail,
+    {
+      userId: pass.userId,
+      to: pass.user.email,
+      category: "transactional",
+      ...accessOpenedEmail(last.endsAt),
+      log: [{ kind: "access_opened", refId: pass.id }],
+    },
+    now,
+  )
 }
 
 export async function handleStatus(input: { db: Db; userId: string; now: Date; unlimited?: boolean }): Promise<{

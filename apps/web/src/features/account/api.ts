@@ -18,8 +18,12 @@ export interface ProfileView {
   goal: Goal | null
   targetRole: string | null
   phone: string | null
-  /** Başvuru takip hatırlatması e-postası (DOG-98). */
+  /** Başvuru hatırlatmaları e-postası (DOG-98, DOG-128). */
   applicationReminders: boolean
+  /** Erişim dönemi bilgileri (DOG-129); eski yanıtlarda yok. */
+  accessUpdates?: boolean
+  /** Ürün haberleri, açık onayla (DOG-130); eski yanıtlarda yok. */
+  productNews?: boolean
 }
 
 export const profileQueryKey = ["profile"] as const

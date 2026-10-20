@@ -3079,3 +3079,43 @@ gibi göreli bir ifadeyi ya da yayın tarihini kolayca son gün sanabilir.
 - Tarih eklenmiş 5 vakanın 5'i doğru: yıllı, yılsız, İngilizce, göreli
   ifade, yayın tarihi.
 - Şart çıkarımı (`eval:conditions`) değişmedi: 12/12.
+
+## K-78 · E-postalar tek günlük işte, kayıtlı ve sınırlı; ürün haberleri onay ve anahtarla
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-128, DOG-129, DOG-130 (strateji: `docs/e-posta-stratejisi.md`)
+
+**Karar:**
+- **Gönderim kaydı (`EmailLog`).** Her gönderilen e-posta için tür, kategori,
+  konu (analiz ya da dönem kimliği) ve zaman tutuluyor; içerik tutulmuyor.
+  - `userId + kind + refId` tekil: aynı hatırlatma iki kez gitmiyor.
+  - Takip hatırlatmasının eski `reminderSentAt` işareti de yazılıyor; seçici
+    hâlâ ona bakıyor.
+- **Tek günlük iş (`server/email/daily.ts`, 07:00 UTC).**
+  - Başvuru hatırlatmaları kullanıcı başına tek e-postada toplanıyor: takip,
+    yarınki mülakat ve son günü yarın ya da öbür gün olan uyarlanmış ilan.
+  - Kullanıcıya günde en fazla bir işlem dışı e-posta gidiyor. Öncelik:
+    hatırlatmalar > erişim dönemi > ürün haberleri; kalanı ertesi güne.
+  - Sınır: son 20 saatte e-posta aldıysa yok, son 7 günde 3 e-posta aldıysa
+    yok. E-postalar aynı `sentAt` değeriyle sayılıyor.
+  - Mülakat hatırlatması sınırdan muaf: ertelenirse işe yaramıyor.
+- **Erişim dönemi bitiyor.** Dönemin bitmesine 48 saat kala, yalnızca dönem
+  içinde en az bir uyarlama yapmışsa ve ardına başka bir dönem eklenmemişse.
+  Kullanılmamış döneme hatırlatma satış baskısına dönerdi. Metin
+  "otomatik yenilenmiyor" diyor; satış dili yok.
+- **İşlem e-postaları anında gidiyor ve kapatılamıyor.**
+  - "Erişimin açıldı": ödeme bildirimi işlenince gidiyor; hata bildirimi
+    düşürmüyor.
+  - "Hesabın silindi": adres silmeden önce belleğe alınıyor, gönderimden sonra
+    hiçbir yerde kalmıyor; kayıt yazılmıyor.
+- **Ürün haberleri (aktivasyon).**
+  - Açık onay gerekiyor: `User.productNews` varsayılan kapalı.
+  - Onay geçmişi `EmailConsent`'te; yalnızca ekleniyor (zaman, kaynak, metin
+    sürümü).
+  - Ayrıca `PRODUCT_EMAILS_ENABLED=1` gerekiyor. Bu anahtar İYS kaydı ve hukuki
+    teyitten sonra açılmalı. Bugün kapalı.
+  - Aylık haber ve iş önerisi e-postası yazılmadı: içerik ve kaynak yok.
+- **Çıkış.** Üç kategori de tek tıkla kapatılabiliyor (DOG-127). Ürün
+  haberlerinden çıkış onay geçmişine "geri alındı" olarak yazılıyor.
+- **Testler gerçek Resend'e gitmiyor.** Ödeme bildirimi ve günlük iş istemciyi
+  dışarıdan alıyor. Yerel `.env`'de anahtar olduğu için entegrasyon testi
+  bir kez gerçek gönderim denemişti.
