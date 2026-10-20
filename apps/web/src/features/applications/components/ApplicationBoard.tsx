@@ -29,6 +29,7 @@ import {
   STAGE_LABEL,
   STAGE_COLOR,
   NOTE_MAX_LENGTH,
+  deadlineBadge,
   groupByStage,
   scoreBadge,
   type Stage,
@@ -253,6 +254,7 @@ function BoardCardView({
   const [adaptError, setAdaptError] = useState<string | null>(null)
   const router = useRouter()
   const labelText = card.score === null ? null : scoreBadge(card.score)
+  const deadline = deadlineBadge(card)
 
   async function adapt() {
     setAdapting(true)
@@ -326,6 +328,20 @@ function BoardCardView({
         {card.interviewAt && (
           <span className="rounded-full bg-brand-amber/10 px-2 py-0.5 text-xs font-semibold text-brand-amber">
             Mülakat {DATE_FORMAT.format(new Date(`${card.interviewAt}T12:00:00`))}
+          </span>
+        )}
+        {/* Son başvuru günü (DOG-120): yalnızca "Kaydedildi"de; yaklaşınca vurgulu. */}
+        {deadline && (
+          <span
+            className={
+              deadline.tone === "soon"
+                ? "rounded-full bg-brand-red/10 px-2 py-0.5 text-xs font-semibold text-brand-red dark:text-[#f87171]"
+                : deadline.tone === "past"
+                  ? "rounded-full bg-background px-2 py-0.5 text-xs text-muted line-through decoration-muted/60"
+                  : "rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted"
+            }
+          >
+            {deadline.text}
           </span>
         )}
       </div>

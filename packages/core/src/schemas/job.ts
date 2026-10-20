@@ -44,6 +44,12 @@ export const JobPostingSchema = z.object({
   seniority: z.enum(["intern", "junior", "mid", "senior", "lead"]).nullable(),
   language: z.enum(["tr", "en"]),
   requirements: z.array(RequirementSchema),
+  /**
+   * Son başvuru tarihi, `YYYY-MM-DD` (DOG-120). Kodda çözümleniyor
+   * (extract/deadline.ts); ilanda açıkça yazmıyorsa null. Bu alandan önce
+   * çıkarılmış ilanlarda yok.
+   */
+  deadline: z.string().nullable().optional(),
 })
 
 /**
@@ -56,8 +62,18 @@ export const JobPostingSchema = z.object({
  */
 export const RequirementDraftSchema = RequirementSchema.omit({ concepts: true })
 
-export const JobPostingDraftSchema = JobPostingSchema.omit({ requirements: true }).extend({
+export const JobPostingDraftSchema = JobPostingSchema.omit({ requirements: true, deadline: true }).extend({
   requirements: z.array(RequirementDraftSchema),
+  /** İlandaki son başvuru ifadesi, olduğu gibi (DOG-120); yoksa null. Tarihe kod çeviriyor. */
+  deadlineText: z.string().nullable(),
+})
+
+/**
+ * Okuma hoşgörülü: alanı atlayan yanıt (eski önbellek, sahte model) son
+ * başvuru tarihi yok sayılıyor. Modele giden şema yine katı.
+ */
+export const JobPostingDraftParseSchema = JobPostingDraftSchema.extend({
+  deadlineText: z.string().nullable().default(null),
 })
 
 export type Concept = z.infer<typeof ConceptSchema>

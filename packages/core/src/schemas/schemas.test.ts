@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { ResumeProfileSchema, resumeProfileJsonSchema, experienceListJsonSchema, projectListJsonSchema } from "./resume.js"
-import { JobPostingSchema, jobPostingJsonSchema } from "./job.js"
+import { JobPostingSchema, jobPostingDraftJsonSchema } from "./job.js"
 
 /** LM Studio'nun strict kısıtı: her alan required, ek alan yok, $schema yok. */
 function assertStrictCompatible(schema: Record<string, unknown>, optional: string[] = []) {
@@ -104,9 +104,10 @@ describe("posting schema", () => {
     ).toThrow()
   })
 
-  it("JSON Schema is strict-compatible", () => {
-    // Kavramdaki equivalents isteğe bağlı (DOG-104); şema LLM'e gönderilmiyor,
-    // kavramlar kodda bölünüyor. Üst düzey alanlar katı kalmalı.
-    assertStrictCompatible(jobPostingJsonSchema)
+  it("the JSON Schema sent to the model is strict-compatible", () => {
+    // LLM'e taslak şema gidiyor (extract/job.ts). Tam şemada isteğe bağlı
+    // alanlar var: kavramdaki equivalents (DOG-104) ve kodda çözümlenen
+    // deadline (DOG-120); ikisi de LLM'e gönderilmiyor.
+    assertStrictCompatible(jobPostingDraftJsonSchema)
   })
 })

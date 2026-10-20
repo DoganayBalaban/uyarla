@@ -3052,3 +3052,30 @@ Bir koşu, 20 yazı; rastgelelik payı var. Yine de yön iki köprüde de aynı.
 - Yazılar istemin istediği 150–250 kelimenin altında (ortalama ~138). İlk iş
   hâlinde 8 yazı 120 kelimenin de altında.
 - DOG-122'deki başlık formülü ve "mülakatta geri adım testi" uygulanmadı.
+
+## K-77 · Son başvuru tarihini model kopyalar, kod çözümler
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-120
+
+**Bağlam:** Panoda son başvuru günü gösterilecek; ai-job-search 7 günden azı
+işaretliyor ve tarih yazmayan ilanda tahmin etmiyor (DOG-113). Model bugünün
+tarihini bilmiyor. Ayrıca "25 Ekim" gibi yılsız bir tarihi, "2 hafta içinde"
+gibi göreli bir ifadeyi ya da yayın tarihini kolayca son gün sanabilir.
+
+**Karar:**
+- **Model yalnızca kopyalıyor.** İlanda açıkça yazan son başvuru ifadesini
+  olduğu gibi döndürüyor (`deadlineText`); yoksa null. Göreli ifade ve yayın
+  tarihi null.
+- **Kod çözümlüyor** (`extract/deadline.ts`). Sayısal biçimler, Türkçe ve
+  İngilizce ay adları çözülüyor; geçersiz gün (31 Şubat) reddediliyor.
+- **Yılsız tarih** çıkarım anına göre yerleştiriliyor: bu yılın o günü,
+  60 günden eskiyse gelecek yılın.
+- **Saklama:** `JobPosting.deadline` (DATE). Pano yalnızca "Kaydedildi"
+  aşamasında rozet gösteriyor; 7 gün ve altı vurgulu ve sütunun üstünde,
+  geçmiş "süresi doldu". Gün sayımı Türkiye saatine göre.
+
+**Ölçüm (`pnpm eval:deadline`):**
+- Tarihsiz 13 ilanın 13'ünde null; uydurma tarih yok.
+- Tarih eklenmiş 5 vakanın 5'i doğru: yıllı, yılsız, İngilizce, göreli
+  ifade, yayın tarihi.
+- Şart çıkarımı (`eval:conditions`) değişmedi: 12/12.
