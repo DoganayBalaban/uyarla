@@ -8,6 +8,7 @@ import {
   positionName,
   scoreBadge,
   toBoardCard,
+  shouldAskBeforeApplying,
   todayInTurkey,
   type BoardRow,
 } from "@/features/applications/board"
@@ -39,6 +40,20 @@ describe("board", () => {
     expect(positionName("", "\n  Kıdemli Veri Analisti\nAçıklama")).toBe("Kıdemli Veri Analisti")
     expect(positionName("", "")).toBe("İsimsiz ilan")
     expect(positionName("", "x".repeat(100))).toHaveLength(78)
+  })
+
+  it("asks before applying with an unadapted card that isn't ready (DOG-91)", () => {
+    const result = { scoringRevision: 2, requirements: [{ requirement: { text: "SAP", importance: "must", type: "technical" }, status: "missing" }] }
+    const notReady = toBoardCard(row({ result }))
+    expect(notReady.readiness).toEqual({ ready: false, missingMust: 1, titleMissing: false })
+    expect(shouldAskBeforeApplying(notReady, "applied")).toBe(true)
+    expect(shouldAskBeforeApplying(notReady, "interview")).toBe(false)
+    expect(shouldAskBeforeApplying({ ...notReady, stage: "interview" }, "applied")).toBe(false)
+    expect(shouldAskBeforeApplying({ ...notReady, adaptation: { id: "ad", status: "ready" } }, "applied")).toBe(false)
+    expect(shouldAskBeforeApplying({ ...notReady, adaptation: { id: "ad", status: "failed" } }, "applied")).toBe(true)
+    const ready = toBoardCard(row({ result: { requirements: [] } }))
+    expect(shouldAskBeforeApplying(ready, "applied")).toBe(false)
+    expect(shouldAskBeforeApplying(toBoardCard(row()), "applied")).toBe(false)
   })
 
   it("marks a card made from a sample posting (DOG-101)", () => {

@@ -3273,3 +3273,29 @@ neredeyse doğruysa kullanıcının tek seçeneği eski hâle dönmekti.
   ve terim vurgulama sonraki adım.
 - **Ayrı uç yok:** karar ucuna `{ itemId, edit }` olarak eklendi (Vercel'deki
   12 fonksiyon sınırı).
+
+## K-84 · "Başvuruya hazır": zorunluların tamamı ve unvan; skor eşiği yok
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-91
+
+**Bağlam:** Jobscan her yerde %75 hedefi koyuyor ve "75 ve üstü ATS
+filtrelerini geçer" diyor. Bu kanıtsız bir iddia; marka rehberimiz böyle bir
+iddiaya izin vermiyor. Bizde hedef ve başvuru anına bağlı bir yönlendirme
+yoktu.
+
+**Karar:**
+- **Ölçüt skor değil, gereksinim:** zorunlu gereksinimlerin tamamı
+  karşılanıyor ve skorun 2. sürümünde ilandaki unvan CV'de en az kısmen
+  geçiyor. Eksik sayılmayanlar `missingMustRequirements` kuralıyla aynı:
+  işaretlenenler (DOG-90), kişisel nitelikler (DOG-103) ve şartlar (DOG-115).
+  Kural tek modülde (`features/analysis/readiness.ts`); "AI ile yaz" da
+  bunu kullanıyor.
+- **Sonuç sayfası:** hazırsa "Başvuruya hazır". Değilse tek cümle: kaç
+  zorunlu eksik, en öndeki hangisi, unvan geçiyor mu ve en çok kazandıracak
+  adım. Her zorunlu skora eşit giriyor; "en öndeki" ilanın sırası.
+- **Pano kapısı:** hazır olmayan ve uyarlanmamış bir kart "Kaydedildi"den
+  "Başvuruldu"ya alınırken "Önce uyarlamak ister misin?" diye soruluyor.
+  Seçenekler "Önce uyarla", "Yine de başvurdum" ve "Vazgeç". Kullanıcı
+  durdurulmuyor.
+- Kartın hazır olma bilgisi uyarlamadan önceki analize göre; uyarlanmış
+  kartta soru çıkmıyor.

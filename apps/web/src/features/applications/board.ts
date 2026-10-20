@@ -7,6 +7,7 @@
 import { readFollowUps, type FollowUpRecord } from "@uyarla/core/cover/followUpRecord"
 import { scoreStatus } from "@/lib/scoreStatus"
 import { isSamplePosting } from "@/features/analysis/samplePostings"
+import { readiness } from "@/features/analysis/readiness"
 
 export const STAGES = ["saved", "applied", "interview", "offer", "rejected"] as const
 export type Stage = (typeof STAGES)[number]
@@ -55,6 +56,8 @@ export interface BoardCard {
   followUps: FollowUpRecord[]
   createdAt: string
   adaptation: { id: string; status: string } | null
+  /** Başvuruya hazır mı (DOG-91), uyarlamadan önceki analize göre; eski kayıtlarda null. */
+  readiness: { ready: boolean; missingMust: number; titleMissing: boolean } | null
 }
 
 /** Panonun veritabanından okuduğu alanlar; iki uç da aynı seçimi kullanıyor. */
@@ -67,6 +70,7 @@ export const BOARD_SELECT = {
   interviewAt: true,
   followUps: true,
   createdAt: true,
+  result: true,
   jobPosting: { select: { position: true, company: true, rawText: true, deadline: true } },
   adaptation: { select: { id: true, status: true } },
 } as const
@@ -81,6 +85,7 @@ export interface BoardRow {
   interviewAt: Date | null
   followUps: unknown
   createdAt: Date
+  result?: unknown
   jobPosting: { position: string; company: string | null; rawText: string; deadline: Date | null }
   adaptation: { id: string; status: string } | null
 }
@@ -110,7 +115,23 @@ export function toBoardCard(s: BoardRow): BoardCard {
     followUps: readFollowUps(s.followUps),
     createdAt: s.createdAt.toISOString(),
     adaptation: s.adaptation ? { id: s.adaptation.id, status: s.adaptation.status } : null,
+    readiness: cardReadiness(s.result),
   }
+}
+
+function cardReadiness(result: unknown): BoardCard["readiness"] {
+  const r = readiness(result)
+  return r ? { ready: r.ready, missingMust: r.missingMust.length, titleMissing: r.titleMissing } : null
+}
+
+/**
+ * "Başvuruldu"ya alırken sorulsun mu (DOG-91): hazır değil ve uyarlanmamış.
+ * Kullanıcıyı durdurmuyor; "yine de başvurdum" her zaman var.
+ */
+export function shouldAskBeforeApplying(card: BoardCard, to: Stage): boolean {
+  if (to !== "applied" || card.stage !== "saved") return false
+  if (!card.readiness || card.readiness.ready) return false
+  return !card.adaptation || card.adaptation.status === "failed"
 }
 
 /** Son günü bu kadar yaklaşan ilan vurgulanıyor ve sütunun üstüne çıkıyor (DOG-120). */

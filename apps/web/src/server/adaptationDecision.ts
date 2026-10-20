@@ -85,33 +85,10 @@ export function applyBulkDecision(draft: AdaptationDraft, action: BulkDecision):
 }
 
 /**
- * Analizde karşılanmayan zorunlu gereksinimler (DOG-94): "AI ile yaz"
- * bunlar için açılıyor. Kullanıcının "ilanda yok" diye işaretledikleri
- * (DOG-90) listede yok.
+ * Analizde karşılanmayan zorunlu gereksinimler (DOG-94): "AI ile yaz" bunlar
+ * için açılıyor. Kural "başvuruya hazır mı" ölçütüyle ortak (DOG-91).
  */
-export function missingMustRequirements(result: unknown): Array<{ index: number; text: string }> {
-  const r = result as {
-    requirements?: Array<{ requirement: { text: string; importance: string; type?: string }; status: string }>
-    excluded?: number[]
-    scoringRevision?: number
-  } | null
-  if (!r?.requirements) return []
-  const excluded = new Set(r.excluded ?? [])
-  // Kişisel nitelikler skordan çıktığı analizlerde eksik sayılmıyor (DOG-103).
-  const skipSoft = (r.scoringRevision ?? 1) >= 2
-  return r.requirements
-    .map((x, index) => ({ x, index }))
-    .filter(
-      ({ x, index }) =>
-        x.status === "missing" &&
-        x.requirement.importance === "must" &&
-        !excluded.has(index) &&
-        !(skipSoft && x.requirement.type === "soft") &&
-        // Şartlar (DOG-115) CV'den anlaşılmıyor; "kontrol et" eksik sayılmıyor.
-        x.requirement.type !== "condition",
-    )
-    .map(({ x, index }) => ({ index, text: x.requirement.text }))
-}
+export { missingMustRequirements } from "@/features/analysis/readiness"
 
 /** Uyarı taşıyan madde kaldıysa `draft`, kalmadıysa `ready` (K-26). */
 export function nextStatus(draft: AdaptationDraft): "draft" | "ready" {
