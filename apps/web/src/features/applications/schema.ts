@@ -40,3 +40,6 @@ export const followUpRequestSchema = z.object({
   kind: z.enum(["followup", "thanks"], { error: "Geçersiz tür." }),
   channel: z.enum(["email", "linkedin"], { error: "Geçersiz kanal." }),
 })
+
+/** `POST /api/applications/[id]`: mülakat hazırlık paketi iste (DOG-118). */
+export const interviewPrepRequestSchema = z.object({ type: z.literal("interview-prep") })

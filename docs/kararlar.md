@@ -3149,3 +3149,48 @@ gibi göreli bir ifadeyi ya da yayın tarihini kolayca son gün sanabilir.
   dilinde, dile göre hitapla istiyor; ikinci ölçümde karışma yok.
 - Takip mesajları 40–50 kelimede kaldı. ai-job-search'ün 60–120 aralığı yerine
   40–100 kabul edildi: kısa takip mesajı iyi bir şey.
+
+## K-80 · Mülakat hazırlığı: kanıt birebir, STAR yer tutuculu, tutarlılık kodda
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-118 (ilk adım; DOG-97'nin pratik kısmı sonraya)
+
+**Bağlam:** ai-job-search `/interview`: "kağıtta olmayan iddia odada yok;
+kağıttaki her iddia derinlemesine savunulabilir." Uyarlamadan sonraki en büyük
+boşluk mülakat.
+
+**Karar:**
+- **Kaynak** başvurunun gönderilen hâli: uyarlama varsa kabul edilen
+  maddelerle CV ve ön yazı.
+- **Olası sorular (6–8):** teknik, davranışsal, boşluk. Her soru için CV'den
+  kanıt ve bir STAR iskeleti var.
+  - **Kanıt CV'de birebir olmalı** (normalleştirilmiş eşitlik, madde ya da
+    özgün metni); değilse düşürülüyor.
+  - **Belgede karşılığı olmayan STAR kısmı yer tutucu:** model "[ekip
+    büyüklüğü]" gibi köşeli parantez bırakıyor.
+  - Plan, niyet ve "öğreniyorum / kursa katılıyorum" da iddia sayılıyor.
+- **Tutarlılık özeti kodda (LLM yok):** sayı taşıyan maddeler ("bunu nasıl
+  ölçtün?") ve uyarlamada yeniden yazılıp kabul edilenler ("kendi
+  kelimelerinle anlat").
+- **Eksik zorunlu gereksinimlere dürüst köprü (K-76).** Olumsuzlanan yan cümle
+  sayı kontrolünden de çıkıyor: "5 yıl deneyimim yok" geçiyor, "4 yıllık
+  deneyimim var" işaretleniyor.
+- **Sayfa ve bağlantılar:** `/applications/[id]/mulakat`; kart "Mülakat"
+  aşamasında bağlantı veriyor. Mülakat hatırlatması e-postasının düğmesi
+  hazırlık sayfasına gidiyor. Başvuru başına iki deneme.
+
+**Ölçüm (`pnpm eval:interview-prep`, 6 alan):**
+
+| | İlk sürüm | Son |
+|---|---|---|
+| Kanıtın CV'de birebir kalanı | 31/43 | 36/42 |
+| STAR uydurma işareti (48 soru) | 11 | 3–7 (koşudan koşuya) |
+| Kanıtsız ve yer tutucusuz STAR | – | 0 |
+| Köprü yazılan eksik gereksinim | 16/16 | 16/16 |
+
+- Bir koşuda kanıt 0'a düşmüştü: model iş başlığını ve beceri satırını
+  kopyalıyordu; istem "• ile başlayan madde satırı" diyor.
+- Kalan STAR işaretleri çoğunlukla cevap iskeletinin ilan terimini
+  sahiplenmesi ("raporlama yaptım"); kullanıcıya "kontrol et" olarak
+  gösteriliyor.
+- Kalan köprü işaretleri tarihten hesaplanan süreler ("1 yıl 5 aydır");
+  CV'de yazmadığı için doğru işaret.

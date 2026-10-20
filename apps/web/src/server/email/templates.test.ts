@@ -30,6 +30,12 @@ describe("applicationRemindersEmail (DOG-98, DOG-128)", () => {
     expect(html).toContain("Uyarladığın CV")
   })
 
+  it("links the interview prep page when it knows the application (DOG-118)", () => {
+    const { html } = applicationRemindersEmail({ followups: [], interviews: [{ ...interview, analysisId: "an-1" }], deadlines: [] })
+    expect(html).toContain("/applications/an-1/mulakat")
+    expect(html).toContain("Mülakat hazırlığını aç")
+  })
+
   it("puts several kinds under their own headings and links the board", () => {
     const { subject, html, text } = applicationRemindersEmail({ followups: [followup], interviews: [interview], deadlines: [deadline] })
     expect(subject).toBe("Yarın Beta mülakatın var")

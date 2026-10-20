@@ -432,6 +432,15 @@ function BoardCardView({
           {adaptError}
         </p>
       )}
+      {/* Mülakat hazırlık paketi (DOG-118). */}
+      {card.stage === "interview" && (
+        <Link
+          href={`/applications/${card.analysisId}/mulakat`}
+          className="mt-2 mr-3 inline-flex text-sm font-semibold text-brand-blue no-underline dark:text-brand-blue-light"
+        >
+          Mülakat hazırlığı
+        </Link>
+      )}
       {/* Takip mesajı ya da teşekkür notu taslağı (DOG-117). */}
       <FollowUpPanel card={card} />
     </article>

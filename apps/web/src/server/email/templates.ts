@@ -62,6 +62,8 @@ export interface InterviewItem {
   /** "YYYY-AA-GG" */
   interviewAt: string
   adaptationId: string | null
+  /** Mülakat hazırlık sayfası için (DOG-118); eski çağıranlarda yok. */
+  analysisId?: string
 }
 export interface DeadlineItem {
   position: string
@@ -105,16 +107,24 @@ export function applicationRemindersEmail(bundle: ReminderBundle, unsubscribe: s
             ? "Mülakatın için teşekkür notu"
             : "Başvurularından haber var mı?"
 
-  // Tek bir uyarlanmış ilan varsa düğme doğrudan ona: CV ve ön yazı orada.
+  // Tek bir mülakat varsa düğme hazırlık paketine (DOG-118); tek bir
+  // uyarlanmış ilan varsa uyarlamaya: CV ve ön yazı orada.
   const only = [...interviews, ...deadlines]
-  const target = only.length === 1 && followups.length === 0 && thanks.length === 0 && only[0]!.adaptationId ? `${siteUrl()}/adapt/${only[0]!.adaptationId}` : null
+  const single = only.length === 1 && followups.length === 0 && thanks.length === 0 ? only[0]! : null
+  const prepFor = single && interviews.length === 1 ? interviews[0]!.analysisId : undefined
+  const target = prepFor
+    ? `${siteUrl()}/applications/${prepFor}/mulakat`
+    : single?.adaptationId
+      ? `${siteUrl()}/adapt/${single.adaptationId}`
+      : null
+  const targetLabel = prepFor ? "Mülakat hazırlığını aç" : "Uyarladığın CV'yi aç"
 
   const parts: string[] = [h1(subject)]
   const text: string[] = [subject, ""]
 
   if (interviews.length) {
     parts.push(
-      p("Uyarladığın CV'ye, ön yazına ve ilana bir kez daha bakmak için iyi bir an: mülakatta CV'ndeki her maddeyi bir örnekle anlatabilmen gerekecek."),
+      p("Uyarladığın CV'ye, ön yazına ve ilana bir kez daha bakmak için iyi bir an: mülakatta CV'ndeki her maddeyi bir örnekle anlatabilmen gerekecek. Hazırlık paketinde olası sorular ve CV'ndeki dayanakları var."),
     )
     parts.push(list(interviews.map((i) => li(role(i.position, i.company), `${escapeHtml(day(i.interviewAt))} · mülakat`))))
     text.push("Yarınki mülakatların:", ...interviews.map((i) => `- ${roleText(i.position, i.company)} (${day(i.interviewAt)})`), "")
@@ -149,7 +159,7 @@ export function applicationRemindersEmail(bundle: ReminderBundle, unsubscribe: s
       "",
     )
   }
-  parts.push(emailButton(target ?? board, target ? "Uyarladığın CV'yi aç" : "Başvuru panosunu aç"))
+  parts.push(emailButton(target ?? board, target ? targetLabel : "Başvuru panosunu aç"))
   text.push(target ?? board, "", footerText(unsubscribe))
 
   return {

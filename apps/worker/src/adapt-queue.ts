@@ -29,6 +29,13 @@ export interface FollowUpJobData {
   followUpId: string
 }
 
+/** Mülakat hazırlık paketi (DOG-118); kayıt web katmanında "running". */
+export const INTERVIEW_PREP_JOB = "interview-prep"
+
+export interface InterviewPrepJobData {
+  analysisId: string
+}
+
 export interface AdaptJobData {
   /**
    * Uyarlama kaydı web katmanında oluşturuluyor ve kimliği buraya geliyor.
