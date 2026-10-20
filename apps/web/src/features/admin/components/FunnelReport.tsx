@@ -37,7 +37,7 @@ export function FunnelReport({ title, summary }: { title: string; summary: Funne
       </table>
       <p className="m-0 border-t border-border px-5 py-3 text-sm text-muted">
         {analyses.total} analiz · {analyses.failed} başarısız ({percent(analyses.failureRate)}) · medyan süre{" "}
-        {medianDurationMs === null ? "—" : `${(medianDurationMs / 1000).toFixed(1)} sn`}
+        {medianDurationMs === null ? "—" : `${(medianDurationMs / 1000).toFixed(1)} sn`} · örnek ilanla {analyses.sample}
       </p>
     </section>
   )

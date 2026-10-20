@@ -57,7 +57,16 @@ describe("summarizeFunnel", () => {
       row({ userId: "u3", status: "running", durationMs: null }),
     ])
     expect(f.steps[0]!.users).toBe(1)
-    expect(f.analyses).toEqual({ total: 3, done: 1, failed: 1, failureRate: 0.5 })
+    expect(f.analyses).toEqual({ total: 3, done: 1, failed: 1, failureRate: 0.5, sample: 0 })
+  })
+
+  it("counts finished analyses made with an unedited sample posting (DOG-101)", () => {
+    const f = summarizeFunnel([
+      row({ userId: "u1", sample: true }),
+      row({ userId: "u2", sample: true, status: "failed", durationMs: null }),
+      row({ userId: "u3" }),
+    ])
+    expect(f.analyses.sample).toBe(1)
   })
 
   it("reports the median duration of finished analyses", () => {

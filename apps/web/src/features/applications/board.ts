@@ -6,6 +6,7 @@
 
 import { readFollowUps, type FollowUpRecord } from "@uyarla/core/cover/followUpRecord"
 import { scoreStatus } from "@/lib/scoreStatus"
+import { isSamplePosting } from "@/features/analysis/samplePostings"
 
 export const STAGES = ["saved", "applied", "interview", "offer", "rejected"] as const
 export type Stage = (typeof STAGES)[number]
@@ -98,7 +99,8 @@ export function toBoardCard(s: BoardRow): BoardCard {
   return {
     analysisId: s.id,
     position: positionName(s.jobPosting.position, s.jobPosting.rawText),
-    company: s.jobPosting.company?.trim() || null,
+    // Örnek ilanın şirketi yok; kart gerçek başvuruyla karışmasın (DOG-101).
+    company: s.jobPosting.company?.trim() || (isSamplePosting(s.jobPosting.rawText) ? "Örnek ilan" : null),
     score: s.score === null ? null : Math.round(s.score),
     stage: isStage(s.stage) ? s.stage : "saved",
     stageChangedAt: s.stageChangedAt?.toISOString() ?? null,
