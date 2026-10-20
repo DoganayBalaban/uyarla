@@ -40,13 +40,22 @@ const storeWith = (record: LinkedInReportRecord | null) => {
 describe("runLinkedInReport (DOG-69)", () => {
   it("scores the profile against the chosen postings and writes the report", async () => {
     const { store, saved } = storeWith({ status: "running", analysisIds: ["a1"], createdAt: "" })
-    await runLinkedInReport({ llm: {} as never, embedding: embedding as never, modelId: "m", store }, { resumeId: "r1" })
+    const llm = { extract: vi.fn(async () => ({ data: { baslik: "Frontend Geliştirici | React", hakkinda: "React ile panel geliştirdim." }, tokens: 3 })) }
+    await runLinkedInReport({ llm: llm as never, embedding: embedding as never, modelId: "m", store }, { resumeId: "r1" })
     expect(saved).toHaveLength(1)
     const rec = saved[0]!
     expect(rec.status).toBe("done")
     if (rec.status !== "done") throw new Error("beklenmedik")
     expect(rec.report.commonMissing.map((m) => m.term)).toEqual(["Docker"])
     expect(rec.report.postings[0]).toMatchObject({ analysisId: "a1", position: "Frontend Geliştirici" })
+    expect(rec.report.suggestions?.headline).toMatchObject({ text: "Frontend Geliştirici | React", verification: { status: "ok" } })
+  })
+
+  it("still saves the report when the suggestion fails", async () => {
+    const { store, saved } = storeWith({ status: "running", analysisIds: ["a1"], createdAt: "" })
+    const llm = { extract: vi.fn(async () => { throw new Error("model düştü") }) }
+    await runLinkedInReport({ llm: llm as never, embedding: embedding as never, modelId: "m", store }, { resumeId: "r1" })
+    expect(saved[0]).toMatchObject({ status: "done", report: { suggestions: null } })
   })
 
   it("does not redo a finished report", async () => {
