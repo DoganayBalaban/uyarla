@@ -4,6 +4,7 @@ import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 import { analysisErrorMessage } from "@/server/analysisErrorMessage"
 import { analyzeQueue } from "@/server/queue"
 import { detectPlatform } from "@/features/analysis/platforms"
+import { classifyPostingSource, postingSourceWarning } from "@/features/analysis/postingSource"
 
 export const runtime = "nodejs"
 
@@ -45,6 +46,8 @@ export async function GET(
         tokenUsage: analysis?.tokenUsage ?? null,
         // İlan adresinden tanınan platform (DOG-95); ipuçları istemcide.
         platform: detectPlatform(analysis?.jobPosting.sourceUrl),
+        // Bilinmeyen ya da taklit alan adında uyarı (DOG-125).
+        sourceWarning: postingSourceWarning(classifyPostingSource(analysis?.jobPosting.sourceUrl)),
       modelId: analysis?.modelId ?? null,
       })
     }
