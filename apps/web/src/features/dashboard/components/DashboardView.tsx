@@ -7,6 +7,7 @@ import type { SkillGap } from "@/features/dashboard/skillGaps"
 import { STAGES, STAGE_LABEL, STAGE_COLOR, type Stage } from "@/features/applications/board"
 import { scoreStatus } from "@/lib/scoreStatus"
 import { PageHeader, PageShell } from "@/components/layout/PageShell"
+import { JobSearchCard } from "@/features/dashboard/components/JobSearchCard"
 
 /**
  * Kayıtlı kullanıcının ana ekranı. Tanıtım sayfası kayıtlı kullanıcıyı buraya
@@ -21,12 +22,15 @@ export function DashboardView({
   targetRole,
   summary: summaryData,
   gaps = { list: [], analyses: 0 },
+  searchKeywords = "",
 }: {
   name: string | null
   targetRole: string | null
   summary: DashboardSummary
   /** Beceri açığı raporu (DOG-119). */
   gaps?: { list: SkillGap[]; analyses: number }
+  /** "İlan bul" kartının sorgusu (DOG-68). */
+  searchKeywords?: string
 }) {
   // Ad yoksa ya da e-postanın kendisiyse selamda kullanılmıyor.
   const userName = name?.trim()
@@ -70,6 +74,9 @@ export function DashboardView({
             İlk analizini yap
           </Link>
         </div>
+        <div className="mt-6 max-w-md">
+          <JobSearchCard initialKeywords={searchKeywords} />
+        </div>
       </PageShell>
     )
   }
@@ -91,6 +98,7 @@ export function DashboardView({
         </div>
         <div className="space-y-6">
           <ApplicationStages counts={summaryData.stageCounts} totalCount={summaryData.total} />
+          <JobSearchCard initialKeywords={searchKeywords} />
           {gaps.list.length > 0 && <SkillGaps list={gaps.list} analyses={gaps.analyses} />}
         </div>
       </div>
