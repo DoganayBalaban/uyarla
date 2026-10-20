@@ -3497,3 +3497,25 @@ sorguyla sitelerin kendi arama sayfaları.
     biçiminde; yalnızca "İstanbul" ABD sonuçlarına düşüyordu.
 - **Yapılmayanlar:** API çağrısı, kazıma, dış ilan saklama, yeni uç.
   Careerjet API ile kart içi liste ayrı bir karar (sabit çıkış IP'si ister).
+
+## K-91 · Yazarken canlı skor: kaydetmeyen önizleme
+
+**Tarih:** 21 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-92 (üçüncü adım)
+
+**Bağlam:** Jobscan Power Edit'te skor düzenledikçe güncelleniyor. Bizde skor
+kaydedince yeniden hesaplanıyordu (K-83); yazarken yalnızca metinde geçen
+ilan terimleri görünüyordu (K-88).
+
+**Karar:**
+- **Karar ucuna önizleme:** `{ itemId, edit, preview: true }`. Kaydetmeyle
+  aynı kod çalışıyor (`editDraftItem` ve `computeScoreAfter`), taslak
+  veritabanına yazılmıyor. Yanıtta bu metinle skor ve maddenin uydurma
+  kontrolü var.
+- **Düzenleme kutusu:** yazmaya 0,8 saniye ara verince bir istek gidiyor;
+  yeni yazı öncekini iptal ediyor. Gösterilen: "Bu metinle skor: 48 (+3)" ve
+  varsa "kontrol et" uyarısı.
+- **Maliyet:** LLM yok. Değişen metin için bir gömme çağrısı; değişmeyen
+  kanıtlar önbellekten. Kullanıcı başına saatte 150 önizleme.
+- **Ayrı uç yok** (Vercel'deki 12 fonksiyon sınırı).
+- **DOG-92'de kalan:** serbest düzenleyici (bölüm ve madde ekleme, taşıma).
+  Önce DOG-22'deki kullanılabilirlik testiyle doğrulanmalı.

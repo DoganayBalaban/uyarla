@@ -32,6 +32,7 @@ import {
   decideAll,
   downloadAdaptation,
   editItem,
+  previewEdit,
   restoreBullet,
   setLayout,
   useAdaptation,
@@ -388,6 +389,8 @@ export function AdaptationView({ id }: { id: string }) {
                     busy={busy}
                     onSave={(text) => saveEdit("summary", text)}
                     terms={state.postingTerms ?? []}
+                    onPreview={(text, signal) => previewEdit(id, "summary", text, signal)}
+                    currentScore={state.scoreAfter ?? null}
                   />
                 </motion.section>
               )}
@@ -439,6 +442,8 @@ export function AdaptationView({ id }: { id: string }) {
                           busy={busy}
                           onSave={(text) => saveEdit(bullet.id, text)}
                           terms={state.postingTerms ?? []}
+                          onPreview={(text, signal) => previewEdit(id, bullet.id, text, signal)}
+                          currentScore={state.scoreAfter ?? null}
                         />
                         {(bullet.alignments?.length ?? 0) > 0 && (
                           <ul className="mt-3 space-y-1.5">

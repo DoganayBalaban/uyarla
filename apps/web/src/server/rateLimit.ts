@@ -23,6 +23,9 @@ export const RATE_LIMITS = {
   registered: { limit: 10, windowSeconds: 3600 },
   // Veri indirme bütün CV dosyalarını depodan okuyor (DOG-63); saatte birkaç kez yeter.
   dataExport: { limit: 5, windowSeconds: 3600 },
+  // Yazarken canlı skor (DOG-92): LLM yok, yeni metin için bir gömme çağrısı.
+  // Yazmaya ara verince bir istek; saatte birkaç uzun düzenleme yeter.
+  scorePreview: { limit: 150, windowSeconds: 3600 },
 } satisfies Record<string, RateLimitRule>
 
 /**
