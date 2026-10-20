@@ -13,6 +13,7 @@ function card(suffix: Partial<BoardCard> = {}): BoardCard {
     noteText: null,
     interviewAt: null,
     deadline: null,
+    followUps: [],
     createdAt: "2026-09-20T10:00:00.000Z",
     adaptation: null,
     ...suffix,

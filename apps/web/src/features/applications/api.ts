@@ -33,8 +33,31 @@ export function applyCardChange(cards: BoardCard[], analysisId: string, change: 
   )
 }
 
+/** Takip mesajı ya da teşekkür notu taslağı ister (DOG-117); worker yazıyor. */
+export async function requestFollowUp(
+  analysisId: string,
+  body: { kind: "followup" | "thanks"; channel: "email" | "linkedin" },
+): Promise<void> {
+  await api.post(`/applications/${encodeURIComponent(analysisId)}`, body)
+}
+
 export function useApplicationCards() {
-  return useQuery({ queryKey: applicationsQueryKey, queryFn: getApplicationCards })
+  return useQuery({
+    queryKey: applicationsQueryKey,
+    queryFn: getApplicationCards,
+    // Bir taslak yazılırken pano kendini yokluyor (DOG-117).
+    refetchInterval: (query) =>
+      query.state.data?.some((k) => k.followUps.some((f) => f.status === "running")) ? 2000 : false,
+  })
+}
+
+export function useRequestFollowUp() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ analysisId, kind, channel }: { analysisId: string; kind: "followup" | "thanks"; channel: "email" | "linkedin" }) =>
+      requestFollowUp(analysisId, { kind, channel }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: applicationsQueryKey }),
+  })
 }
 
 /** İyimser güncelleme: kart hemen yer değiştiriyor, hata olursa geri alınıyor. */

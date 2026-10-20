@@ -3119,3 +3119,33 @@ gibi göreli bir ifadeyi ya da yayın tarihini kolayca son gün sanabilir.
 - **Testler gerçek Resend'e gitmiyor.** Ödeme bildirimi ve günlük iş istemciyi
   dışarıdan alıyor. Yerel `.env`'de anahtar olduğu için entegrasyon testi
   bir kez gerçek gönderim denemişti.
+
+## K-79 · Takip mesajı ve teşekkür notu: yalnızca gönderilen belgelerden, yer tutuculu
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-117
+
+**Karar:**
+- **Kaynak** başvurunun gönderilen hâli: uyarlama varsa kabul edilen
+  maddelerle CV ve ön yazı, yoksa analizdeki profil. Taslağın her iddiası
+  buradan geliyor (ai-job-search'ün "yeni iddia yok" kuralı).
+- **Doğrulama ön yazıyla aynı** (sayı ve ilan terimi; dürüst köprü ve unvan
+  hariç, K-76). Bizim verdiğimiz başvuru ya da mülakat tarihi kaynağa
+  ekleniyor; yoksa "10 Ekim'de başvurdum" cümlesindeki sayı uydurma
+  sayılırdı.
+- **Teşekkür notu:** görüşmede ne konuşulduğunu bilmiyoruz. Model bir konu
+  uydurmuyor, `[görüşmede konuşulan bir konu]` yer tutucusunu bırakıyor;
+  kullanıcı dolduruyor ya da siliyor.
+- **Biz göndermiyoruz.** Taslak panodaki kartta, kopyala düğmesiyle. Her
+  türden başvuru başına en çok iki taslak. Üretim worker'da, ön yazı ve
+  katkı gibi.
+- **Hatırlatma:** mülakatın ertesi günü günlük işte teşekkür notu
+  hatırlatması (`thanks_reminder`). Takip hatırlatması da panodaki "Takip
+  mesajı" taslağına yönlendiriyor.
+
+**Ölçüm (`pnpm eval:follow-up`, 8 çift × takip ve teşekkür):**
+- Uydurma işareti 0/16, klişe 0, yer tutucusuz teşekkür notu 0.
+- İlk sürümde İngilizce ilanlarda dil karışıyordu ("Merhaba, Thank you…",
+  Türkçe metin ve İngilizce konu). İstem metnin ve konunun tamamını ilan
+  dilinde, dile göre hitapla istiyor; ikinci ölçümde karışma yok.
+- Takip mesajları 40–50 kelimede kaldı. ai-job-search'ün 60–120 aralığı yerine
+  40–100 kabul edildi: kısa takip mesajı iyi bir şey.

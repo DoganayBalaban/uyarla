@@ -18,6 +18,17 @@ export interface ContributionJobData {
   contributionId: string
 }
 
+/**
+ * Takip mesajı ve teşekkür notu taslağı (DOG-117). Kayıt web katmanında
+ * analizin `followUps` dizisine "running" olarak ekleniyor; iş onu dolduruyor.
+ */
+export const FOLLOW_UP_JOB = "follow-up"
+
+export interface FollowUpJobData {
+  analysisId: string
+  followUpId: string
+}
+
 export interface AdaptJobData {
   /**
    * Uyarlama kaydı web katmanında oluşturuluyor ve kimliği buraya geliyor.

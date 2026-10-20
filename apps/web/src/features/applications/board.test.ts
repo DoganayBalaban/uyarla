@@ -19,6 +19,7 @@ function row(suffix: Partial<BoardRow> = {}): BoardRow {
     stageChangedAt: null,
     note: null,
     interviewAt: null,
+    followUps: null,
     createdAt: new Date("2026-09-20T10:00:00Z"),
     jobPosting: { position: "Frontend Geliştirici", company: null, rawText: "ilan", deadline: null },
     adaptation: null,

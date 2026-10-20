@@ -34,3 +34,9 @@ export const applicationPatchSchema = z
   .refine((body) => body.stage !== undefined || body.note !== undefined || body.interviewAt !== undefined, {
     error: "Güncellenecek bir şey yok.",
   })
+
+/** `POST /api/applications/[id]` gövdesi: takip mesajı ya da teşekkür notu taslağı iste (DOG-117). */
+export const followUpRequestSchema = z.object({
+  kind: z.enum(["followup", "thanks"], { error: "Geçersiz tür." }),
+  channel: z.enum(["email", "linkedin"], { error: "Geçersiz kanal." }),
+})

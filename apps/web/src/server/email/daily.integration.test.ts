@@ -116,6 +116,17 @@ describe("runDailyEmails · başvuru hatırlatmaları (DOG-98, DOG-128, DOG-120)
   })
 })
 
+describe("runDailyEmails · teşekkür notu (DOG-117)", () => {
+  it("suggests a thank-you note the day after an interview, once", async () => {
+    const user = await makeUser("tesekkur")
+    await makeAnalysis(user.id, { stage: "interview", interviewAt: new Date("2020-05-31T00:00:00Z"), position: "Finans Uzmanı" })
+    const client = fakeClient()
+    expect(await runDailyEmails(prisma, { now: NOW, dryRun: false, client })).toMatchObject({ sent: 1, byKind: { thanks_reminder: 1 } })
+    expect(client.emails.send.mock.calls[0]![0].subject).toBe("Mülakatın için teşekkür notu")
+    expect((await runDailyEmails(prisma, { now: new Date(NOW.getTime() + DAY), dryRun: true })).byKind).toEqual({})
+  })
+})
+
 describe("runDailyEmails · sıklık sınırı (DOG-126)", () => {
   it("defers a follow-up when an e-mail went out in the last 20 hours, but not tomorrow's interview", async () => {
     const user = await makeUser("sinir")
