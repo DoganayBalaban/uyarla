@@ -30,7 +30,7 @@ async function main(): Promise<void> {
   const median = f.medianDurationMs === null ? "—" : `${(f.medianDurationMs / 1000).toFixed(1)} sn`
   console.log(
     `  ${f.analyses.total} analiz · ${f.analyses.failed} başarısız ` +
-      `(%${Math.round(f.analyses.failureRate * 100)}) · medyan ${median}`,
+      `(%${Math.round(f.analyses.failureRate * 100)}) · medyan ${median} · örnek ilanla ${f.analyses.sample}`,
   )
 }
 

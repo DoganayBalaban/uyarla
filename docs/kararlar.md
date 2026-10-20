@@ -3224,3 +3224,27 @@ STAR'a göre okunuyor, kağıtta olmayan iddia işaretleniyor.
 **Ölçüm (`pnpm eval:practice`, muhasebe CV'si × İK ilanı):** iyi kurulmuş
 STAR, belirsiz kısa cevap ve CV'de olmayan sayı içeren cevap. STAR okumasında
 sapma 0, kaçırılan "kağıtta yok" 0, önerilerde uydurma sayı 0.
+
+## K-82 · Örnek ilanla dene; quiz ölçümden sonra
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-101 (ilk adım)
+
+**Bağlam:** Jobscan'in ana sayfasında kayıtsız bir deneme taraması ve
+"örnek ilan seç" seçeneği var. Bizde kayıtsız analiz zaten var. Elinde ilan
+olmayan ziyaretçi için ilk denemenin önünde hâlâ bir engel duruyor.
+
+**Karar:**
+- **Analiz formunda üç örnek ilan:** frontend geliştirici, dijital pazarlama,
+  muhasebe. Kutu boşken görünüyorlar; seçince metin kutuya geliyor ve
+  düzenlenebiliyor.
+- **Kurgusal:** şirket adı yok; başlıkta "(örnek ilan)" yazıyor ve kullanıcıya
+  "gerçek bir şirkete ait değil" deniyor. Çıkarım başlıktaki notu atıyor. Bu
+  yüzden panoda kartın şirket yerinde "Örnek ilan" görünüyor.
+- **Ölçüm göçsüz:** huni raporu (/admin ve `pnpm funnel`), düzenlenmeden
+  gönderilen örnekleri metinden tanıyıp ayrıca sayıyor.
+- **Quiz ve A/B deneyi şimdilik yok.** Önce örnekle yapılan analizin
+  kayda ve uyarlamaya geçişini görelim. Quiz'de kanıtsız istatistik
+  kullanılmayacak.
+
+**Kontrol:** Üç örnek ilan da yerel modelle doğru çıkarıldı: pozisyon,
+zorunlu ve tercih edilen gereksinimler ayrı.

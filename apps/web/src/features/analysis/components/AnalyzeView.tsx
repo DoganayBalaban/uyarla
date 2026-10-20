@@ -31,6 +31,7 @@ import {
   handleResponse,
 } from "@/features/analysis/activeAnalysis"
 import { resultPath, resumeRequest } from "@/features/analysis/paths"
+import { SAMPLE_POSTINGS } from "@/features/analysis/samplePostings"
 import {
   browserSendMessage,
   createAutoSubmitGate,
@@ -112,6 +113,7 @@ export function AnalyzeView() {
   })
   const resumeFile = watch("cv") as File | undefined
   const postingUrl = watch("postingUrl") ?? ""
+  const jobText = watch("jobText") ?? ""
 
   // Kayıtlı kullanıcının CV kütüphanesi (DOG-50). Anonimde istek gitmiyor.
   const { data: sessionData } = useSession()
@@ -621,6 +623,25 @@ export function AnalyzeView() {
             <p id="jobText-error" role="alert" className="mt-2 text-sm text-brand-amber">
               {errors.jobText.message}
             </p>
+          )}
+          {/* Elinde ilan olmayan ilk denemeyi engellemesin (DOG-101); kutu boşken. */}
+          {!jobText.trim() && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-muted">Elinde ilan yok mu? Örnek ilanla dene:</span>
+              {SAMPLE_POSTINGS.map((sample) => (
+                <button
+                  key={sample.id}
+                  type="button"
+                  onClick={() => {
+                    setValue("jobText", sample.text, { shouldValidate: true })
+                    setPostingState({ kind: "done", text: "Örnek ilan aşağıya eklendi; kurgusal bir ilan, gerçek bir şirkete ait değil." })
+                  }}
+                  className="rounded-full border border-border bg-card px-3 py-1 font-medium transition-colors hover:border-foreground/25"
+                >
+                  {sample.label}
+                </button>
+              ))}
+            </div>
           )}
 
           <button

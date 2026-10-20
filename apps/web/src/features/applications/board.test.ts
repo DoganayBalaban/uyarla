@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { SAMPLE_POSTINGS } from "@/features/analysis/samplePostings"
 import {
   daysUntil,
   deadlineBadge,
@@ -38,6 +39,12 @@ describe("board", () => {
     expect(positionName("", "\n  Kıdemli Veri Analisti\nAçıklama")).toBe("Kıdemli Veri Analisti")
     expect(positionName("", "")).toBe("İsimsiz ilan")
     expect(positionName("", "x".repeat(100))).toHaveLength(78)
+  })
+
+  it("marks a card made from a sample posting (DOG-101)", () => {
+    const rawText = SAMPLE_POSTINGS[1]!.text
+    expect(toBoardCard(row({ jobPosting: { position: "Dijital Pazarlama Uzmanı", company: null, rawText, deadline: null } })).company).toBe("Örnek ilan")
+    expect(toBoardCard(row()).company).toBeNull()
   })
 
   it("card: score is rounded, unknown stage counts as saved", () => {

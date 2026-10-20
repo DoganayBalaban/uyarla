@@ -1,4 +1,5 @@
 import type { prisma } from "@uyarla/db"
+import { isSamplePosting } from "@/features/analysis/samplePostings"
 
 type Db = typeof prisma
 
@@ -25,6 +26,8 @@ export interface FunnelAnalysisRow {
   adapted: boolean
   /** Uyarlanmış CV indirildiğinde `Adaptation.resumeVersionId` doluyor. */
   downloaded: boolean
+  /** Düzenlenmeden gönderilen örnek ilan (DOG-101). */
+  sample?: boolean
 }
 
 export type FunnelStepKey = "analyzed" | "registered" | "adapted" | "downloaded"
@@ -38,7 +41,7 @@ export interface FunnelStep {
 
 export interface FunnelSummary {
   steps: FunnelStep[]
-  analyses: { total: number; done: number; failed: number; failureRate: number }
+  analyses: { total: number; done: number; failed: number; failureRate: number; sample: number }
   medianDurationMs: number | null
 }
 
@@ -87,6 +90,8 @@ export function summarizeFunnel(rows: FunnelAnalysisRow[]): FunnelSummary {
       failed,
       // Sürmekte olanlar orana girmiyor: henüz başarılı da başarısız da değiller.
       failureRate: done + failed === 0 ? 0 : failed / (done + failed),
+      // Örnek ilanla tamamlanan analiz: ilk denemenin engelini kaldırıyor mu?
+      sample: rows.filter((r) => r.status === "done" && r.sample).length,
     },
     medianDurationMs: durations.length ? durations[Math.floor((durations.length - 1) / 2)]! : null,
   }
@@ -102,6 +107,7 @@ export async function computeFunnel(db: Db, { from, to }: { from: Date; to: Date
       durationMs: true,
       user: { select: { isAnonymous: true } },
       adaptation: { select: { resumeVersionId: true } },
+      jobPosting: { select: { rawText: true } },
     },
   })
   return summarizeFunnel(
@@ -113,6 +119,7 @@ export async function computeFunnel(db: Db, { from, to }: { from: Date; to: Date
       isAnonymous: a.user.isAnonymous === true,
       adapted: a.adaptation !== null,
       downloaded: a.adaptation?.resumeVersionId != null,
+      sample: isSamplePosting(a.jobPosting.rawText),
     })),
   )
 }
