@@ -1,4 +1,5 @@
 import { AdaptationDraftSchema } from "@uyarla/core/schemas/adaptation"
+import { EDIT_MAX_LENGTH, editDraftItem } from "@uyarla/core/adapt/edit"
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import {
@@ -24,19 +25,24 @@ export async function PATCH(
   // Tek madde ({ itemId, decision }), toplu karar ({ bulk }), belge stratejisi
   // ({ layout }) ya da tek sayfa için çıkarılan maddeyi geri alma ({ restore }),
   // hepsi DOG-93. Ayrı route'lar değil: Vercel Hobby'de deploy başına 12
-  // fonksiyon sınırı var.
-  const { itemId, decision, bulk, layout, restore } = (await request.json()) as {
+  // fonksiyon sınırı var. Metni elle düzenleme ({ itemId, edit }) DOG-92.
+  const { itemId, decision, bulk, layout, restore, edit } = (await request.json()) as {
     itemId?: string
     decision?: "accepted" | "rejected"
     bulk?: BulkDecision
     layout?: "full" | "onePage"
     restore?: string
+    edit?: string
   }
 
   const isBulk = bulk === "accept_verified" || bulk === "reject_all"
   const isLayout = layout === "full" || layout === "onePage"
   const isRestore = typeof restore === "string" && restore.length > 0
-  if (!isBulk && !isLayout && !isRestore && (!itemId || (decision !== "accepted" && decision !== "rejected"))) {
+  const isEdit = typeof edit === "string" && !!itemId
+  if (isEdit && (!edit.trim() || edit.trim().length > EDIT_MAX_LENGTH)) {
+    return NextResponse.json({ error: `Metin boş olamaz ve en fazla ${EDIT_MAX_LENGTH} karakter olabilir.` }, { status: 400 })
+  }
+  if (!isBulk && !isLayout && !isRestore && !isEdit && (!itemId || (decision !== "accepted" && decision !== "rejected"))) {
     return NextResponse.json({ error: "Geçersiz karar." }, { status: 400 })
   }
 
@@ -67,6 +73,13 @@ export async function PATCH(
       },
       layout,
     ))
+  } else if (isEdit) {
+    if (!payload.profile) return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
+    try {
+      fresh = editDraftItem(payload.draft, itemId!, edit!, { profile: payload.profile, posting: payload.posting })
+    } catch {
+      return NextResponse.json({ error: "Madde bulunamadı." }, { status: 404 })
+    }
   } else {
     try {
       fresh = isBulk
