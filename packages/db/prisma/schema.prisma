@@ -182,6 +182,8 @@ model Analysis {
   // Mülakat hazırlık paketi (DOG-118): { status, createdAt, attempts, prep }.
   // Eski kayıtlarda boş.
   interviewPrep  Json?
+  // Başvuru formu yanıtları (DOG-123): soru, sınır ve CV'ye dayanan yanıt.
+  formAnswers    Json?
 
   @@index([resumeVersionId, jobPostingId])
   @@index([userId])

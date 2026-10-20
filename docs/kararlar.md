@@ -3363,3 +3363,47 @@ koruma eklenebilir.
   sayfalara bilgi verme. İstatistik ya da korkutma yok.
 - Uyarı sonuç sayfasında. Adres yoksa hiçbir şey gösterilmiyor; "İlanı
   getir" zaten yalnızca izinli sitelerden indiriyor.
+
+## K-87 · Başvuru formu yanıtları: ön yazının kuralı, sınır kodda, dil sorudan
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-123
+
+**Bağlam:** ai-job-search CV ve ön yazının yanında portal formları için kısa
+metinler de üretiyor: kendini tanıtma, "140 karakterde neden sen", "neden bu
+şirket". Kariyer.net ve şirket ATS formları bunu sık soruyor.
+
+**Karar:**
+- **Uyarlama sayfasında "Form sorusu yanıtla".** Kullanıcı soruyu ve isteğe
+  bağlı sınırı (karakter ya da kelime) giriyor. Yanıt gönderilen CV'den ve ön
+  yazıdan yazılıyor; doğrulama ön yazıyla aynı (sayı ve ilan terimi).
+- **Kayıt `Analysis.formAnswers`** (göç `form_yanitlari`). Takip mesajı ve
+  mülakat hazırlığıyla aynı "gönderilen belgeler" bağlamı. Başvuru başına
+  10 yanıt, aynı anda bir tane.
+- **Sınır kodda:** model aşarsa bir kez "şu kadar fazla, kısalt" deniyor.
+  Yine aşarsa yanıt sınırın içindeki son tam cümlede kesiliyor. Hiçbir cümle
+  sığmıyorsa yanıt olduğu gibi kalıyor ve sayaç kırmızı.
+- **Dil sorudan, kodda:** model yanıtı ilanın diline kaydırıyordu
+  (İngilizce ilanda Türkçe soruya İngilizce yanıt). Sorunun dili belirlenip
+  "YANIT DİLİ" satırıyla veriliyor.
+- **İstemde ilk ölçümden gelen kurallar:**
+  - Süre tarihlerden hesaplanmaz ("2+ yıl" uydurmaydı).
+  - Soru sormuyorsa eksiklerden söz edilmez.
+  - Kişisel gerekçe ("şirketi takip ediyorum") uydurulmaz; yerine
+    "[kendi gerekçen]" yer tutucusu konur.
+- **Uç:** ayrı uç yok; `/api/applications/[id]` POST'unda
+  `{type: "form-answer"}` (Vercel'deki 12 fonksiyon sınırı).
+- **Dışa aktarım:** veri dışa aktarımına `formAnswers` ile birlikte daha önce
+  unutulan `followUps` ve `interviewPrep` (pratik cevapları dahil) eklendi.
+
+**Ölçüm (`pnpm eval:form-answer`, 5 çift × 4 soru):**
+
+| | İlk istem | Son |
+|---|---|---|
+| Uydurma işareti | 4/20 | 0–1/20 |
+| Sınırı aşan | 0 | 0 |
+| Klişe | 3 | 0 |
+| Uydurma kişisel gerekçe | 1 | 0 |
+| İngilizce ilanda Türkçe soruya Türkçe yanıt | 2/8 | 8/8 |
+
+Kalan tek işaret "document processing" (CV'de "document ingestion");
+kullanıcıya "kontrol et" olarak gösteriliyor.

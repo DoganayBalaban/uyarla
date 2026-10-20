@@ -4,7 +4,9 @@ import {
   analysisProfile,
   applyAdaptation,
   readFollowUps,
+  readFormAnswers,
   type CoverLetterRecord,
+  type FormAnswerRecord,
   type FollowUpRecord,
   type InterviewPrepRecord,
   type JobPostingData,
@@ -46,10 +48,24 @@ export interface InterviewPrepStore {
   updatePrep(analysisId: string, change: (current: InterviewPrepRecord | null) => InterviewPrepRecord | null): Promise<void>
 }
 
+/** Başvuru formu yanıtının bağlamı (DOG-123): gönderilen belgeler ve soru. */
+export interface FormAnswerContext {
+  profile: ResumeProfile
+  coverLetter: string[]
+  posting: JobPostingData
+  record: FormAnswerRecord
+}
+
+export interface FormAnswerStore {
+  getContext(analysisId: string, answerId: string): Promise<FormAnswerContext | null>
+  update(analysisId: string, answerId: string, patch: Partial<FormAnswerRecord>): Promise<void>
+}
+
 const day = (d: Date | null) => d?.toISOString().slice(0, 10) ?? null
 
 const SENT_SELECT = {
   followUps: true,
+  formAnswers: true,
   interviewPrep: true,
   result: true,
   stageChangedAt: true,
@@ -148,6 +164,26 @@ export const prismaFollowUpStore: FollowUpStore = {
       const row = await tx.analysis.findUnique({ where: { id: analysisId }, select: { followUps: true } })
       const list = readFollowUps(row?.followUps).map((f) => (f.id === followUpId ? { ...f, ...patch } : f))
       await tx.analysis.update({ where: { id: analysisId }, data: { followUps: list as unknown as object } })
+    })
+  },
+}
+
+/** FormAnswerStore'un Prisma uygulaması (DOG-123). */
+export const prismaFormAnswerStore: FormAnswerStore = {
+  async getContext(analysisId, answerId) {
+    const sent = await sentDocuments(analysisId)
+    const record = readFormAnswers(sent.analysis.formAnswers).find((a) => a.id === answerId)
+    if (!record) return null
+    return { profile: sent.profile, coverLetter: sent.coverLetter, posting: sent.posting, record }
+  },
+
+  async update(analysisId, answerId, patch) {
+    await prisma.$transaction(async (tx) => {
+      // Web ucu da diziye ekliyor; satır kilidiyle birbirini ezmiyorlar.
+      await tx.$queryRaw`SELECT id FROM "Analysis" WHERE id = ${analysisId} FOR UPDATE`
+      const row = await tx.analysis.findUnique({ where: { id: analysisId }, select: { formAnswers: true } })
+      const list = readFormAnswers(row?.formAnswers).map((a) => (a.id === answerId ? { ...a, ...patch } : a))
+      await tx.analysis.update({ where: { id: analysisId }, data: { formAnswers: list as unknown as object } })
     })
   },
 }

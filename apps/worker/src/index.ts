@@ -16,15 +16,18 @@ import { COVER_LETTER_JOB, runCoverLetter } from "./cover-pipeline.js"
 import { CONTRIBUTION_JOB, runContribution } from "./contribution-pipeline.js"
 import {
   FOLLOW_UP_JOB,
+  FORM_ANSWER_JOB,
   INTERVIEW_PREP_JOB,
   PRACTICE_JOB,
   type ContributionJobData,
   type FollowUpJobData,
+  type FormAnswerJobData,
   type InterviewPrepJobData,
   type PracticeJobData,
 } from "./adapt-queue.js"
 import { runFollowUp } from "./follow-up-pipeline.js"
-import { prismaFollowUpStore, prismaInterviewPrepStore } from "./follow-up-store.js"
+import { prismaFollowUpStore, prismaFormAnswerStore, prismaInterviewPrepStore } from "./follow-up-store.js"
+import { runFormAnswer } from "./form-answer-pipeline.js"
 import { runInterviewPrep, runPractice } from "./interview-prep-pipeline.js"
 import { initErrorTracking, reportJobFailure } from "./observability.js"
 import { runAnalysis } from "./pipeline.js"
@@ -113,6 +116,22 @@ const adaptWorker = new Worker<AdaptJobData, void>(
     }
 
     // Takip mesajı ve teşekkür notu taslağı (DOG-117); aynı kuyruk, aynı model.
+    // Başvuru formu yanıtı (DOG-123); takip mesajıyla aynı akış.
+    if (job.name === FORM_ANSWER_JOB) {
+      const data = job.data as unknown as FormAnswerJobData
+      try {
+        await runFormAnswer({ llm, store: prismaFormAnswerStore }, data)
+      } catch (error) {
+        const lastAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1)
+        if (error instanceof PermanentError || lastAttempt) {
+          await prismaFormAnswerStore.update(data.analysisId, data.answerId, { status: "failed" }).catch(() => {})
+        }
+        if (error instanceof PermanentError) throw toUnrecoverable(error, "adapt")
+        throw error
+      }
+      return
+    }
+
     if (job.name === FOLLOW_UP_JOB) {
       const data = job.data as unknown as FollowUpJobData
       try {

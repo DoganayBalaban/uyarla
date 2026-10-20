@@ -22,6 +22,7 @@ import { DocumentView } from "@/features/adaptation/components/DocumentView"
 import { DecisionToggle, VerificationWarning } from "@/features/adaptation/components/DecisionControls"
 import { EditText } from "@/features/adaptation/components/EditText"
 import { PlatformTips } from "@/features/analysis/components/PlatformTips"
+import { FormAnswersSection } from "@/features/adaptation/components/FormAnswersSection"
 import { ContributionsSection } from "@/features/adaptation/components/ContributionsSection"
 import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/cn"
@@ -519,6 +520,7 @@ export function AdaptationView({ id }: { id: string }) {
           )}
 
           <CoverLetterSection adaptationId={id} letter={state.coverLetter} checks={state.coverLetterChecks ?? null} />
+          {state.analysisId && <FormAnswersSection adaptationId={id} analysisId={state.analysisId} answers={state.formAnswers ?? []} />}
         </div>
 
         {/* İndirme paneli: masaüstünde yapışkan. */}

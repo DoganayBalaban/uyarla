@@ -10,6 +10,7 @@ import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 import { checkCoverLetter } from "@uyarla/core/cover/checks"
 import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 import { detectPlatform } from "@/features/analysis/platforms"
+import { readFormAnswers } from "@uyarla/core/cover/formAnswerRecord"
 
 export const runtime = "nodejs"
 
@@ -46,6 +47,9 @@ export async function GET(
       missingRequirements: missingMustRequirements(adaptation.analysis.result),
       // İlanın platformuna özel ipuçları indirme panelinin altında (DOG-95).
       platform: detectPlatform(adaptation.analysis.jobPosting.sourceUrl),
+      // Başvuru formu yanıtları (DOG-123); istek /api/applications/[analysisId] ucuna.
+      analysisId: adaptation.analysisId,
+      formAnswers: readFormAnswers(adaptation.analysis.formAnswers),
     })
   } catch (error) {
     const reply = authErrorResponse(error)

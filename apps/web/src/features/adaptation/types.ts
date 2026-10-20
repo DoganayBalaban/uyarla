@@ -1,6 +1,7 @@
 import type { CoverLetterChecks } from "@uyarla/core/cover/checks"
 import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 import type { PlatformId } from "@/features/analysis/platforms"
+import type { FormAnswerRecord } from "@uyarla/core/cover/formAnswerRecord"
 
 /** `GET /api/adapt/[id]` yanıtının arayüzün kullandığı kısmı. */
 
@@ -80,6 +81,9 @@ export interface AdaptationState {
   missingRequirements?: Array<{ index: number; text: string }>
   /** İlan adresinden tanınan platform (DOG-95). */
   platform?: PlatformId | null
+  analysisId?: string
+  /** Başvuru formu yanıtları (DOG-123). */
+  formAnswers?: FormAnswerRecord[]
   /** Tek sayfa planının sonucu (DOG-93); yalnızca strateji seçildiği yanıtta. */
   onePage?: { fits: boolean; pages: number }
 }

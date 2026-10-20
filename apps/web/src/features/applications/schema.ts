@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { ANSWER_MAX_LENGTH, ANSWER_MIN_LENGTH } from "@uyarla/core/interview/practiceRecord"
+import { LIMIT_RANGE, QUESTION_MAX_LENGTH, QUESTION_MIN_LENGTH } from "@uyarla/core/cover/formAnswerRecord"
 import { NOTE_MAX_LENGTH, STAGES } from "@/features/applications/board"
 
 /**
@@ -57,3 +58,23 @@ export const practiceRequestSchema = z.object({
 })
 
 export type PracticeRequest = z.infer<typeof practiceRequestSchema>
+
+/** `POST /api/applications/[id]`: başvuru formu sorusuna yanıt iste (DOG-123). */
+export const formAnswerRequestSchema = z
+  .object({
+    type: z.literal("form-answer"),
+    question: z
+      .string({ error: "Soruyu yazar mısın?" })
+      .trim()
+      .min(QUESTION_MIN_LENGTH, "Soruyu yazar mısın?")
+      .max(QUESTION_MAX_LENGTH, `Soru en fazla ${QUESTION_MAX_LENGTH} karakter olabilir.`),
+    limit: z
+      .object({ unit: z.enum(["chars", "words"]), max: z.number({ error: "Geçersiz sınır." }).int("Geçersiz sınır.") })
+      .nullable()
+      .optional(),
+  })
+  .refine((b) => !b.limit || (b.limit.max >= LIMIT_RANGE[b.limit.unit].min && b.limit.max <= LIMIT_RANGE[b.limit.unit].max), {
+    error: `Sınır ${LIMIT_RANGE.chars.min}–${LIMIT_RANGE.chars.max} karakter ya da ${LIMIT_RANGE.words.min}–${LIMIT_RANGE.words.max} kelime olabilir.`,
+  })
+
+export type FormAnswerRequest = z.infer<typeof formAnswerRequestSchema>
