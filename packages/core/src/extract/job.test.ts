@@ -39,6 +39,15 @@ describe("extractJobPosting", () => {
     expect(data.requirements[1]!.concepts.map((c) => c.term)).toEqual(["Next.js"])
   })
 
+  it("turns the deadline phrase into a date in code, and null when absent (DOG-120)", async () => {
+    const now = new Date("2026-10-20T09:00:00Z")
+    const { data } = await extractJobPosting(llmReturning({ ...DRAFT, deadlineText: "Son başvuru: 3 Kasım" }), "ilan", { now })
+    expect(data.deadline).toBe("2026-11-03")
+    expect(data).not.toHaveProperty("deadlineText")
+    // Alanı atlayan eski yanıt: tarih yok.
+    expect((await extractJobPosting(llmReturning(DRAFT), "ilan", { now })).data.deadline).toBeNull()
+  })
+
   it("keeps the required/preferred distinction", async () => {
     const { data } = await extractJobPosting(llmReturning(DRAFT), "ilan metni")
     expect(data.requirements.map((r) => r.importance)).toEqual(["must", "nice"])

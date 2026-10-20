@@ -75,6 +75,8 @@ export const prismaStore: AnalysisStore = {
         requirements: data.requirements as unknown as object,
         language: data.language,
         seniority: data.seniority,
+        // Son başvuru tarihi (DOG-120); "YYYY-MM-DD", sütun gün olarak.
+        deadline: data.deadline ? new Date(`${data.deadline}T00:00:00Z`) : null,
       },
     })
   },

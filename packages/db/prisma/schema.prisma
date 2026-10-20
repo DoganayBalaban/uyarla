@@ -114,6 +114,9 @@ model JobPosting {
   requirements Json
   language     String
   seniority    String?
+  // Son başvuru tarihi (DOG-120): ilanda açıkça yazıyorsa, gün olarak.
+  // Eski kayıtlarda ve tarih yazmayan ilanlarda boş.
+  deadline     DateTime?  @db.Date
   createdAt    DateTime   @default(now())
   analyses     Analysis[]
 }

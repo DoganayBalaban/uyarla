@@ -26,7 +26,8 @@
     "eval:injection": "dotenv -e ../../.env -- tsx eval/injection.ts",
     "eval:conditions": "dotenv -e ../../.env -- tsx eval/conditions.ts",
     "eval:facts": "dotenv -e ../../.env -- tsx eval/facts.ts",
-    "eval:cover-rules": "dotenv -e ../../.env -- tsx eval/coverRules.ts"
+    "eval:cover-rules": "dotenv -e ../../.env -- tsx eval/coverRules.ts",
+    "eval:deadline": "dotenv -e ../../.env -- tsx eval/deadline.ts"
   },
   "devDependencies": {
     "@types/pdfkit": "^0.17.6",

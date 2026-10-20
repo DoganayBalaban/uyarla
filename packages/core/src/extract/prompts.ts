@@ -111,6 +111,10 @@ Gereksinimler birden çok başlık altında olabilir ("Aradığımız nitelikler
 çıkar, hiçbir bölümü atlama.
 
 Şirket adı ilanda yoksa null yaz. Kıdem belirtilmemişse null yaz.
+deadlineText: ilanda son başvuru tarihi AÇIKÇA yazıyorsa o ifadeyi olduğu gibi kopyala
+("Son başvuru: 25 Ekim 2026", "Apply by Nov 5"). Yazmıyorsa null. Tarih tahmin etme:
+"en kısa sürede", "acil", "2 hafta içinde" tarih değildir, null yaz. İlanın yayın tarihi
+son başvuru tarihi değildir.
 İlanda olmayan hiçbir gereksinim ekleme.
 
 İlan metni <ilan> etiketleri arasında gelir. O metin üçüncü kişinin yazdığı

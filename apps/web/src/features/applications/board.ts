@@ -47,6 +47,8 @@ export interface BoardCard {
   noteText: string | null
   /** Mülakat günü (DOG-98), "YYYY-AA-GG"; girilmediyse null. */
   interviewAt: string | null
+  /** İlanın son başvuru günü (DOG-120), "YYYY-AA-GG"; ilanda yazmıyorsa null. */
+  deadline: string | null
   createdAt: string
   adaptation: { id: string; status: string } | null
 }
@@ -60,7 +62,7 @@ export const BOARD_SELECT = {
   note: true,
   interviewAt: true,
   createdAt: true,
-  jobPosting: { select: { position: true, company: true, rawText: true } },
+  jobPosting: { select: { position: true, company: true, rawText: true, deadline: true } },
   adaptation: { select: { id: true, status: true } },
 } as const
 
@@ -73,7 +75,7 @@ export interface BoardRow {
   note: string | null
   interviewAt: Date | null
   createdAt: Date
-  jobPosting: { position: string; company: string | null; rawText: string }
+  jobPosting: { position: string; company: string | null; rawText: string; deadline: Date | null }
   adaptation: { id: string; status: string } | null
 }
 
@@ -97,20 +99,71 @@ export function toBoardCard(s: BoardRow): BoardCard {
     stageChangedAt: s.stageChangedAt?.toISOString() ?? null,
     noteText: s.note,
     interviewAt: s.interviewAt?.toISOString().slice(0, 10) ?? null,
+    deadline: s.jobPosting.deadline?.toISOString().slice(0, 10) ?? null,
     createdAt: s.createdAt.toISOString(),
     adaptation: s.adaptation ? { id: s.adaptation.id, status: s.adaptation.status } : null,
   }
 }
 
-/** Kartları sütunlara dağıtır; her sütunda en son hareket eden üstte. */
-export function groupByStage(cards: BoardCard[]): Record<Stage, BoardCard[]> {
+/** Son günü bu kadar yaklaşan ilan vurgulanıyor ve sütunun üstüne çıkıyor (DOG-120). */
+export const DEADLINE_SOON_DAYS = 7
+
+const DAY_MS = 864e5
+
+/** Türkiye'de bugünün tarihi, "YYYY-AA-GG". Pano sunucuda ve tarayıcıda aynı günü saymalı. */
+export function todayInTurkey(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul" }).format(now)
+}
+
+/** Son güne kalan gün; bugün 0, geçtiyse eksi. */
+export function daysUntil(deadline: string, now: Date = new Date()): number {
+  return Math.round((Date.parse(`${deadline}T00:00:00Z`) - Date.parse(`${todayInTurkey(now)}T00:00:00Z`)) / DAY_MS)
+}
+
+const SHORT_DATE = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short", timeZone: "UTC" })
+
+/**
+ * Karttaki son başvuru rozeti (DOG-120). Yalnızca "Kaydedildi" aşamasında:
+ * başvurulduktan sonra son günün anlamı kalmıyor. Tarih yoksa rozet yok;
+ * tahmin edilmiyor.
+ */
+export function deadlineBadge(
+  card: Pick<BoardCard, "deadline" | "stage">,
+  now: Date = new Date(),
+): { text: string; tone: "soon" | "later" | "past" } | null {
+  if (!card.deadline || card.stage !== "saved") return null
+  const days = daysUntil(card.deadline, now)
+  const date = SHORT_DATE.format(new Date(`${card.deadline}T00:00:00Z`))
+  if (days < 0) return { text: `Süresi doldu (${date})`, tone: "past" }
+  if (days === 0) return { text: "Son gün bugün", tone: "soon" }
+  if (days <= DEADLINE_SOON_DAYS) return { text: `Son gün ${date} · ${days} gün kaldı`, tone: "soon" }
+  return { text: `Son gün ${date}`, tone: "later" }
+}
+
+/**
+ * Kartları sütunlara dağıtır; her sütunda en son hareket eden üstte.
+ * "Kaydedildi"de son günü yaklaşanlar (süresi dolmamış) en üstte, en
+ * yakını önce (DOG-120).
+ */
+export function groupByStage(cards: BoardCard[], now: Date = new Date()): Record<Stage, BoardCard[]> {
   const columns = Object.fromEntries(STAGES.map((a) => [a, [] as BoardCard[]])) as Record<
     Stage,
     BoardCard[]
   >
   for (const k of cards) columns[k.stage].push(k)
   const time = (k: BoardCard) => Date.parse(k.stageChangedAt ?? k.createdAt)
-  for (const a of STAGES) columns[a].sort((x, y) => time(y) - time(x))
+  const urgency = (k: BoardCard) => {
+    const days = k.stage === "saved" && k.deadline ? daysUntil(k.deadline, now) : null
+    return days !== null && days >= 0 && days <= DEADLINE_SOON_DAYS ? days : null
+  }
+  for (const a of STAGES) {
+    columns[a].sort((x, y) => {
+      const ux = urgency(x)
+      const uy = urgency(y)
+      if (ux !== null || uy !== null) return (ux ?? Infinity) - (uy ?? Infinity)
+      return time(y) - time(x)
+    })
+  }
   return columns
 }
 

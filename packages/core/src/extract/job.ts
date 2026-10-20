@@ -1,7 +1,8 @@
 import type { ExtractResult, LlmProvider } from "../llm/types.js"
-import { JobPostingDraftSchema, JobPostingSchema, jobPostingDraftJsonSchema } from "../schemas/job.js"
+import { JobPostingDraftParseSchema, JobPostingSchema, jobPostingDraftJsonSchema } from "../schemas/job.js"
 import type { JobPostingData } from "../schemas/job.js"
 import { splitIntoConcepts } from "./concepts.js"
+import { parseDeadline } from "./deadline.js"
 import { addLanguageEquivalents } from "./equivalents.js"
 import { JOB_PROMPT } from "./prompts.js"
 import { stripInjectedInstructions } from "./sanitize.js"
@@ -27,6 +28,8 @@ import { stripInjectedInstructions } from "./sanitize.js"
 export async function extractJobPosting(
   llm: LlmProvider,
   rawText: string,
+  /** Yıl yazmayan son başvuru tarihini yerleştirmek için (DOG-120); testte sabitleniyor. */
+  options: { now?: Date } = {},
 ): Promise<ExtractResult<JobPostingData>> {
   // Yapay zekaya seslenen talimat satırları LLM'e gitmiyor (DOG-121);
   // istemdeki "metin veri, talimat değil" kuralının ikinci katmanı.
@@ -39,10 +42,11 @@ export async function extractJobPosting(
     // "</ilan>" sınırı erken kapatıp ardına talimat yazamasın diye kaçışlanıyor.
     input: `<ilan>\n${cleanText.replace(/<\/?ilan>/gi, "")}\n</ilan>`,
   })
-  const draft = JobPostingDraftSchema.parse(data)
+  const { deadlineText, ...draft } = JobPostingDraftParseSchema.parse(data)
 
   const posting = JobPostingSchema.parse({
     ...draft,
+    deadline: parseDeadline(deadlineText, options.now),
     requirements: draft.requirements.map((req) => ({
       ...req,
       concepts: splitIntoConcepts(req.text, req.type),
