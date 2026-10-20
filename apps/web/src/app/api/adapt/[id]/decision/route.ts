@@ -14,6 +14,7 @@ import {
   type BulkDecision,
 } from "@/server/adaptationDecision"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
+import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 
 export const runtime = "nodejs"
 
@@ -26,13 +27,15 @@ export async function PATCH(
   // ({ layout }) ya da tek sayfa için çıkarılan maddeyi geri alma ({ restore }),
   // hepsi DOG-93. Ayrı route'lar değil: Vercel Hobby'de deploy başına 12
   // fonksiyon sınırı var. Metni elle düzenleme ({ itemId, edit }) DOG-92.
-  const { itemId, decision, bulk, layout, restore, edit } = (await request.json()) as {
+  const { itemId, decision, bulk, layout, restore, edit, preview } = (await request.json()) as {
     itemId?: string
     decision?: "accepted" | "rejected"
     bulk?: BulkDecision
     layout?: "full" | "onePage"
     restore?: string
     edit?: string
+    /** Yazarken canlı skor (DOG-92): düzenlemeyi kaydetmeden skorla. */
+    preview?: boolean
   }
 
   const isBulk = bulk === "accept_verified" || bulk === "reject_all"
@@ -51,8 +54,10 @@ export async function PATCH(
     return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
   }
 
+  let session: Awaited<ReturnType<typeof getSession>>
   try {
-    ensureOwner(payload.ownerId, await getSession())
+    session = await getSession()
+    ensureOwner(payload.ownerId, session)
   } catch (error) {
     const reply = authErrorResponse(error)
     if (reply) return reply
@@ -79,6 +84,22 @@ export async function PATCH(
       fresh = editDraftItem(payload.draft, itemId!, edit!, { profile: payload.profile, posting: payload.posting })
     } catch {
       return NextResponse.json({ error: "Madde bulunamadı." }, { status: 404 })
+    }
+    // Önizleme kaydedilmiyor: yalnızca bu metinle skor ve kontrol sonucu.
+    if (preview === true) {
+      try {
+        await enforceRateLimit(redisStore, `onizleme:${session!.user.id}`, RATE_LIMITS.scorePreview)
+      } catch (error) {
+        const reply = authErrorResponse(error)
+        if (reply) return reply
+        throw error
+      }
+      const item = itemId === "summary" ? fresh.summary : fresh.bullets.find((b) => b.id === itemId)
+      return NextResponse.json({
+        preview: true,
+        scoreAfter: await computeScoreAfter(payload.profile, payload.posting, fresh, payload.excluded),
+        verification: item?.verification ?? null,
+      })
     }
   } else {
     try {

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 import { api } from "@/lib/api"
-import type { AdaptationState, Draft } from "@/features/adaptation/types"
+import type { AdaptationState, Draft, Verification } from "@/features/adaptation/types"
 import { fileNameFromDisposition } from "@/features/adaptation/fileName"
 
 /** Analizden uyarlama başlatır; aynı analizin uyarlaması varsa onu döndürür. */
@@ -26,6 +26,25 @@ export async function decide(
 /** Önerinin metnini elle düzenler (DOG-92); yeni hâl kullanıcının metni olur. */
 export async function editItem(id: string, itemId: string, edit: string): Promise<Partial<AdaptationState>> {
   return (await api.patch<Partial<AdaptationState>>(`/adapt/${encodeURIComponent(id)}/decision`, { itemId, edit })).data
+}
+
+/**
+ * Yazarken canlı skor (DOG-92): düzenlemeyi kaydetmeden bu metinle skor ve
+ * uydurma kontrolü.
+ */
+export async function previewEdit(
+  id: string,
+  itemId: string,
+  edit: string,
+  signal?: AbortSignal,
+): Promise<{ scoreAfter: number | null; verification: Verification | null }> {
+  return (
+    await api.patch<{ scoreAfter: number | null; verification: Verification | null }>(
+      `/adapt/${encodeURIComponent(id)}/decision`,
+      { itemId, edit, preview: true },
+      { signal },
+    )
+  ).data
 }
 
 /** Toplu karar (DOG-93): uyarısızları yeni hâline al ya da hepsini geri al. */

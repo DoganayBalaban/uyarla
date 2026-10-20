@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { Pencil } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { Pencil, TriangleAlert } from "lucide-react"
+import type { Verification } from "@/features/adaptation/types"
 import { termsIn, type PostingTerm } from "@/features/adaptation/postingTerms"
 
 /** Sunucuyla aynı sınır (core adapt/edit); istemciye core'u çekmemek için ayrı. */
@@ -17,16 +18,23 @@ export function EditText({
   busy,
   onSave,
   terms = [],
+  onPreview,
+  currentScore = null,
 }: {
   text: string
   edited?: boolean
   busy: boolean
   /** İlan terimleri (DOG-92): yazarken metinde geçenler canlı gösteriliyor. */
   terms?: readonly PostingTerm[]
+  /** Yazarken canlı skor (DOG-92): kaydetmeden bu metinle skor ve kontrol. */
+  onPreview?: (text: string, signal: AbortSignal) => Promise<{ scoreAfter: number | null; verification: Verification | null }>
+  /** Şu anki "sonra" skoru; önizlemeyle karşılaştırılıyor. */
+  currentScore?: number | null
   onSave: (text: string) => Promise<string | null>
 }) {
   const [draft, setDraft] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const preview = useLivePreview(draft, text, onPreview)
 
   if (draft === null) {
     return (
@@ -65,6 +73,7 @@ export function EditText({
         className="w-full rounded-button border border-border bg-background p-2 text-sm leading-relaxed"
       />
       {terms.length > 0 && <LiveTerms text={draft} terms={terms} />}
+      {onPreview && <LiveScore preview={preview} currentScore={currentScore} />}
       <p className="m-0 text-xs text-muted">
         CV&apos;nde olmayan bir sayı ya da ilan terimi eklersen &ldquo;kontrol et&rdquo; uyarısı çıkar; mülakatta
         savunabileceğin şeyleri yaz.
@@ -109,5 +118,82 @@ function LiveTerms({ text, terms }: { text: string; terms: readonly PostingTerm[
         </>
       )}
     </p>
+  )
+}
+
+/** Önizleme skorunun şu ankinden farkı; biri yoksa null. */
+export function scoreDelta(preview: number | null, current: number | null): number | null {
+  return preview !== null && current !== null ? Math.round(preview) - Math.round(current) : null
+}
+
+/** Önizleme gerekli mi: metin boş değil ve kaydedilenden farklı. */
+export function needsPreview(draft: string | null, original: string): draft is string {
+  return draft !== null && draft.trim() !== "" && draft.trim() !== original.trim()
+}
+
+type Preview =
+  | { state: "idle" }
+  | { state: "loading" }
+  | { state: "done"; scoreAfter: number | null; verification: Verification | null }
+  | { state: "error" }
+
+/** Yazmaya ara verince (0,8 sn) bir önizleme; yeni yazı öncekini iptal ediyor. */
+function useLivePreview(draft: string | null, original: string, onPreview: Parameters<typeof EditText>[0]["onPreview"]): Preview {
+  const [preview, setPreview] = useState<Preview>({ state: "idle" })
+  // Ebeveyn her render'da yeni işlev veriyor (sayfa yokluyor); önizleme
+  // yalnızca metin değişince gitsin.
+  const latest = useRef(onPreview)
+  latest.current = onPreview
+  const enabled = !!onPreview
+  useEffect(() => {
+    if (!enabled || !needsPreview(draft, original)) {
+      setPreview({ state: "idle" })
+      return
+    }
+    const controller = new AbortController()
+    const timer = setTimeout(() => {
+      setPreview({ state: "loading" })
+      latest.current!(draft, controller.signal)
+        .then((r) => setPreview({ state: "done", ...r }))
+        .catch(() => {
+          if (!controller.signal.aborted) setPreview({ state: "error" })
+        })
+    }, 800)
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
+  }, [draft, original, enabled])
+  return preview
+}
+
+function LiveScore({ preview, currentScore }: { preview: Preview; currentScore: number | null }) {
+  if (preview.state === "idle") return null
+  if (preview.state === "loading") return <p className="m-0 text-xs text-muted">Skoru hesaplıyoruz…</p>
+  if (preview.state === "error") return <p className="m-0 text-xs text-muted">Skoru şimdi hesaplayamadık; kaydedince güncellenir.</p>
+  const score = preview.scoreAfter
+  const diff = scoreDelta(score, currentScore)
+  return (
+    <div className="space-y-1" aria-live="polite">
+      {score !== null && (
+        <p className="m-0 text-xs">
+          Bu metinle skor: <span className="font-semibold">{score}</span>
+          {diff !== null && diff !== 0 && (
+            <span className={diff > 0 ? "text-brand-green dark:text-[#4ade80]" : "text-brand-red dark:text-[#f87171]"}>
+              {" "}
+              ({diff > 0 ? "+" : ""}
+              {diff})
+            </span>
+          )}
+          {diff === 0 && <span className="text-muted"> (değişmiyor)</span>}
+        </p>
+      )}
+      {preview.verification?.status === "flagged" && (
+        <p className="m-0 flex gap-1.5 text-xs text-brand-amber">
+          <TriangleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+          <span>Kontrol et: {preview.verification.issues.map((i) => i.detail).join(" ")}</span>
+        </p>
+      )}
+    </div>
   )
 }
