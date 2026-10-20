@@ -20,6 +20,7 @@ import {
 import { DiffText } from "@/features/adaptation/components/DiffText"
 import { DocumentView } from "@/features/adaptation/components/DocumentView"
 import { DecisionToggle, VerificationWarning } from "@/features/adaptation/components/DecisionControls"
+import { EditText } from "@/features/adaptation/components/EditText"
 import { ContributionsSection } from "@/features/adaptation/components/ContributionsSection"
 import { apiErrorMessage } from "@/lib/api"
 import { cn } from "@/lib/cn"
@@ -28,6 +29,7 @@ import {
   decide,
   decideAll,
   downloadAdaptation,
+  editItem,
   restoreBullet,
   setLayout,
   useAdaptation,
@@ -69,6 +71,20 @@ export function AdaptationView({ id }: { id: string }) {
       queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
     } catch {
       // Karar kaydedilemedi: madde olduğu gibi kalıyor, kullanıcı tekrar deneyebilir.
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  /** Metni elle düzenleme (DOG-92); hata metni ya da null döner. */
+  async function saveEdit(itemId: string, text: string): Promise<string | null> {
+    setIsBusy(true)
+    try {
+      const parsed = await editItem(id, itemId, text)
+      queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
+      return null
+    } catch (error) {
+      return apiErrorMessage(error, "Düzenlemeyi kaydedemedik. Tekrar dener misin?")
     } finally {
       setIsBusy(false)
     }
@@ -364,6 +380,12 @@ export function AdaptationView({ id }: { id: string }) {
                   </div>
                   <VerificationWarning v={draft.summary.verification} />
                   <DiffText original={draft.summary.original} rewritten={draft.summary.rewritten} />
+                  <EditText
+                    text={draft.summary.rewritten}
+                    edited={draft.summary.edited}
+                    busy={busy}
+                    onSave={(text) => saveEdit("summary", text)}
+                  />
                 </motion.section>
               )}
 
@@ -408,6 +430,12 @@ export function AdaptationView({ id }: { id: string }) {
                         </div>
                         <VerificationWarning v={bullet.verification} />
                         <DiffText original={bullet.original} rewritten={bullet.rewritten} />
+                        <EditText
+                          text={bullet.rewritten}
+                          edited={bullet.edited}
+                          busy={busy}
+                          onSave={(text) => saveEdit(bullet.id, text)}
+                        />
                         {(bullet.alignments?.length ?? 0) > 0 && (
                           <ul className="mt-3 space-y-1.5">
                             {bullet.alignments!.map((a) => (

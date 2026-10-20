@@ -16,6 +16,8 @@ export interface Bullet {
   /** İlanın terimine çevrilen ifade ve dayanağı; eski taslaklarda yok. */
   alignments?: Array<{ term: string; basis: string }>
   decision: "accepted" | "rejected" | "pending"
+  /** Yeni hâli kullanıcı elle yazdı (DOG-92). */
+  edited?: boolean
 }
 
 /** Kullanıcının anlattığı deneyimden yazılan madde (DOG-94). */
@@ -37,6 +39,7 @@ export interface Draft {
     rewritten: string
     verification: Verification
     decision: string
+    edited?: boolean
   }
   bullets: Bullet[]
   skillOrder: string[]

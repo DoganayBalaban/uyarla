@@ -3248,3 +3248,28 @@ olmayan ziyaretçi için ilk denemenin önünde hâlâ bir engel duruyor.
 
 **Kontrol:** Üç örnek ilan da yerel modelle doğru çıkarıldı: pozisyon,
 zorunlu ve tercih edilen gereksinimler ayrı.
+
+## K-83 · Önerinin metnini elle düzenleme; kontrol kodda, karar kullanıcının
+
+**Tarih:** 20 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-92 (ilk adım)
+
+**Bağlam:** Jobscan Power Edit'te CV serbestçe düzenleniyor ve skor canlı
+güncelleniyor. Bizde öneriler madde madde kabul ya da ret alıyordu. Öneri
+neredeyse doğruysa kullanıcının tek seçeneği eski hâle dönmekti.
+
+**Karar:**
+- **Özet ve değişen maddelerde "Düzenle".** Kaydedince yeni hâl kullanıcının
+  metni oluyor ve seçili hâle geliyor. Ekranda "Yeni hâli senin düzenlemen"
+  yazıyor.
+- **Kontrol LLM'siz ve CV'nin tamamına karşı:** sayı ve ilan terimi kontrolü.
+  Kullanıcı CV'nin başka bir yerindeki bir olguyu maddeye taşıyabilir. CV'de
+  hiç olmayan bir sayı ya da ilan terimi "kontrol et" uyarısı alıyor ama
+  engellenmiyor; yazan kullanıcı. Modelin yazımındaki "uyarılı öneri
+  önerilmez" kuralı (K-38) burada geçerli değil.
+- **Terim dayanakları:** metinde geçmeyen terimin dayanağı artık
+  gösterilmiyor. Metin özgün hâline döndürülürse düzenleme sayılmıyor.
+- **Skor değişmedi:** her kararda olduğu gibi kaydedince LLM'siz yeniden
+  hesaplanıyor (gömme önbellekli, `computeScoreAfter`). Yazarken canlı skor
+  ve terim vurgulama sonraki adım.
+- **Ayrı uç yok:** karar ucuna `{ itemId, edit }` olarak eklendi (Vercel'deki
+  12 fonksiyon sınırı).

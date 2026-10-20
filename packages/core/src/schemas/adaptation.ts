@@ -32,6 +32,8 @@ export const AdaptedSummarySchema = z.object({
   rewritten: z.string(),
   verification: VerificationSchema,
   decision: z.enum(["accepted", "rejected"]),
+  /** Yeni hâli kullanıcı elle yazdı (DOG-92). */
+  edited: z.boolean().optional(),
 })
 
 export const AdaptedBulletSchema = z.object({
@@ -59,6 +61,8 @@ export const AdaptedBulletSchema = z.object({
    * (K-26).
    */
   decision: z.enum(["accepted", "rejected", "pending"]),
+  /** Yeni hâli kullanıcı elle yazdı (DOG-92). */
+  edited: z.boolean().optional(),
 })
 
 /**

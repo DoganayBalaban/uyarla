@@ -23,6 +23,11 @@ export async function decide(
     .data
 }
 
+/** Önerinin metnini elle düzenler (DOG-92); yeni hâl kullanıcının metni olur. */
+export async function editItem(id: string, itemId: string, edit: string): Promise<Partial<AdaptationState>> {
+  return (await api.patch<Partial<AdaptationState>>(`/adapt/${encodeURIComponent(id)}/decision`, { itemId, edit })).data
+}
+
 /** Toplu karar (DOG-93): uyarısızları yeni hâline al ya da hepsini geri al. */
 export async function decideAll(
   id: string,
