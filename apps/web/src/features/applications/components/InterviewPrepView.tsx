@@ -14,6 +14,14 @@ import {
   type PracticeEntry,
 } from "@uyarla/core/interview/practiceRecord"
 import { api, apiErrorMessage, apiStatus } from "@/lib/api"
+import { StageTimeline } from "@/features/analysis/components/StageTimeline"
+import { deriveStageStates } from "@/features/analysis/stageStates"
+
+/** Paketin gerçek adımları (DOG-136); hangisinde olduğunu worker kayda yazıyor. */
+const PREP_STAGES = [
+  { id: "reading", title: "Gönderdiğin belgeleri okuyoruz", description: "Başvurduğun CV, ön yazı ve ilanın eksik kalan şartları." },
+  { id: "writing", title: "Olası soruları ve cevap iskeletlerini yazıyoruz", description: "Kanıtlar CV'nden birebir alınıyor ve kontrol ediliyor." },
+]
 
 interface PrepData {
   position: string
@@ -102,11 +110,12 @@ export function InterviewPrepView({ analysisId }: { analysisId: string }) {
         </p>
       </div>
 
-      {running && (
-        <p className="flex items-center gap-2 text-sm text-muted" role="status">
-          <LoaderCircle className="size-4 text-brand-blue motion-safe:animate-spin" aria-hidden />
-          Hazırlık paketini yazıyoruz; bir dakika sürebilir…
-        </p>
+      {running && record?.status === "running" && (
+        <StageTimeline
+          heading="Hazırlık paketin hazırlanıyor"
+          subtitle="Bir dakika kadar sürebilir."
+          stages={deriveStageStates(PREP_STAGES, record.stage ?? null)}
+        />
       )}
       {record?.status === "failed" && <p className="text-sm text-brand-red">Hazırlık paketini yazamadık. Tekrar dener misin?</p>}
 

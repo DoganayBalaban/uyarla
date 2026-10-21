@@ -104,8 +104,14 @@ export const MAX_PREP_ATTEMPTS = 2
 export { MAX_PRACTICE_PER_QUESTION, type PracticeEntry } from "./practiceRecord.js"
 import type { PracticeEntry } from "./practiceRecord.js"
 
+/**
+ * Hazırlık paketinin o anki adımı (DOG-136); worker yazıyor. Yoksa ilk adım:
+ * gönderilen belgeler okunuyor.
+ */
+export type InterviewPrepStage = "reading" | "writing"
+
 export type InterviewPrepRecord = (
-  | { status: "running"; createdAt: string; attempts: number; prep?: InterviewPrep }
+  | { status: "running"; createdAt: string; attempts: number; prep?: InterviewPrep; stage?: InterviewPrepStage }
   | { status: "failed"; createdAt: string; attempts: number; prep?: InterviewPrep }
   | { status: "done"; createdAt: string; attempts: number; prep: InterviewPrep }
 ) & { practice?: PracticeEntry[] }
