@@ -1,6 +1,7 @@
 "use client"
 
 import { reportClientError } from "@/lib/clientErrors"
+import { recoverFromStaleChunk } from "@/lib/staleChunk"
 import Link from "next/link"
 import { useEffect } from "react"
 import { PageShell } from "@/components/layout/PageShell"
@@ -11,6 +12,8 @@ import { PageShell } from "@/components/layout/PageShell"
  */
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
+    // Dağıtımdan sonra bayat parça (DOG-140): bir kez yeniden yükle.
+    if (recoverFromStaleChunk(error)) return
     console.error(error)
     // Hata sınırı hatayı yutuyor; izlemeye elle bildiriliyor (DOG-62).
     reportClientError(error)
