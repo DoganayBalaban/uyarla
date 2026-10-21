@@ -3679,3 +3679,19 @@ dedi. Düzenleme yalnızca var olan maddenin metniyle sınırlıydı (K-83).
 - **Ayrı uç yok:** karar ucuna `{ bullet: { op } }` (12 fonksiyon sınırı).
 - **Kapsam dışı (sonraki adım):** proje maddelerini ekleme ve taşıma, bölüm
   ekleme ve bölüm sırası, işler arası taşıma.
+
+## K-98 · Proje maddeleri, bölüm sırası ve kullanıcı bölümleri (DOG-92, altıncı adım)
+
+- **Projeler işlerle aynı kodla:** `groupBullets` iş ve projeyi bir "grup"
+  olarak ele alıyor. Kullanıcı maddesi `projectIndex` taşıyabiliyor; sıra
+  anahtarı projede `p<n>`. Katkılar (DOG-94) yalnızca işlere ekleniyor.
+- **Bölüm sırası:** taslakta `sectionOrder`. Ekrandaki ve indirilen sıra aynı
+  kuralla (`document/model` `sectionOrder`): kullanıcının seçimi, yoksa CV'nin
+  sırası, yoksa varsayılan; ilk işini arayanda eğitim önde (DOG-55).
+  İçeriği olmayan bölümün üstünden atlanıyor; yoksa projesi olmayan CV'de
+  "eğitimi yukarı al" görünmez bir yer değişimi olurdu.
+- **Kullanıcı bölümleri:** taslakta `userSections` (kimlik `s<n>`). Belgede CV'nin
+  kendi diğer bölümlerinden sonra. Satırlar maddeler gibi kontrol ediliyor
+  (uyarı var, engel yok). En fazla 12 satır, başlık en fazla 60 karakter.
+- **Kapsam dışı:** maddeyi işler arası taşımak, CV'nin kendi bölümlerini
+  silmek ya da yeniden adlandırmak.

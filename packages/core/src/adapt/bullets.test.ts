@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { AdaptationDraft } from "../schemas/adaptation.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { addUserBullet, jobBullets, moveBullet, removeBullet, restoreBullet } from "./bullets.js"
+import { addUserBullet, addUserSection, jobBullets, moveBullet, moveSection, removeBullet, removeUserSection, restoreBullet } from "./bullets.js"
 import { applyAdaptation } from "./profile.js"
 
 const profile: ResumeProfile = {
@@ -83,5 +83,50 @@ describe("bullet editor (DOG-92)", () => {
     const again = addUserBullet(moved, 0, "Bir madde daha", { profile, posting })
     expect(texts(again).at(-1)).toBe("Bir madde daha")
     expect(() => moveBullet(draft, profile, 0, "9-9", "down")).toThrow()
+  })
+})
+
+describe("projects and sections (DOG-92, sixth step)", () => {
+  const withProject: ResumeProfile = {
+    ...profile,
+    projects: [{ name: "Panel", role: null, startDate: null, endDate: null, bullets: [{ text: "Grafik bileşeni", sourceRef: "Grafik bileşeni" }] }],
+  } as ResumeProfile
+  const projectTexts = (d: AdaptationDraft) => applyAdaptation(withProject, d).projects![0]!.bullets.map((b) => b.text)
+
+  it("adds, moves and removes project bullets like job bullets", () => {
+    const added = addUserBullet(draft, { kind: "project", index: 0 }, "Testlerini yazdım", { profile: withProject, posting })
+    expect(added.userBullets?.[0]).toMatchObject({ id: "u1", projectIndex: 0 })
+    expect(added.userBullets?.[0]).not.toHaveProperty("experienceIndex")
+    // Proje maddesi işe karışmıyor.
+    expect(applyAdaptation(withProject, added).experience[0]!.bullets).toHaveLength(2)
+    expect(projectTexts(added)).toEqual(["Grafik bileşeni", "Testlerini yazdım"])
+    const moved = moveBullet(added, withProject, { kind: "project", index: 0 }, "u1", "up")
+    expect(moved.bulletOrder).toEqual({ p0: ["u1", "p0-0"] })
+    expect(projectTexts(moved)).toEqual(["Testlerini yazdım", "Grafik bileşeni"])
+    expect(projectTexts(removeBullet(moved, "p0-0"))).toEqual(["Testlerini yazdım"])
+    expect(() => addUserBullet(draft, { kind: "project", index: 4 }, "x", { profile: withProject, posting })).toThrow()
+  })
+
+  it("moves a section within the current order", () => {
+    const current = ["experience", "projects", "education", "skills"] as const
+    const out = moveSection(draft, current, "education", "up")
+    expect(out.sectionOrder).toEqual(["experience", "education", "projects", "skills"])
+    expect(applyAdaptation(profile, out).sectionOrder).toEqual(out.sectionOrder)
+    expect(moveSection(draft, current, "experience", "up")).toBe(draft)
+    // Projesi olmayan CV'de eğitim, görünmeyen "projeler"in üstünden atlıyor.
+    const noProjects = new Set(["experience", "education", "skills"] as const)
+    expect(moveSection(draft, current, "education", "up", noProjects).sectionOrder).toEqual(["education", "projects", "experience", "skills"])
+  })
+
+  it("adds the user's section after the CV's own and deletes it", () => {
+    const out = addUserSection(draft, " Gönüllü çalışmalar ", "Kod kampında mentorluk\n\n  Açık kaynak katkı ", { profile, posting })
+    expect(out.userSections).toEqual([
+      { id: "s1", heading: "Gönüllü çalışmalar", lines: ["Kod kampında mentorluk", "Açık kaynak katkı"], verification: { status: "ok", issues: [] } },
+    ])
+    expect(applyAdaptation(profile, out).otherSections).toEqual([{ heading: "Gönüllü çalışmalar", lines: ["Kod kampında mentorluk", "Açık kaynak katkı"] }])
+    expect(addUserSection(draft, "Sertifika", "Kubernetes sertifikası", { profile, posting }).userSections?.[0]?.verification.status).toBe("flagged")
+    expect(removeUserSection(out, "s1").userSections).toEqual([])
+    expect(() => addUserSection(draft, "", "x", { profile, posting })).toThrow()
+    expect(() => addUserSection(draft, "Başlık", "  \n ", { profile, posting })).toThrow()
   })
 })

@@ -44,7 +44,7 @@ export async function GET(
       // deterministik; böylece eski ön yazılarda da var.
       coverLetterChecks:
         letter?.status === "done" ? checkCoverLetter(letter.paragraphs.map((p) => p.text), posting) : null,
-      document: adaptationDocument(profile, draft),
+      document: adaptationDocument(profile, draft, payload.documentOptions),
       missingRequirements: missingMustRequirements(adaptation.analysis.result),
       // İlanın platformuna özel ipuçları indirme panelinin altında (DOG-95).
       platform: detectPlatform(adaptation.analysis.jobPosting.sourceUrl),

@@ -200,7 +200,7 @@ const DEFAULT_ORDER: StructuredSection[] = ["experience", "projects", "education
  * "mevcut formatımı bozmasın" istendi ve eğitimi sona koyan aday bunu
  * bilerek yapmış.
  */
-function sectionOrder(profile: ResumeProfile, options: DocumentOptions): StructuredSection[] {
+export function sectionOrder(profile: ResumeProfile, options: DocumentOptions = {}): StructuredSection[] {
   const known = profile.sectionOrder ?? []
   if (known.length === 0) {
     if (!options.educationFirst) return DEFAULT_ORDER

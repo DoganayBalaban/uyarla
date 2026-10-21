@@ -1,7 +1,6 @@
 import type { AdaptationDraft } from "../schemas/adaptation.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { jobBullets } from "./bullets.js"
-import { projectBulletId } from "./ids.js"
+import { groupBullets, jobBullets } from "./bullets.js"
 
 // Kimlikler ayrı modülde: bullets.ts de kullanıyor ve döngüsel içe aktarma olmasın.
 export { bulletId, projectBulletId } from "./ids.js"
@@ -19,13 +18,6 @@ export function applyAdaptation(
   profile: ResumeProfile,
   draft: AdaptationDraft,
 ): ResumeProfile {
-  const accepted = new Map(
-    draft.bullets.filter((b) => b.decision === "accepted").map((b) => [b.id, b.rewritten]),
-  )
-  // Tek sayfa için çıkarılan (DOG-93) ve kullanıcının kaldırdığı (DOG-92)
-  // proje maddeleri. Kimlik konumdan geldiği için süzme eşlemeden sonra.
-  const dropped = new Set([...(draft.omitted ?? []), ...(draft.removed ?? [])])
-
   return {
     ...profile,
     // Başlık satırını yalnızca kullanıcı düzenliyor (DOG-92); unvan eşleşmesi
@@ -46,18 +38,21 @@ export function applyAdaptation(
         .filter((b) => !b.omitted && !b.removed)
         .map(({ text, sourceRef }) => ({ text, sourceRef })),
     })),
-    // Projelerin maddeleri de deneyim maddeleri gibi uyarlanıyor (DOG-105).
+    // Projelerin maddeleri de deneyim maddeleri gibi (DOG-105, DOG-92).
     ...(profile.projects
       ? {
           projects: profile.projects.map((project, i) => ({
             ...project,
-            bullets: project.bullets.flatMap((bullet, j) =>
-              dropped.has(projectBulletId(i, j))
-                ? []
-                : [{ ...bullet, text: accepted.get(projectBulletId(i, j)) ?? bullet.text }],
-            ),
+            bullets: groupBullets(profile, draft, { kind: "project", index: i })
+              .filter((b) => !b.omitted && !b.removed)
+              .map(({ text, sourceRef }) => ({ text, sourceRef })),
           })),
         }
+      : {}),
+    // Kullanıcının seçtiği bölüm sırası ve eklediği bölümler (DOG-92).
+    ...(draft.sectionOrder ? { sectionOrder: draft.sectionOrder } : {}),
+    ...(draft.userSections?.length
+      ? { otherSections: [...(profile.otherSections ?? []), ...draft.userSections.map(({ heading, lines }) => ({ heading, lines }))] }
       : {}),
     // Eklenen beceriler adayın kendi maddelerinden geliyor (K-38).
     skills: sortItems([...profile.skills, ...(draft.addedSkills ?? [])], draft.skillOrder),

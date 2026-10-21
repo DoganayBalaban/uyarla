@@ -55,8 +55,10 @@ export function documentSections(
   // CV'deki maddenin önceki hâli kimliğinden ("deneyim-madde"); katkı ve
   // kullanıcı maddesinin önceki hâli yok, tamamı eklenmiş.
   const beforeOf = (id: string) => {
-    const m = /^(\d+)-(\d+)$/.exec(id)
-    return m ? (before.experience[Number(m[1])]?.bullets[Number(m[2])] ?? "") : ""
+    const job = /^(\d+)-(\d+)$/.exec(id)
+    if (job) return before.experience[Number(job[1])]?.bullets[Number(job[2])] ?? ""
+    const project = /^p(\d+)-(\d+)$/.exec(id)
+    return project ? (before.projects?.[Number(project[1])]?.bullets[Number(project[2])] ?? "") : ""
   }
   const beforeSkills = new Set(before.skills)
 
@@ -78,9 +80,10 @@ export function documentSections(
       name: p.name,
       role: p.role,
       dates: p.dates,
-      bullets: p.bullets.map((text, j) =>
-        line(before.projects?.[i]?.bullets[j] ?? "", text, `p${i}-${j}`),
-      ),
+      bullets: p.bullets.map((text, j) => {
+        const id = p.bulletIds?.[j] ?? `p${i}-${j}`
+        return line(p.bulletIds ? beforeOf(id) : (before.projects?.[i]?.bullets[j] ?? ""), text, id)
+      }),
     })),
     skills: after.skills.map((name) => ({ name, added: !beforeSkills.has(name) })),
   }

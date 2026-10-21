@@ -131,15 +131,37 @@ export const AdaptationDraftSchema = z.object({
    * düzenlemedeki gibi: uyarı var, engel yok.
    */
   userBullets: z
-    .array(z.object({ id: z.string(), experienceIndex: z.number().int().nonnegative(), text: z.string(), verification: VerificationSchema }))
+    .array(
+      z.object({
+        id: z.string(),
+        /** Deneyim maddesi; proje maddesinde yok. */
+        experienceIndex: z.number().int().nonnegative().optional(),
+        /** Proje maddesi (DOG-92, altıncı adım). */
+        projectIndex: z.number().int().nonnegative().optional(),
+        text: z.string(),
+        verification: VerificationSchema,
+      }),
+    )
     .optional(),
   /**
    * Kullanıcının belgeden kaldırdığı maddeler (DOG-92). Tek sayfa
    * `omitted`'ından ayrı: strateji değişince sıfırlanmıyor.
    */
   removed: z.array(z.string()).optional(),
-  /** İş başına madde sırası (DOG-92); anahtar deneyim sırası. Yoksa doğal sıra. */
+  /**
+   * Grup başına madde sırası (DOG-92): anahtar deneyimde sırası ("0"),
+   * projede "p" önekli ("p0"). Yoksa doğal sıra.
+   */
   bulletOrder: z.record(z.string(), z.array(z.string())).optional(),
+  /** Kullanıcının seçtiği bölüm sırası (DOG-92); yoksa CV'nin kendi sırası. */
+  sectionOrder: z.array(z.enum(["experience", "projects", "education", "skills"])).optional(),
+  /**
+   * Kullanıcının eklediği bölümler (DOG-92): belgede diğer bölümlerin sonunda.
+   * Satırlar maddeler gibi kontrol ediliyor; uyarı var, engel yok.
+   */
+  userSections: z
+    .array(z.object({ id: z.string(), heading: z.string(), lines: z.array(z.string()), verification: VerificationSchema }))
+    .optional(),
 })
 
 export type TermAlignment = z.infer<typeof TermAlignmentSchema>

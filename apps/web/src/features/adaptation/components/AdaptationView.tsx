@@ -35,7 +35,9 @@ import {
   previewEdit,
   restoreBullet,
   changeBullet,
+  changeSection,
   type BulletOp,
+  type SectionOp,
   setLayout,
   useAdaptation,
 } from "@/features/adaptation/api"
@@ -144,6 +146,21 @@ export function AdaptationView({ id }: { id: string }) {
     try {
       const parsed = await changeBullet(id, op)
       // Madde sayısı değişince tek sayfa sonucu bayatlıyor.
+      setOnePage(null)
+      queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
+      return null
+    } catch (error) {
+      return apiErrorMessage(error, "Kaydedemedik. Tekrar dener misin?")
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  /** Bölüm sırası, bölüm ekle ya da sil (DOG-92); hata mesajını döndürüyor. */
+  async function sectionChange(op: SectionOp): Promise<string | null> {
+    setIsBusy(true)
+    try {
+      const parsed = await changeSection(id, op)
       setOnePage(null)
       queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
       return null
@@ -391,6 +408,7 @@ export function AdaptationView({ id }: { id: string }) {
               draft={draft}
               onRestore={(b) => void restore(b)}
               onBullet={bulletChange}
+              onSection={sectionChange}
               busy={busy}
               terms={state.postingTerms ?? []}
             />

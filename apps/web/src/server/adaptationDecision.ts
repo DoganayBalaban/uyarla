@@ -1,6 +1,17 @@
 import { AdaptationDraftSchema, hasPendingDecisions, type AdaptationDraft } from "@uyarla/core/schemas/adaptation"
 import { applyAdaptation } from "@uyarla/core/adapt/profile"
-import { addUserBullet, jobBullets, moveBullet, removeBullet, restoreBullet as restoreDraftBullet } from "@uyarla/core/adapt/bullets"
+import {
+  addUserBullet,
+  addUserSection,
+  groupBullets,
+  moveBullet,
+  moveSection,
+  removeBullet,
+  removeUserSection,
+  restoreBullet as restoreDraftBullet,
+} from "@uyarla/core/adapt/bullets"
+import { sectionOrder, type DocumentOptions } from "@uyarla/core/document/model"
+import type { StructuredSection } from "@uyarla/core/schemas/resume"
 import { analysisProfile } from "@uyarla/core/adapt/facts"
 import { CachedEmbeddingProvider, redisVectorStore } from "@uyarla/core/llm/embeddingCache"
 import { OpenAiCompatibleEmbeddingProvider, embeddingConfigFromEnv } from "@uyarla/core/llm/embedding"
@@ -101,7 +112,7 @@ export function nextStatus(draft: AdaptationDraft): "draft" | "ready" {
 export async function loadAdaptation(id: string) {
   const adaptation = await prisma.adaptation.findUnique({
     where: { id },
-    include: { analysis: { include: { resumeVersion: true, jobPosting: true } } },
+    include: { analysis: { include: { resumeVersion: true, jobPosting: true, user: { select: { goal: true } } } } },
   })
   if (!adaptation) return null
 
@@ -135,6 +146,8 @@ export async function loadAdaptation(id: string) {
     posting,
     /** Skor hesapları için düzeltmeleri uygulanmış ilan. */
     scoringPosting,
+    /** Belge seçenekleri: ilk işini arayanda eğitim önde (DOG-55); bölüm sırası buna bağlı. */
+    documentOptions: { educationFirst: analysis.user.goal === "first_job" },
     draft,
     scoreBefore: analysis.score,
     /** Skor formülünün sürümü (DOG-103); eski analizlerde 1. */
@@ -216,35 +229,91 @@ export function restoreBullet(draft: AdaptationDraft, bulletId: string): Adaptat
   return restoreDraftBullet(draft, bulletId)
 }
 
-/** Madde düzenleyici işlemi (DOG-92): ekle, kaldır, taşı. */
+/**
+ * Madde düzenleyici işlemi (DOG-92): ekle, kaldır, taşı. Grup bir iş
+ * (`experienceIndex`) ya da proje (`projectIndex`).
+ */
+type Where = { experienceIndex: number } | { projectIndex: number }
 export type BulletOp =
-  | { op: "add"; experienceIndex: number; text: string }
+  | ({ op: "add"; text: string } & Where)
   | { op: "remove"; id: string }
-  | { op: "move"; experienceIndex: number; id: string; direction: "up" | "down" }
+  | ({ op: "move"; id: string; direction: "up" | "down" } & Where)
 
-/** Gövdedeki işlemi doğrular; geçersizse null. */
+/** Bölüm işlemi (DOG-92): sırayı değiştir, kendi bölümünü ekle ya da sil. */
+export type SectionOp =
+  | { op: "move"; section: StructuredSection; direction: "up" | "down" }
+  | { op: "add"; heading: string; text: string }
+  | { op: "remove"; id: string }
+
+const SECTIONS: readonly StructuredSection[] = ["experience", "projects", "education", "skills"]
+const isIndex = (x: unknown): x is number => typeof x === "number" && Number.isInteger(x) && x >= 0
+const isDirection = (x: unknown): x is "up" | "down" => x === "up" || x === "down"
+
+function whereOf(v: Record<string, unknown>): Where | null {
+  if (isIndex(v.experienceIndex)) return { experienceIndex: v.experienceIndex }
+  if (isIndex(v.projectIndex)) return { projectIndex: v.projectIndex }
+  return null
+}
+
+/** Gövdedeki madde işlemini doğrular; geçersizse null. */
 export function parseBulletOp(value: unknown): BulletOp | null {
   if (!value || typeof value !== "object") return null
   const v = value as Record<string, unknown>
-  const index = (x: unknown) => typeof x === "number" && Number.isInteger(x) && x >= 0
-  if (v.op === "add" && index(v.experienceIndex) && typeof v.text === "string") {
-    return { op: "add", experienceIndex: v.experienceIndex as number, text: v.text }
-  }
-  if (v.op === "remove" && typeof v.id === "string" && v.id) return { op: "remove", id: v.id }
-  if (v.op === "move" && index(v.experienceIndex) && typeof v.id === "string" && (v.direction === "up" || v.direction === "down")) {
-    return { op: "move", experienceIndex: v.experienceIndex as number, id: v.id, direction: v.direction }
-  }
+  if (v.op === "remove") return typeof v.id === "string" && v.id ? { op: "remove", id: v.id } : null
+  const where = whereOf(v)
+  if (!where) return null
+  if (v.op === "add" && typeof v.text === "string") return { op: "add", text: v.text, ...where }
+  if (v.op === "move" && typeof v.id === "string" && isDirection(v.direction)) return { op: "move", id: v.id, direction: v.direction, ...where }
   return null
 }
+
+/** Gövdedeki bölüm işlemini doğrular; geçersizse null. */
+export function parseSectionOp(value: unknown): SectionOp | null {
+  if (!value || typeof value !== "object") return null
+  const v = value as Record<string, unknown>
+  if (v.op === "move" && SECTIONS.includes(v.section as StructuredSection) && isDirection(v.direction)) {
+    return { op: "move", section: v.section as StructuredSection, direction: v.direction }
+  }
+  if (v.op === "add" && typeof v.heading === "string" && typeof v.text === "string") return { op: "add", heading: v.heading, text: v.text }
+  if (v.op === "remove" && typeof v.id === "string" && v.id) return { op: "remove", id: v.id }
+  return null
+}
+
+const groupOf = (w: Where) =>
+  "experienceIndex" in w ? { kind: "experience" as const, index: w.experienceIndex } : { kind: "project" as const, index: w.projectIndex }
 
 export function applyBulletOp(
   draft: AdaptationDraft,
   op: BulletOp,
   context: { profile: ResumeProfile; posting: JobPostingData },
 ): AdaptationDraft {
-  if (op.op === "add") return addUserBullet(draft, op.experienceIndex, op.text, context)
   if (op.op === "remove") return removeBullet(draft, op.id)
-  return moveBullet(draft, context.profile, op.experienceIndex, op.id, op.direction)
+  if (op.op === "add") return addUserBullet(draft, groupOf(op), op.text, context)
+  return moveBullet(draft, context.profile, groupOf(op), op.id, op.direction)
+}
+
+export function applySectionOp(
+  draft: AdaptationDraft,
+  op: SectionOp,
+  context: { profile: ResumeProfile; posting: JobPostingData; options: DocumentOptions },
+): AdaptationDraft {
+  if (op.op === "add") return addUserSection(draft, op.heading, op.text, context)
+  if (op.op === "remove") return removeUserSection(draft, op.id)
+  // Taşıma belgede şu an görünen sıradan: CV'nin sırası ya da varsayılan.
+  const applied = applyAdaptation(context.profile, draft)
+  const present = new Set<StructuredSection>(
+    (
+      [
+        ["experience", applied.experience.length],
+        ["projects", applied.projects?.length ?? 0],
+        ["education", applied.education.length],
+        ["skills", applied.skills.length],
+      ] as const
+    )
+      .filter(([, n]) => n > 0)
+      .map(([k]) => k),
+  )
+  return moveSection(draft, sectionOrder(applied, context.options), op.section, op.direction, present)
 }
 
 /**
@@ -284,8 +353,11 @@ export interface DocumentOutline {
     bulletIds?: string[]
   }>
   /** Projeler ve diğer bölümler (DOG-105); indirilen belgede de var. */
-  projects: Array<{ name: string; role: string | null; dates: string | null; bullets: string[] }>
-  otherSections: Array<{ heading: string; lines: string[] }>
+  projects: Array<{ name: string; role: string | null; dates: string | null; bullets: string[]; bulletIds?: string[] }>
+  /** Kullanıcının eklediği bölümün kimliği var (DOG-92); silinebiliyor. */
+  otherSections: Array<{ heading: string; lines: string[]; id?: string }>
+  /** Belgedeki bölüm sırası (DOG-92), indirmeyle aynı kuralla. */
+  sectionOrder?: StructuredSection[]
   skills: string[]
 }
 
@@ -299,20 +371,30 @@ export interface DocumentOutline {
 export function adaptationDocument(
   profile: ResumeProfile | null,
   draft: AdaptationDraft | null,
+  options: DocumentOptions = {},
 ): { before: DocumentOutline; after: DocumentOutline } | null {
   if (!profile || !draft) return null
   // Tek sayfa için çıkarılanlar (DOG-93) ve kullanıcının kaldırdıkları
   // (DOG-92) burada düşmüyor: ekran onları üstü çizili, geri alınabilir
-  // gösteriyor. Deneyim maddeleri indirmeyle aynı listeden (jobBullets).
-  const after = outline(applyAdaptation(profile, { ...draft, omitted: [], removed: [] }))
+  // gösteriyor. Maddeler indirmeyle aynı listeden (groupBullets).
+  const applied = applyAdaptation(profile, { ...draft, omitted: [], removed: [] })
+  const after = outline(applied)
+  const own = (profile.otherSections ?? []).length
   return {
-    before: outline(profile),
+    before: { ...outline(profile), sectionOrder: sectionOrder(profile, options) },
     after: {
       ...after,
       experience: after.experience.map((job, i) => {
-        const list = jobBullets(profile, draft, i)
+        const list = groupBullets(profile, draft, { kind: "experience", index: i })
         return { ...job, bullets: list.map((b) => b.text), bulletIds: list.map((b) => b.id) }
       }),
+      projects: after.projects.map((project, i) => {
+        const list = groupBullets(profile, draft, { kind: "project", index: i })
+        return { ...project, bullets: list.map((b) => b.text), bulletIds: list.map((b) => b.id) }
+      }),
+      // CV'nin kendi bölümlerinden sonra kullanıcınınkiler, aynı sırayla.
+      otherSections: after.otherSections.map((o, k) => (k >= own ? { ...o, id: draft.userSections?.[k - own]?.id } : o)),
+      sectionOrder: sectionOrder(applied, options),
     },
   }
 }
