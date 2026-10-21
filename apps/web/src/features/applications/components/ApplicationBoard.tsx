@@ -44,11 +44,17 @@ const DRAG_TYPE = "application/x-uyarla-kart"
 
 const DATE_FORMAT = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short" })
 
-/** Sütun başlığının altındaki kısa metin; rehber §6.2 tonunda. */
-const COLUMN_HINT: Partial<Record<Stage, string>> = {
+/**
+ * Sütun başlığının altındaki kısa metin; rehber §6.2 tonunda. Her sütunda
+ * kartın o aşamada sunduğu şeye yönlendiriyor (DOG-135); hatırlatma e-postası
+ * anılmıyor, ürün e-postaları açık değil (DOG-130).
+ */
+const COLUMN_HINT: Record<Stage, string> = {
   saved: "Skorunu aldın, henüz başvurmadın.",
-  rejected: "Bu olmadı, olur.",
+  applied: "Cevap gelmediyse kartta takip mesajı yazabilirsin.",
+  interview: "Mülakat gününü ekle; kartta hazırlık paketi ve teşekkür notu var.",
   offer: "Tebrikler!",
+  rejected: "Bu olmadı, olur.",
 }
 
 export function ApplicationBoard() {
@@ -191,7 +197,7 @@ export function ApplicationBoard() {
                     {columns[cardStage].length}
                   </span>
                 </h2>
-                {COLUMN_HINT[cardStage] && columns[cardStage].length > 0 && (
+                {columns[cardStage].length > 0 && (
                   <p className="m-0 mt-1 text-xs text-muted">{COLUMN_HINT[cardStage]}</p>
                 )}
               </header>
@@ -437,7 +443,7 @@ function BoardCardView({
             maxLength={NOTE_MAX_LENGTH}
             {...register("note", { onBlur: () => void saveNote() })}
             rows={3}
-            placeholder="Şirket, görüştüğün kişi, tarih…"
+            placeholder="Görüştüğün kişi, şirketin ürünleri, soracağın sorular…"
             aria-invalid={errors.note ? true : undefined}
             className="mt-3 w-full rounded-button border border-border bg-background p-2 text-sm dark:bg-white/5"
           />
