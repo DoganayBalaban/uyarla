@@ -118,6 +118,13 @@ export const AdaptationDraftSchema = z.object({
    * Skor ve indirme bu maddeler olmadan hesaplanıyor.
    */
   omitted: z.array(z.string()).optional(),
+  /**
+   * Kullanıcının düzenlediği başlık satırı (DOG-92, DOG-134): adının altındaki
+   * satır. Uyarlama başlığı kendiliğinden değiştirmiyor; yalnızca kullanıcı
+   * yazıyor. Doğrulama maddelerdeki gibi: CV'de olmayan ilan terimi "kontrol
+   * et" uyarısı alıyor ama engellenmiyor. Yoksa CV'nin kendi başlığı.
+   */
+  headline: z.object({ text: z.string(), verification: VerificationSchema }).optional(),
 })
 
 export type TermAlignment = z.infer<typeof TermAlignmentSchema>

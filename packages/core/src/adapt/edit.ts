@@ -12,6 +12,8 @@ import { resumeText } from "./targets.js"
  * ilan terimi "kontrol et" uyarısı alıyor ama engellenmiyor: yazan kullanıcı.
  */
 export const EDIT_MAX_LENGTH = 1000
+/** Başlık satırı tek satır; LinkedIn başlığıyla aynı yönlendirme (DOG-69). */
+export const HEADLINE_MAX_LENGTH = 160
 
 const CLEAN: Verification = { status: "ok", issues: [] }
 
@@ -30,6 +32,17 @@ export function editDraftItem(
     original !== null && value === normalize(original)
       ? CLEAN
       : verifyRewrite({ rewritten: value, source: resumeText(context.profile), posting: context.posting })
+
+  if (itemId === "headline") {
+    if (value.length > HEADLINE_MAX_LENGTH) throw new Error("Başlık çok uzun")
+    const original = context.profile.headline
+    // CV'nin kendi başlığına dönüş düzenlemeyi kaldırıyor.
+    if (original !== null && value === normalize(original)) {
+      const { headline: _headline, ...rest } = draft
+      return rest
+    }
+    return { ...draft, headline: { text: value, verification: verify(null) } }
+  }
 
   if (itemId === "summary") {
     if (!draft.summary.original) throw new Error("Özet yok")
