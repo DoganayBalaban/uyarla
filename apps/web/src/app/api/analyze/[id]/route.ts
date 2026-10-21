@@ -26,7 +26,7 @@ export async function GET(
       const analysis = analysisId
         ? await prisma.analysis.findUnique({
             where: { id: analysisId },
-            include: { jobPosting: { select: { sourceUrl: true } } },
+            include: { jobPosting: { select: { sourceUrl: true, rawText: true } } },
           })
         : null
 
@@ -48,6 +48,8 @@ export async function GET(
         platform: detectPlatform(analysis?.jobPosting.sourceUrl),
         // Bilinmeyen ya da taklit alan adında uyarı (DOG-125).
         sourceWarning: postingSourceWarning(classifyPostingSource(analysis?.jobPosting.sourceUrl)),
+        // İlan metni sekmesi (DOG-133).
+        postingText: analysis?.jobPosting.rawText ?? null,
       modelId: analysis?.modelId ?? null,
       })
     }

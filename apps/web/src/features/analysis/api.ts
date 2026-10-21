@@ -21,6 +21,8 @@ export interface AnalysisResponse {
   platform?: PlatformId | null
   /** Bilinmeyen ya da taklit ilan adresi uyarısı (DOG-125). */
   sourceWarning?: { tone: "soft" | "strong"; text: string } | null
+  /** İlanın kullanıcının yapıştırdığı metni (DOG-133). */
+  postingText?: string | null
 }
 
 export interface PostingFromUrl {
