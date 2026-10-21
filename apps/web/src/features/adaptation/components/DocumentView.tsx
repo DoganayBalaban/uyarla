@@ -64,8 +64,37 @@ export function DocumentView({
     "education",
     "skills",
   ]
-  const present: SectionKind[] = order.filter((k) =>
-    k === "experience" ? s.experience.length > 0 : k === "projects" ? s.projects.length > 0 : k === "skills" ? s.skills.length > 0 : true,
+  const hiddenKeys = new Set(mode === "before" ? [] : (document.after.hiddenSections ?? []))
+  const educationRows = (mode === "before" ? document.before.education : document.after.education) ?? []
+  const present: SectionKind[] = order.filter(
+    (k) =>
+      !hiddenKeys.has(k) &&
+      (k === "experience"
+        ? s.experience.length > 0
+        : k === "projects"
+          ? s.projects.length > 0
+          : k === "skills"
+            ? s.skills.length > 0 || languages.length > 0 || certifications.length > 0
+            : educationRows.length > 0),
+  )
+  const titleOf = (k: string) =>
+    (mode === "before" ? document.before.sectionTitles : document.after.sectionTitles)?.[k] ?? SECTION_LABEL[k as SectionKind] ?? k
+  const languages = (mode === "before" ? document.before.languages : document.after.languages) ?? []
+  const certifications = (mode === "before" ? document.before.certifications : document.after.certifications) ?? []
+  // Maddenin taşınabileceği yerler (DOG-92): görünen işler ve projeler.
+  const targets: Array<{ label: string; where: BulletWhere }> = [
+    ...(hiddenKeys.has("experience") ? [] : s.experience.map((j, i) => ({ label: [j.title, j.company].filter(Boolean).join(" · "), where: { experienceIndex: i } }))),
+    ...(hiddenKeys.has("projects") ? [] : s.projects.map((p, i) => ({ label: `Proje: ${p.name}`, where: { projectIndex: i } }))),
+  ]
+  const header = (key: string, title: string, options: { user?: boolean } = {}) => (
+    <SectionHeader
+      sectionKey={key}
+      title={title}
+      hidden={hiddenKeys.has(key)}
+      user={options.user ?? false}
+      busy={busy}
+      onSection={onSection && mode !== "before" ? onSection : undefined}
+    />
   )
   const bulletList = (bullets: DocumentLine[], where: BulletWhere) => (
     <ul className="mt-2 list-disc space-y-1.5 pl-5">
@@ -82,6 +111,7 @@ export function DocumentView({
               <BulletControls
                 id={b.id}
                 where={where}
+                targets={targets}
                 first={j === 0}
                 last={j === bullets.length - 1}
                 userWritten={b.userWritten}
@@ -118,7 +148,8 @@ export function DocumentView({
 
   const experienceBlock = s.experience.length > 0 && (
     <div key="experience">
-      <h3 className="m-0 mb-3 text-xs font-bold tracking-wider text-muted uppercase">Deneyim</h3>
+      {header("experience", titleOf("experience"))}
+      {!hiddenKeys.has("experience") && (
       <div className="space-y-5">
         {s.experience.map((job, i) => (
           <div key={i}>
@@ -132,11 +163,13 @@ export function DocumentView({
           </div>
         ))}
       </div>
+      )}
     </div>
   )
   const projectsBlock = s.projects.length > 0 && (
     <div key="projects">
-      <h3 className="m-0 mb-3 text-xs font-bold tracking-wider text-muted uppercase">Projeler</h3>
+      {header("projects", titleOf("projects"))}
+      {!hiddenKeys.has("projects") && (
       <div className="space-y-5">
         {s.projects.map((p, i) => (
           <div key={i}>
@@ -150,11 +183,34 @@ export function DocumentView({
           </div>
         ))}
       </div>
+      )}
     </div>
   )
-  const skillsBlock = s.skills.length > 0 && (
-    <div key="skills">
-      <h3 className="m-0 mb-2 text-xs font-bold tracking-wider text-muted uppercase">Beceriler</h3>
+  const educationBlock = educationRows.length > 0 && (
+    <div key="education">
+      {header("education", titleOf("education"))}
+      {!hiddenKeys.has("education") && (
+        <div className="space-y-2">
+          {educationRows.map((e, i) => (
+            <div key={i}>
+              <p className="m-0 font-semibold">
+                {e.school}
+                {e.detail && <span className="font-normal text-muted"> · {e.detail}</span>}
+              </p>
+              {e.dates && <p className="m-0 text-xs text-muted">{e.dates}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+  // Beceriler, ardından diller ve sertifikalar: belgede aynı yerde (document/model).
+  const skillsBlock = (s.skills.length > 0 || languages.length > 0 || certifications.length > 0) && (
+    <div key="skills" className="flex flex-col gap-6">
+      {s.skills.length > 0 && (
+    <div>
+      {header("skills", titleOf("skills"))}
+      {!hiddenKeys.has("skills") && (
       <ul className="flex flex-wrap gap-1.5">
         {(mode === "before" ? document.before.skills.map((name) => ({ name, added: false })) : s.skills).map((k) => (
           <li
@@ -168,6 +224,26 @@ export function DocumentView({
           </li>
         ))}
       </ul>
+      )}
+    </div>
+      )}
+      {languages.length > 0 && (
+        <div>
+          {header("languages", titleOf("languages"))}
+          {!hiddenKeys.has("languages") && <p className="m-0 leading-relaxed">{shown(languages.join(", "))}</p>}
+        </div>
+      )}
+      {certifications.length > 0 && (
+        <div>
+          {header("certifications", titleOf("certifications"))}
+          {!hiddenKeys.has("certifications") &&
+            certifications.map((c, i) => (
+              <p key={i} className="m-0 leading-relaxed">
+                {shown(c)}
+              </p>
+            ))}
+        </div>
+      )}
     </div>
   )
 
@@ -237,23 +313,17 @@ export function DocumentView({
           </div>
         )}
 
-        {order.map((k) => (k === "experience" ? experienceBlock : k === "projects" ? projectsBlock : k === "skills" ? skillsBlock : null))}
+        {order.map((k) =>
+          k === "experience" ? experienceBlock : k === "projects" ? projectsBlock : k === "skills" ? skillsBlock : educationBlock,
+        )}
 
         {(mode === "before" ? (document.before.otherSections ?? []) : (document.after.otherSections ?? [])).map((o, i) => (
           <div key={i}>
-            <h3 className="m-0 mb-2 flex items-center gap-3 text-xs font-bold tracking-wider text-muted uppercase">
-              {o.heading}
-              {o.id && onSection && mode !== "before" && (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void onSection({ op: "remove", id: o.id! })}
-                  className="text-xs font-normal tracking-normal normal-case hover:text-foreground disabled:opacity-40"
-                >
-                  Sil
-                </button>
-              )}
-            </h3>
+            {o.key ? header(o.key, o.heading, { user: !!o.id }) : (
+              <h3 className="m-0 mb-2 text-xs font-bold tracking-wider text-muted uppercase">{o.heading}</h3>
+            )}
+            {o.key && hiddenKeys.has(o.key) ? null : (
+            <>
             {o.id && mode !== "before" && (
               <p className={cn("m-0 mb-1 text-xs", flaggedSections.has(o.id) ? "font-medium text-brand-amber" : "text-muted")}>
                 {flaggedSections.has(o.id)
@@ -266,6 +336,8 @@ export function DocumentView({
                 {shown(l)}
               </p>
             ))}
+            </>
+            )}
           </div>
         ))}
         {onSection && mode !== "before" && <AddSection busy={busy} onSection={onSection} />}
@@ -351,6 +423,7 @@ function BulletItem({
 function BulletControls({
   id,
   where,
+  targets,
   first,
   last,
   userWritten,
@@ -359,6 +432,8 @@ function BulletControls({
 }: {
   id: string
   where: BulletWhere
+  /** Taşınabileceği yerler; kendi yeri listede ama seçilemiyor. */
+  targets: Array<{ label: string; where: BulletWhere }>
   first: boolean
   last: boolean
   userWritten: boolean
@@ -377,6 +452,25 @@ function BulletControls({
       <button type="button" disabled={busy} onClick={() => void onBullet({ op: "remove", id })} className={small}>
         {userWritten ? "Sil" : "Kaldır"}
       </button>
+      {targets.length > 1 && (
+        <select
+          aria-label="Başka yere taşı"
+          disabled={busy}
+          value=""
+          onChange={(e) => {
+            const target = targets[Number(e.target.value)]
+            if (target) void onBullet({ op: "relocate", id, ...target.where })
+          }}
+          className="w-auto max-w-44 rounded border border-border bg-card px-1 py-0.5 text-xs text-muted"
+        >
+          <option value="">Başka yere taşı…</option>
+          {targets.map((t, k) => (
+            <option key={k} value={k} disabled={JSON.stringify(t.where) === JSON.stringify(where)}>
+              {t.label}
+            </option>
+          ))}
+        </select>
+      )}
     </span>
   )
 }
@@ -450,11 +544,13 @@ function AddBullet({
   )
 }
 
-const SECTION_LABEL: Record<SectionKind, string> = {
+const SECTION_LABEL: Record<SectionKind | "languages" | "certifications", string> = {
   experience: "Deneyim",
   projects: "Projeler",
   education: "Eğitim",
   skills: "Beceriler",
+  languages: "Diller",
+  certifications: "Sertifikalar",
 }
 
 /** Bölüm sırası (DOG-92): indirilecek belgede bölümlerin sırası. */
@@ -550,5 +646,99 @@ function AddSection({ busy, onSection }: { busy: boolean; onSection: (op: Sectio
         </button>
       </div>
     </form>
+  )
+}
+
+/**
+ * Bölüm başlığı (DOG-92): yeniden adlandır, belgeden kaldır, geri al.
+ * Kullanıcının kendi bölümü kaldırılınca siliniyor.
+ */
+function SectionHeader({
+  sectionKey,
+  title,
+  hidden,
+  user,
+  busy,
+  onSection,
+}: {
+  sectionKey: string
+  title: string
+  hidden: boolean
+  user: boolean
+  busy: boolean
+  onSection?: (op: SectionOp) => Promise<string | null>
+}) {
+  const [renaming, setRenaming] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const small = "text-xs font-normal tracking-normal normal-case text-muted hover:text-foreground disabled:opacity-40"
+  if (renaming !== null && onSection) {
+    return (
+      <form
+        className="mb-2 flex flex-wrap items-center gap-2"
+        onSubmit={async (e) => {
+          e.preventDefault()
+          const message = await onSection({ op: "rename", key: sectionKey, title: renaming })
+          if (message) setError(message)
+          else {
+            setRenaming(null)
+            setError(null)
+          }
+        }}
+      >
+        <input
+          autoFocus
+          value={renaming}
+          maxLength={60}
+          onChange={(e) => setRenaming(e.target.value)}
+          aria-label="Bölümün yeni adı"
+          className="rounded-button border border-border bg-card px-2 py-1 text-sm"
+        />
+        <button type="submit" disabled={busy} className="rounded-button bg-brand-blue px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50">
+          Kaydet
+        </button>
+        <button type="button" onClick={() => setRenaming(null)} className="text-xs font-semibold text-muted">
+          Vazgeç
+        </button>
+        <span className="w-full text-xs text-muted">Boş bırakırsan varsayılan ada döner.</span>
+        {error && (
+          <span role="alert" className="w-full text-xs text-brand-red dark:text-[#f87171]">
+            {error}
+          </span>
+        )}
+      </form>
+    )
+  }
+  return (
+    <h3
+      className={cn(
+        "m-0 mb-2 flex flex-wrap items-center gap-x-3 text-xs font-bold tracking-wider uppercase",
+        hidden ? "text-muted/60 line-through" : "text-muted",
+      )}
+    >
+      {title}
+      {onSection && hidden && (
+        <span className="no-underline">
+          <span className="text-xs font-normal tracking-normal normal-case">Belgeden kaldırdın. </span>
+          <button type="button" disabled={busy} onClick={() => void onSection({ op: "restore", key: sectionKey })} className="text-xs font-semibold tracking-normal text-brand-blue normal-case">
+            Geri al
+          </button>
+        </span>
+      )}
+      {onSection && !hidden && (
+        <>
+          <button type="button" disabled={busy} onClick={() => setRenaming(title)} className={small}>
+            Adını değiştir
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void onSection(user ? { op: "remove", id: sectionKey } : { op: "hide", key: sectionKey })}
+            className={small}
+          >
+            {user ? "Sil" : "Kaldır"}
+          </button>
+        </>
+      )}
+    </h3>
   )
 }

@@ -272,6 +272,17 @@ export function AdaptationView({ id }: { id: string }) {
           transition: { duration: 0.4, delay: delayMs, ease: [0.22, 1, 0.36, 1] as const },
         }
 
+  // Kullanıcı kendisi düzenlediyse (DOG-92) artışı uyarlamaya mal etmiyoruz.
+  const userEdited =
+    !!draft?.headline ||
+    !!draft?.summary.edited ||
+    !!draft?.bullets.some((b) => b.edited) ||
+    !!draft?.userBullets?.length ||
+    !!draft?.userSections?.length ||
+    Object.keys(draft?.bulletPlacement ?? {}).length > 0 ||
+    !!draft?.removed?.length ||
+    !!draft?.sectionEdits?.hidden?.length
+
   return (
     <div className="space-y-6">
       {/* Skor kartı: önce → sonra. Skor ekranın en büyük öğesi (§9.5). */}
@@ -286,7 +297,9 @@ export function AdaptationView({ id }: { id: string }) {
             <h1 className="mt-1 text-3xl">CV&apos;n hazır</h1>
             <p className="mt-2 text-sm text-muted">
               {diff > 0
-                ? `Deneyimini ilanın terimleriyle anlattık; skorun ${diff} puan arttı. Her değişikliği aşağıda görebilir, istemediğini eski hâline döndürebilirsin.`
+                ? userEdited
+                  ? `Seçimlerin ve düzenlemelerinle skorun ${diff} puan arttı. Her değişikliği aşağıda görebilir, istemediğini eski hâline döndürebilirsin.`
+                  : `Deneyimini ilanın terimleriyle anlattık; skorun ${diff} puan arttı. Her değişikliği aşağıda görebilir, istemediğini eski hâline döndürebilirsin.`
                 : pendingAlignment > 0
                   ? `${pendingAlignment} maddede deneyimini ilanın terimiyle anlattık. Doğru bulduklarını onayladığında skorun güncellenir.`
                   : after === before

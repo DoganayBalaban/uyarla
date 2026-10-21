@@ -75,12 +75,17 @@ export type BulletOp =
   | ({ op: "add"; text: string } & BulletWhere)
   | { op: "remove"; id: string }
   | ({ op: "move"; id: string; direction: "up" | "down" } & BulletWhere)
+  /** Başka bir işe ya da projeye taşı; hedef `BulletWhere`. */
+  | ({ op: "relocate"; id: string } & BulletWhere)
 
 /** Bölüm işlemi (DOG-92): sırayı değiştir, kendi bölümünü ekle ya da sil. */
 export type SectionOp =
   | { op: "move"; section: SectionKind; direction: "up" | "down" }
   | { op: "add"; heading: string; text: string }
   | { op: "remove"; id: string }
+  | { op: "hide"; key: string }
+  | { op: "restore"; key: string }
+  | { op: "rename"; key: string; title: string }
 
 export async function changeBullet(id: string, bullet: BulletOp): Promise<Partial<AdaptationState>> {
   return (await api.patch<Partial<AdaptationState>>(`/adapt/${encodeURIComponent(id)}/decision`, { bullet })).data

@@ -63,6 +63,8 @@ export interface Draft {
   sectionOrder?: SectionKind[]
   /** Kullanıcının eklediği bölümler (DOG-92). */
   userSections?: Array<{ id: string; heading: string; lines: string[]; verification: Verification }>
+  bulletPlacement?: Record<string, string>
+  sectionEdits?: { hidden?: string[]; titles?: Record<string, string> }
 }
 
 export type SectionKind = "experience" | "projects" | "education" | "skills"
@@ -82,10 +84,17 @@ export interface DocumentOutline {
   }>
   /** Projeler ve diğer bölümler (DOG-105); eski yanıtlarda yok. */
   projects?: Array<{ name: string; role: string | null; dates: string | null; bullets: string[]; bulletIds?: string[] }>
-  /** Kullanıcının eklediği bölümün kimliği var (DOG-92). */
-  otherSections?: Array<{ heading: string; lines: string[]; id?: string }>
+  /** Kullanıcının eklediği bölümün kimliği var (DOG-92); `key` bölüm düzenlemelerinin anahtarı. */
+  otherSections?: Array<{ heading: string; lines: string[]; id?: string; key?: string }>
   /** Belgedeki bölüm sırası (DOG-92); eski yanıtlarda yok. */
   sectionOrder?: SectionKind[]
+  /** Bölümlerin belgedeki başlıkları (DOG-92); diller ve sertifikalar dahil. */
+  sectionTitles?: Record<string, string>
+  languages?: string[]
+  certifications?: string[]
+  /** Belgeden kaldırılan bölümlerin anahtarları (DOG-92). */
+  hiddenSections?: string[]
+  education?: Array<{ school: string; detail: string | null; dates: string | null }>
   skills: string[]
 }
 

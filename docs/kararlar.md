@@ -3695,3 +3695,29 @@ dedi. Düzenleme yalnızca var olan maddenin metniyle sınırlıydı (K-83).
   (uyarı var, engel yok). En fazla 12 satır, başlık en fazla 60 karakter.
 - **Kapsam dışı:** maddeyi işler arası taşımak, CV'nin kendi bölümlerini
   silmek ya da yeniden adlandırmak.
+
+## K-99 · Düzenleyicinin son adımı: işler arası taşıma, bölüm kaldırma ve adlandırma (DOG-92)
+
+- **Maddeyi başka işe ya da projeye taşıma:** taslakta `bulletPlacement`
+  (madde kimliği → grup anahtarı). `groupBullets` tüm maddeleri doğal
+  yerleriyle kurup yerleşimi uyguluyor; taşınan madde yeni yerinde sona
+  ekleniyor ve oradan da sıralanabiliyor. Kimlik değişmiyor, ekran önceki
+  hâlini yine kimlikten buluyor. Kendi yerine dönen madde taşınmış sayılmıyor.
+- **Bölüm kaldırma ve adlandırma:** taslakta `sectionEdits` (`hidden`,
+  `titles`). Anahtarlar yapılandırılmış bölümler, `languages`,
+  `certifications`, CV'nin diğer bölümleri (`o<n>`) ve kullanıcınınkiler
+  (`s<n>`). Gizlenen bölüm belgede ve skorda yok, geri alınabilir. Yeni ad
+  profile `sectionTitles` olarak gidiyor; belge modeli onu kullanıyor (diğer
+  başlıklar gibi büyük harf). Profil şeması LLM'e gitmiyor; alan isteğe bağlı.
+- **Uçtan uca denemede bulunan iki sorun:**
+  - Belge görünümü diller ve sertifikaları hiç göstermiyordu; kullanıcı
+    "Sertifikalar" bölümü yok sanıp ekleyince indirilen CV'de iki
+    "SERTİFİKALAR" çıktı. Görünüm artık becerilerin ardında ikisini de
+    çiziyor (belgeyle aynı yer) ve eğitim bölümünü de gösteriyor.
+  - Üstteki "Deneyimini ilanın terimleriyle anlattık; skorun N puan arttı"
+    cümlesi, artışı kullanıcının kendi düzenlemesi getirdiğinde de
+    uyarlamaya mal ediyordu. Kullanıcı düzenlediyse "Seçimlerin ve
+    düzenlemelerinle skorun N puan arttı".
+- **DOG-92 burada kapanıyor.** Jobscan'deki araç çubuğu, sürükle-bırak ve geri
+  al/ileri al yok; düzenleme kalıcı ve her adım geri alınabilir (Geri al,
+  Kaldır/Sil). "Temel CV olarak kaydet" DOG-137'ye aitti ve yapılmadı.

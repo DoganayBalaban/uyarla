@@ -2,7 +2,21 @@ import { describe, expect, it } from "vitest"
 import type { AdaptationDraft } from "../schemas/adaptation.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { addUserBullet, addUserSection, jobBullets, moveBullet, moveSection, removeBullet, removeUserSection, restoreBullet } from "./bullets.js"
+import {
+  addUserBullet,
+  addUserSection,
+  hideSection,
+  jobBullets,
+  moveBullet,
+  moveSection,
+  relocateBullet,
+  removeBullet,
+  removeUserSection,
+  renameSection,
+  restoreBullet,
+  restoreSection,
+} from "./bullets.js"
+import { toDocumentModel } from "../document/model.js"
 import { applyAdaptation } from "./profile.js"
 
 const profile: ResumeProfile = {
@@ -128,5 +142,54 @@ describe("projects and sections (DOG-92, sixth step)", () => {
     expect(removeUserSection(out, "s1").userSections).toEqual([])
     expect(() => addUserSection(draft, "", "x", { profile, posting })).toThrow()
     expect(() => addUserSection(draft, "Başlık", "  \n ", { profile, posting })).toThrow()
+  })
+})
+
+describe("relocating bullets and editing the CV's own sections (DOG-92, last step)", () => {
+  const twoJobs: ResumeProfile = {
+    ...profile,
+    experience: [
+      ...profile.experience,
+      { company: "Beta", title: "Stajyer", startDate: "2021", endDate: "2022", bullets: [{ text: "Test yazdım", sourceRef: "Test yazdım" }] },
+    ],
+    otherSections: [{ heading: "Hobiler", lines: ["Satranç"] }],
+  }
+  const jobs = (d: AdaptationDraft) => applyAdaptation(twoJobs, d).experience.map((j) => j.bullets.map((b) => b.text))
+
+  it("moves a bullet to another job, at the end, and back home", () => {
+    const moved = relocateBullet(draft, twoJobs, "0-0", { kind: "experience", index: 1 })
+    expect(jobs(moved)).toEqual([["Sayfa açılışını %30 hızlandırdım"], ["Test yazdım", "React ile panel yaptım"]])
+    // Yeni yerinde de taşınabiliyor.
+    expect(jobs(moveBullet(moved, twoJobs, 1, "0-0", "up"))[1]).toEqual(["React ile panel yaptım", "Test yazdım"])
+    // Kendi yerine dönen madde taşınmış sayılmıyor.
+    const back = relocateBullet(moved, twoJobs, "0-0", { kind: "experience", index: 0 })
+    expect(back.bulletPlacement).toEqual({})
+    expect(jobs(back)[0]).toEqual(["React ile panel yaptım", "Sayfa açılışını %30 hızlandırdım"])
+    expect(() => relocateBullet(draft, twoJobs, "9-9", { kind: "experience", index: 1 })).toThrow()
+    expect(() => relocateBullet(draft, twoJobs, "0-0", { kind: "project", index: 0 })).toThrow()
+  })
+
+  it("hides a section from the document and the score, reversibly", () => {
+    const hidden = hideSection(hideSection(draft, "skills"), "o0")
+    const out = applyAdaptation(twoJobs, hidden)
+    expect(out.skills).toEqual([])
+    expect(out.otherSections).toEqual([])
+    const back = applyAdaptation(twoJobs, restoreSection(hidden, "o0"))
+    expect(back.otherSections).toEqual([{ heading: "Hobiler", lines: ["Satranç"] }])
+    // Becerilerin ardındaki diller ve sertifikalar da gizlenebiliyor.
+    const certs = applyAdaptation({ ...twoJobs, certifications: ["Google Ads"] }, hideSection(draft, "certifications"))
+    expect(certs.certifications).toEqual([])
+    expect(() => hideSection(draft, "summary")).toThrow()
+  })
+
+  it("renames sections; the document uses the new heading, empty goes back to default", () => {
+    const renamed = renameSection(renameSection(draft, "experience", "İş deneyimi"), "o0", "İlgi alanları")
+    const model = toDocumentModel(applyAdaptation(twoJobs, renamed))
+    expect(model.sections.map((x) => x.title)).toContain("İŞ DENEYİMİ")
+    expect(model.sections.map((x) => x.title)).toContain("İLGİ ALANLARI")
+    const langs = toDocumentModel(applyAdaptation({ ...twoJobs, languages: ["İngilizce"] }, renameSection(draft, "languages", "Yabancı diller")))
+    expect(langs.sections.map((x) => x.title)).toContain("YABANCI DİLLER")
+    expect(renameSection(renamed, "experience", "  ").sectionEdits?.titles).toEqual({ o0: "İlgi alanları" })
+    expect(() => renameSection(draft, "experience", "x".repeat(61))).toThrow()
   })
 })

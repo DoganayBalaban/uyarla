@@ -7,10 +7,14 @@ import {
   moveBullet,
   moveSection,
   removeBullet,
+  hideSection,
+  relocateBullet,
   removeUserSection,
+  renameSection,
+  restoreSection,
   restoreBullet as restoreDraftBullet,
 } from "@uyarla/core/adapt/bullets"
-import { sectionOrder, type DocumentOptions } from "@uyarla/core/document/model"
+import { sectionHeadings, sectionOrder, type DocumentOptions } from "@uyarla/core/document/model"
 import type { StructuredSection } from "@uyarla/core/schemas/resume"
 import { analysisProfile } from "@uyarla/core/adapt/facts"
 import { CachedEmbeddingProvider, redisVectorStore } from "@uyarla/core/llm/embeddingCache"
@@ -238,12 +242,17 @@ export type BulletOp =
   | ({ op: "add"; text: string } & Where)
   | { op: "remove"; id: string }
   | ({ op: "move"; id: string; direction: "up" | "down" } & Where)
+  /** Başka bir işe ya da projeye taşı; `Where` hedef. */
+  | ({ op: "relocate"; id: string } & Where)
 
 /** Bölüm işlemi (DOG-92): sırayı değiştir, kendi bölümünü ekle ya da sil. */
 export type SectionOp =
   | { op: "move"; section: StructuredSection; direction: "up" | "down" }
   | { op: "add"; heading: string; text: string }
   | { op: "remove"; id: string }
+  | { op: "hide"; key: string }
+  | { op: "restore"; key: string }
+  | { op: "rename"; key: string; title: string }
 
 const SECTIONS: readonly StructuredSection[] = ["experience", "projects", "education", "skills"]
 const isIndex = (x: unknown): x is number => typeof x === "number" && Number.isInteger(x) && x >= 0
@@ -264,6 +273,7 @@ export function parseBulletOp(value: unknown): BulletOp | null {
   if (!where) return null
   if (v.op === "add" && typeof v.text === "string") return { op: "add", text: v.text, ...where }
   if (v.op === "move" && typeof v.id === "string" && isDirection(v.direction)) return { op: "move", id: v.id, direction: v.direction, ...where }
+  if (v.op === "relocate" && typeof v.id === "string" && v.id) return { op: "relocate", id: v.id, ...where }
   return null
 }
 
@@ -276,6 +286,8 @@ export function parseSectionOp(value: unknown): SectionOp | null {
   }
   if (v.op === "add" && typeof v.heading === "string" && typeof v.text === "string") return { op: "add", heading: v.heading, text: v.text }
   if (v.op === "remove" && typeof v.id === "string" && v.id) return { op: "remove", id: v.id }
+  if ((v.op === "hide" || v.op === "restore") && typeof v.key === "string" && v.key) return { op: v.op, key: v.key }
+  if (v.op === "rename" && typeof v.key === "string" && v.key && typeof v.title === "string") return { op: "rename", key: v.key, title: v.title }
   return null
 }
 
@@ -289,6 +301,7 @@ export function applyBulletOp(
 ): AdaptationDraft {
   if (op.op === "remove") return removeBullet(draft, op.id)
   if (op.op === "add") return addUserBullet(draft, groupOf(op), op.text, context)
+  if (op.op === "relocate") return relocateBullet(draft, context.profile, op.id, groupOf(op))
   return moveBullet(draft, context.profile, groupOf(op), op.id, op.direction)
 }
 
@@ -299,6 +312,9 @@ export function applySectionOp(
 ): AdaptationDraft {
   if (op.op === "add") return addUserSection(draft, op.heading, op.text, context)
   if (op.op === "remove") return removeUserSection(draft, op.id)
+  if (op.op === "hide") return hideSection(draft, op.key)
+  if (op.op === "restore") return restoreSection(draft, op.key)
+  if (op.op === "rename") return renameSection(draft, op.key, op.title)
   // Taşıma belgede şu an görünen sıradan: CV'nin sırası ya da varsayılan.
   const applied = applyAdaptation(context.profile, draft)
   const present = new Set<StructuredSection>(
@@ -354,10 +370,19 @@ export interface DocumentOutline {
   }>
   /** Projeler ve diğer bölümler (DOG-105); indirilen belgede de var. */
   projects: Array<{ name: string; role: string | null; dates: string | null; bullets: string[]; bulletIds?: string[] }>
-  /** Kullanıcının eklediği bölümün kimliği var (DOG-92); silinebiliyor. */
-  otherSections: Array<{ heading: string; lines: string[]; id?: string }>
+  /** Kullanıcının eklediği bölümün kimliği var (DOG-92); silinebiliyor. `key` bölüm düzenlemelerinin anahtarı. */
+  otherSections: Array<{ heading: string; lines: string[]; id?: string; key?: string }>
+  /** Eğitim satırları (DOG-92): ekranda bölüm olarak görünsün, adı ve gizlenmesi düzenlenebilsin. */
+  education?: Array<{ school: string; detail: string | null; dates: string | null }>
   /** Belgedeki bölüm sırası (DOG-92), indirmeyle aynı kuralla. */
   sectionOrder?: StructuredSection[]
+  /** Bölümlerin belgedeki başlıkları (DOG-92); diller ve sertifikalar dahil. */
+  sectionTitles?: Record<string, string>
+  /** Becerilerin ardından gelen diller ve sertifikalar (DOG-92): belgede var, ekranda da görünsün. */
+  languages?: string[]
+  certifications?: string[]
+  /** Belgeden kaldırılan bölümlerin anahtarları (DOG-92). */
+  hiddenSections?: string[]
   skills: string[]
 }
 
@@ -377,13 +402,22 @@ export function adaptationDocument(
   // Tek sayfa için çıkarılanlar (DOG-93) ve kullanıcının kaldırdıkları
   // (DOG-92) burada düşmüyor: ekran onları üstü çizili, geri alınabilir
   // gösteriyor. Maddeler indirmeyle aynı listeden (groupBullets).
-  const applied = applyAdaptation(profile, { ...draft, omitted: [], removed: [] })
+  // Gizlenen bölümler (DOG-92) de çiziliyor: ekran onları kapalı, geri alınabilir gösteriyor.
+  const hidden = draft.sectionEdits?.hidden ?? []
+  const applied = applyAdaptation(profile, {
+    ...draft,
+    omitted: [],
+    removed: [],
+    sectionEdits: { ...draft.sectionEdits, hidden: [] },
+  })
   const after = outline(applied)
   const own = (profile.otherSections ?? []).length
   return {
-    before: { ...outline(profile), sectionOrder: sectionOrder(profile, options) },
+    before: { ...outline(profile), sectionOrder: sectionOrder(profile, options), sectionTitles: sectionHeadings(profile) },
     after: {
       ...after,
+      sectionTitles: sectionHeadings(applied),
+      hiddenSections: hidden,
       experience: after.experience.map((job, i) => {
         const list = groupBullets(profile, draft, { kind: "experience", index: i })
         return { ...job, bullets: list.map((b) => b.text), bulletIds: list.map((b) => b.id) }
@@ -392,8 +426,11 @@ export function adaptationDocument(
         const list = groupBullets(profile, draft, { kind: "project", index: i })
         return { ...project, bullets: list.map((b) => b.text), bulletIds: list.map((b) => b.id) }
       }),
-      // CV'nin kendi bölümlerinden sonra kullanıcınınkiler, aynı sırayla.
-      otherSections: after.otherSections.map((o, k) => (k >= own ? { ...o, id: draft.userSections?.[k - own]?.id } : o)),
+      // CV'nin kendi bölümlerinden ("o<n>") sonra kullanıcınınkiler ("s<n>"), aynı sırayla.
+      otherSections: after.otherSections.map((o, k) => {
+        const userId = k >= own ? draft.userSections?.[k - own]?.id : undefined
+        return { ...o, key: userId ?? `o${k}`, ...(userId ? { id: userId } : {}) }
+      }),
       sectionOrder: sectionOrder(applied, options),
     },
   }
@@ -417,6 +454,13 @@ function outline(p: ResumeProfile): DocumentOutline {
       bullets: x.bullets.map((b) => b.text),
     })),
     otherSections: p.otherSections ?? [],
+    languages: p.languages,
+    certifications: p.certifications,
+    education: p.education.map((e) => ({
+      school: e.school,
+      detail: [e.degree, e.field].filter(Boolean).join(", ") || null,
+      dates: [e.startDate, e.endDate].filter(Boolean).join(" – ") || null,
+    })),
     skills: p.skills,
   }
 }

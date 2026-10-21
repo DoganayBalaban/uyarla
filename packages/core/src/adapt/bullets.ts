@@ -38,34 +38,60 @@ export function groupKey(group: BulletGroup): string {
   return group.kind === "experience" ? String(group.index) : `p${group.index}`
 }
 
-/** Bir işin ya da projenin maddeleri son sırasıyla; çıkarılan ve kaldırılanlar işaretli. */
+/** Tüm maddeler, doğal yerleriyle (kendi işi ya da projesi). */
+function allBullets(profile: ResumeProfile, draft: AdaptationDraft): Array<Omit<JobBullet, "omitted" | "removed"> & { home: string }> {
+  const accepted = new Map(draft.bullets.filter((b) => b.decision === "accepted").map((b) => [b.id, b.rewritten]))
+  // sourceRef asla değişmez: doğrulamanın tek kaynağı bu.
+  return [
+    ...profile.experience.flatMap((job, i) =>
+      job.bullets.map((bullet, j) => {
+        const id = bulletId(i, j)
+        return { id, text: accepted.get(id) ?? bullet.text, sourceRef: bullet.sourceRef, kind: "cv" as const, home: String(i) }
+      }),
+    ),
+    ...(profile.projects ?? []).flatMap((project, i) =>
+      project.bullets.map((bullet, j) => {
+        const id = projectBulletId(i, j)
+        return { id, text: accepted.get(id) ?? bullet.text, sourceRef: bullet.sourceRef, kind: "cv" as const, home: `p${i}` }
+      }),
+    ),
+    // Kullanıcının anlattığı deneyimden yazılanlar (DOG-94); dayanak cevabı.
+    ...(draft.contributions ?? [])
+      .filter((c) => c.status === "done" && c.decision === "accepted" && c.text)
+      .map((c) => ({ id: c.id, text: c.text!, sourceRef: c.answer, kind: "contribution" as const, home: String(c.experienceIndex) })),
+    ...(draft.userBullets ?? []).map((u) => ({
+      id: u.id,
+      text: u.text,
+      sourceRef: u.text,
+      kind: "user" as const,
+      home: u.projectIndex !== undefined ? `p${u.projectIndex}` : String(u.experienceIndex ?? 0),
+    })),
+  ]
+}
+
+/**
+ * Bir işin ya da projenin maddeleri son sırasıyla; çıkarılan ve kaldırılanlar
+ * işaretli. Başka yere taşınan madde (DOG-92) yeni yerinde, kendi yerinden
+ * sonra eklenmiş gibi; kullanıcı sırası ikisini de diziyor.
+ */
 export function groupBullets(profile: ResumeProfile, draft: AdaptationDraft, group: BulletGroup): JobBullet[] {
   const source = group.kind === "experience" ? profile.experience[group.index] : profile.projects?.[group.index]
   if (!source) return []
-  const idOf = (j: number) => (group.kind === "experience" ? bulletId(group.index, j) : projectBulletId(group.index, j))
-  const accepted = new Map(draft.bullets.filter((b) => b.decision === "accepted").map((b) => [b.id, b.rewritten]))
+  const key = groupKey(group)
+  const placement = draft.bulletPlacement ?? {}
   const omitted = new Set(draft.omitted ?? [])
   const removed = new Set(draft.removed ?? [])
-  const flags = (id: string) => ({ omitted: omitted.has(id), removed: removed.has(id) })
-  const mine = (u: { experienceIndex?: number; projectIndex?: number }) =>
-    group.kind === "experience" ? u.experienceIndex === group.index && u.projectIndex === undefined : u.projectIndex === group.index
-
-  const natural: JobBullet[] = [
-    ...source.bullets.map((bullet, j) => {
-      const id = idOf(j)
-      // sourceRef asla değişmez: doğrulamanın tek kaynağı bu.
-      return { id, text: accepted.get(id) ?? bullet.text, sourceRef: bullet.sourceRef, kind: "cv" as const, ...flags(id) }
-    }),
-    // Kullanıcının anlattığı deneyimden yazılanlar (DOG-94); dayanak cevabı.
-    // Katkılar yalnızca işlere ekleniyor.
-    ...(group.kind === "experience" ? (draft.contributions ?? []) : [])
-      .filter((c) => c.experienceIndex === group.index && c.status === "done" && c.decision === "accepted" && c.text)
-      .map((c) => ({ id: c.id, text: c.text!, sourceRef: c.answer, kind: "contribution" as const, ...flags(c.id) })),
-    ...(draft.userBullets ?? [])
-      .filter(mine)
-      .map((u) => ({ id: u.id, text: u.text, sourceRef: u.text, kind: "user" as const, ...flags(u.id) })),
-  ]
-  return ordered(natural, draft.bulletOrder?.[groupKey(group)])
+  const all = allBullets(profile, draft).map(({ home, ...b }) => ({
+    ...b,
+    home,
+    at: placement[b.id] ?? home,
+    omitted: omitted.has(b.id),
+    removed: removed.has(b.id),
+  }))
+  const natural = [...all.filter((b) => b.at === key && b.home === key), ...all.filter((b) => b.at === key && b.home !== key)].map(
+    ({ home: _home, at: _at, ...b }) => b,
+  )
+  return ordered(natural, draft.bulletOrder?.[key])
 }
 
 /** Bir işin maddeleri (deneyim grubu). */
@@ -201,4 +227,49 @@ export function addUserSection(
 export function removeUserSection(draft: AdaptationDraft, id: string): AdaptationDraft {
   if (!(draft.userSections ?? []).some((x) => x.id === id)) throw new Error(`Bölüm bulunamadı: ${id}`)
   return { ...draft, userSections: draft.userSections!.filter((x) => x.id !== id) }
+}
+
+/** Maddenin kendi yeri (taşınmadan önce). */
+function homeOf(profile: ResumeProfile, draft: AdaptationDraft, id: string): string | null {
+  return allBullets(profile, draft).find((b) => b.id === id)?.home ?? null
+}
+
+/** Maddeyi başka bir işe ya da projeye taşır (DOG-92); yeni yerinde sona. */
+export function relocateBullet(draft: AdaptationDraft, profile: ResumeProfile, id: string, to: BulletGroup): AdaptationDraft {
+  const home = homeOf(profile, draft, id)
+  if (home === null) throw new Error(`Madde bulunamadı: ${id}`)
+  const exists = to.kind === "experience" ? profile.experience[to.index] : profile.projects?.[to.index]
+  if (!exists) throw new Error("Bölüm bulunamadı")
+  const key = groupKey(to)
+  const placement = { ...(draft.bulletPlacement ?? {}) }
+  // Kendi yerine dönen madde taşınmış sayılmıyor.
+  if (key === home) delete placement[id]
+  else placement[id] = key
+  // Eski yerinin sırasından çıkıyor; yeni yerinde sırada yoksa sona düşüyor.
+  return { ...draft, bulletPlacement: placement, bulletOrder: withoutId(draft.bulletOrder, id) }
+}
+
+/** CV'nin bölümleri (DOG-92): yapılandırılmış ad, "o<n>" (CV'nin diğer bölümü), "s<n>" (kullanıcının). */
+const SECTION_KEY = /^(experience|projects|education|skills|languages|certifications|o\d+|s\d+)$/
+
+export function hideSection(draft: AdaptationDraft, key: string): AdaptationDraft {
+  if (!SECTION_KEY.test(key)) throw new Error(`Bölüm bulunamadı: ${key}`)
+  const hidden = new Set(draft.sectionEdits?.hidden ?? [])
+  hidden.add(key)
+  return { ...draft, sectionEdits: { ...draft.sectionEdits, hidden: [...hidden] } }
+}
+
+export function restoreSection(draft: AdaptationDraft, key: string): AdaptationDraft {
+  return { ...draft, sectionEdits: { ...draft.sectionEdits, hidden: (draft.sectionEdits?.hidden ?? []).filter((k) => k !== key) } }
+}
+
+/** Bölümü yeniden adlandırır; boş ad varsayılana döndürüyor. */
+export function renameSection(draft: AdaptationDraft, key: string, title: string): AdaptationDraft {
+  if (!SECTION_KEY.test(key)) throw new Error(`Bölüm bulunamadı: ${key}`)
+  const value = normalize(title)
+  if (value.length > SECTION_HEADING_MAX_LENGTH) throw new Error("Başlık çok uzun")
+  const titles = { ...(draft.sectionEdits?.titles ?? {}) }
+  if (value) titles[key] = value
+  else delete titles[key]
+  return { ...draft, sectionEdits: { ...draft.sectionEdits, titles } }
 }
