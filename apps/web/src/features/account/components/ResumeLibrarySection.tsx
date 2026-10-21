@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -10,6 +11,7 @@ import { resumeFileSchema } from "@/features/analysis/schema"
 import { useLibrary, useRemoveResume, useUpdateResume, useUploadResume } from "@/features/resumes/api"
 import { isLibraryFull, resumeTitle } from "@/features/resumes/library"
 import { LIBRARY_MAX, labelSchema, type LibraryResume } from "@/features/resumes/schema"
+import { STAGE_LABEL, isStage } from "@/features/applications/board"
 import { apiErrorMessage } from "@/lib/api"
 
 const addSchema = z.object({ cv: resumeFileSchema, label: labelSchema })
@@ -19,7 +21,10 @@ const inputClass =
   "w-full rounded-button border border-border bg-background px-3 py-2 text-sm outline-none focus:border-brand-blue"
 const smallButton = "inline-flex items-center gap-1 rounded-button border border-border px-2.5 py-1.5 text-xs font-semibold disabled:opacity-50"
 
-/** CV kütüphanesi (DOG-50, spec §5): listele, yeniden adlandır, varsayılan yap, kaldır, ekle. */
+/**
+ * CV kütüphanesi (DOG-50, spec §5): listele, yeniden adlandır, temel CV yap,
+ * kaldır, ekle. Her CV'nin altında o CV'yle yapılmış başvurular (DOG-137).
+ */
 export function ResumeLibrarySection() {
   const library = useLibrary(true)
   const resumes = library.data ?? []
@@ -33,7 +38,10 @@ export function ResumeLibrarySection() {
         <h2 className="m-0 text-lg">CV&apos;lerim</h2>
         <span className="text-sm text-muted">{resumes.length}/{LIBRARY_MAX}</span>
       </div>
-      <p className="m-0 mt-1 text-sm text-muted">Analizde yeniden yüklemek yerine buradan seçersin. Kaldırdığın CV&apos;yle yapılmış analizler panoda kalır.</p>
+      <p className="m-0 mt-1 text-sm text-muted">
+        Analizde yeniden yüklemek yerine buradan seçersin; temel CV yeni analizde seçili gelir. Kaldırdığın CV&apos;yle
+        yapılmış analizler panoda kalır.
+      </p>
 
       {library.isPending ? (
         <LoaderCircle className="mt-4 size-5 motion-safe:animate-spin text-muted" aria-hidden />
@@ -102,12 +110,12 @@ function ResumeRow({ resume, onError }: { resume: LibraryResume; onError: (messa
         )}
         {resume.isDefault ? (
           <span className="inline-flex items-center gap-1 rounded-full bg-brand-amber/15 px-2 py-0.5 text-xs font-semibold">
-            <Star className="size-3" aria-hidden /> Varsayılan
+            <Star className="size-3" aria-hidden /> Temel CV
           </span>
         ) : (
           <button type="button" className={smallButton} disabled={update.isPending}
-            onClick={() => void guard(() => update.mutateAsync({ id: resume.id, patch: { isDefault: true } }), "Varsayılan yapamadık.")}>
-            Varsayılan yap
+            onClick={() => void guard(() => update.mutateAsync({ id: resume.id, patch: { isDefault: true } }), "Temel CV yapamadık.")}>
+            Temel CV yap
           </button>
         )}
         {!renaming && (
@@ -120,6 +128,7 @@ function ResumeRow({ resume, onError }: { resume: LibraryResume; onError: (messa
         </button>
       </div>
       {form.formState.errors.label && <p role="alert" className="mt-1 text-sm text-brand-amber">{form.formState.errors.label.message}</p>}
+      <ResumeApplications resume={resume} />
       {confirming && (
         <div className="mt-3 flex flex-wrap items-center gap-2 rounded-button bg-brand-red/5 p-2.5 text-sm">
           <span className="flex-1">Kütüphaneden kaldırılsın mı? Bu CV&apos;yle yapılmış analizler panoda kalır.</span>
@@ -171,5 +180,32 @@ function AddResumeForm({ onDone, onError }: { onDone: () => void; onError: (mess
         <button type="button" onClick={onDone} className={smallButton}>Vazgeç</button>
       </div>
     </form>
+  )
+}
+
+/** Bu CV'yle analiz edilen ilanlar (DOG-137): şirket, unvan, panodaki aşama. */
+function ResumeApplications({ resume }: { resume: LibraryResume }) {
+  const apps = resume.applications ?? []
+  const total = resume.applicationCount ?? apps.length
+  if (total === 0) return <p className="m-0 mt-2 pl-6 text-xs text-muted">Bu CV&apos;yle henüz analiz yapmadın.</p>
+  return (
+    <div className="mt-2 pl-6 text-xs">
+      <p className="m-0 text-muted">Bu CV&apos;yle analiz ettiğin ilanlar ({total}):</p>
+      <ul className="m-0 mt-1 list-none space-y-0.5 p-0">
+        {apps.map((a) => (
+          <li key={a.analysisId} className="truncate">
+            <Link href={`/analyze?analiz=${encodeURIComponent(a.analysisId)}`} className="font-medium text-foreground underline-offset-2 hover:underline">
+              {a.company ? `${a.company} · ${a.position}` : a.position}
+            </Link>
+            {isStage(a.stage) && <span className="text-muted"> · {STAGE_LABEL[a.stage]}</span>}
+          </li>
+        ))}
+      </ul>
+      {total > apps.length && (
+        <Link href="/applications" className="mt-1 inline-block font-semibold text-brand-blue">
+          Tümü başvuru panosunda
+        </Link>
+      )}
+    </div>
   )
 }
