@@ -137,7 +137,13 @@ export function AnalyzeView() {
 
   // Kayıtlı kullanıcının CV kütüphanesi (DOG-50). Anonimde istek gitmiyor.
   const { data: sessionData } = useSession()
-  const registered = !!sessionData?.user && !(sessionData.user as { isAnonymous?: boolean | null }).isAnonymous
+  // İlk çizim sunucuyla aynı olsun: sunucu oturumu bilmiyor. İstemcide oturum
+  // hazır gelince formun CV bölümü değişiyor ve sonraki Radix kimlikleri
+  // (sekmeler) kayıyordu (DOG-146).
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => setHydrated(true), [])
+  const registered =
+    hydrated && !!sessionData?.user && !(sessionData.user as { isAnonymous?: boolean | null }).isAnonymous
   const library = useLibrary(registered)
   // Uyarlamadan önce neyin harcanacağı (DOG-81); anonimde uyarlama zaten girişe gidiyor.
   const billing = useBillingStatus({ enabled: registered })
