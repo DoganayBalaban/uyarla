@@ -35,12 +35,12 @@ export function ContributionsSection({
 }) {
   if (missing.length === 0 || experience.length === 0) return null
   return (
-    <section className="rounded-card border border-border bg-card p-5 sm:p-6">
-      <h2 className="m-0 text-lg">Eksik kalan zorunlular</h2>
+    <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
+      <h2 className="m-0 text-base font-semibold">Eksik kalan zorunlular</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Bu gereksinimler için CV&apos;nde kanıt bulamadık, o yüzden yazmadık. Gerçekten yaptığın bir şeyse anlat; senin
         anlattığından bir madde yazalım. Anlatmadığın hiçbir şeyi eklemeyiz. Kabul ettiğin madde sonraki
-        analizlerinde de kanıt sayılır; Hesabım&apos;dan unutabilirsin.
+        analizlerinde de kanıt sayılır; CV&apos;lerim&apos;den unutabilirsin.
       </p>
       <ul className="mt-4 divide-y divide-border">
         {missing.map((r) => (

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { documentSections } from "@/features/adaptation/documentView"
+import { documentSections, sectionMoves } from "@/features/adaptation/documentView"
 
 const job = (bullets: string[]) => ({ company: "Moda Sepeti", title: "Uzman", startDate: "2023", endDate: "Halen", bullets })
 
@@ -96,5 +96,20 @@ describe("documentSections · bullet editor (DOG-92)", () => {
       ["0-1", "b", "b", true, false],
       ["0-0", "a", "A", false, false],
     ])
+  })
+})
+
+describe("sectionMoves (DOG-147)", () => {
+  const order = ["experience", "projects", "education", "skills"] as const
+  it("splits a drag into one-step moves of the dragged section", () => {
+    expect(sectionMoves(order, 3, 1)).toEqual([
+      { op: "move", section: "skills", direction: "up" },
+      { op: "move", section: "skills", direction: "up" },
+    ])
+    expect(sectionMoves(order, 0, 2).map((m) => m.direction)).toEqual(["down", "down"])
+  })
+  it("does nothing for a drop in place or out of range", () => {
+    expect(sectionMoves(order, 1, 1)).toEqual([])
+    expect(sectionMoves(order, 1, 9)).toEqual([])
   })
 })

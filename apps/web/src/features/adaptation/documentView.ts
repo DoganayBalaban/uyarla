@@ -1,4 +1,4 @@
-import type { DocumentOutline, Draft } from "@/features/adaptation/types"
+import type { DocumentOutline, Draft, SectionKind } from "@/features/adaptation/types"
 
 /**
  * Belge görünümünün satırları (DOG-93): önceki ve sonraki hâl yan yana değil,
@@ -87,4 +87,15 @@ export function documentSections(
     })),
     skills: after.skills.map((name) => ({ name, added: !beforeSkills.has(name) })),
   }
+}
+
+/**
+ * Sürüklenen bölümü `from`dan `to`ya götüren tek adımlık taşımalar (DOG-147).
+ * Sunucu bölümü bir adım yukarı ya da aşağı taşıyor.
+ */
+export function sectionMoves(order: readonly SectionKind[], from: number, to: number): Array<{ op: "move"; section: SectionKind; direction: "up" | "down" }> {
+  const section = order[from]
+  if (!section || from === to || to < 0 || to >= order.length) return []
+  const direction = to < from ? "up" : "down"
+  return Array.from({ length: Math.abs(to - from) }, () => ({ op: "move" as const, section, direction }))
 }

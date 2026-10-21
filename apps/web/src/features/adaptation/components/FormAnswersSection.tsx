@@ -56,7 +56,7 @@ export function FormAnswersSection({
   }
 
   return (
-    <section className="rounded-card border border-border bg-card p-5 sm:p-6">
+    <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
       <h2 className="m-0 flex items-center gap-2 text-lg">
         <ClipboardList className="size-5 text-brand-blue" aria-hidden />
         Form sorusu yanıtla
