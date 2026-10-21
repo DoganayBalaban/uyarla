@@ -75,6 +75,14 @@ describe("ScoreResult", () => {
     expect(html.match(/Bu ilanın adresi/g)).toHaveLength(1)
   })
 
+  it("has a summary panel whose rows point at sections on the page (DOG-131)", () => {
+    const html = renderToStaticMarkup(<ScoreResult result={result} adapting={false} />)
+    expect(html).toContain('aria-label="Sonuç özeti"')
+    expect(html).toContain("Zorunlu gereksinimler")
+    expect(html).toContain("Görünmeyen kavramlar")
+    for (const id of ["skor", "gereksinimler", "kavramlar"]) expect(html).toContain(`id="${id}"`)
+  })
+
   it("draws an old analysis as before", () => {
     const html = renderToStaticMarkup(<ScoreResult result={{ ...result, scoringRevision: undefined }} adapting={false} />)
     expect(html).not.toContain("Mülakatta anlaşılacaklar")

@@ -21,6 +21,7 @@ import { ScoreRing } from "@/features/analysis/components/ScoreRing"
 import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
 import { scoreStatus } from "@/lib/scoreStatus"
 import { readiness, readinessHint } from "@/features/analysis/readiness"
+import { navStatus, resultNav, type ResultNavItem } from "@/features/analysis/resultNav"
 import { PlatformTips } from "@/features/analysis/components/PlatformTips"
 import type { PlatformId } from "@/features/analysis/platforms"
 import { withTitleFinding } from "@/features/analysis/titleFinding"
@@ -135,6 +136,20 @@ export function ScoreResult({
   // Kendi eşiğimiz (DOG-91): zorunluların tamamı ve unvan.
   const ready = readiness(result)
   const format = withTitleFinding(result.format, result.titleMatch)
+  // Yapışkan özet (DOG-131): sayılar bu sayfanın zaten gösterdiği veriden.
+  const visibleLanguages = (result.languageChecks ?? []).filter((c) => c.status !== "absent" && !result.excluded?.includes(c.index))
+  const navItems = resultNav({
+    requirements: exclusion.active,
+    titleMissing: result.titleMatch && (result.scoringRevision ?? 1) >= 2 ? result.titleMatch.level === "none" : null,
+    formatFindings: format ? format.findings.length : null,
+    conditionsToCheck:
+      exclusion.conditionRows.filter(({ item }) => item.status !== "matched").length + visibleLanguages.filter((c) => c.status !== "ok").length,
+    missingKeywords: exclusion.missingKeywords.length,
+  })
+  const goTo = (item: ResultNavItem) => {
+    if (item.filterMissing) setFilter("missing")
+    document.getElementById(item.target)?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" })
+  }
   const satisfiedCount = summary.matched
   const correctedCount = Object.keys(result.corrections ?? {}).length
   const missing = summary.total - satisfiedCount
@@ -153,11 +168,15 @@ export function ScoreResult({
         }
 
   return (
+    <div className="lg:grid lg:grid-cols-[12.5rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+    <ResultNavPanel score={exclusion.score} items={navItems} onSelect={goTo} />
     <section className="space-y-6">
+      <ResultNavStrip items={navItems} onSelect={goTo} />
       {/* Skor kartı. */}
       <motion.div
         {...entrance(0)}
-        className="relative overflow-hidden rounded-card border border-border bg-card p-6 shadow-sm sm:p-8"
+        id="skor"
+        className="relative scroll-mt-24 overflow-hidden rounded-card border border-border bg-card p-6 shadow-sm sm:p-8"
       >
         <div
           aria-hidden
@@ -291,7 +310,7 @@ export function ScoreResult({
       )}
 
       {format && (
-        <motion.div {...entrance(0.08)}>
+        <motion.div {...entrance(0.08)} id="bicim" className="scroll-mt-24">
           <FormatReport report={format} />
         </motion.div>
       )}
@@ -299,12 +318,12 @@ export function ScoreResult({
       <ConditionsCard
         conditions={exclusion.conditionRows.map(({ item }) => item)}
         // Dil CV'de hiç yoksa gereksinim listesinde zaten eksik görünüyor.
-        languages={(result.languageChecks ?? []).filter((c) => c.status !== "absent" && !result.excluded?.includes(c.index))}
+        languages={visibleLanguages}
         motionProps={entrance(0.11)}
       />
 
       {/* Gereksinimler. */}
-      <motion.div {...entrance(0.14)} className="rounded-card border border-border bg-card p-5 sm:p-6">
+      <motion.div {...entrance(0.14)} id="gereksinimler" className="scroll-mt-24 rounded-card border border-border bg-card p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="m-0 text-lg">Gereksinimler</h2>
           <div role="tablist" aria-label="Gereksinimleri süz" className="inline-flex rounded-button bg-background p-1 text-sm">
@@ -379,7 +398,7 @@ export function ScoreResult({
       )}
 
       {/* Eksik kavramlar. */}
-      <motion.div {...entrance(0.2)} className="rounded-card border border-border bg-card p-5 sm:p-6">
+      <motion.div {...entrance(0.2)} id="kavramlar" className="scroll-mt-24 rounded-card border border-border bg-card p-5 sm:p-6">
         <h2 className="m-0 text-lg">CV&apos;nde görünmeyen kavramlar</h2>
         <p className="mt-1 text-sm text-muted">
           İlanda geçen ama CV&apos;nde karşılığını bulamadığımız kavramlar. Deneyiminde varsa açıkça yazmak skoru
@@ -415,6 +434,7 @@ export function ScoreResult({
         </pre>
       </details>
     </section>
+    </div>
   )
 }
 
@@ -587,7 +607,7 @@ function ConditionsCard({
 }) {
   if (conditions.length === 0 && languages.length === 0) return null
   return (
-    <motion.div {...motionProps} className="rounded-card border border-border bg-card p-5 sm:p-6">
+    <motion.div {...motionProps} id="sartlar" className="scroll-mt-24 rounded-card border border-border bg-card p-5 sm:p-6">
       <h2 className="m-0 text-lg">Şartlar</h2>
       <p className="mt-1 text-sm text-muted">
         İlanın yetkinlik dışındaki şartları. Skora katılmıyor; CV&apos;n çoğunu söylemez, başvurmadan önce kendin
@@ -634,5 +654,57 @@ function ConditionLine({ ok, text, note }: { ok: boolean; text: string; note: st
         <span className="text-muted"> · {note}</span>
       </span>
     </li>
+  )
+}
+
+/** Geniş ekranda yapışkan özet (DOG-131): skor ve kategori satırları. */
+function ResultNavPanel({ score, items, onSelect }: { score: number; items: ResultNavItem[]; onSelect: (i: ResultNavItem) => void }) {
+  const state = scoreStatus(score)
+  return (
+    <aside aria-label="Sonuç özeti" className="sticky top-24 hidden rounded-card border border-border bg-card p-4 lg:block">
+      <p className="m-0 text-xs font-semibold tracking-wider text-muted uppercase">Uyum skoru</p>
+      <p className={cn("m-0 mt-1 font-heading text-3xl font-extrabold", state.textClass)}>{score}</p>
+      <p className="m-0 text-xs text-muted">{state.label}</p>
+      <ul className="m-0 mt-4 list-none space-y-3 p-0">
+        {items.map((item) => (
+          <li key={item.key}>
+            <button type="button" onClick={() => onSelect(item)} className="w-full text-left text-sm">
+              <span className="flex items-baseline justify-between gap-2">
+                <span className="font-medium">{item.label}</span>
+                <span className={cn("shrink-0 text-xs", item.issues === 0 ? "text-brand-green dark:text-[#4ade80]" : "text-brand-blue")}>
+                  {navStatus(item)}
+                </span>
+              </span>
+              {item.progress && (
+                <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-background" aria-hidden>
+                  <span
+                    className="block h-full rounded-full bg-brand-blue"
+                    style={{ width: `${item.progress.total ? (item.progress.done / item.progress.total) * 100 : 0}%` }}
+                  />
+                </span>
+              )}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )
+}
+
+/** Dar ekranda aynı satırlar, sayfanın üstünde kaydırılabilir şerit. */
+function ResultNavStrip({ items, onSelect }: { items: ResultNavItem[]; onSelect: (i: ResultNavItem) => void }) {
+  return (
+    <nav aria-label="Sonuç bölümleri" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:hidden">
+      {items.map((item) => (
+        <button
+          key={item.key}
+          type="button"
+          onClick={() => onSelect(item)}
+          className="shrink-0 rounded-full border border-border bg-card px-3 py-1 text-xs whitespace-nowrap"
+        >
+          {item.label} · <span className={item.issues === 0 ? "text-brand-green dark:text-[#4ade80]" : "text-brand-blue"}>{navStatus(item)}</span>
+        </button>
+      ))}
+    </nav>
   )
 }
