@@ -1,6 +1,7 @@
 "use client"
 
 import { reportClientError } from "@/lib/clientErrors"
+import { recoverFromStaleChunk } from "@/lib/staleChunk"
 import { useEffect } from "react"
 
 /**
@@ -10,6 +11,8 @@ import { useEffect } from "react"
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   // Kök yerleşim hatası Next'in sunucu kancasına düşmüyor; elle bildiriliyor (DOG-62).
   useEffect(() => {
+    // Dağıtımdan sonra bayat parça (DOG-140): bir kez yeniden yükle.
+    if (recoverFromStaleChunk(error)) return
     reportClientError(error)
   }, [error])
   return (
