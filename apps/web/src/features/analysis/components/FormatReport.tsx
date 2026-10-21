@@ -41,14 +41,14 @@ export function FormatReportCard({
   const warningCount = report.findings.length - problemCount
 
   return (
-    <section className="rounded-card border border-border bg-card p-5 sm:p-6">
+    <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="grid size-9 place-items-center rounded-button bg-brand-blue/10 text-brand-blue">
+          <span className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
             <ScanText className="size-5" aria-hidden />
           </span>
           <div>
-            <h2 className="m-0 text-lg">
+            <h2 className="m-0 text-base font-semibold">
               CV kontrolü {impact && <ImpactBadge impact={impact} className="ml-1" />}
             </h2>
             <p className="m-0 text-sm text-muted-foreground">Başvuru sistemleri CV&apos;ni doğru okuyabilir mi, işe alımcı ne görüyor?</p>
@@ -137,7 +137,7 @@ function FindingItem({
   return (
     <li
       className={cn(
-        "flex gap-3 rounded-button border border-border border-l-4 bg-background/60 p-3.5",
+        "flex gap-3 rounded-lg border border-l-4 bg-muted/30 p-3.5",
         isProblem ? "border-l-brand-red" : "border-l-brand-amber",
       )}
     >

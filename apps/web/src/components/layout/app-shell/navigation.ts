@@ -68,7 +68,9 @@ const TOP: Record<string, string> = {
 }
 
 /** Üst çubuktaki konum yolu; son öge bağlantısız. */
-export function breadcrumbs(path: string): Crumb[] {
+export function breadcrumbs(path: string, search: URLSearchParams | null = null): Crumb[] {
+  // Sonucun kalıcı adresi `/analyze?analiz=<id>` (K3).
+  if (path === "/analyze" && search?.has("analiz")) return [{ label: "Analiz sonucu" }]
   if (/^\/applications\/[^/]+\/mulakat/.test(path)) {
     return [{ label: "Mülakatlar", href: "/interviews" }, { label: "Hazırlık" }]
   }

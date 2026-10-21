@@ -48,3 +48,32 @@ export function parseTerms(text: string): string[] {
     .map((t) => t.trim())
     .filter(Boolean)
 }
+
+export type RequirementMenuKey = "show" | "mark" | "correct"
+
+/**
+ * Gereksinim satırının işlemleri (DOG-146). Eksik yıl ve bölüm şartının
+ * düzeltmesi satırda görünür kalıyor (DOG-134: en sık düzeltilen şey);
+ * gerisi satırın menüsünde.
+ */
+export function requirementMenu(input: {
+  canChange: boolean
+  canShowInPosting: boolean
+  kind: "years" | "terms" | null
+  /** Düzeltme satırda görünüyor mu (eksik yıl ya da bölüm şartı). */
+  inlineFix: boolean
+  corrected: boolean
+}): { inline: string | null; menu: Array<{ key: RequirementMenuKey; label: string }> } {
+  const { canChange, canShowInPosting, kind, inlineFix, corrected } = input
+  const inline =
+    canChange && kind && inlineFix && !corrected
+      ? kind === "years"
+        ? "Yıl yanlış mı okunmuş? Düzelt"
+        : "Bölüm yanlış mı okunmuş? Düzelt"
+      : null
+  const menu: Array<{ key: RequirementMenuKey; label: string }> = []
+  if (canShowInPosting) menu.push({ key: "show", label: "İlanda göster" })
+  if (canChange && kind && !inline) menu.push({ key: "correct", label: corrected ? "Düzeltmeyi değiştir" : "Şartı düzelt" })
+  if (canChange) menu.push({ key: "mark", label: "Bu şartta sorun var" })
+  return { inline, menu }
+}
