@@ -18,6 +18,21 @@ export function applyAdaptation(
   profile: ResumeProfile,
   draft: AdaptationDraft,
 ): ResumeProfile {
+  // Bölüm düzenlemeleri (DOG-92): gizlenen bölüm belgede ve skorda yok.
+  const hidden = new Set(draft.sectionEdits?.hidden ?? [])
+  const titles = draft.sectionEdits?.titles ?? {}
+  const others = [
+    ...(profile.otherSections ?? []).map((o, i) => ({ key: `o${i}`, ...o })),
+    ...(draft.userSections ?? []).map(({ id, heading, lines }) => ({ key: id, heading, lines })),
+  ]
+    .filter((o) => !hidden.has(o.key))
+    .map(({ key, heading, lines }) => ({ heading: titles[key] ?? heading, lines }))
+  const structuredTitles = Object.fromEntries(
+    (["experience", "projects", "education", "skills", "languages", "certifications"] as const)
+      .filter((k) => titles[k])
+      .map((k) => [k, titles[k]!]),
+  )
+
   return {
     ...profile,
     // Başlık satırını yalnızca kullanıcı düzenliyor (DOG-92); unvan eşleşmesi
@@ -32,31 +47,39 @@ export function applyAdaptation(
     // Maddeler tek yerden (DOG-92): kabul edilen yeniden yazımlar, katkılar,
     // kullanıcının eklediği maddeler; kullanıcı sırası, kaldırılanlar ve tek
     // sayfa için çıkarılanlar düşmüş. Belge görünümü de aynı listeyi kullanıyor.
-    experience: profile.experience.map((job, i) => ({
-      ...job,
-      bullets: jobBullets(profile, draft, i)
-        .filter((b) => !b.omitted && !b.removed)
-        .map(({ text, sourceRef }) => ({ text, sourceRef })),
-    })),
+    experience: hidden.has("experience")
+      ? []
+      : profile.experience.map((job, i) => ({
+          ...job,
+          bullets: jobBullets(profile, draft, i)
+            .filter((b) => !b.omitted && !b.removed)
+            .map(({ text, sourceRef }) => ({ text, sourceRef })),
+        })),
     // Projelerin maddeleri de deneyim maddeleri gibi (DOG-105, DOG-92).
     ...(profile.projects
       ? {
-          projects: profile.projects.map((project, i) => ({
-            ...project,
-            bullets: groupBullets(profile, draft, { kind: "project", index: i })
-              .filter((b) => !b.omitted && !b.removed)
-              .map(({ text, sourceRef }) => ({ text, sourceRef })),
-          })),
+          projects: hidden.has("projects")
+            ? []
+            : profile.projects.map((project, i) => ({
+                ...project,
+                bullets: groupBullets(profile, draft, { kind: "project", index: i })
+                  .filter((b) => !b.omitted && !b.removed)
+                  .map(({ text, sourceRef }) => ({ text, sourceRef })),
+              })),
         }
       : {}),
     // Kullanıcının seçtiği bölüm sırası ve eklediği bölümler (DOG-92).
     ...(draft.sectionOrder ? { sectionOrder: draft.sectionOrder } : {}),
-    ...(draft.userSections?.length
-      ? { otherSections: [...(profile.otherSections ?? []), ...draft.userSections.map(({ heading, lines }) => ({ heading, lines }))] }
-      : {}),
+    // CV'nin kendi diğer bölümleri, sonra kullanıcınınkiler; gizlenenler düşmüş, adlar değişmiş.
+    ...(profile.otherSections || others.length ? { otherSections: others } : {}),
+    ...(Object.keys(structuredTitles).length ? { sectionTitles: structuredTitles } : {}),
+    ...(hidden.has("education") ? { education: [] } : {}),
     // Eklenen beceriler adayın kendi maddelerinden geliyor (K-38).
-    skills: sortItems([...profile.skills, ...(draft.addedSkills ?? [])], draft.skillOrder),
-    // Eğitim, diller ve sertifikalar dokunulmadan geçer (spec §6.4).
+    skills: hidden.has("skills") ? [] : sortItems([...profile.skills, ...(draft.addedSkills ?? [])], draft.skillOrder),
+    ...(hidden.has("skills") ? { skillGroups: [] } : {}),
+    // Diller ve sertifikalar dokunulmadan geçer (spec §6.4); yalnızca kullanıcı gizleyebilir.
+    ...(hidden.has("languages") ? { languages: [] } : {}),
+    ...(hidden.has("certifications") ? { certifications: [] } : {}),
   }
 }
 

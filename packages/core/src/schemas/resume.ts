@@ -91,6 +91,21 @@ export const ResumeProfileSchema = z.object({
    * belge varsayılan sırayı kullanıyor.
    */
   sectionOrder: z.array(z.enum(["experience", "projects", "education", "skills"])).optional(),
+  /**
+   * Yapılandırılmış bölümlerin kullanıcının verdiği adları (DOG-92); yalnızca
+   * uyarlamada dolu. Yoksa belgenin dilindeki varsayılan başlık.
+   */
+  sectionTitles: z
+    .object({
+      experience: z.string(),
+      projects: z.string(),
+      education: z.string(),
+      skills: z.string(),
+      languages: z.string(),
+      certifications: z.string(),
+    })
+    .partial()
+    .optional(),
 })
 
 /** Aşama 1: ham metni kaba bloklara böler (spec §6.3). */
@@ -152,6 +167,8 @@ export type SkillGroup = z.infer<typeof SkillGroupSchema>
 export type ResumeProfile = z.infer<typeof ResumeProfileSchema>
 /** Belgede sırası CV'den alınan bölümler (DOG-106). */
 export type StructuredSection = NonNullable<ResumeProfile["sectionOrder"]>[number]
+/** Adı değiştirilebilen bölümler (DOG-92): yapılandırılmışlar ve becerilerin ardındaki diller, sertifikalar. */
+export type TitledSection = keyof NonNullable<ResumeProfile["sectionTitles"]>
 export type ResumeSegments = z.infer<typeof ResumeSegmentsSchema>
 export type SkillLines = z.infer<typeof SkillLinesSchema>
 

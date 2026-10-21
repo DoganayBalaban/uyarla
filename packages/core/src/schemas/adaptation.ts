@@ -162,6 +162,19 @@ export const AdaptationDraftSchema = z.object({
   userSections: z
     .array(z.object({ id: z.string(), heading: z.string(), lines: z.array(z.string()), verification: VerificationSchema }))
     .optional(),
+  /**
+   * Maddenin taşındığı yer (DOG-92): madde kimliği → grup anahtarı ("0", "p1").
+   * Yoksa maddenin kendi işi ya da projesi.
+   */
+  bulletPlacement: z.record(z.string(), z.string()).optional(),
+  /**
+   * Bölüm düzenlemeleri (DOG-92). Anahtar: yapılandırılmış bölüm adı
+   * ("experience"), CV'nin diğer bölümü ("o0") ya da kullanıcı bölümü ("s1").
+   * Gizlenen bölüm belgede ve skorda yok; geri alınabilir.
+   */
+  sectionEdits: z
+    .object({ hidden: z.array(z.string()).optional(), titles: z.record(z.string(), z.string()).optional() })
+    .optional(),
 })
 
 export type TermAlignment = z.infer<typeof TermAlignmentSchema>
