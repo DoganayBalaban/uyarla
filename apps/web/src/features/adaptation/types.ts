@@ -56,11 +56,16 @@ export interface Draft {
   /** Kullanıcının düzenlediği başlık satırı (DOG-92); yoksa CV'nin kendisi. */
   headline?: { text: string; verification: Verification }
   /** Kullanıcının yazdığı maddeler (DOG-92). */
-  userBullets?: Array<{ id: string; experienceIndex: number; text: string; verification: Verification }>
+  userBullets?: Array<{ id: string; experienceIndex?: number; projectIndex?: number; text: string; verification: Verification }>
   /** Kullanıcının kaldırdığı maddeler (DOG-92); geri alınabilir. */
   removed?: string[]
   bulletOrder?: Record<string, string[]>
+  sectionOrder?: SectionKind[]
+  /** Kullanıcının eklediği bölümler (DOG-92). */
+  userSections?: Array<{ id: string; heading: string; lines: string[]; verification: Verification }>
 }
+
+export type SectionKind = "experience" | "projects" | "education" | "skills"
 
 /** Belge görünümünün bir hâli; sunucudaki DocumentOutline ile aynı (DOG-93). */
 export interface DocumentOutline {
@@ -76,8 +81,11 @@ export interface DocumentOutline {
     bulletIds?: string[]
   }>
   /** Projeler ve diğer bölümler (DOG-105); eski yanıtlarda yok. */
-  projects?: Array<{ name: string; role: string | null; dates: string | null; bullets: string[] }>
-  otherSections?: Array<{ heading: string; lines: string[] }>
+  projects?: Array<{ name: string; role: string | null; dates: string | null; bullets: string[]; bulletIds?: string[] }>
+  /** Kullanıcının eklediği bölümün kimliği var (DOG-92). */
+  otherSections?: Array<{ heading: string; lines: string[]; id?: string }>
+  /** Belgedeki bölüm sırası (DOG-92); eski yanıtlarda yok. */
+  sectionOrder?: SectionKind[]
   skills: string[]
 }
 

@@ -6,12 +6,14 @@ import {
   adaptationDocument,
   applyBulkDecision,
   applyBulletOp,
+  applySectionOp,
   applyDecision,
   applyLayout,
   computeScoreAfter,
   loadAdaptation,
   nextStatus,
   parseBulletOp,
+  parseSectionOp,
   restoreBullet,
   type BulkDecision,
 } from "@/server/adaptationDecision"
@@ -33,6 +35,8 @@ export async function PATCH(
   const body = (await request.json()) as Record<string, unknown>
   const bulletOp = body.bullet === undefined ? null : parseBulletOp(body.bullet)
   if (body.bullet !== undefined && !bulletOp) return NextResponse.json({ error: "Geçersiz madde işlemi." }, { status: 400 })
+  const sectionOp = body.section === undefined ? null : parseSectionOp(body.section)
+  if (body.section !== undefined && !sectionOp) return NextResponse.json({ error: "Geçersiz bölüm işlemi." }, { status: 400 })
   const { itemId, decision, bulk, layout, restore, edit, preview } = body as {
     itemId?: string
     decision?: "accepted" | "rejected"
@@ -54,7 +58,7 @@ export async function PATCH(
   if (bulletOp?.op === "add" && (!bulletOp.text.trim() || bulletOp.text.trim().length > EDIT_MAX_LENGTH)) {
     return NextResponse.json({ error: `Metin boş olamaz ve en fazla ${EDIT_MAX_LENGTH} karakter olabilir.` }, { status: 400 })
   }
-  if (!bulletOp && !isBulk && !isLayout && !isRestore && !isEdit && (!itemId || (decision !== "accepted" && decision !== "rejected"))) {
+  if (!bulletOp && !sectionOp && !isBulk && !isLayout && !isRestore && !isEdit && (!itemId || (decision !== "accepted" && decision !== "rejected"))) {
     return NextResponse.json({ error: "Geçersiz karar." }, { status: 400 })
   }
 
@@ -75,12 +79,13 @@ export async function PATCH(
 
   let fresh
   let onePage: { fits: boolean; pages: number } | null = null
-  if (bulletOp) {
+  if (bulletOp || sectionOp) {
     if (!payload.profile) return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
+    const context = { profile: payload.profile, posting: payload.posting, options: payload.documentOptions }
     try {
-      fresh = applyBulletOp(payload.draft, bulletOp, { profile: payload.profile, posting: payload.posting })
+      fresh = bulletOp ? applyBulletOp(payload.draft, bulletOp, context) : applySectionOp(payload.draft, sectionOp!, context)
     } catch {
-      return NextResponse.json({ error: "Madde bulunamadı." }, { status: 404 })
+      return NextResponse.json({ error: sectionOp ? "Bölüm kaydedilemedi; başlık ve satırları kontrol eder misin?" : "Madde bulunamadı." }, { status: sectionOp ? 422 : 404 })
     }
   } else if (isLayout) {
     if (!payload.profile) return NextResponse.json({ error: "Uyarlama bulunamadı." }, { status: 404 })
@@ -141,7 +146,7 @@ export async function PATCH(
     draft: fresh,
     scoreAfter: await computeScoreAfter(payload.profile, payload.scoringPosting, fresh, payload.excluded),
     // Belge görünümü kararla birlikte güncelleniyor (DOG-93).
-    document: adaptationDocument(payload.profile, fresh),
+    document: adaptationDocument(payload.profile, fresh, payload.documentOptions),
     // Tek sayfa planının sonucu; yalnızca strateji seçildiğinde.
     ...(onePage ? { onePage } : {}),
   })

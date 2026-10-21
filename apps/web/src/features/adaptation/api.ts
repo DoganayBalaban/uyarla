@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 import { api } from "@/lib/api"
-import type { AdaptationState, Draft, Verification } from "@/features/adaptation/types"
+import type { AdaptationState, Draft, SectionKind, Verification } from "@/features/adaptation/types"
 import { fileNameFromDisposition } from "@/features/adaptation/fileName"
 
 /** Analizden uyarlama başlatır; aynı analizin uyarlaması varsa onu döndürür. */
@@ -70,13 +70,24 @@ export async function restoreBullet(id: string, bulletId: string): Promise<Parti
 }
 
 /** Madde düzenleyici işlemi (DOG-92): ekle, kaldır, taşı. */
+export type BulletWhere = { experienceIndex: number } | { projectIndex: number }
 export type BulletOp =
-  | { op: "add"; experienceIndex: number; text: string }
+  | ({ op: "add"; text: string } & BulletWhere)
   | { op: "remove"; id: string }
-  | { op: "move"; experienceIndex: number; id: string; direction: "up" | "down" }
+  | ({ op: "move"; id: string; direction: "up" | "down" } & BulletWhere)
+
+/** Bölüm işlemi (DOG-92): sırayı değiştir, kendi bölümünü ekle ya da sil. */
+export type SectionOp =
+  | { op: "move"; section: SectionKind; direction: "up" | "down" }
+  | { op: "add"; heading: string; text: string }
+  | { op: "remove"; id: string }
 
 export async function changeBullet(id: string, bullet: BulletOp): Promise<Partial<AdaptationState>> {
   return (await api.patch<Partial<AdaptationState>>(`/adapt/${encodeURIComponent(id)}/decision`, { bullet })).data
+}
+
+export async function changeSection(id: string, section: SectionOp): Promise<Partial<AdaptationState>> {
+  return (await api.patch<Partial<AdaptationState>>(`/adapt/${encodeURIComponent(id)}/decision`, { section })).data
 }
 
 export async function requestCoverLetter(id: string): Promise<{ coverLetter: CoverLetterRecord }> {
