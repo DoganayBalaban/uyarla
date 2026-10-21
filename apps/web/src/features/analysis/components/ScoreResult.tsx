@@ -19,6 +19,7 @@ import { cn } from "@/lib/cn"
 import { FormatReportCard as FormatReport, type FormatReportView } from "@/features/analysis/components/FormatReport"
 import { ImpactBadge } from "@/features/analysis/components/ImpactBadge"
 import { TitleCorrection } from "@/features/analysis/components/TitleCorrection"
+import { ResultGuide } from "@/features/analysis/components/ResultGuide"
 import { scoreImpacts, type ScoreImpact } from "@/features/analysis/scoreImpact"
 import { ScoreRing } from "@/features/analysis/components/ScoreRing"
 import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
@@ -196,6 +197,7 @@ export function ScoreResult({
     <ResultNavPanel score={exclusion.score} items={navItems} onSelect={goTo} />
     <section className="space-y-6">
       <ResultNavStrip items={navItems} onSelect={goTo} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
       {postingText && (
         <div role="tablist" aria-label="Sonuç görünümü" className="inline-flex rounded-button bg-background p-1 text-sm">
           {(
@@ -220,6 +222,17 @@ export function ScoreResult({
           ))}
         </div>
       )}
+      <ResultGuide
+        impacts={impacts}
+        onGo={(target) => {
+          setTab("report")
+          // Rapor sekmesi görünür olduktan sonra kaydır.
+          requestAnimationFrame(() =>
+            document.getElementById(target)?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" }),
+          )
+        }}
+      />
+      </div>
       {postingText && tab === "posting" && (
         <PostingTextView text={postingText} highlight={highlight} onClear={() => setHighlight(null)} />
       )}
