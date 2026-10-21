@@ -97,7 +97,7 @@ export async function PATCH(
       const item = itemId === "summary" ? fresh.summary : fresh.bullets.find((b) => b.id === itemId)
       return NextResponse.json({
         preview: true,
-        scoreAfter: await computeScoreAfter(payload.profile, payload.posting, fresh, payload.excluded),
+        scoreAfter: await computeScoreAfter(payload.profile, payload.scoringPosting, fresh, payload.excluded),
         verification: item?.verification ?? null,
       })
     }
@@ -122,7 +122,7 @@ export async function PATCH(
   return NextResponse.json({
     status,
     draft: fresh,
-    scoreAfter: await computeScoreAfter(payload.profile, payload.posting, fresh, payload.excluded),
+    scoreAfter: await computeScoreAfter(payload.profile, payload.scoringPosting, fresh, payload.excluded),
     // Belge görünümü kararla birlikte güncelleniyor (DOG-93).
     document: adaptationDocument(payload.profile, fresh),
     // Tek sayfa planının sonucu; yalnızca strateji seçildiğinde.

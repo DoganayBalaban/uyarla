@@ -4,6 +4,7 @@ import { analysisProfile } from "@uyarla/core/adapt/facts"
 import { CachedEmbeddingProvider, redisVectorStore } from "@uyarla/core/llm/embeddingCache"
 import { OpenAiCompatibleEmbeddingProvider, embeddingConfigFromEnv } from "@uyarla/core/llm/embedding"
 import { rescore } from "@uyarla/core/adapt/rescore"
+import { correctPosting, type RequirementCorrection } from "@uyarla/core/score/exclusions"
 import type { JobPostingData } from "@uyarla/core/schemas/job"
 import type { ResumeProfile } from "@uyarla/core/schemas/resume"
 import { prisma } from "@uyarla/db"
@@ -115,6 +116,11 @@ export async function loadAdaptation(id: string) {
     language: analysis.jobPosting.language as never,
     requirements: analysis.jobPosting.requirements as never,
   }
+  // Önce skoru (Analysis.score) şart ve unvan düzeltmeleriyle (DOG-90,
+  // DOG-134); sonra skoru da aynı ilanla hesaplanmalı, yoksa düzeltilen
+  // şart sonra skorunda eksik sayılıp farkı yanlış gösterir.
+  const fixes = (analysis.result ?? {}) as { corrections?: Record<number, RequirementCorrection>; positionCorrection?: string }
+  const scoringPosting = correctPosting(posting, fixes.corrections ?? {}, fixes.positionCorrection)
 
   // Kayıt henüz yazılmamışken draft boş bir nesne; parse etmeye çalışmıyoruz.
   const draft: AdaptationDraft | null =
@@ -126,6 +132,8 @@ export async function loadAdaptation(id: string) {
     adaptation,
     profile,
     posting,
+    /** Skor hesapları için düzeltmeleri uygulanmış ilan. */
+    scoringPosting,
     draft,
     scoreBefore: analysis.score,
     /** Skor formülünün sürümü (DOG-103); eski analizlerde 1. */

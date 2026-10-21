@@ -57,6 +57,7 @@ import {
   analysisQueryKey,
   fetchPostingFromUrl,
   getAnalysis,
+  updatePosition,
   updateRequirement,
   type RequirementAction,
   startAnalysis,
@@ -319,6 +320,18 @@ export function AnalyzeView() {
     }
   }
 
+  /** İlan unvanını düzeltir (DOG-134); hata mesajıyla reddeder, form gösteriyor. */
+  async function changePosition(analysisId: string, position: string | null) {
+    try {
+      const { result } = await updatePosition(analysisId, position)
+      setState((s) => (s ? { ...s, result } : s))
+      queryClient.setQueryData<AnalysisResponse>(analysisQueryKey(analysisId), (d) => (d ? { ...d, result } : d))
+      void queryClient.invalidateQueries({ queryKey: applicationsQueryKey })
+    } catch (error) {
+      throw new Error(await apiErrorMessage(error, "Yeniden hesaplayamadık. Birazdan tekrar dener misin?"))
+    }
+  }
+
   /** Uyarlamayı başlatır ve uyarlama ekranına geçer. */
   async function adapt(analysisId: string) {
     setBusy(true)
@@ -460,6 +473,7 @@ export function AnalyzeView() {
         adaptNote={adaptNote}
         onYeniAnaliz={startOver}
         onRequirementChange={state.analysisId ? (index, change) => changeRequirement(state.analysisId!, index, change) : undefined}
+        onPositionChange={state.analysisId ? (position) => changePosition(state.analysisId!, position) : undefined}
       />
     )
   }

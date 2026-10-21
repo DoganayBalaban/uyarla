@@ -1,3 +1,4 @@
+import { containsKeyword } from "../normalize/turkish.js"
 import type { JobPostingData, Requirement } from "../schemas/job.js"
 
 /**
@@ -54,6 +55,15 @@ export interface RequirementCorrection {
   terms?: string[]
 }
 
+/**
+ * Unvan düzeltmesi (DOG-134): ilanın unvanı yanlış okunduysa kullanıcının
+ * yazdığı unvan. Kabul edilmesi için ilan metninde geçmesi gerekiyor; ilanın
+ * düzeltmesi, CV hakkında bir beyan değil.
+ */
+export function positionInPosting(rawText: string | null | undefined, position: string): boolean {
+  return !!rawText && containsKeyword(rawText, position)
+}
+
 /** Düzeltme taşıyabilen gereksinim; `minYears` metinden okunan yılın yerine geçiyor. */
 export type CorrectedRequirement = Requirement & { minYears?: number }
 
@@ -65,9 +75,12 @@ export type CorrectedRequirement = Requirement & { minYears?: number }
 export function correctPosting(
   posting: JobPostingData,
   corrections: Record<number | string, RequirementCorrection>,
+  /** Unvan düzeltmesi (DOG-134); yoksa ilanın okunan unvanı. */
+  position?: string | null,
 ): JobPostingData {
   return {
     ...posting,
+    position: position?.trim() || posting.position,
     requirements: posting.requirements.map((r, i): CorrectedRequirement => {
       const fix = corrections[i]
       if (!fix) return r

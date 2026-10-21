@@ -112,4 +112,30 @@ describe("ScoreResult", () => {
     expect(html).toContain("Bildirdin")
     expect(html).toContain("İlk skor 34")
   })
+
+  it("shows the year and degree fix right on missing rows, and the title fix under the title finding (DOG-134)", () => {
+    const rows: ScoreResultView = {
+      ...result,
+      requirements: [
+        req("En az 5 yıl muhasebe deneyimi", "experience", "missing"),
+        req("Ekip yönetimi deneyimi", "experience", "missing"),
+        req("İşletme bölümü mezunu", "education", "missing"),
+      ],
+      format: { findings: [], passed: [] },
+    }
+    const noop = async () => {}
+    const html = renderToStaticMarkup(
+      <ScoreResult result={rows} adapting={false} onRequirementChange={noop} onPositionChange={noop} />,
+    )
+    expect(html).toContain("Yıl yanlış mı okunmuş? Düzelt")
+    expect(html).toContain("Bölüm yanlış mı okunmuş? Düzelt")
+    // Yıl istemeyen deneyim satırında genel bağlantı, fareyle görünür.
+    expect(html).toContain("Şartı düzelt")
+    expect(html).toContain("İlandaki unvan yanlış mı okunmuş? Düzelt")
+
+    const corrected = renderToStaticMarkup(
+      <ScoreResult result={{ ...rows, positionCorrection: "Muhasebe Uzmanı" }} adapting={false} onPositionChange={noop} />,
+    )
+    expect(corrected).toContain("“Muhasebe Uzmanı” olarak düzelttin")
+  })
 })
