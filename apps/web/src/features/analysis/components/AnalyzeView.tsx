@@ -645,7 +645,8 @@ export function AnalyzeView() {
           )}
           {/* Elinde ilan olmayan ilk denemeyi engellemesin (DOG-101); kutu boşken. */}
           {!jobText.trim() && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+            // Genel bakışın boş durumu buraya bağlanıyor (DOG-145).
+            <div id="ornek-ilanlar" className="mt-3 flex scroll-mt-20 flex-wrap items-center gap-2 text-sm">
               <span className="text-muted-foreground">Elinde ilan yok mu? Örnek ilanla dene:</span>
               {SAMPLE_POSTINGS.map((sample) => (
                 <button
