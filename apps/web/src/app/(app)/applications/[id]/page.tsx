@@ -1,4 +1,4 @@
-import { PageShell } from "@/components/layout/PageShell"
+import { AppPage } from "@/components/layout/app-shell/AppPage"
 import { ApplicationDetail } from "@/features/applications/components/ApplicationDetail"
 
 export const metadata = { title: "Başvuru · uyarla" }
@@ -7,8 +7,8 @@ export const metadata = { title: "Başvuru · uyarla" }
 export default async function ApplicationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   return (
-    <PageShell width="narrow">
+    <AppPage width="narrow">
       <ApplicationDetail analysisId={id} />
-    </PageShell>
+    </AppPage>
   )
 }

@@ -1,13 +1,13 @@
-import { PageShell } from "@/components/layout/PageShell"
+import { AppPage } from "@/components/layout/app-shell/AppPage"
 import { ApplicationBoard } from "@/features/applications/components/ApplicationBoard"
 
-export const metadata = { title: "Başvuru panosu · uyarla" }
+export const metadata = { title: "Başvurular · uyarla" }
 
-/** Başvuru panosu. Beş sütun orta genişliğe sığmıyor; geniş kapta çiziliyor. */
+/** Başvurular (DOG-148): pano ya da tablo. Başlık veriye bağlı, bileşen çiziyor. */
 export default function ApplicationsPage() {
   return (
-    <PageShell width="wide">
+    <AppPage className="max-w-[90rem]">
       <ApplicationBoard />
-    </PageShell>
+    </AppPage>
   )
 }

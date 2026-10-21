@@ -1,4 +1,4 @@
-import { PageShell } from "@/components/layout/PageShell"
+import { AppPage } from "@/components/layout/app-shell/AppPage"
 import { InterviewPrepView } from "@/features/applications/components/InterviewPrepView"
 
 export const metadata = { title: "Mülakat hazırlığı · uyarla" }
@@ -7,8 +7,8 @@ export const metadata = { title: "Mülakat hazırlığı · uyarla" }
 export default async function InterviewPrepPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   return (
-    <PageShell width="narrow">
+    <AppPage width="narrow">
       <InterviewPrepView analysisId={id} />
-    </PageShell>
+    </AppPage>
   )
 }
