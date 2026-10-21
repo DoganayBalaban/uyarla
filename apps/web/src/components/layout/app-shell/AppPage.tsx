@@ -29,16 +29,29 @@ export function AppPage({
 }) {
   return (
     <main className={cn("mx-auto w-full px-4 pt-6 pb-16 sm:px-6 lg:pt-8", WIDTH[width], className)}>
-      {title && (
-        <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div className="min-w-0 max-w-2xl">
-            <h1 className="m-0 text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
-            {description && <p className="m-0 mt-1 text-sm text-muted-foreground">{description}</p>}
-          </div>
-          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
-        </header>
-      )}
+      {title && <AppPageHeader title={title} description={description} actions={actions} />}
       <FadeIn>{children}</FadeIn>
     </main>
+  )
+}
+
+/** Sayfa başlığı; başlığı veriye bağlı sayfalar (pano) kendisi çiziyor. */
+export function AppPageHeader({
+  title,
+  description,
+  actions,
+}: {
+  title: React.ReactNode
+  description?: React.ReactNode
+  actions?: React.ReactNode
+}) {
+  return (
+    <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="min-w-0 max-w-2xl">
+        <h1 className="m-0 text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
+        {description && <p className="m-0 mt-1 text-sm text-muted-foreground">{description}</p>}
+      </div>
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    </header>
   )
 }
