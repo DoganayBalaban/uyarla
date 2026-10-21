@@ -3655,3 +3655,27 @@ kişiden 2'si CV'yi "olduğu gibi göndermem" dedi; serbest düzenleyiciye
   (`extract/header.ts`). Satırı baştan yazan kullanıcı bağlantıları
   indirilen CV'den de siler; ekranda bunu söyleyen bir uyarı var.
 - **DOG-92'de kalan:** bölüm ve madde ekleme, taşıma.
+
+## K-97 · Madde ekleme, kaldırma ve taşıma (DOG-92, serbest düzenleyicinin ilk adımı)
+
+**Bağlam:** K2'de 5 kişiden 2'si uyarlanmış CV'yi "olduğu gibi göndermem"
+dedi. Düzenleme yalnızca var olan maddenin metniyle sınırlıydı (K-83).
+
+**Karar:**
+- **Tek kaynak:** bir işin maddeleri `jobBullets`'tan (core/adapt/bullets.ts):
+  CV maddeleri (kabul edilen yeniden yazımla), katkılar (DOG-94), kullanıcı
+  maddeleri; kullanıcı sırası uygulanmış, kaldırılan ve tek sayfa için
+  çıkarılanlar işaretli. `applyAdaptation` (indirme, skor) ve belge görünümü
+  aynı listeyi kullanıyor; ekran ile indirilen CV ayrışamaz.
+- **Taslakta yeni alanlar:** `userBullets` (kimlik `u<n>`), `removed`,
+  `bulletOrder` (iş başına kimlik sırası). Kimlikler konumdan geliyor; sıra
+  değişince belge görünümü maddeleri `bulletIds` ile eşliyor.
+- **Kaldırma tek sayfa `omitted`'ından ayrı:** strateji "tam"a dönünce
+  `omitted` sıfırlanıyor, kullanıcının kaldırdığı kalıyor. İkisi de üstü
+  çizili ve geri alınabilir; kullanıcının kendi maddesi kaldırılınca siliniyor.
+- **Kullanıcı maddesi düzenleme gibi kontrol ediliyor (K-83):** CV'de olmayan
+  sayı ya da ilan terimi "kontrol et" alıyor ama engellenmiyor. Skora
+  katılıyor; yazan kullanıcı ve bu onun CV'si.
+- **Ayrı uç yok:** karar ucuna `{ bullet: { op } }` (12 fonksiyon sınırı).
+- **Kapsam dışı (sonraki adım):** proje maddelerini ekleme ve taşıma, bölüm
+  ekleme ve bölüm sırası, işler arası taşıma.

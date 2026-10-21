@@ -34,6 +34,8 @@ import {
   editItem,
   previewEdit,
   restoreBullet,
+  changeBullet,
+  type BulletOp,
   setLayout,
   useAdaptation,
 } from "@/features/adaptation/api"
@@ -131,6 +133,22 @@ export function AdaptationView({ id }: { id: string }) {
       queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
     } catch {
       // Kaydedilemediyse madde çıkarılmış olarak kalıyor; tekrar denenebilir.
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  /** Madde ekle, kaldır, taşı (DOG-92); hata mesajını döndürüyor. */
+  async function bulletChange(op: BulletOp): Promise<string | null> {
+    setIsBusy(true)
+    try {
+      const parsed = await changeBullet(id, op)
+      // Madde sayısı değişince tek sayfa sonucu bayatlıyor.
+      setOnePage(null)
+      queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
+      return null
+    } catch (error) {
+      return apiErrorMessage(error, "Kaydedemedik. Tekrar dener misin?")
     } finally {
       setIsBusy(false)
     }
@@ -368,7 +386,14 @@ export function AdaptationView({ id }: { id: string }) {
           )}
 
           {view === "document" && state.document ? (
-            <DocumentView document={state.document} draft={draft} onRestore={(b) => void restore(b)} terms={state.postingTerms ?? []} />
+            <DocumentView
+              document={state.document}
+              draft={draft}
+              onRestore={(b) => void restore(b)}
+              onBullet={bulletChange}
+              busy={busy}
+              terms={state.postingTerms ?? []}
+            />
           ) : (
             <>
               {/* Başlık satırı (DOG-92): uyarlama değiştirmiyor, yalnızca kullanıcı. */}
