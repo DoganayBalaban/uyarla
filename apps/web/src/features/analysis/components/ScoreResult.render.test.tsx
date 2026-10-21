@@ -83,12 +83,13 @@ describe("ScoreResult", () => {
     for (const id of ["skor", "gereksinimler", "kavramlar"]) expect(html).toContain(`id="${id}"`)
   })
 
-  it("offers the posting text tab and a 'show in posting' link (DOG-133)", () => {
+  it("offers the posting text tab and a row menu for 'show in posting' (DOG-133, DOG-146)", () => {
     const html = renderToStaticMarkup(<ScoreResult result={result} adapting={false} postingText={"Aranan nitelikler\n• React deneyimi"} />)
-    expect(html).toContain('role="tablist" aria-label="Sonuç görünümü"')
+    expect(html).toMatch(/role="tablist"[^>]*aria-label="Sonuç görünümü"/)
     expect(html).toContain("İlan metni")
-    expect(html).toContain("İlanda göster")
-    expect(renderToStaticMarkup(<ScoreResult result={result} adapting={false} />)).not.toContain("İlanda göster")
+    // "İlanda göster" satırın menüsünde (requirementMenu testli).
+    expect(html).toContain('aria-label="Gereksinim işlemleri"')
+    expect(renderToStaticMarkup(<ScoreResult result={result} adapting={false} />)).not.toContain("Gereksinim işlemleri")
   })
 
   it("draws an old analysis as before", () => {
@@ -129,8 +130,8 @@ describe("ScoreResult", () => {
     )
     expect(html).toContain("Yıl yanlış mı okunmuş? Düzelt")
     expect(html).toContain("Bölüm yanlış mı okunmuş? Düzelt")
-    // Yıl istemeyen deneyim satırında genel bağlantı, fareyle görünür.
-    expect(html).toContain("Şartı düzelt")
+    // Yıl istemeyen deneyim satırının düzeltmesi menüde (requirementMenu testli).
+    expect(html.match(/aria-label="Gereksinim işlemleri"/g)).toHaveLength(3)
     expect(html).toContain("İlandaki unvan yanlış mı okunmuş? Düzelt")
 
     const corrected = renderToStaticMarkup(

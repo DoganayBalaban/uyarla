@@ -18,6 +18,7 @@ import { resultPath } from "@/features/analysis/paths"
 import { useAnalysisJob } from "@/features/analysis/api"
 import { apiStatus } from "@/lib/api"
 import { scoreStatus } from "@/lib/scoreStatus"
+import { Button } from "@/components/ui/button"
 
 const POLL_MS = 3000
 const DONE_TITLE = "✓ Analizin hazır · uyarla"
@@ -31,6 +32,9 @@ const DONE_TITLE = "✓ Analizin hazır · uyarla"
  * tarayıcı bildirimi de gidiyor.
  *
  * Analiz sayfasında gösterilmiyor: orada aşama çizelgesi zaten açık.
+ *
+ * Görünüşü sağ alttaki sonner bildirimleriyle aynı (DOG-146); kendisi sonner
+ * değil, çünkü durumu kayıttan geliyor ve sayfalar arasında kalıcı.
  */
 export function AnalysisNotice() {
   const pathname = usePathname()
@@ -126,7 +130,7 @@ export function AnalysisNotice() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reducedMotion ? undefined : { opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="pointer-events-auto w-full max-w-sm rounded-card border border-border bg-card p-4 shadow-xl shadow-brand-night/10"
+            className="pointer-events-auto w-full max-w-sm rounded-xl border bg-popover p-4 text-popover-foreground shadow-lg"
           >
             {record.status === "running" && (
               <RunningNotice
@@ -157,7 +161,7 @@ function RunningNotice({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand-blue/10 text-brand-blue">
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
         <LoaderCircle className="size-5 motion-safe:animate-spin" aria-hidden />
       </span>
       <div className="min-w-0 flex-1">
@@ -166,22 +170,17 @@ function RunningNotice({
           {(record.stage && STAGE_SHORT_LABEL[record.stage]) ?? "Sıraya alındı"} · bitince haber vereceğiz
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Link
-            href="/analyze"
-            className="inline-flex items-center gap-1.5 rounded-button bg-brand-blue px-3 py-1.5 text-sm font-semibold text-white no-underline transition hover:bg-brand-blue/90"
-          >
-            Analize dön
-            <ArrowRight className="size-3.5" aria-hidden />
-          </Link>
+          <Button asChild size="sm">
+            <Link href="/analyze">
+              Analize dön
+              <ArrowRight aria-hidden />
+            </Link>
+          </Button>
           {notificationPermission === "default" && (
-            <button
-              type="button"
-              onClick={onAskPermission}
-              className="inline-flex items-center gap-1.5 rounded-button border border-border px-3 py-1.5 text-sm font-medium text-foreground transition hover:border-brand-blue/40 hover:text-brand-blue"
-            >
-              <BellRing className="size-3.5" aria-hidden />
+            <Button type="button" variant="outline" size="sm" onClick={onAskPermission}>
+              <BellRing aria-hidden />
               Tarayıcıdan da haber ver
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -204,14 +203,12 @@ function DoneNotice({ record, onClose }: { record: ActiveAnalysis; onClose: () =
           </p>
         )}
         {record.analysisId && (
-          <Link
-            href={resultPath(record.analysisId)}
-            onClick={onClose}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-button bg-brand-blue px-3 py-1.5 text-sm font-semibold text-white no-underline transition hover:bg-brand-blue/90"
-          >
-            Sonucu gör
-            <ArrowRight className="size-3.5" aria-hidden />
-          </Link>
+          <Button asChild size="sm" className="mt-3">
+            <Link href={resultPath(record.analysisId)} onClick={onClose}>
+              Sonucu gör
+              <ArrowRight aria-hidden />
+            </Link>
+          </Button>
         )}
       </div>
       <CloseButton onClose={onClose} />
@@ -228,14 +225,12 @@ function FailedNotice({ record, onClose }: { record: ActiveAnalysis; onClose: ()
       <div className="min-w-0 flex-1">
         <p className="m-0 font-semibold">Analiz tamamlanamadı</p>
         <p className="m-0 mt-0.5 text-sm text-muted-foreground">{record.error ?? "Birkaç dakika sonra tekrar dener misin?"}</p>
-        <Link
-          href="/analyze"
-          onClick={onClose}
-          className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue no-underline dark:text-brand-blue-light"
-        >
-          Tekrar dene
-          <ArrowRight className="size-3.5" aria-hidden />
-        </Link>
+        <Button asChild variant="link" size="sm" className="mt-2 h-auto px-0">
+          <Link href="/analyze" onClick={onClose}>
+            Tekrar dene
+            <ArrowRight aria-hidden />
+          </Link>
+        </Button>
       </div>
       <CloseButton onClose={onClose} />
     </div>
@@ -244,13 +239,8 @@ function FailedNotice({ record, onClose }: { record: ActiveAnalysis; onClose: ()
 
 function CloseButton({ onClose }: { onClose: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClose}
-      aria-label="Bildirimi kapat"
-      className="-m-1 grid size-7 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-background hover:text-foreground"
-    >
-      <X className="size-4" aria-hidden />
-    </button>
+    <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Bildirimi kapat" className="-m-1 size-7 text-muted-foreground">
+      <X aria-hidden />
+    </Button>
   )
 }

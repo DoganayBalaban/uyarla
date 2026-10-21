@@ -9,8 +9,8 @@ export function PlatformTips({ platform }: { platform: PlatformId | null | undef
   const info = platform ? PLATFORMS[platform] : null
   if (!info) return null
   return (
-    <section aria-label={`${info.name} için ipuçları`} className="rounded-card border border-border bg-card p-5">
-      <h2 className="m-0 text-base">Bu ilan {info.name} üzerinden</h2>
+    <section aria-label={`${info.name} için ipuçları`} className="rounded-xl border bg-card p-5 shadow-xs">
+      <h2 className="m-0 text-base font-semibold">Bu ilan {info.name} üzerinden</h2>
       <ul className="mt-3 space-y-2.5 pl-5 text-sm">
         {info.tips.map((tip, i) => (
           <li key={i}>
