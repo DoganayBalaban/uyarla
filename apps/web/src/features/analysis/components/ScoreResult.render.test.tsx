@@ -83,6 +83,14 @@ describe("ScoreResult", () => {
     for (const id of ["skor", "gereksinimler", "kavramlar"]) expect(html).toContain(`id="${id}"`)
   })
 
+  it("offers the posting text tab and a 'show in posting' link (DOG-133)", () => {
+    const html = renderToStaticMarkup(<ScoreResult result={result} adapting={false} postingText={"Aranan nitelikler\n• React deneyimi"} />)
+    expect(html).toContain('role="tablist" aria-label="Sonuç görünümü"')
+    expect(html).toContain("İlan metni")
+    expect(html).toContain("İlanda göster")
+    expect(renderToStaticMarkup(<ScoreResult result={result} adapting={false} />)).not.toContain("İlanda göster")
+  })
+
   it("draws an old analysis as before", () => {
     const html = renderToStaticMarkup(<ScoreResult result={{ ...result, scoringRevision: undefined }} adapting={false} />)
     expect(html).not.toContain("Mülakatta anlaşılacaklar")

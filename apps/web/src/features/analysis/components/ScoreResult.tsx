@@ -22,6 +22,7 @@ import { isPartial, partialNote, summarizeRequirements } from "@/features/analys
 import { scoreStatus } from "@/lib/scoreStatus"
 import { readiness, readinessHint } from "@/features/analysis/readiness"
 import { navStatus, resultNav, type ResultNavItem } from "@/features/analysis/resultNav"
+import { keywordSpans } from "@uyarla/core/normalize/highlight"
 import { PlatformTips } from "@/features/analysis/components/PlatformTips"
 import type { PlatformId } from "@/features/analysis/platforms"
 import { withTitleFinding } from "@/features/analysis/titleFinding"
@@ -38,8 +39,8 @@ export interface RequirementResult {
     text: string
     importance: string
     type: string
-    /** Kavramlar; eğitim şartı düzeltmesinin başlangıç değeri (DOG-90). */
-    concepts?: Array<{ term: string }>
+    /** Kavramlar; eğitim şartı düzeltmesinin başlangıç değeri (DOG-90), ilanda vurgu (DOG-133). */
+    concepts?: Array<{ term: string; synonyms?: string[] }>
     /** Kullanıcının düzelttiği en az yıl (DOG-90). */
     minYears?: number
   }
@@ -110,12 +111,15 @@ export function ScoreResult({
   onRequirementChange,
   platform,
   sourceWarning,
+  postingText,
 }: {
   result: ScoreResultView
   /** İlan adresinden tanınan platform (DOG-95); ipuçları skor kartının altında. */
   platform?: PlatformId | null
   /** İlan kaynağı uyarısı (DOG-125): bilinmeyen ya da taklit alan adı. */
   sourceWarning?: { tone: "soft" | "strong"; text: string } | null
+  /** İlan metni sekmesi (DOG-133); eski yanıtlarda yok. */
+  postingText?: string | null
   durationMs?: number | null
   tokenUsage?: number | null
   modelId?: string | null
@@ -130,6 +134,15 @@ export function ScoreResult({
 }) {
   const reducedMotion = useReducedMotion() ?? false
   const [activeFilter, setFilter] = useState<FilterBar>("all")
+  // Rapor ya da ilan metni (DOG-133); "İlanda göster" ilgili terimleri vurgular.
+  const [tab, setTab] = useState<"report" | "posting">("report")
+  const [highlight, setHighlight] = useState<{ label: string; terms: string[] } | null>(null)
+  const showInPosting = (item: RequirementResult) => {
+    const terms = (item.requirement.concepts ?? []).flatMap((c) => [c.term, ...(c.synonyms ?? [])])
+    setHighlight({ label: item.requirement.text, terms: terms.length ? terms : [item.requirement.text] })
+    setTab("posting")
+    window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" })
+  }
   const exclusion = applyExclusions(result)
   const state = scoreStatus(exclusion.score)
   const summary = summarizeRequirements(exclusion.active)
@@ -147,6 +160,7 @@ export function ScoreResult({
     missingKeywords: exclusion.missingKeywords.length,
   })
   const goTo = (item: ResultNavItem) => {
+    setTab("report")
     if (item.filterMissing) setFilter("missing")
     document.getElementById(item.target)?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" })
   }
@@ -172,6 +186,34 @@ export function ScoreResult({
     <ResultNavPanel score={exclusion.score} items={navItems} onSelect={goTo} />
     <section className="space-y-6">
       <ResultNavStrip items={navItems} onSelect={goTo} />
+      {postingText && (
+        <div role="tablist" aria-label="Sonuç görünümü" className="inline-flex rounded-button bg-background p-1 text-sm">
+          {(
+            [
+              ["report", "Rapor"],
+              ["posting", "İlan metni"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={tab === value}
+              onClick={() => setTab(value)}
+              className={cn(
+                "rounded-[8px] px-4 py-1.5 font-semibold transition",
+                tab === value ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+      {postingText && tab === "posting" && (
+        <PostingTextView text={postingText} highlight={highlight} onClear={() => setHighlight(null)} />
+      )}
+      <div className={cn("space-y-6", tab === "posting" && "hidden")}>
       {/* Skor kartı. */}
       <motion.div
         {...entrance(0)}
@@ -364,6 +406,7 @@ export function ScoreResult({
                 reported={result.reports?.some((r) => r.index === index) ?? false}
                 correction={result.corrections?.[index]}
                 onChange={onRequirementChange ? (change) => onRequirementChange(index, change) : undefined}
+                onShowInPosting={postingText ? () => showInPosting(item) : undefined}
               />
             ))}
           </ul>
@@ -433,6 +476,7 @@ export function ScoreResult({
           {JSON.stringify(result, null, 2)}
         </pre>
       </details>
+      </div>
     </section>
     </div>
   )
@@ -445,8 +489,11 @@ function RequirementRow({
   reported,
   correction,
   onChange,
+  onShowInPosting,
 }: {
   item: RequirementResult
+  /** İlan metni sekmesinde bu gereksinimin terimlerini vurgular (DOG-133). */
+  onShowInPosting?: () => void
   excluded?: boolean
   mark?: ExclusionMark
   reported: boolean
@@ -559,12 +606,19 @@ function RequirementRow({
       )}
       {/* Kavram ayırma bazen ilanda olmayan bir şart üretiyor; kullanıcı
           düzeltebilsin, işaret de bize hata verisi olsun (DOG-90). */}
-      {onChange && panel === null && (
+      {(onChange || onShowInPosting) && panel === null && (
         <div className="mt-1 ml-8 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+          {onShowInPosting && (
+            <button type="button" onClick={onShowInPosting} className="underline-offset-2 hover:text-foreground hover:underline">
+              İlanda göster
+            </button>
+          )}
+          {onChange && (
           <button type="button" onClick={() => setPanel("mark")} className="underline-offset-2 hover:text-foreground hover:underline">
             Bu şartta sorun var
           </button>
-          {kind && (
+          )}
+          {onChange && kind && (
             <button type="button" onClick={() => setPanel("correct")} className="underline-offset-2 hover:text-foreground hover:underline">
               {correction ? "Düzeltmeyi değiştir" : "Şartı düzelt"}
             </button>
@@ -706,5 +760,55 @@ function ResultNavStrip({ items, onSelect }: { items: ResultNavItem[]; onSelect:
         </button>
       ))}
     </nav>
+  )
+}
+
+/**
+ * İlan metni sekmesi (DOG-133). "İlanda göster" ile gelindiyse gereksinimin
+ * kavramları ve eş anlamlıları vurgulu; eşleşme skorlamayla aynı kural.
+ */
+function PostingTextView({
+  text,
+  highlight,
+  onClear,
+}: {
+  text: string
+  highlight: { label: string; terms: string[] } | null
+  onClear: () => void
+}) {
+  const spans = highlight ? keywordSpans(text, highlight.terms) : []
+  const parts: Array<{ text: string; mark: boolean }> = []
+  let at = 0
+  for (const s of spans) {
+    if (s.start > at) parts.push({ text: text.slice(at, s.start), mark: false })
+    parts.push({ text: text.slice(s.start, s.end), mark: true })
+    at = s.end
+  }
+  if (at < text.length) parts.push({ text: text.slice(at), mark: false })
+  return (
+    <div className="rounded-card border border-border bg-card p-5 sm:p-6">
+      {highlight && (
+        <p className="m-0 mb-3 flex flex-wrap items-center gap-2 text-sm text-muted">
+          <span>
+            Vurgulanan: <span className="font-medium text-foreground">{highlight.label}</span>
+            {spans.length === 0 && " · ilan metninde bu kelimelerle geçmiyor; çıkarım ilanı farklı ifade etmiş olabilir."}
+          </span>
+          <button type="button" onClick={onClear} className="text-xs font-semibold text-brand-blue">
+            Vurguyu kaldır
+          </button>
+        </p>
+      )}
+      <p className="m-0 text-sm leading-relaxed whitespace-pre-line">
+        {parts.map((p, i) =>
+          p.mark ? (
+            <mark key={i} className="rounded bg-brand-blue/15 px-0.5 text-foreground">
+              {p.text}
+            </mark>
+          ) : (
+            <span key={i}>{p.text}</span>
+          ),
+        )}
+      </p>
+    </div>
   )
 }

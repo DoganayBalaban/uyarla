@@ -450,6 +450,7 @@ export function AnalyzeView() {
         result={state.result}
         platform={state.platform}
         sourceWarning={state.sourceWarning}
+        postingText={state.postingText}
         durationMs={state.durationMs}
         tokenUsage={state.tokenUsage}
         modelId={state.modelId}
