@@ -15,7 +15,8 @@
     "funnel": "dotenv -e ../../.env -- tsx scripts/funnel.ts",
     "exclusion-reports": "dotenv -e ../../.env -- tsx scripts/exclusion-reports.ts",
     "backfill:excluded": "dotenv -e ../../.env -- tsx scripts/backfill-excluded-scores.ts",
-    "emails:daily": "dotenv -e ../../.env -- tsx scripts/daily-emails.ts"
+    "emails:daily": "dotenv -e ../../.env -- tsx scripts/daily-emails.ts",
+    "calibration": "dotenv -e ../../.env -- tsx scripts/calibration.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
