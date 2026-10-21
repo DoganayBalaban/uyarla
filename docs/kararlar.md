@@ -3721,3 +3721,33 @@ dedi. Düzenleme yalnızca var olan maddenin metniyle sınırlıydı (K-83).
 - **DOG-92 burada kapanıyor.** Jobscan'deki araç çubuğu, sürükle-bırak ve geri
   al/ileri al yok; düzenleme kalıcı ve her adım geri alınabilir (Geri al,
   Kaldır/Sil). "Temel CV olarak kaydet" DOG-137'ye aitti ve yapılmadı.
+
+## K-100 · Aktarılabilir deneyim: ölçüldü, şimdilik ürüne alınmadı (DOG-100)
+
+**Soru:** Alan değiştiren adaya "doğrudan deneyimin yok ama şu deneyimin
+buna yakın" denebilir mi?
+
+**Ölçüm 1 · gömme benzerliği:** 20 çiftte eşiğin altında kalan (0,35–0,50) 74
+"yakın eşleşme"nin yaklaşık 10'u gerçekten ilgili. Alan değiştiren CV'lerde
+neredeyse hepsi anlamsız ("İşe alım" ← "fatura kesimi", "medikal estetik" ←
+"iş makinesi satışı"). Skorlamadaki "eşiğin altındaki en yakın maddeyi
+gösterme" kararı yerinde.
+
+**Ölçüm 2 · LLM köprüsü** (`pnpm eval:transferable`, alan değiştiren 7 çift):
+CV'den birebir alıntı şartı ve sayı kontrolüyle 23 eksik zorunlu
+gereksinimde 2 öneri. Biri aslında skorlayıcının kaçırdığı doğrudan eşleşme
+("MS Excel" ← "Excel'de rapor"), biri zayıf. Muhasebe → İK ve satış →
+pazarlamada sıfır; gerçekten aktarılabilir tek bağ (Muhtasar beyannamesi →
+SGK mevzuatı) iki istem sürümünde ve `gpt-4.1`'de de kaçtı. Uydurma yok,
+değer de yok.
+
+**Karar:** altyapı (göç, worker işi, uç, arayüz) kurulmadı.
+`score/transferable.ts` ve eval betiği duruyor; gerçek kullanıcı CV'leriyle
+yeniden ölçülebilsin.
+
+**Yan bulgu:** "MS Excel" / "Microsoft Excel" → "Excel" kelime öbeği karşılığı
+eklendi. Skor değerlendirmesinde isabet %94,5 → %95,4, kaçırma 5 → 4, uydurma
+aynı. Etiket isabeti 17/20 → 16/20: İK CV'si × muhasebe ilanı doğru Excel
+eşleşmesiyle 17 → 33 oldu ve "Orta"ya geçti. Dört zorunludan birini karşılayan
+çiftin "Orta" alması eşik meselesi (DOG-124); eşleşme doğru olduğu için
+karşılık tutuldu.
