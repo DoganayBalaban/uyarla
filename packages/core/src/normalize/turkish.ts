@@ -81,6 +81,10 @@ export function normalizeText(text: string): string {
     .replace(/â/g, "a")
     .replace(/î/g, "i")
     .replace(/û/g, "u")
+    // Kesme işaretinden sonraki ek atılıyor: "Excel'de" boşlukla bölününce
+    // araya giren "de" kelimesi "Excel pivot tablo" dizisini kırıyordu; ilan
+    // "Excel'de pivot tablo" yazınca terim ne ilanda ne CV'de bulunuyordu.
+    .replace(/([\p{L}\p{N}])['’]\p{L}+/gu, "$1")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim()
     .replace(/\s+/g, " ")

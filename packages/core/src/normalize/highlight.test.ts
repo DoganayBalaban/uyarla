@@ -10,6 +10,11 @@ describe("keywordSpans (DOG-92)", () => {
     expect(marked(text, ["React", "REST API"])).toEqual(["React", "REST API'leri", "REST APIs"])
   })
 
+  it("matches a multi-word term with an apostrophe suffix in the middle", () => {
+    const text = "Excel'de pivot tablo ve temel formüller"
+    expect(marked(text, ["Excel pivot tablo"])).toEqual(["Excel'de pivot tablo"])
+  })
+
   it("matches multi-word synonyms and keeps longer terms whole", () => {
     expect(marked("Yapay zekâ ürünleri ve makine öğrenmesi modelleri", ["AI", "makine öğrenmesi", "öğrenme"])).toEqual([
       "Yapay zekâ",

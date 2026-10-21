@@ -13,9 +13,13 @@ export interface KeywordSpan {
   keyword: string
 }
 
-/** Metindeki kelimeler ve konumları; `normalizeText` ile aynı sınırlar. */
+/**
+ * Metindeki kelimeler ve konumları; `normalizeText` ile aynı sınırlar.
+ * Kesme işaretli ek kelimeye dahil ("API'leri"): kök ondan önceki kısım,
+ * vurgu ekle birlikte.
+ */
 function words(text: string): Array<{ start: number; end: number; stem: string }> {
-  return [...text.matchAll(/[\p{L}\p{N}]+/gu)].map((m) => ({
+  return [...text.matchAll(/[\p{L}\p{N}]+(?:['’]\p{L}+)?/gu)].map((m) => ({
     start: m.index!,
     end: m.index! + m[0].length,
     stem: normalizeToken(m[0]),
@@ -63,11 +67,7 @@ export function keywordSpans(text: string, keywords: readonly string[]): Keyword
     for (let i = 0; i + parts.length <= tokens.length; i++) {
       if (parts.every((p, j) => tokens[i + j]!.token === p && !taken[i + j])) {
         for (let j = 0; j < parts.length; j++) taken[i + j] = true
-        // Kesme işaretli ek vurguya dahil ("API'leri"); eşleşme yine terimde.
-        const last = tokens[i + parts.length - 1]!.end
-        const suffix = text.slice(last).match(/^['’]\p{L}+/u)?.[0].length ?? 0
-        if (suffix) taken[i + parts.length] = true
-        spans.push({ start: tokens[i]!.start, end: last + suffix, keyword })
+        spans.push({ start: tokens[i]!.start, end: tokens[i + parts.length - 1]!.end, keyword })
       }
     }
   }

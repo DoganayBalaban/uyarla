@@ -166,6 +166,16 @@ describe("cross-language section and field names", () => {
   })
 })
 
+describe("apostrophe suffix", () => {
+  it("drops the suffix so a multi-word term is not split", () => {
+    // Analiz sonucunda bulundu: ilan "Excel'de pivot tablo" yazıyordu,
+    // "de" ayrı kelime kalınca "Excel pivot tablo" terimi hiç bulunmuyordu.
+    expect(containsKeyword("Excel'de pivot tablo ve temel formüller", "Excel pivot tablo")).toBe(true)
+    expect(containsKeyword("AWS’de Lambda fonksiyonları yazdım", "AWS Lambda")).toBe(true)
+    expect(normalizeTokens("Python'u ve 2023'te")).toEqual(normalizeTokens("Python ve 2023"))
+  })
+})
+
 describe("English plural suffix", () => {
   it("plural and singular reduce to the same stem", () => {
     // Ölçümle bulundu: CV'de "Developed REST APIs" yazarken ilan "REST API"
