@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Check, CircleCheck, Copy, LoaderCircle, TriangleAlert } from "lucide-react"
+import { Check, CircleCheck, Copy, TriangleAlert } from "lucide-react"
 import {
   ABOUT_TARGET_WORDS,
   HEADLINE_MAX_CHARS,
@@ -16,6 +16,15 @@ import { api, apiErrorMessage } from "@/lib/api"
 import { useLibrary } from "@/features/resumes/api"
 import { useApplicationCards } from "@/features/applications/api"
 import { PageHeader } from "@/components/layout/PageShell"
+import { StageTimeline } from "@/features/analysis/components/StageTimeline"
+import { deriveStageStates } from "@/features/analysis/stageStates"
+
+/** Raporun gerçek adımları (DOG-136); hangisinde olduğunu worker kayda yazıyor. */
+const REPORT_STAGES = [
+  { id: "reading", title: "Profilini okuyoruz", description: "LinkedIn PDF'indeki deneyim, beceri ve Hakkında bölümü ayrıştırılıyor." },
+  { id: "scoring", title: "İlanlarla karşılaştırıyoruz", description: "Seçtiğin her ilanın gereksinimleri profilinde aranıyor." },
+  { id: "writing", title: "Başlık ve Hakkında önerisi yazıyoruz", description: "Öneri, profilinde yazanlara karşı kontrol ediliyor." },
+]
 
 const reportKey = (resumeId: string) => ["linkedin-report", resumeId] as const
 
@@ -149,11 +158,12 @@ export function LinkedInView() {
         )}
       </section>
 
-      {running && (
-        <p className="flex items-center gap-2 text-sm text-muted" role="status">
-          <LoaderCircle className="size-4 text-brand-blue motion-safe:animate-spin" aria-hidden />
-          Profilini okuyup ilanlarla karşılaştırıyoruz…
-        </p>
+      {running && record?.status === "running" && (
+        <StageTimeline
+          heading="Raporun hazırlanıyor"
+          subtitle="Genelde bir dakika kadar sürüyor."
+          stages={deriveStageStates(REPORT_STAGES, record.stage ?? null)}
+        />
       )}
       {record?.status === "failed" && <p className="text-sm text-brand-red">Raporu hazırlayamadık. Tekrar dener misin?</p>}
       {record?.status === "done" && <ReportView report={record.report} />}

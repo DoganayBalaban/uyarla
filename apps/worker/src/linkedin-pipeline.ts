@@ -34,12 +34,15 @@ export async function runLinkedInReport(
     async (text) => (await extractResumeProfile(deps.llm, text)).data,
     resumeParserKey(deps.modelId),
   )
+  // Adımlar kayda yazılıyor; ekran yalnızca bunu gösteriyor (DOG-136).
+  await deps.store.save(input.resumeId, { ...context.record, stage: "scoring" })
   const scored: ScoredPosting[] = []
   for (const p of context.postings) {
     const result = await scoreProfile({ profile, posting: p.posting }, deps.embedding)
     scored.push({ analysisId: p.analysisId, position: p.position, company: p.company, result, excluded: p.excluded })
   }
   const report = linkedinReport(profile, scored, { targetRole: context.targetRole })
+  await deps.store.save(input.resumeId, { ...context.record, stage: "writing" })
   // Başlık ve "Hakkında" önerisi (LLM). Patlarsa rapor yine kaydediliyor.
   let suggestions = null
   try {

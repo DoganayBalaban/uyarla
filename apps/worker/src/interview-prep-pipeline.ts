@@ -11,6 +11,10 @@ import type { InterviewPrepStore } from "./follow-up-store.js"
 export async function runInterviewPrep(deps: { llm: LlmProvider; store: InterviewPrepStore }, input: InterviewPrepJobData): Promise<void> {
   const context = await deps.store.getPrepContext(input.analysisId)
   if (!context.record || context.record.status !== "running") return
+  // Belgeler okundu; adım kayda yazılıyor, ekran bunu gösteriyor (DOG-136).
+  await deps.store.updatePrep(input.analysisId, (current) =>
+    current?.status === "running" ? { ...current, stage: "writing" } : current,
+  )
   const { data } = await generateInterviewPrep(deps.llm, {
     profile: context.profile,
     coverLetter: context.coverLetter,
@@ -19,7 +23,11 @@ export async function runInterviewPrep(deps: { llm: LlmProvider; store: Intervie
     rewritten: context.rewritten,
   })
   // Bu arada eklenen pratik denemeleri korunuyor.
-  await deps.store.updatePrep(input.analysisId, (current) => (current ? { ...current, status: "done", prep: data } : null))
+  await deps.store.updatePrep(input.analysisId, (current) => {
+    if (!current) return null
+    const { stage: _stage, ...rest } = current as typeof current & { stage?: unknown }
+    return { ...rest, status: "done", prep: data }
+  })
 }
 
 /**
