@@ -57,7 +57,7 @@ export function DemoRing({
             cy="50"
             r={R}
             fill="none"
-            className={muted ? "stroke-muted/40" : status.strokeClass}
+            className={muted ? "stroke-muted-foreground/40" : status.strokeClass}
             strokeWidth="8"
             strokeLinecap="round"
             style={{ strokeDasharray: dash }}
@@ -66,14 +66,14 @@ export function DemoRing({
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
           <motion.span
-            className={`font-heading font-extrabold tabular-nums ${muted ? "text-muted" : status.textClass}`}
+            className={`font-heading font-extrabold tabular-nums ${muted ? "text-muted-foreground" : status.textClass}`}
             style={{ fontSize: size * 0.3 }}
           >
             {rounded}
           </motion.span>
         </div>
       </div>
-      <span className={`text-[0.6875rem] font-bold uppercase tracking-wide ${muted ? "text-muted" : status.textClass}`}>
+      <span className={`text-[0.6875rem] font-bold uppercase tracking-wide ${muted ? "text-muted-foreground" : status.textClass}`}>
         {label ?? status.label}
       </span>
     </div>
@@ -94,7 +94,7 @@ export function BulletText({ segments, decision }: { segments: Segment[]; decisi
             seg.kind === "add" && decision !== "old"
               ? "rounded bg-brand-green/15 px-0.5"
               : seg.kind === "del" && !decision
-                ? "text-muted line-through decoration-muted/70"
+                ? "text-muted-foreground line-through decoration-muted-foreground/70"
                 : undefined
           return (
             <motion.span
@@ -140,7 +140,7 @@ export function DecisionToggle({
             aria-checked={active}
             onClick={() => onChange(o.d)}
             className={`relative z-0 cursor-pointer rounded-lg px-3 py-1 font-semibold transition-colors ${
-              active ? (o.d === "new" ? "text-brand-blue" : "text-foreground") : "text-muted hover:text-foreground"
+              active ? (o.d === "new" ? "text-brand-blue" : "text-foreground") : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {active && (

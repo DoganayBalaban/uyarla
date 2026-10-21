@@ -13,7 +13,7 @@ import { parseTerms, REASON_OPTIONS } from "@/features/analysis/requirementFix"
 const panel = "mt-3 ml-8 rounded-button border border-border bg-background p-4 text-sm"
 const primary =
   "rounded-button bg-brand-blue px-3.5 py-2 font-semibold text-white transition hover:bg-brand-blue/90 disabled:opacity-50"
-const secondary = "rounded-button px-3 py-2 font-semibold text-muted transition hover:text-foreground"
+const secondary = "rounded-button px-3 py-2 font-semibold text-muted-foreground transition hover:text-foreground"
 
 export function MarkPanel({
   saving,
@@ -51,7 +51,7 @@ export function MarkPanel({
               />
               <span>
                 <span className="font-medium">{o.label}</span>
-                <span className="block text-xs text-muted">{o.hint}</span>
+                <span className="block text-xs text-muted-foreground">{o.hint}</span>
               </span>
             </label>
           ))}
@@ -132,7 +132,7 @@ export function CorrectPanel({
         </label>
       ) : (
         <label className="block">
-          <span className="text-muted">İlanın kabul ettiği bölüm ya da dereceler, virgülle ayır:</span>
+          <span className="text-muted-foreground">İlanın kabul ettiği bölüm ya da dereceler, virgülle ayır:</span>
           <input
             type="text"
             value={terms}
@@ -142,7 +142,7 @@ export function CorrectPanel({
           />
         </label>
       )}
-      <p className="mt-2 text-xs text-muted">
+      <p className="mt-2 text-xs text-muted-foreground">
         Yalnızca ilanın ne istediğini düzeltiyorsun; skor CV&apos;ndekine göre yeniden hesaplanır.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">

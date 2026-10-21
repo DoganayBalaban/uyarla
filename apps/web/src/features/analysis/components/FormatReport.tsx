@@ -51,7 +51,7 @@ export function FormatReportCard({
             <h2 className="m-0 text-lg">
               CV kontrolü {impact && <ImpactBadge impact={impact} className="ml-1" />}
             </h2>
-            <p className="m-0 text-sm text-muted">Başvuru sistemleri CV&apos;ni doğru okuyabilir mi, işe alımcı ne görüyor?</p>
+            <p className="m-0 text-sm text-muted-foreground">Başvuru sistemleri CV&apos;ni doğru okuyabilir mi, işe alımcı ne görüyor?</p>
           </div>
         </div>
         <ul className="flex flex-wrap gap-1.5 text-xs font-semibold">
@@ -66,7 +66,7 @@ export function FormatReportCard({
       </div>
 
       {report.findings.length === 0 ? (
-        <p className="mt-4 flex items-center gap-2 text-sm text-muted">
+        <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
           <CircleCheck className="size-4 text-brand-green dark:text-[#4ade80]" aria-hidden />
           CV&apos;nde ATS&apos;in okumasını zorlaştıracak ya da işe alımcının gözüne batacak bir sorun bulmadık.
         </p>
@@ -86,7 +86,7 @@ export function FormatReportCard({
           )}
           {content.length > 0 && (
             <div className="mt-5">
-              <h3 className="m-0 text-sm font-semibold text-muted">İşe alımcı gözüyle</h3>
+              <h3 className="m-0 text-sm font-semibold text-muted-foreground">İşe alımcı gözüyle</h3>
               <ul className="mt-2.5 space-y-2.5">
                 {content.map((b) => (
                   <FindingItem
@@ -104,13 +104,13 @@ export function FormatReportCard({
 
       {report.passed.length > 0 && (
         <details className="group mt-4">
-          <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-muted">
+          <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-muted-foreground">
             Geçen kontroller
             <ChevronDown className="size-4 transition group-open:rotate-180" aria-hidden />
           </summary>
           <ul className="mt-3 flex flex-wrap gap-2">
             {report.passed.map((g) => (
-              <li key={g} className="inline-flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1 text-xs text-muted">
+              <li key={g} className="inline-flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1 text-xs text-muted-foreground">
                 <CircleCheck className="size-3.5 text-brand-green dark:text-[#4ade80]" aria-hidden />
                 {g}
               </li>
@@ -151,11 +151,11 @@ function FindingItem({
           {b.title}
           {impact && <ImpactBadge impact={impact} className="ml-2" />}
         </p>
-        <p className="m-0 mt-0.5 text-sm text-muted">{b.description}</p>
+        <p className="m-0 mt-0.5 text-sm text-muted-foreground">{b.description}</p>
         {b.examples && b.examples.length > 0 && (
           <div className="mt-2">
             <p className="m-0 text-xs font-medium">Rakam ekleyebileceğin cümleler:</p>
-            <ul className="mt-1 list-disc space-y-0.5 pl-4 text-sm text-muted">
+            <ul className="mt-1 list-disc space-y-0.5 pl-4 text-sm text-muted-foreground">
               {b.examples.map((e) => (
                 <li key={e}>{e}</li>
               ))}

@@ -38,10 +38,10 @@ type ResumeStep = z.input<typeof resumeStepSchema>
 type ResumeStepOutput = z.output<typeof resumeStepSchema>
 
 const inputClass =
-  "w-full rounded-button border border-border bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted/70 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15"
+  "w-full rounded-button border border-border bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15"
 const primaryButton =
   "inline-flex items-center justify-center gap-2 rounded-button bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-blue-hover disabled:cursor-not-allowed disabled:opacity-60"
-const skipButton = "text-sm font-medium text-muted underline-offset-4 hover:text-foreground hover:underline"
+const skipButton = "text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
 
 export function OnboardingFlow({ initialName, returnTo }: { initialName: string; returnTo: string }) {
   const router = useRouter()
@@ -111,12 +111,12 @@ export function OnboardingFlow({ initialName, returnTo }: { initialName: string;
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col justify-center px-6 py-12">
-      <p className="text-sm font-medium text-muted">{step}/3</p>
+      <p className="text-sm font-medium text-muted-foreground">{step}/3</p>
 
       {step === 1 && (
         <form onSubmit={submitName} noValidate className="mt-3">
           <h1 className="font-heading text-3xl font-extrabold tracking-tight">Sana nasıl hitap edelim?</h1>
-          <p className="mt-2 text-muted">Önce seni biraz tanıyalım.</p>
+          <p className="mt-2 text-muted-foreground">Önce seni biraz tanıyalım.</p>
           <label htmlFor="name" className="mt-8 mb-1.5 block text-sm font-medium">
             Adın
           </label>
@@ -133,7 +133,7 @@ export function OnboardingFlow({ initialName, returnTo }: { initialName: string;
       {step === 2 && (
         <form onSubmit={submitGoal} noValidate className="mt-3">
           <h1 className="font-heading text-3xl font-extrabold tracking-tight">Ne arıyorsun?</h1>
-          <p className="mt-2 text-muted">İsteğe bağlı. Sonra hesabım sayfasından değiştirebilirsin.</p>
+          <p className="mt-2 text-muted-foreground">İsteğe bağlı. Sonra hesabım sayfasından değiştirebilirsin.</p>
           <div role="radiogroup" aria-label="Amacın" className="mt-6 grid gap-2.5 sm:grid-cols-2">
             {GOAL_OPTIONS.map((option) => (
               <button
@@ -152,7 +152,7 @@ export function OnboardingFlow({ initialName, returnTo }: { initialName: string;
                 )}
               >
                 <span className="block font-semibold">{option.label}</span>
-                <span className="text-sm text-muted">{option.hint}</span>
+                <span className="text-sm text-muted-foreground">{option.hint}</span>
               </button>
             ))}
           </div>
@@ -177,7 +177,7 @@ export function OnboardingFlow({ initialName, returnTo }: { initialName: string;
       {step === 3 && (
         <form onSubmit={submitResume} noValidate className="mt-3">
           <h1 className="font-heading text-3xl font-extrabold tracking-tight">CV&apos;ni bir kez yükle</h1>
-          <p className="mt-2 text-muted">Her ilanda yeniden yüklemek yerine kayıtlı CV&apos;ni seçersin. İsteğe bağlı.</p>
+          <p className="mt-2 text-muted-foreground">Her ilanda yeniden yüklemek yerine kayıtlı CV&apos;ni seçersin. İsteğe bağlı.</p>
           <div className="mt-6">
             <ResumeUpload
               value={resumeFile ?? null}

@@ -162,7 +162,7 @@ function RunningNotice({
       </span>
       <div className="min-w-0 flex-1">
         <p className="m-0 font-semibold">Analizin hazırlanıyor</p>
-        <p className="m-0 mt-0.5 text-sm text-muted">
+        <p className="m-0 mt-0.5 text-sm text-muted-foreground">
           {(record.stage && STAGE_SHORT_LABEL[record.stage]) ?? "Sıraya alındı"} · bitince haber vereceğiz
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -199,7 +199,7 @@ function DoneNotice({ record, onClose }: { record: ActiveAnalysis; onClose: () =
       <div className="min-w-0 flex-1">
         <p className="m-0 font-semibold">Analizin hazır</p>
         {state && record.score != null && (
-          <p className="m-0 mt-0.5 text-sm text-muted">
+          <p className="m-0 mt-0.5 text-sm text-muted-foreground">
             Uyum skorun <span className={`font-semibold ${state.textClass}`}>{record.score} · {state.label}</span>
           </p>
         )}
@@ -227,7 +227,7 @@ function FailedNotice({ record, onClose }: { record: ActiveAnalysis; onClose: ()
       </span>
       <div className="min-w-0 flex-1">
         <p className="m-0 font-semibold">Analiz tamamlanamadı</p>
-        <p className="m-0 mt-0.5 text-sm text-muted">{record.error ?? "Birkaç dakika sonra tekrar dener misin?"}</p>
+        <p className="m-0 mt-0.5 text-sm text-muted-foreground">{record.error ?? "Birkaç dakika sonra tekrar dener misin?"}</p>
         <Link
           href="/analyze"
           onClick={onClose}
@@ -248,7 +248,7 @@ function CloseButton({ onClose }: { onClose: () => void }) {
       type="button"
       onClick={onClose}
       aria-label="Bildirimi kapat"
-      className="-m-1 grid size-7 shrink-0 place-items-center rounded-full text-muted transition hover:bg-background hover:text-foreground"
+      className="-m-1 grid size-7 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-background hover:text-foreground"
     >
       <X className="size-4" aria-hidden />
     </button>

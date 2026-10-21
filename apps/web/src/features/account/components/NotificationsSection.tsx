@@ -39,7 +39,7 @@ export function NotificationsSection() {
   return (
     <section className="rounded-card border border-border bg-card p-6">
       <h2 className="m-0 text-lg">E-posta tercihleri</h2>
-      <p className="m-0 mt-1 text-sm text-muted">
+      <p className="m-0 mt-1 text-sm text-muted-foreground">
         Giriş bağlantısı, ödeme onayı ve hesap silme gibi hesabınla ilgili e-postalar her zaman gider. Hiçbir e-postayı
         günde birden fazla göndermiyoruz.
       </p>
@@ -54,7 +54,7 @@ export function NotificationsSection() {
           />
           <span>
             <span className="block text-sm font-medium">{row.title}</span>
-            <span className="block text-sm text-muted">{row.text}</span>
+            <span className="block text-sm text-muted-foreground">{row.text}</span>
           </span>
         </label>
       ))}

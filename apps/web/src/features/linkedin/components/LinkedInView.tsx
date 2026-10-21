@@ -83,7 +83,7 @@ export function LinkedInView() {
 
       <section className="rounded-card border border-border bg-card p-5 text-sm">
         <h2 className="m-0 text-base">1. Profilinin PDF'i</h2>
-        <p className="mt-1 text-muted">
+        <p className="mt-1 text-muted-foreground">
           LinkedIn'de profiline git, <span className="font-medium text-foreground">Daha fazla → PDF olarak kaydet</span> de ve
           dosyayı{" "}
           <Link href="/account" className="font-medium text-brand-blue">
@@ -111,7 +111,7 @@ export function LinkedInView() {
 
       <section className="rounded-card border border-border bg-card p-5 text-sm">
         <h2 className="m-0 text-base">2. Hedeflediğin ilanlar</h2>
-        <p className="mt-1 text-muted">Daha önce analiz ettiğin ilanlardan en fazla {MAX_REPORT_POSTINGS} tanesini seç.</p>
+        <p className="mt-1 text-muted-foreground">Daha önce analiz ettiğin ilanlardan en fazla {MAX_REPORT_POSTINGS} tanesini seç.</p>
         {analyses.length > 0 ? (
           <ul className="mt-3 space-y-1.5 pl-0">
             {analyses.map((c) => (
@@ -126,7 +126,7 @@ export function LinkedInView() {
                   />
                   <span>
                     {c.position}
-                    {c.company && <span className="text-muted"> · {c.company}</span>}
+                    {c.company && <span className="text-muted-foreground"> · {c.company}</span>}
                   </span>
                 </label>
               </li>
@@ -134,7 +134,7 @@ export function LinkedInView() {
           </ul>
         ) : (
           !cards.isPending && (
-            <p className="mt-3 text-muted">
+            <p className="mt-3 text-muted-foreground">
               Henüz analizin yok.{" "}
               <Link href="/analyze" className="font-medium text-brand-blue">
                 Bir ilanı ölç
@@ -177,7 +177,7 @@ export function ReportView({ report }: { report: LinkedInReport }) {
       {report.suggestions && (
         <section className="rounded-card border border-border bg-card p-5 text-sm">
           <h2 className="m-0 text-base">Öneriler</h2>
-          <p className="mt-1 text-muted">
+          <p className="mt-1 text-muted-foreground">
             Yalnızca profilinde yazanlarla; başlığa yalnızca profilinde geçen beceriler giriyor. Kopyalayıp LinkedIn'de kendin
             güncelle.
           </p>
@@ -210,7 +210,7 @@ export function ReportView({ report }: { report: LinkedInReport }) {
           ))}
         </ul>
         {report.headline && (
-          <p className="m-0 mt-3 text-muted">
+          <p className="m-0 mt-3 text-muted-foreground">
             Şu anki başlığın: <span className="text-foreground">{report.headline}</span>
           </p>
         )}
@@ -218,7 +218,7 @@ export function ReportView({ report }: { report: LinkedInReport }) {
 
       <section className="rounded-card border border-border bg-card p-5 text-sm">
         <h2 className="m-0 text-base">İlanlarda geçen, profilinde görünmeyenler</h2>
-        <p className="mt-1 text-muted">
+        <p className="mt-1 text-muted-foreground">
           {report.postings.length > 1 ? "Seçtiğin ilanların en az ikisinde isteniyor." : "Seçtiğin ilanda isteniyor."} Deneyiminde varsa
           profiline ekle; yoksa ekleme.
         </p>
@@ -228,14 +228,14 @@ export function ReportView({ report }: { report: LinkedInReport }) {
               <li key={m.term} className="list-none rounded-full border border-border bg-background px-2.5 py-0.5">
                 {m.term}
                 {m.must && <span className="ml-1 text-xs text-brand-amber">zorunlu</span>}
-                {report.postings.length > 1 && <span className="ml-1 text-xs text-muted">{m.postings} ilanda</span>}
+                {report.postings.length > 1 && <span className="ml-1 text-xs text-muted-foreground">{m.postings} ilanda</span>}
               </li>
             ))}
           </ul>
         ) : (
           <p className="mt-3">Ortak bir eksik görünmüyor.</p>
         )}
-        <p className="m-0 mt-3 text-xs text-muted">
+        <p className="m-0 mt-3 text-xs text-muted-foreground">
           Karşılaştırılan ilanlar: {report.postings.map((p) => `${p.position}${p.company ? ` (${p.company})` : ""}`).join(", ")}
         </p>
       </section>
@@ -258,7 +258,7 @@ function SuggestionBlock({
   return (
     <div className="mt-4">
       <h3 className="m-0 text-sm font-semibold">{title}</h3>
-      {current && <p className="m-0 mt-1 text-xs text-muted">Şu anki: {current}</p>}
+      {current && <p className="m-0 mt-1 text-xs text-muted-foreground">Şu anki: {current}</p>}
       <p className="m-0 mt-2 whitespace-pre-line rounded-button bg-background p-2.5 leading-relaxed">{suggestion.text}</p>
       {suggestion.verification.status === "flagged" && (
         <p className="m-0 mt-2 flex gap-1.5 text-brand-amber">
@@ -266,7 +266,7 @@ function SuggestionBlock({
           <span>Kontrol et: {suggestion.verification.issues.map((i) => i.detail).join(" ")}</span>
         </p>
       )}
-      <div className="mt-1.5 flex items-center gap-3 text-xs text-muted">
+      <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
         <span>{measure(suggestion.text)}</span>
         <button
           type="button"

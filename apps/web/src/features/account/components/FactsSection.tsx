@@ -16,21 +16,21 @@ export function FactsSection() {
   return (
     <section className="rounded-card border border-border bg-card p-6">
       <h2 className="m-0 text-lg">Anlattığın deneyimler</h2>
-      <p className="m-0 mt-1 text-sm text-muted">
+      <p className="m-0 mt-1 text-sm text-muted-foreground">
         Uyarlamada eksik bir gereksinim için anlatıp kabul ettiğin maddeler. Sonraki analizlerde, CV&apos;nde aynı iş
         varsa onun altında kanıt sayılır ve uyarladığın CV&apos;ye eklenir. Unuttuğun madde yeni analizlerde
         kullanılmaz.
       </p>
       {list.isPending ? (
-        <LoaderCircle className="mt-4 size-5 text-muted motion-safe:animate-spin" aria-hidden />
+        <LoaderCircle className="mt-4 size-5 text-muted-foreground motion-safe:animate-spin" aria-hidden />
       ) : facts.length === 0 ? (
-        <p className="mt-4 text-sm text-muted">Henüz yok.</p>
+        <p className="mt-4 text-sm text-muted-foreground">Henüz yok.</p>
       ) : (
         <ul className="mt-4 list-none space-y-3 p-0">
           {facts.map((fact) => (
             <li key={fact.id} className="rounded-button border border-border bg-background p-3 text-sm">
               <p className="m-0">{fact.text}</p>
-              <p className="m-0 mt-1 text-muted">
+              <p className="m-0 mt-1 text-muted-foreground">
                 {fact.title} · {fact.company}
                 {fact.requirement && <> · &quot;{fact.requirement}&quot; için</>}
               </p>
@@ -38,7 +38,7 @@ export function FactsSection() {
                 type="button"
                 disabled={forget.isPending}
                 onClick={() => forget.mutate(fact.id)}
-                className="mt-2 text-sm font-medium text-muted underline-offset-2 transition hover:text-foreground hover:underline disabled:opacity-50"
+                className="mt-2 text-sm font-medium text-muted-foreground underline-offset-2 transition hover:text-foreground hover:underline disabled:opacity-50"
               >
                 Unut
               </button>

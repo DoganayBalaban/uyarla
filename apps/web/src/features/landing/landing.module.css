@@ -359,7 +359,7 @@
   font: inherit;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--muted-foreground);
   cursor: pointer;
 }
 .heroChapter:hover {
@@ -925,7 +925,7 @@
   margin-top: 3rem;
   padding-top: 1.5rem;
   position: relative;
-  color: var(--muted);
+  color: var(--muted-foreground);
   font-size: 0.875rem;
 }
 .footerBottom::before {
@@ -1013,19 +1013,19 @@
   margin-left: 0.5rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--muted-foreground);
 }
 .mockLabel {
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--muted-foreground);
   margin: 0 0 0.6rem;
 }
 .mockSmall {
   font-size: 0.8125rem;
-  color: var(--muted);
+  color: var(--muted-foreground);
   margin: 0.15rem 0 0;
 }
 .mockTop {
@@ -1107,7 +1107,7 @@
 .importance {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--muted-foreground);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0.05rem 0.4rem;

@@ -17,7 +17,7 @@ export function FunnelReport({ title, summary }: { title: string; summary: Funne
       <h2 className="m-0 px-5 pt-4 pb-3 text-base font-bold">{title}</h2>
       <table className="w-full border-t border-border text-sm">
         <thead>
-          <tr className="text-left text-muted">
+          <tr className="text-left text-muted-foreground">
             <th className="px-5 py-2 font-medium">Adım</th>
             <th className="px-5 py-2 text-right font-medium">Kişi</th>
             <th className="px-5 py-2 text-right font-medium">Önceki adımdan</th>
@@ -35,7 +35,7 @@ export function FunnelReport({ title, summary }: { title: string; summary: Funne
           ))}
         </tbody>
       </table>
-      <p className="m-0 border-t border-border px-5 py-3 text-sm text-muted">
+      <p className="m-0 border-t border-border px-5 py-3 text-sm text-muted-foreground">
         {analyses.total} analiz · {analyses.failed} başarısız ({percent(analyses.failureRate)}) · medyan süre{" "}
         {medianDurationMs === null ? "—" : `${(medianDurationMs / 1000).toFixed(1)} sn`} · örnek ilanla {analyses.sample}
       </p>

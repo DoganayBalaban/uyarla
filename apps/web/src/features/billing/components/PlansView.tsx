@@ -50,7 +50,7 @@ export function PlansView({ plans, returnTo }: { plans: PlanOffer[]; returnTo: s
     return (
       <div className="mx-auto max-w-xl text-center">
         <h1 className="text-2xl">Paketler şu an kapalı</h1>
-        <p className="mt-2 text-muted">Birazdan tekrar dener misin? Sorun sürerse iletisim@uyarla.com.tr adresine yaz.</p>
+        <p className="mt-2 text-muted-foreground">Birazdan tekrar dener misin? Sorun sürerse iletisim@uyarla.com.tr adresine yaz.</p>
       </div>
     )
   }
@@ -59,7 +59,7 @@ export function PlansView({ plans, returnTo }: { plans: PlanOffer[]; returnTo: s
     <div className="mx-auto max-w-4xl">
       <header className="text-center">
         <h1 className="text-2xl sm:text-3xl">Erişim dönemini seç</h1>
-        <p className="mx-auto mt-2 max-w-xl text-muted">
+        <p className="mx-auto mt-2 max-w-xl text-muted-foreground">
           Süre boyunca istediğin kadar CV uyarla ve ön yazı oluştur. Tek seferlik ödeme, otomatik yenileme yok.
         </p>
       </header>
@@ -143,7 +143,7 @@ export function PlansView({ plans, returnTo }: { plans: PlanOffer[]; returnTo: s
               {error}
             </p>
           )}
-          <p className="flex items-start gap-1.5 text-xs text-muted">
+          <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
             <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             Ödeme Polar üzerinden alınır; kart bilgin uyarla&apos;ya gelmez. Fiyatlara KDV dahil, faturan e-postana gönderilir.
           </p>

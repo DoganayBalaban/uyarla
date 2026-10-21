@@ -93,7 +93,7 @@ export function ProfileSection() {
         <div>
           <label htmlFor="profile-phone" className="mb-1.5 block text-sm font-medium">Telefon</label>
           <input id="profile-phone" type="tel" autoComplete="tel" placeholder="+90 555 000 00 00" {...register("phone")} className={inputClass} />
-          <p className="mt-1 text-xs text-muted">CV&apos;nde telefon yoksa indirdiğin CV&apos;ye bu yazılır. E-posta olarak hesabındaki adres kullanılır.</p>
+          <p className="mt-1 text-xs text-muted-foreground">CV&apos;nde telefon yoksa indirdiğin CV&apos;ye bu yazılır. E-posta olarak hesabındaki adres kullanılır.</p>
           {formState.errors.phone && <p role="alert" className="mt-1 text-sm text-brand-amber">{formState.errors.phone.message}</p>}
         </div>
         <div className="flex items-center gap-3">

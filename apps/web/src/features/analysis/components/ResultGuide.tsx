@@ -88,7 +88,7 @@ export function ResultGuide({ impacts, onGo }: { impacts: ScoreImpacts; onGo: (t
         }}
         className={cn(
           "inline-flex items-center gap-1.5 text-sm font-medium transition",
-          seen ? "text-muted hover:text-foreground" : "text-brand-blue",
+          seen ? "text-muted-foreground hover:text-foreground" : "text-brand-blue",
         )}
       >
         <CircleHelp className="size-4" aria-hidden />
@@ -105,17 +105,17 @@ export function ResultGuide({ impacts, onGo }: { impacts: ScoreImpacts; onGo: (t
             onKeyDown={(e) => e.key === "Escape" && close()}
           >
             <div className="flex items-start justify-between gap-3">
-              <p className="m-0 text-xs font-semibold text-muted tabular-nums">
+              <p className="m-0 text-xs font-semibold text-muted-foreground tabular-nums">
                 {at + 1} / {steps.length}
               </p>
-              <button type="button" onClick={close} aria-label="Kapat" className="text-muted hover:text-foreground">
+              <button type="button" onClick={close} aria-label="Kapat" className="text-muted-foreground hover:text-foreground">
                 <X className="size-4" aria-hidden />
               </button>
             </div>
             <h2 id="result-guide-title" className="m-0 mt-1 text-lg">
               {step.title}
             </h2>
-            <p className="mt-2 text-sm text-muted">{step.body}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{step.body}</p>
             <div className="mt-5 flex flex-wrap items-center gap-2">
               {at < steps.length - 1 ? (
                 <button
@@ -132,7 +132,7 @@ export function ResultGuide({ impacts, onGo }: { impacts: ScoreImpacts; onGo: (t
                 </button>
               )}
               {at > 0 && (
-                <button type="button" onClick={() => setAt(at - 1)} className="px-3 py-2 text-sm font-semibold text-muted">
+                <button type="button" onClick={() => setAt(at - 1)} className="px-3 py-2 text-sm font-semibold text-muted-foreground">
                   Önceki
                 </button>
               )}

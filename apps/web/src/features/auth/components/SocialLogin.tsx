@@ -106,7 +106,7 @@ export function SocialLogin({ open, returnTo }: { open: Provider[]; returnTo: st
             )}
           >
             {soon && (
-              <span className="absolute -top-2 right-2 rounded-full bg-background px-1.5 text-[10px] font-semibold text-muted ring-1 ring-border">
+              <span className="absolute -top-2 right-2 rounded-full bg-background px-1.5 text-[10px] font-semibold text-muted-foreground ring-1 ring-border">
                 yakında
               </span>
             )}
@@ -121,7 +121,7 @@ export function SocialLogin({ open, returnTo }: { open: Provider[]; returnTo: st
         })}
       </div>
       {messageText && (
-        <p role="status" className="mt-3 text-sm text-muted">
+        <p role="status" className="mt-3 text-sm text-muted-foreground">
           {messageText}
         </p>
       )}

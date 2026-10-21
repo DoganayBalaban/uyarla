@@ -88,7 +88,7 @@ export function CheckDemo() {
           onClick={tryDownload}
           aria-disabled={!unlocked}
           className={`inline-flex cursor-pointer items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold transition-colors ${
-            unlocked ? "bg-brand-blue text-white hover:bg-brand-blue-hover" : "bg-border text-muted"
+            unlocked ? "bg-brand-blue text-white hover:bg-brand-blue-hover" : "bg-border text-muted-foreground"
           }`}
         >
           {unlocked ? <Download size={16} /> : <Lock size={16} />}
@@ -100,7 +100,7 @@ export function CheckDemo() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-sm text-muted"
+            className="text-sm text-muted-foreground"
           >
             {unlocked ? "Karar verildi, indirme açık." : "İşaretli maddeye karar verene kadar indirme kapalı."}
           </motion.span>
@@ -114,7 +114,7 @@ export function CheckDemo() {
             setDecisions({})
             setDownloaded(false)
           }}
-          className="mt-3 inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-muted hover:text-foreground"
+          className="mt-3 inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
         >
           <RotateCcw size={12} /> Baştan dene
         </button>

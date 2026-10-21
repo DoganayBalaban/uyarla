@@ -76,7 +76,7 @@ const STAGES = [
 ]
 
 const inputClass =
-  "w-full rounded-button border border-border bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted/70 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15"
+  "w-full rounded-button border border-border bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/15"
 
 function StepHeading({ number, heading, hint }: { number: number; heading: string; hint: string }) {
   return (
@@ -86,7 +86,7 @@ function StepHeading({ number, heading, hint }: { number: number; heading: strin
       </span>
       <div>
         <p className="m-0 font-semibold">{heading}</p>
-        <p className="m-0 text-sm text-muted">{hint}</p>
+        <p className="m-0 text-sm text-muted-foreground">{hint}</p>
       </div>
     </div>
   )
@@ -452,7 +452,7 @@ export function AnalyzeView() {
       <div className="mx-auto max-w-md rounded-card border border-border bg-card p-10 text-center shadow-sm">
         <LoaderCircle className="mx-auto size-8 text-brand-blue motion-safe:animate-spin" aria-hidden />
         <h1 className="mt-5 text-2xl">Uyarlaman hazırlanıyor…</h1>
-        <p className="mt-2 text-sm text-muted">Kaldığın yerden devam ediyoruz.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Kaldığın yerden devam ediyoruz.</p>
       </div>
     )
   }
@@ -481,7 +481,7 @@ export function AnalyzeView() {
   if (running) {
     return (
       <div className="mx-auto max-w-2xl">
-        {libraryNote && <p className="mb-4 text-sm text-muted">{libraryNote}</p>}
+        {libraryNote && <p className="mb-4 text-sm text-muted-foreground">{libraryNote}</p>}
         <StageTimeline
           heading="Analizin hazırlanıyor"
           subtitle="Genelde bir dakika kadar sürüyor. Sayfadan ayrılma."
@@ -504,7 +504,7 @@ export function AnalyzeView() {
             Bu ilanı {new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long" }).format(new Date(duplicate.createdAt))}{" "}
             tarihinde analiz ettin.
           </p>
-          <p className="m-0 mt-1 text-muted">Önceki sonuç panonda duruyor; yeniden analiz panoya ikinci bir kart ekler.</p>
+          <p className="m-0 mt-1 text-muted-foreground">Önceki sonuç panonda duruyor; yeniden analiz panoya ikinci bir kart ekler.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href={resultPath(duplicate.analysisId)}
@@ -568,7 +568,7 @@ export function AnalyzeView() {
               />
               {registered &&
                 (libraryFull ? (
-                  <p className="mt-2 text-sm text-muted">Kütüphanende {LIBRARY_MAX} CV var; bu dosya kaydedilmeyecek.</p>
+                  <p className="mt-2 text-sm text-muted-foreground">Kütüphanende {LIBRARY_MAX} CV var; bu dosya kaydedilmeyecek.</p>
                 ) : (
                   <label className="mt-3 flex items-center gap-2 text-sm">
                     <input type="checkbox" {...register("saveToLibrary")} className="size-4 accent-brand-blue" />
@@ -591,7 +591,7 @@ export function AnalyzeView() {
           </label>
           <div className="flex gap-2">
             <div className="relative min-w-0 flex-1">
-              <Link2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden />
+              <Link2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
               <input
                 id="ilanUrl"
                 type="url"
@@ -646,7 +646,7 @@ export function AnalyzeView() {
           {/* Elinde ilan olmayan ilk denemeyi engellemesin (DOG-101); kutu boşken. */}
           {!jobText.trim() && (
             <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-muted">Elinde ilan yok mu? Örnek ilanla dene:</span>
+              <span className="text-muted-foreground">Elinde ilan yok mu? Örnek ilanla dene:</span>
               {SAMPLE_POSTINGS.map((sample) => (
                 <button
                   key={sample.id}
@@ -697,13 +697,13 @@ export function AnalyzeView() {
                   </span>
                   <span>
                     <span className="block font-medium">{b}</span>
-                    <span className="text-muted">{m}</span>
+                    <span className="text-muted-foreground">{m}</span>
                   </span>
                 </li>
               ))}
             </ul>
           </div>
-          <div className="flex gap-3 rounded-card border border-border bg-card/60 p-4 text-sm text-muted">
+          <div className="flex gap-3 rounded-card border border-border bg-card/60 p-4 text-sm text-muted-foreground">
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-green dark:text-[#4ade80]" aria-hidden />
             <p className="m-0">
               CV&apos;n analiz için OpenAI&apos;a gönderilir; satılmaz, model eğitiminde kullanılmaz.{" "}
