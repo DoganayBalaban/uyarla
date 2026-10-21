@@ -13,6 +13,9 @@ const summary: DashboardSummary = {
   stageCounts: { saved: 4, applied: 0, interview: 0, offer: 0, rejected: 0 },
   pending: [],
   recentAnalyses: [],
+  metrics: { analysesLast30: 2, applied: 0, positive: 0, averageScore: 28 },
+  timeline: [],
+  outcomeSignal: null,
 }
 
 describe("DashboardView · beceri açığı (DOG-119)", () => {
@@ -32,11 +35,50 @@ describe("DashboardView · beceri açığı (DOG-119)", () => {
   })
 })
 
-describe("DashboardView · İlan bul (DOG-68)", () => {
-  it("links to the job sites with the profile's query", () => {
+describe("DashboardView · DOG-145", () => {
+  it("shows the summary cards with a one-line meaning", () => {
+    const html = renderToStaticMarkup(<DashboardView name="Elif" targetRole={null} summary={summary} />)
+    expect(html).toContain("Ortalama skor")
+    expect(html).toContain("Son 30 günde 2 yeni analiz")
+    expect(html).toContain("Orta uyum bandında")
+  })
+
+  it("lists an upcoming interview with its day and links to the prep", () => {
+    const html = renderToStaticMarkup(
+      <DashboardView
+        name="Elif"
+        targetRole={null}
+        summary={{
+          ...summary,
+          pending: [{ kind: "interview", analysisId: "a1", position: "Muhasebe Uzmanı", address: "/applications/a1/mulakat", date: "2026-10-22" }],
+        }}
+      />,
+    )
+    expect(html).toContain("Mülakatın 22 Ekim Perşembe")
+    expect(html).toContain('href="/applications/a1/mulakat"')
+  })
+
+  it("shows the personal outcome signal only when there is one", () => {
+    const html = renderToStaticMarkup(
+      <DashboardView name="Elif" targetRole={null} summary={{ ...summary, outcomeSignal: ["Yüksek uyumlu 3 sonuçlanmış başvurunun 2 tanesi mülakata döndü."] }} />,
+    )
+    expect(html).toContain("Senin sonuçların")
+    expect(renderToStaticMarkup(<DashboardView name="Elif" targetRole={null} summary={summary} />)).not.toContain("Senin sonuçların")
+  })
+
+  it("an empty dashboard is a single first-analysis card", () => {
+    const html = renderToStaticMarkup(<DashboardView name="Elif" targetRole={null} summary={{ ...summary, total: 0 }} />)
+    expect(html).toContain("İlk analizini yap")
+    expect(html).toContain('href="/analyze#ornek-ilanlar"')
+    expect(html).not.toContain("Ortalama skor")
+  })
+})
+
+describe("DashboardView · önerilen arama (DOG-68)", () => {
+  it("shows the profile's query and sends the search to /jobs", () => {
     const html = renderToStaticMarkup(<DashboardView name="Elif" targetRole={null} summary={summary} searchKeywords="Muhasebe Uzmanı" />)
-    expect(html).toContain("İlan bul")
-    expect(html).toContain("https://www.kariyer.net/is-ilanlari?kw=Muhasebe%20Uzman%C4%B1")
-    expect(html).toContain('target="_blank"')
+    expect(html).toContain("Muhasebe Uzmanı")
+    expect(html).toContain('href="/jobs"')
+    expect(html).not.toContain("kariyer.net")
   })
 })

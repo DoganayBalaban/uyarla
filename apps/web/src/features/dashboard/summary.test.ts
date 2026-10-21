@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { summarize } from "@/features/dashboard/summary"
+import { bucketTimeline, summarize } from "@/features/dashboard/summary"
 import type { BoardCard } from "@/features/applications/board"
 
 function card(suffix: Partial<BoardCard> = {}): BoardCard {
@@ -66,5 +66,71 @@ describe("dashboard summary", () => {
       card({ analysisId: `a${i}`, createdAt: `2026-09-${String(10 + i).padStart(2, "0")}T00:00:00Z` }),
     )
     expect(summarize(cards).recentAnalyses.map((k) => k.analysisId)).toEqual(["a6", "a5", "a4", "a3", "a2"])
+  })
+})
+
+describe("dashboard summary · DOG-145", () => {
+  const now = new Date("2026-10-20T09:00:00Z")
+
+  it("puts an interview within a week first and a near deadline before ready resumes", () => {
+    const o = summarize(
+      [
+        card({ analysisId: "ready", adaptation: { id: "u2", status: "ready" } }),
+        card({ analysisId: "deadline", deadline: "2026-10-24" }),
+        card({ analysisId: "late", deadline: "2026-11-30" }),
+        card({ analysisId: "interview", stage: "interview", interviewAt: "2026-10-22" }),
+        card({ analysisId: "past", stage: "interview", interviewAt: "2026-10-01" }),
+      ],
+      now,
+    )
+    expect(o.pending.map((b) => [b.kind, b.analysisId])).toEqual([
+      ["interview", "interview"],
+      ["deadline", "deadline"],
+      ["ready", "ready"],
+      ["adapt", "late"],
+    ])
+    expect(o.pending[0]).toMatchObject({ address: "/applications/interview/mulakat", date: "2026-10-22" })
+  })
+
+  it("counts metrics from the user's own cards", () => {
+    const o = summarize(
+      [
+        card({ score: 80, createdAt: "2026-10-19T10:00:00Z" }),
+        card({ score: 40, stage: "applied", createdAt: "2026-10-01T10:00:00Z" }),
+        card({ score: null, stage: "interview", createdAt: "2026-08-01T10:00:00Z" }),
+        card({ score: 61, stage: "offer", createdAt: "2026-08-02T10:00:00Z" }),
+      ],
+      now,
+    )
+    expect(o.metrics).toEqual({ analysesLast30: 2, applied: 3, positive: 2, averageScore: 60 })
+  })
+
+  it("builds a daily timeline in Istanbul time, empty days included", () => {
+    const o = summarize(
+      [
+        // 21:30 UTC İstanbul'da ertesi gün.
+        card({ score: 50, createdAt: "2026-10-18T21:30:00Z" }),
+        card({ score: 70, createdAt: "2026-10-19T08:00:00Z" }),
+        card({ score: null, createdAt: "2026-10-17T08:00:00Z" }),
+      ],
+      now,
+    )
+    expect(o.timeline).toHaveLength(90)
+    expect(o.timeline.at(-1)).toEqual({ date: "2026-10-20", analyses: 0, score: null })
+    expect(o.timeline.at(-2)).toEqual({ date: "2026-10-19", analyses: 2, score: 60 })
+    expect(o.timeline.at(-4)).toEqual({ date: "2026-10-17", analyses: 1, score: null })
+  })
+})
+
+describe("bucketTimeline", () => {
+  it("sums weeks from the newest day and weights the score by analyses", () => {
+    const days = Array.from({ length: 9 }, (_, i) => ({ date: `2026-10-${String(10 + i).padStart(2, "0")}`, analyses: 0, score: null as number | null }))
+    days[8] = { ...days[8]!, analyses: 3, score: 40 }
+    days[7] = { ...days[7]!, analyses: 1, score: 80 }
+    days[0] = { ...days[0]!, analyses: 2, score: null }
+    expect(bucketTimeline(days, 7)).toEqual([
+      { date: "2026-10-10", analyses: 2, score: null },
+      { date: "2026-10-12", analyses: 4, score: 50 },
+    ])
   })
 })
