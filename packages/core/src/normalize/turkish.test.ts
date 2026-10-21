@@ -166,6 +166,13 @@ describe("cross-language section and field names", () => {
   })
 })
 
+describe("MS Excel (DOG-100)", () => {
+  it("matches Excel written without the vendor prefix", () => {
+    expect(containsKeyword("Raporları Excel'de hazırlıyorum", "MS Excel")).toBe(true)
+    expect(containsKeyword("Microsoft Excel ileri düzey", "Excel")).toBe(true)
+  })
+})
+
 describe("apostrophe suffix", () => {
   it("drops the suffix so a multi-word term is not split", () => {
     // Analiz sonucunda bulundu: ilan "Excel'de pivot tablo" yazıyordu,

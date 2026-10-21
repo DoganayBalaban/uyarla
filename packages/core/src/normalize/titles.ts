@@ -91,4 +91,9 @@ export const PHRASE_SYNONYMS: Record<string, string> = {
   // 26 Eylül uçtan uca testi: "authentication" maddesinin sadık çevirisi
   // "kimlik doğrulama" uydurma sayılmıştı (birikmiş işler #11).
   "kimlik doğrulama": "authentication",
+  // eval:transferable (21 Ekim 2026, DOG-100): ilan "MS Excel programını"
+  // istiyordu, İK CV'si "raporları Excel'de hazırlıyorum" diyordu; "ms"
+  // ayrı kelime kalınca eşleşme kaçıyordu.
+  "ms excel": "excel",
+  "microsoft excel": "excel",
 }
