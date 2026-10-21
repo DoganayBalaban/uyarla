@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { motion, useReducedMotion } from "motion/react"
 import {
   ArrowRight,
@@ -141,7 +141,6 @@ export function ScoreResult({
     const terms = (item.requirement.concepts ?? []).flatMap((c) => [c.term, ...(c.synonyms ?? [])])
     setHighlight({ label: item.requirement.text, terms: terms.length ? terms : [item.requirement.text] })
     setTab("posting")
-    window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" })
   }
   const exclusion = applyExclusions(result)
   const state = scoreStatus(exclusion.score)
@@ -748,7 +747,7 @@ function ResultNavPanel({ score, items, onSelect }: { score: number; items: Resu
 /** Dar ekranda aynı satırlar, sayfanın üstünde kaydırılabilir şerit. */
 function ResultNavStrip({ items, onSelect }: { items: ResultNavItem[]; onSelect: (i: ResultNavItem) => void }) {
   return (
-    <nav aria-label="Sonuç bölümleri" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 lg:hidden">
+    <nav aria-label="Sonuç bölümleri" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
       {items.map((item) => (
         <button
           key={item.key}
@@ -776,6 +775,15 @@ function PostingTextView({
   highlight: { label: string; terms: string[] } | null
   onClear: () => void
 }) {
+  const reducedMotion = useReducedMotion()
+  const firstMark = useRef<HTMLElement>(null)
+  // Uzun ilanda ilk vurgu ekranın altında kalmasın; vurgu yoksa sekmenin başına.
+  useEffect(() => {
+    if (!highlight) return
+    const behavior = reducedMotion ? "auto" : "smooth"
+    if (firstMark.current) firstMark.current.scrollIntoView({ block: "center", behavior })
+    else window.scrollTo({ top: 0, behavior })
+  }, [highlight, reducedMotion])
   const spans = highlight ? keywordSpans(text, highlight.terms) : []
   const parts: Array<{ text: string; mark: boolean }> = []
   let at = 0
@@ -801,7 +809,11 @@ function PostingTextView({
       <p className="m-0 text-sm leading-relaxed whitespace-pre-line">
         {parts.map((p, i) =>
           p.mark ? (
-            <mark key={i} className="rounded bg-brand-blue/15 px-0.5 text-foreground">
+            <mark
+              key={i}
+              ref={parts.findIndex((x) => x.mark) === i ? firstMark : undefined}
+              className="rounded bg-brand-blue/25 px-0.5 font-medium text-foreground ring-1 ring-brand-blue/40"
+            >
               {p.text}
             </mark>
           ) : (

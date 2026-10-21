@@ -25,10 +25,10 @@ interface Topic {
 /** Kalıplar normalizeText biçiminde: küçük harf, "ı" → "i", noktalama boşluk. */
 const TOPICS: Topic[] = [
   {
-    asks: /ehliyet|sürücü belge|araç kullan|driv(?:ing|er s|ers) licen[cs]e|drive a (?:car|vehicle)/,
+    asks: /ehliyet|sürücü belge|araç kullan|driv(?:ing|ers?|er s) licen[cs]e|drive a (?:car|vehicle)/,
     // "B sınıfı" tek başına da cevap: tablolu CV'de "Sürücü belgesi | B
     // sınıfı" satırının etiketi ayrıştırmada düşebiliyor (eval cv-f).
-    answers: /ehliyet|sürücü belge|driv(?:ing|er s|ers) licen[cs]e|(?<![\p{L}\p{N}])[a-e]1? sinifi/u,
+    answers: /ehliyet|sürücü belge|driv(?:ing|ers?|er s) licen[cs]e|(?<![\p{L}\p{N}])[a-e]1? sinifi/u,
   },
   {
     asks: /askerlik|military service/,
