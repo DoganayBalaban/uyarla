@@ -25,8 +25,10 @@ import { loginPath } from "@/lib/returnPath"
 import { CONTAINER } from "@/components/layout/PageShell"
 
 /**
- * Bütün sayfaların üst çubuğu; kök layout'ta bir kez çiziliyor. Yapı, yükseklik
- * ve hizalama her sayfada aynı, yalnızca içerik oturuma göre değişiyor:
+ * Tanıtım ve yasal sayfaların üst çubuğu; (marketing) layout'unda ve kök hata
+ * sayfalarında çiziliyor. Uygulama ekranları kenar çubuğu kabuğunda (DOG-144).
+ * Yapı, yükseklik ve hizalama her sayfada aynı, yalnızca içerik oturuma göre
+ * değişiyor:
  *
  * - Ziyaretçi (anonim oturum dahil): tanıtım bölümleri ya da yeni analiz,
  *   sağda giriş.

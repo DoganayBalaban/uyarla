@@ -51,10 +51,12 @@ export async function requestFollowUp(
   await api.post(`/applications/${encodeURIComponent(analysisId)}`, body)
 }
 
-export function useApplicationCards() {
+export function useApplicationCards(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: applicationsQueryKey,
     queryFn: getApplicationCards,
+    // Kenar çubuğu anonim oturumda sorgulamasın (DOG-144).
+    enabled: options.enabled ?? true,
     // Bir taslak yazılırken pano kendini yokluyor (DOG-117).
     refetchInterval: (query) =>
       query.state.data?.some((k) => k.followUps.some((f) => f.status === "running")) ? 2000 : false,
