@@ -371,6 +371,29 @@ export function AdaptationView({ id }: { id: string }) {
             <DocumentView document={state.document} draft={draft} onRestore={(b) => void restore(b)} terms={state.postingTerms ?? []} />
           ) : (
             <>
+              {/* Başlık satırı (DOG-92): uyarlama değiştirmiyor, yalnızca kullanıcı. */}
+              {state.document && (
+                <motion.section {...entrance(0.04)} className="rounded-card border border-border bg-card p-5 sm:p-6">
+                  <h2 className="m-0 text-lg">Başlık satırı</h2>
+                  <p className="mt-1 text-sm text-muted">
+                    Adının altındaki satır. İşe alımcılar çoğu zaman unvanla arıyor; deneyimin uyuyorsa ilandaki unvanı
+                    buraya yazabilirsin. Konumun ve bağlantıların da bu satırdaysa silme: indirilen CV&apos;den de çıkar.
+                  </p>
+                  {draft.headline && <VerificationWarning v={draft.headline.verification} />}
+                  <p className="m-0 mt-3 font-semibold">
+                    {state.document.after.headline ?? <span className="font-normal text-muted">CV&apos;nde başlık satırı yok.</span>}
+                  </p>
+                  <EditText
+                    text={state.document.after.headline ?? ""}
+                    edited={!!draft.headline}
+                    busy={busy}
+                    onSave={(text) => saveEdit("headline", text)}
+                    terms={state.postingTerms ?? []}
+                    onPreview={(text, signal) => previewEdit(id, "headline", text, signal)}
+                    currentScore={state.scoreAfter ?? null}
+                  />
+                </motion.section>
+              )}
               {draft.summary.original && (
                 <motion.section {...entrance(0.06)} className="rounded-card border border-border bg-card p-5 sm:p-6">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

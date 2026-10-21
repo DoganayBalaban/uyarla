@@ -94,7 +94,8 @@ export async function PATCH(
         if (reply) return reply
         throw error
       }
-      const item = itemId === "summary" ? fresh.summary : fresh.bullets.find((b) => b.id === itemId)
+      const item =
+        itemId === "summary" ? fresh.summary : itemId === "headline" ? fresh.headline : fresh.bullets.find((b) => b.id === itemId)
       return NextResponse.json({
         preview: true,
         scoreAfter: await computeScoreAfter(payload.profile, payload.scoringPosting, fresh, payload.excluded),

@@ -39,6 +39,9 @@ export function applyAdaptation(
 
   return {
     ...profile,
+    // Başlık satırını yalnızca kullanıcı düzenliyor (DOG-92); unvan eşleşmesi
+    // de bununla hesaplanıyor.
+    headline: draft.headline?.text ?? profile.headline,
     // Boş yeniden yazım özetsiz CV'de oluyor (original null); onu kabul
     // etmek null özeti "" yapar ve belgede boş bir özet başlığı çıkar.
     summary:

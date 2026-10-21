@@ -53,6 +53,8 @@ export interface Draft {
   /** Belge stratejisi ve tek sayfa için çıkarılan maddeler (DOG-93). */
   layout?: "full" | "onePage"
   omitted?: string[]
+  /** Kullanıcının düzenlediği başlık satırı (DOG-92); yoksa CV'nin kendisi. */
+  headline?: { text: string; verification: Verification }
 }
 
 /** Belge görünümünün bir hâli; sunucudaki DocumentOutline ile aynı (DOG-93). */

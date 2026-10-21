@@ -3637,3 +3637,21 @@ düzeltmeleri satırın fareyle açılan menüsündeydi, unvan için de hiç yok
     telefon var).
   - Hedef unvanı uyarlanmış CV'nin başlığına ekleme: düzenleyici başlık
     satırını kapsamıyor; DOG-92'nin serbest düzenleyici kısmına kaldı.
+
+## K-96 · Uyarlamada başlık satırını kullanıcı düzenliyor (DOG-92)
+
+**Bağlam:** DOG-134'te "hedef unvanı CV başlığına ekleme" kaldı: uyarlama
+başlık satırını değiştirmiyordu, düzenleyici de kapsamıyordu. K2'de 5
+kişiden 2'si CV'yi "olduğu gibi göndermem" dedi; serbest düzenleyiciye
+(bölüm/madde ekleme, taşıma) geçmeden önceki küçük adım bu.
+
+- **Taslakta `headline`** (isteğe bağlı): yalnızca kullanıcı yazıyor,
+  uyarlama dokunmuyor. `applyAdaptation` uyguluyor; indirilen CV, belge
+  görünümü, canlı skor ve unvan eşleşmesi aynı başlığı kullanıyor.
+- **Doğrulama maddelerdeki gibi (K-83):** CV'de olmayan ilan terimi "kontrol
+  et" alıyor ama engellenmiyor; yazan kullanıcı. CV'nin kendi başlığına
+  dönüş düzenlemeyi siliyor. En fazla 160 karakter.
+- **Risk:** ayrıştırıcı konumu ve bağlantıları da bu satıra koyabiliyor
+  (`extract/header.ts`). Satırı baştan yazan kullanıcı bağlantıları
+  indirilen CV'den de siler; ekranda bunu söyleyen bir uyarı var.
+- **DOG-92'de kalan:** bölüm ve madde ekleme, taşıma.
