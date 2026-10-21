@@ -1,21 +1,10 @@
 import type { AdaptationDraft } from "../schemas/adaptation.js"
 import type { ResumeProfile } from "../schemas/resume.js"
+import { jobBullets } from "./bullets.js"
+import { projectBulletId } from "./ids.js"
 
-/**
- * Bir maddenin kararlı kimliği.
- *
- * Kimlik konumdan türetiliyor: taslak ile profil aynı çıkarımdan geliyor ve
- * sıraları değişmiyor. Rastgele kimlik üretmek, taslağı profile geri
- * bağlamak için ayrı bir eşleme tablosu gerektirirdi.
- */
-export function bulletId(experienceIndex: number, bulletIndex: number): string {
-  return `${experienceIndex}-${bulletIndex}`
-}
-
-/** Proje maddesinin kimliği (DOG-105); deneyim kimlikleriyle çakışmasın diye "p" önekli. */
-export function projectBulletId(projectIndex: number, bulletIndex: number): string {
-  return `p${projectIndex}-${bulletIndex}`
-}
+// Kimlikler ayrı modülde: bullets.ts de kullanıyor ve döngüsel içe aktarma olmasın.
+export { bulletId, projectBulletId } from "./ids.js"
 
 /**
  * Kabul edilen kararlardan yeni bir profil üretir (spec §10).
@@ -33,9 +22,9 @@ export function applyAdaptation(
   const accepted = new Map(
     draft.bullets.filter((b) => b.decision === "accepted").map((b) => [b.id, b.rewritten]),
   )
-  // Tek sayfa için çıkarılan maddeler (DOG-93). Kimlik konumdan geldiği için
-  // süzme, kimlik eşlendikten sonra yapılıyor.
-  const omitted = new Set(draft.omitted ?? [])
+  // Tek sayfa için çıkarılan (DOG-93) ve kullanıcının kaldırdığı (DOG-92)
+  // proje maddeleri. Kimlik konumdan geldiği için süzme eşlemeden sonra.
+  const dropped = new Set([...(draft.omitted ?? []), ...(draft.removed ?? [])])
 
   return {
     ...profile,
@@ -48,26 +37,14 @@ export function applyAdaptation(
       draft.summary.decision === "accepted" && draft.summary.rewritten.trim()
         ? draft.summary.rewritten
         : draft.summary.original,
+    // Maddeler tek yerden (DOG-92): kabul edilen yeniden yazımlar, katkılar,
+    // kullanıcının eklediği maddeler; kullanıcı sırası, kaldırılanlar ve tek
+    // sayfa için çıkarılanlar düşmüş. Belge görünümü de aynı listeyi kullanıyor.
     experience: profile.experience.map((job, i) => ({
       ...job,
-      bullets: [
-        ...job.bullets.flatMap((bullet, j) =>
-          omitted.has(bulletId(i, j))
-            ? []
-            : [
-                {
-                  ...bullet,
-                  text: accepted.get(bulletId(i, j)) ?? bullet.text,
-                  // sourceRef asla değişmez: doğrulamanın tek kaynağı bu.
-                },
-              ],
-        ),
-        // Kullanıcının anlattığı deneyimden yazılanlar o işin sonuna (DOG-94).
-        // Dayanak kullanıcının cevabı; sourceRef olarak o saklanıyor.
-        ...(draft.contributions ?? [])
-          .filter((c) => c.experienceIndex === i && c.status === "done" && c.decision === "accepted" && c.text)
-          .map((c) => ({ text: c.text!, sourceRef: c.answer })),
-      ],
+      bullets: jobBullets(profile, draft, i)
+        .filter((b) => !b.omitted && !b.removed)
+        .map(({ text, sourceRef }) => ({ text, sourceRef })),
     })),
     // Projelerin maddeleri de deneyim maddeleri gibi uyarlanıyor (DOG-105).
     ...(profile.projects
@@ -75,7 +52,7 @@ export function applyAdaptation(
           projects: profile.projects.map((project, i) => ({
             ...project,
             bullets: project.bullets.flatMap((bullet, j) =>
-              omitted.has(projectBulletId(i, j))
+              dropped.has(projectBulletId(i, j))
                 ? []
                 : [{ ...bullet, text: accepted.get(projectBulletId(i, j)) ?? bullet.text }],
             ),

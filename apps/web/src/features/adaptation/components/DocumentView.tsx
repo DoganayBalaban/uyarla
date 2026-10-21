@@ -1,15 +1,19 @@
 "use client"
 
 import { useState } from "react"
-import { Check } from "lucide-react"
+import { ArrowDown, ArrowUp, Check, Plus } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { DiffText } from "@/features/adaptation/components/DiffText"
 import { documentSections, type DocumentLine } from "@/features/adaptation/documentView"
 import { HighlightedText } from "@/features/adaptation/components/HighlightedText"
 import { termCoverage, type PostingTerm } from "@/features/adaptation/postingTerms"
 import type { DocumentOutline, Draft } from "@/features/adaptation/types"
+import type { BulletOp } from "@/features/adaptation/api"
 
 type Mode = "diff" | "after" | "before"
+
+/** Sunucudaki sınırla aynı (core/adapt/edit.ts); core istemci paketine çekilmesin. */
+const EDIT_MAX_LENGTH = 1000
 
 const MODES: { mode: Mode; label: string }[] = [
   { mode: "diff", label: "Farklar" },
@@ -29,18 +33,26 @@ export function DocumentView({
   document,
   draft,
   onRestore,
+  onBullet,
+  busy = false,
   terms = [],
 }: {
   document: { before: DocumentOutline; after: DocumentOutline }
   /** İlan terimleri (DOG-92): vurgu ve belgede geçmeyen zorunlular. */
   terms?: readonly PostingTerm[]
-  draft: Pick<Draft, "bullets" | "omitted">
-  /** Tek sayfa için çıkarılan maddeyi geri alır (DOG-93). */
+  draft: Pick<Draft, "bullets" | "omitted" | "removed" | "userBullets">
+  /** Tek sayfa için çıkarılan ya da kaldırılan maddeyi geri alır (DOG-93, DOG-92). */
   onRestore?: (bulletId: string) => void
+  /** Madde ekle, kaldır, taşı (DOG-92); hata mesajı ya da null. */
+  onBullet?: (op: BulletOp) => Promise<string | null>
+  busy?: boolean
 }) {
   const [mode, setMode] = useState<Mode>("diff")
   const [highlight, setHighlight] = useState(false)
   const s = documentSections(document, draft)
+  // Kullanıcının yazdığı maddenin kontrolü (DOG-92): uyarı var, engel yok.
+  const flaggedUser = new Set((draft.userBullets ?? []).filter((u) => u.verification.status === "flagged").map((u) => u.id))
+  const editable = !!onBullet && mode !== "before"
   const shown = (t: string) => (highlight ? <HighlightedText text={t} terms={terms} /> : t)
 
   const text = (l: DocumentLine) =>
@@ -138,9 +150,30 @@ export function DocumentView({
                   {job.dates && <p className="m-0 text-xs text-muted">{job.dates}</p>}
                   <ul className="mt-2 list-disc space-y-1.5 pl-5">
                     {job.bullets.map((b, j) => (
-                      <BulletItem key={j} line={b} mode={mode} text={text} onRestore={onRestore} />
+                      <BulletItem
+                        key={b.id ?? j}
+                        line={b}
+                        mode={mode}
+                        text={text}
+                        onRestore={onRestore}
+                        flagged={b.id !== null && flaggedUser.has(b.id)}
+                        controls={
+                          editable && b.id && !b.removed && !b.omitted ? (
+                            <BulletControls
+                              id={b.id}
+                              experienceIndex={i}
+                              first={j === 0}
+                              last={j === job.bullets.length - 1}
+                              userWritten={b.userWritten}
+                              busy={busy}
+                              onBullet={onBullet!}
+                            />
+                          ) : null
+                        }
+                      />
                     ))}
                   </ul>
+                  {editable && <AddBullet experienceIndex={i} busy={busy} onBullet={onBullet!} />}
                 </div>
               ))}
             </div>
@@ -210,12 +243,32 @@ function BulletItem({
   mode,
   text,
   onRestore,
+  flagged = false,
+  controls = null,
 }: {
   line: DocumentLine
   mode: Mode
   text: (l: DocumentLine) => React.ReactNode
   onRestore?: (bulletId: string) => void
+  flagged?: boolean
+  controls?: React.ReactNode
 }) {
+  // Kullanıcının kaldırdığı madde (DOG-92): tek sayfa çıkarımı gibi.
+  if (line.removed && mode !== "before") {
+    return (
+      <li className="text-muted">
+        <p className="m-0 leading-relaxed line-through decoration-muted/60">{line.after}</p>
+        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs">
+          Belgeden kaldırdın.
+          {onRestore && line.id && (
+            <button type="button" onClick={() => onRestore(line.id!)} className="font-semibold text-brand-blue underline-offset-2 hover:underline">
+              Geri al
+            </button>
+          )}
+        </span>
+      </li>
+    )
+  }
   // Tek sayfa için çıkarılan madde (DOG-93): "Önce"de olduğu gibi, diğer
   // kiplerde üstü çizili ve geri alınabilir.
   if (line.omitted && mode !== "before") {
@@ -237,14 +290,126 @@ function BulletItem({
       </li>
     )
   }
+  if (mode === "before" && !line.before) return null
   return (
     <li>
       {text(line)}
+      {line.userWritten && mode !== "before" && (
+        <span className={cn("mt-0.5 block text-xs", flagged ? "font-medium text-brand-amber" : "text-muted")}>
+          {flagged
+            ? "Senin maddenin; CV'nde olmayan bir sayı ya da ilan terimi var, kontrol et: mülakatta anlatabileceğin bir şey olmalı."
+            : "Senin maddenin."}
+        </span>
+      )}
+      {controls}
       {line.pending && mode !== "before" && (
         <span className="mt-0.5 block text-xs font-medium text-brand-blue">
           Karar bekliyor; yeni hâlini seçmezsen bu madde eski hâliyle kalır.
         </span>
       )}
     </li>
+  )
+}
+
+/** Maddeyi taşı ya da kaldır (DOG-92). */
+function BulletControls({
+  id,
+  experienceIndex,
+  first,
+  last,
+  userWritten,
+  busy,
+  onBullet,
+}: {
+  id: string
+  experienceIndex: number
+  first: boolean
+  last: boolean
+  userWritten: boolean
+  busy: boolean
+  onBullet: (op: BulletOp) => Promise<string | null>
+}) {
+  const small = "inline-flex items-center gap-0.5 text-xs text-muted hover:text-foreground disabled:opacity-40"
+  return (
+    <span className="mt-0.5 flex flex-wrap items-center gap-x-3">
+      <button type="button" disabled={busy || first} onClick={() => void onBullet({ op: "move", experienceIndex, id, direction: "up" })} className={small} aria-label="Yukarı taşı">
+        <ArrowUp className="size-3.5" aria-hidden />
+      </button>
+      <button type="button" disabled={busy || last} onClick={() => void onBullet({ op: "move", experienceIndex, id, direction: "down" })} className={small} aria-label="Aşağı taşı">
+        <ArrowDown className="size-3.5" aria-hidden />
+      </button>
+      <button type="button" disabled={busy} onClick={() => void onBullet({ op: "remove", id })} className={small}>
+        {userWritten ? "Sil" : "Kaldır"}
+      </button>
+    </span>
+  )
+}
+
+/** İşe kullanıcının yazdığı bir madde ekler (DOG-92). */
+function AddBullet({
+  experienceIndex,
+  busy,
+  onBullet,
+}: {
+  experienceIndex: number
+  busy: boolean
+  onBullet: (op: BulletOp) => Promise<string | null>
+}) {
+  const [text, setText] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  if (text === null) {
+    return (
+      <button
+        type="button"
+        onClick={() => setText("")}
+        className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-blue"
+      >
+        <Plus className="size-3.5" aria-hidden />
+        Madde ekle
+      </button>
+    )
+  }
+  return (
+    <form
+      className="mt-2"
+      onSubmit={async (e) => {
+        e.preventDefault()
+        if (!text.trim()) return
+        const message = await onBullet({ op: "add", experienceIndex, text })
+        if (message) setError(message)
+        else {
+          setText(null)
+          setError(null)
+        }
+      }}
+    >
+      <textarea
+        autoFocus
+        rows={2}
+        maxLength={EDIT_MAX_LENGTH}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        aria-label="Yeni madde"
+        placeholder="Bu işte yaptığın ve CV'nde yazmayan bir şey"
+        className="w-full rounded-button border border-border bg-card p-2 text-sm"
+      />
+      <p className="m-0 text-xs text-muted">
+        CV&apos;nde olmayan bir sayı ya da ilan terimi yazarsan &quot;kontrol et&quot; uyarısı çıkar; mülakatta anlatabileceğin
+        bir şey olmalı.
+      </p>
+      {error && (
+        <p role="alert" className="m-0 mt-1 text-xs text-brand-red dark:text-[#f87171]">
+          {error}
+        </p>
+      )}
+      <div className="mt-2 flex gap-2">
+        <button type="submit" disabled={busy || !text.trim()} className="rounded-button bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">
+          Ekle
+        </button>
+        <button type="button" onClick={() => setText(null)} className="px-2 py-1.5 text-xs font-semibold text-muted">
+          Vazgeç
+        </button>
+      </div>
+    </form>
   )
 }

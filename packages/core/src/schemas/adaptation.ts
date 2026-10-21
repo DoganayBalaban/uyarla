@@ -125,6 +125,21 @@ export const AdaptationDraftSchema = z.object({
    * et" uyarısı alıyor ama engellenmiyor. Yoksa CV'nin kendi başlığı.
    */
   headline: z.object({ text: z.string(), verification: VerificationSchema }).optional(),
+  /**
+   * Kullanıcının yazdığı yeni maddeler (DOG-92). Kimlik "u<n>"; CV'deki
+   * maddelerin konumdan gelen kimlikleriyle çakışmıyor. Doğrulama
+   * düzenlemedeki gibi: uyarı var, engel yok.
+   */
+  userBullets: z
+    .array(z.object({ id: z.string(), experienceIndex: z.number().int().nonnegative(), text: z.string(), verification: VerificationSchema }))
+    .optional(),
+  /**
+   * Kullanıcının belgeden kaldırdığı maddeler (DOG-92). Tek sayfa
+   * `omitted`'ından ayrı: strateji değişince sıfırlanmıyor.
+   */
+  removed: z.array(z.string()).optional(),
+  /** İş başına madde sırası (DOG-92); anahtar deneyim sırası. Yoksa doğal sıra. */
+  bulletOrder: z.record(z.string(), z.array(z.string())).optional(),
 })
 
 export type TermAlignment = z.infer<typeof TermAlignmentSchema>

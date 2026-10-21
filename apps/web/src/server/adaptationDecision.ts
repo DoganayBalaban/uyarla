@@ -1,5 +1,6 @@
 import { AdaptationDraftSchema, hasPendingDecisions, type AdaptationDraft } from "@uyarla/core/schemas/adaptation"
 import { applyAdaptation } from "@uyarla/core/adapt/profile"
+import { addUserBullet, jobBullets, moveBullet, removeBullet, restoreBullet as restoreDraftBullet } from "@uyarla/core/adapt/bullets"
 import { analysisProfile } from "@uyarla/core/adapt/facts"
 import { CachedEmbeddingProvider, redisVectorStore } from "@uyarla/core/llm/embeddingCache"
 import { OpenAiCompatibleEmbeddingProvider, embeddingConfigFromEnv } from "@uyarla/core/llm/embedding"
@@ -208,8 +209,42 @@ export async function applyLayout(
 
 /** Kullanıcı tek sayfa için çıkarılan bir maddeyi geri alıyor (DOG-93). */
 export function restoreBullet(draft: AdaptationDraft, bulletId: string): AdaptationDraft {
-  if (!(draft.omitted ?? []).includes(bulletId)) throw new Error(`Çıkarılmış madde yok: ${bulletId}`)
-  return { ...draft, omitted: draft.omitted!.filter((id) => id !== bulletId) }
+  // Tek sayfa için çıkarılan (DOG-93) ya da kullanıcının kaldırdığı (DOG-92).
+  if (!(draft.omitted ?? []).includes(bulletId) && !(draft.removed ?? []).includes(bulletId)) {
+    throw new Error(`Çıkarılmış madde yok: ${bulletId}`)
+  }
+  return restoreDraftBullet(draft, bulletId)
+}
+
+/** Madde düzenleyici işlemi (DOG-92): ekle, kaldır, taşı. */
+export type BulletOp =
+  | { op: "add"; experienceIndex: number; text: string }
+  | { op: "remove"; id: string }
+  | { op: "move"; experienceIndex: number; id: string; direction: "up" | "down" }
+
+/** Gövdedeki işlemi doğrular; geçersizse null. */
+export function parseBulletOp(value: unknown): BulletOp | null {
+  if (!value || typeof value !== "object") return null
+  const v = value as Record<string, unknown>
+  const index = (x: unknown) => typeof x === "number" && Number.isInteger(x) && x >= 0
+  if (v.op === "add" && index(v.experienceIndex) && typeof v.text === "string") {
+    return { op: "add", experienceIndex: v.experienceIndex as number, text: v.text }
+  }
+  if (v.op === "remove" && typeof v.id === "string" && v.id) return { op: "remove", id: v.id }
+  if (v.op === "move" && index(v.experienceIndex) && typeof v.id === "string" && (v.direction === "up" || v.direction === "down")) {
+    return { op: "move", experienceIndex: v.experienceIndex as number, id: v.id, direction: v.direction }
+  }
+  return null
+}
+
+export function applyBulletOp(
+  draft: AdaptationDraft,
+  op: BulletOp,
+  context: { profile: ResumeProfile; posting: JobPostingData },
+): AdaptationDraft {
+  if (op.op === "add") return addUserBullet(draft, op.experienceIndex, op.text, context)
+  if (op.op === "remove") return removeBullet(draft, op.id)
+  return moveBullet(draft, context.profile, op.experienceIndex, op.id, op.direction)
 }
 
 /**
@@ -239,7 +274,15 @@ export async function computeScoreBefore(
 export interface DocumentOutline {
   headline: string | null
   summary: string | null
-  experience: Array<{ company: string; title: string; startDate: string; endDate: string; bullets: string[] }>
+  experience: Array<{
+    company: string
+    title: string
+    startDate: string
+    endDate: string
+    bullets: string[]
+    /** `bullets` ile aynı sırada kimlikler (DOG-92); sıra değişince ekran kimlikle eşliyor. */
+    bulletIds?: string[]
+  }>
   /** Projeler ve diğer bölümler (DOG-105); indirilen belgede de var. */
   projects: Array<{ name: string; role: string | null; dates: string | null; bullets: string[] }>
   otherSections: Array<{ heading: string; lines: string[] }>
@@ -258,9 +301,20 @@ export function adaptationDocument(
   draft: AdaptationDraft | null,
 ): { before: DocumentOutline; after: DocumentOutline } | null {
   if (!profile || !draft) return null
-  // Tek sayfa için çıkarılanlar (DOG-93) burada düşmüyor: ekran maddeleri
-  // konumla eşliyor ve onları üstü çizili, geri alınabilir gösteriyor.
-  return { before: outline(profile), after: outline(applyAdaptation(profile, { ...draft, omitted: [] })) }
+  // Tek sayfa için çıkarılanlar (DOG-93) ve kullanıcının kaldırdıkları
+  // (DOG-92) burada düşmüyor: ekran onları üstü çizili, geri alınabilir
+  // gösteriyor. Deneyim maddeleri indirmeyle aynı listeden (jobBullets).
+  const after = outline(applyAdaptation(profile, { ...draft, omitted: [], removed: [] }))
+  return {
+    before: outline(profile),
+    after: {
+      ...after,
+      experience: after.experience.map((job, i) => {
+        const list = jobBullets(profile, draft, i)
+        return { ...job, bullets: list.map((b) => b.text), bulletIds: list.map((b) => b.id) }
+      }),
+    },
+  }
 }
 
 function outline(p: ResumeProfile): DocumentOutline {

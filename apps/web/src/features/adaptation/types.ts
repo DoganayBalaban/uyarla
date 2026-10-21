@@ -55,13 +55,26 @@ export interface Draft {
   omitted?: string[]
   /** Kullanıcının düzenlediği başlık satırı (DOG-92); yoksa CV'nin kendisi. */
   headline?: { text: string; verification: Verification }
+  /** Kullanıcının yazdığı maddeler (DOG-92). */
+  userBullets?: Array<{ id: string; experienceIndex: number; text: string; verification: Verification }>
+  /** Kullanıcının kaldırdığı maddeler (DOG-92); geri alınabilir. */
+  removed?: string[]
+  bulletOrder?: Record<string, string[]>
 }
 
 /** Belge görünümünün bir hâli; sunucudaki DocumentOutline ile aynı (DOG-93). */
 export interface DocumentOutline {
   headline: string | null
   summary: string | null
-  experience: Array<{ company: string; title: string; startDate: string; endDate: string; bullets: string[] }>
+  experience: Array<{
+    company: string
+    title: string
+    startDate: string
+    endDate: string
+    bullets: string[]
+    /** `bullets` ile aynı sırada kimlikler (DOG-92); eski yanıtlarda yok, konum kullanılıyor. */
+    bulletIds?: string[]
+  }>
   /** Projeler ve diğer bölümler (DOG-105); eski yanıtlarda yok. */
   projects?: Array<{ name: string; role: string | null; dates: string | null; bullets: string[] }>
   otherSections?: Array<{ heading: string; lines: string[] }>

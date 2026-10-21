@@ -69,6 +69,16 @@ export async function restoreBullet(id: string, bulletId: string): Promise<Parti
     .data
 }
 
+/** Madde düzenleyici işlemi (DOG-92): ekle, kaldır, taşı. */
+export type BulletOp =
+  | { op: "add"; experienceIndex: number; text: string }
+  | { op: "remove"; id: string }
+  | { op: "move"; experienceIndex: number; id: string; direction: "up" | "down" }
+
+export async function changeBullet(id: string, bullet: BulletOp): Promise<Partial<AdaptationState>> {
+  return (await api.patch<Partial<AdaptationState>>(`/adapt/${encodeURIComponent(id)}/decision`, { bullet })).data
+}
+
 export async function requestCoverLetter(id: string): Promise<{ coverLetter: CoverLetterRecord }> {
   return (await api.post<{ coverLetter: CoverLetterRecord }>(`/adapt/${encodeURIComponent(id)}/cover-letter`)).data
 }
