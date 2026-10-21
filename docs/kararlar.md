@@ -3609,3 +3609,31 @@ ekranda formülle çelişen elle yazılmış bir iddia kalmıyor.
   taşıyor.
 - **Eski formülle (sürüm 1) skorlanmış analizlerde** unvan, kişisel nitelik ve
   şart rozeti gösterilmiyor; o formülde bunlar farklı sayılıyordu.
+
+## K-95 · Satır içi düzeltmeler; unvan da ilanın düzeltmesi (DOG-134)
+
+Jobscan'de düzeltme, kontrol satırının hemen altında. Bizde DOG-90
+düzeltmeleri satırın fareyle açılan menüsündeydi, unvan için de hiç yoktu.
+
+- **Unvan bulgusu:** altında "İlandaki unvan yanlış mı okunmuş? Düzelt".
+  Kullanıcı ilandaki unvanı yazıyor; unvan eşleşmesi ve skor yeniden
+  hesaplanıyor (`result.positionCorrection`).
+  - **Dürüstlük sınırı:** yazılan unvan ilan metninde geçmeli
+    (`positionInPosting`, skorlamayla aynı eşleşme). Geçmiyorsa 422 "Bu unvan
+    ilan metninde geçmiyor." Bu bir ilan düzeltmesi, CV hakkında beyan
+    değil; kullanıcı kendi unvanını yazıp skoru şişiremiyor.
+  - **Geri alma:** bulgu düzeltmeyle kaybolabildiği için (unvan artık
+    eşleşiyor) not CV kontrolü kartının altında duruyor.
+- **Yıl ve bölüm satırları:** eksikse "Yıl/Bölüm yanlış mı okunmuş? Düzelt"
+  hep görünür. Yıl istemeyen deneyim satırında genel "Şartı düzelt" yine
+  fareyle görünüyor.
+- **Uyarlamanın önce/sonra skoru** artık düzeltilmiş ilanla hesaplanıyor
+  (`loadAdaptation().scoringPosting`). Önce skoru (Analysis.score)
+  düzeltmeleri içeriyordu, sonra skoru içermiyordu; düzeltilen şart sonra
+  skorunda eksik sayılıp farkı yanlış gösterebiliyordu (DOG-90'dan beri).
+- **Yapılmadı:**
+  - Biçim bulgularına "nasıl düzeltilir" bağlantısı: açıklamalar yolu zaten
+    anlatıyor, uygulamada gidilecek bir düzeltme yeri yok (hesapta yalnızca
+    telefon var).
+  - Hedef unvanı uyarlanmış CV'nin başlığına ekleme: düzenleyici başlık
+    satırını kapsamıyor; DOG-92'nin serbest düzenleyici kısmına kaldı.

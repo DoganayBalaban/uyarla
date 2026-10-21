@@ -14,16 +14,29 @@ const REASONS: readonly ExclusionReason[] = ["not_in_posting", "irrelevant", "fo
 const MAX_YEARS = 40
 const MAX_TERMS = 8
 const MAX_TERM_LENGTH = 80
+const MAX_POSITION_LENGTH = 120
 
 export type AnalysisPatch =
   | { action: "exclude"; requirementIndex: number; reason: ExclusionReason; always: boolean }
   | { action: "include"; requirementIndex: number }
   | { action: "correct"; requirementIndex: number; minYears?: number | null; terms?: string[] | null }
+  /** İlan unvanının düzeltmesi (DOG-134); null düzeltmeyi kaldırıyor. */
+  | { action: "position"; position: string | null }
 
 /** PATCH /api/analysis/[id] gövdesi; geçersizse null. Eski `{ requirementIndex, excluded }` gövdesi de geçerli. */
 export function parseAnalysisPatch(body: unknown): AnalysisPatch | null {
   if (!body || typeof body !== "object") return null
   const b = body as Record<string, unknown>
+
+  // Unvan bir gereksinim değil; sıra numarası almıyor.
+  if (b.action === "position") {
+    if (b.position === null) return { action: "position", position: null }
+    if (typeof b.position !== "string") return null
+    const position = b.position.trim()
+    if (!position || position.length > MAX_POSITION_LENGTH) return null
+    return { action: "position", position }
+  }
+
   const index = b.requirementIndex
   if (typeof index !== "number" || !Number.isInteger(index) || index < 0) return null
 
@@ -134,10 +147,11 @@ export function scoreWithExclusions(
     titleMatch?: { level: string } | null
     scoringRevision?: number
     corrections?: Record<number, unknown>
+    positionCorrection?: string
   },
   excluded: readonly number[],
 ): number {
-  const corrected = Object.keys(result.corrections ?? {}).length > 0
+  const corrected = Object.keys(result.corrections ?? {}).length > 0 || !!result.positionCorrection
   if (excluded.length === 0 && !corrected) return result.score
   return adjustedScore(result.requirements, excluded, { title: result.titleMatch, revision: result.scoringRevision })
 }

@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/cn"
 import { FormatReportCard as FormatReport, type FormatReportView } from "@/features/analysis/components/FormatReport"
 import { ImpactBadge } from "@/features/analysis/components/ImpactBadge"
+import { TitleCorrection } from "@/features/analysis/components/TitleCorrection"
 import { scoreImpacts, type ScoreImpact } from "@/features/analysis/scoreImpact"
 import { ScoreRing } from "@/features/analysis/components/ScoreRing"
 import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
@@ -35,6 +36,7 @@ import type { LanguageCheck } from "@uyarla/core/score/languages"
 import type { RequirementAction } from "@/features/analysis/api"
 import { CorrectPanel, MarkPanel } from "@/features/analysis/components/RequirementFixes"
 import { correctionKind, exclusionLabel } from "@/features/analysis/requirementFix"
+import { requiredYears } from "@uyarla/core/score/duration"
 
 export interface RequirementResult {
   requirement: {
@@ -71,6 +73,8 @@ export interface ScoreResultView {
   reports?: RequirementReport[]
   /** İlanın düzeltilmiş şartları (DOG-90). */
   corrections?: Record<number, RequirementCorrection>
+  /** İlanın düzeltilmiş unvanı (DOG-134); titleMatch bununla. */
+  positionCorrection?: string
   /** Skor formülünün sürümü (DOG-103); eski analizlerde yok. */
   scoringRevision?: number
   /** İlanın istediği dil seviyesi ile CV'deki (DOG-115); eski analizlerde yok. */
@@ -111,6 +115,7 @@ export function ScoreResult({
   adaptNote,
   onYeniAnaliz,
   onRequirementChange,
+  onPositionChange,
   platform,
   sourceWarning,
   postingText,
@@ -133,6 +138,8 @@ export function ScoreResult({
   onYeniAnaliz?: () => void
   /** Gereksinimi işaretler, işareti kaldırır ya da şartını düzeltir (DOG-90); yoksa düğmeler çıkmıyor. */
   onRequirementChange?: (requirementIndex: number, change: RequirementAction) => Promise<void>
+  /** İlan unvanını düzeltir (DOG-134); null düzeltmeyi kaldırıyor. */
+  onPositionChange?: (position: string | null) => Promise<void>
 }) {
   const reducedMotion = useReducedMotion() ?? false
   const [activeFilter, setFilter] = useState<FilterBar>("all")
@@ -356,7 +363,19 @@ export function ScoreResult({
 
       {format && (
         <motion.div {...entrance(0.08)} id="bicim" className="scroll-mt-24">
-          <FormatReport report={format} impact={impacts.format} titleImpact={impacts.title} />
+          <FormatReport
+            report={format}
+            impact={impacts.format}
+            titleImpact={impacts.title}
+            titleAction={
+              onPositionChange && result.titleMatch ? (
+                <TitleCorrection position={result.titleMatch.position} onSave={onPositionChange} />
+              ) : undefined
+            }
+          />
+          {result.positionCorrection && (
+            <PositionCorrectionNote position={result.positionCorrection} onUndo={onPositionChange ? () => onPositionChange(null) : undefined} />
+          )}
         </motion.div>
       )}
 
@@ -528,6 +547,12 @@ function RequirementRow({
   }
   const kind = correctionKind(item.requirement.type)
   const done = item.status === "matched"
+  // Eksik yıl ve bölüm şartında düzeltme satırda hep görünür (DOG-134):
+  // yanlış okunmuş "5 yıl" ya da bölüm adı en sık düzeltilen şey.
+  const inlineFix =
+    !done &&
+    !!onChange &&
+    (kind === "terms" || (kind === "years" && (item.requirement.minYears ?? requiredYears(item.requirement.text)) != null))
   const partial = isPartial(item)
   const importanceLabel = IMPORTANCE_LABEL[item.requirement.importance] ?? item.requirement.importance
 
@@ -618,7 +643,12 @@ function RequirementRow({
       {/* Kavram ayırma bazen ilanda olmayan bir şart üretiyor; kullanıcı
           düzeltebilsin, işaret de bize hata verisi olsun (DOG-90). */}
       {(onChange || onShowInPosting) && panel === null && (
-        <div className="mt-1 ml-8 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+        <div
+          className={cn(
+            "mt-1 ml-8 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted",
+            !inlineFix && "sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100",
+          )}
+        >
           {onShowInPosting && (
             <button type="button" onClick={onShowInPosting} className="underline-offset-2 hover:text-foreground hover:underline">
               İlanda göster
@@ -630,8 +660,18 @@ function RequirementRow({
           </button>
           )}
           {onChange && kind && (
-            <button type="button" onClick={() => setPanel("correct")} className="underline-offset-2 hover:text-foreground hover:underline">
-              {correction ? "Düzeltmeyi değiştir" : "Şartı düzelt"}
+            <button
+              type="button"
+              onClick={() => setPanel("correct")}
+              className={cn("underline-offset-2 hover:underline", inlineFix ? "font-semibold text-brand-blue" : "hover:text-foreground")}
+            >
+              {correction
+                ? "Düzeltmeyi değiştir"
+                : !inlineFix
+                  ? "Şartı düzelt"
+                  : kind === "years"
+                    ? "Yıl yanlış mı okunmuş? Düzelt"
+                    : "Bölüm yanlış mı okunmuş? Düzelt"}
             </button>
           )}
         </div>
@@ -836,5 +876,28 @@ function PostingTextView({
         )}
       </p>
     </div>
+  )
+}
+
+/** Unvan düzeltildiyse (DOG-134): bulgu eşleşince kaybolsa da geri alınabilsin. */
+function PositionCorrectionNote({ position, onUndo }: { position: string; onUndo?: () => Promise<void> }) {
+  const [saving, setSaving] = useState(false)
+  return (
+    <p className="m-0 mt-2 px-1 text-xs text-muted">
+      İlanın unvanını “{position}” olarak düzelttin; unvan eşleşmesi ve skor buna göre.{" "}
+      {onUndo && (
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => {
+            setSaving(true)
+            onUndo().catch(() => {}).finally(() => setSaving(false))
+          }}
+          className="font-semibold text-brand-blue underline-offset-2 hover:underline disabled:opacity-50"
+        >
+          {saving ? "Geri alınıyor…" : "Geri al"}
+        </button>
+      )}
+    </p>
   )
 }
