@@ -3751,3 +3751,33 @@ aynı. Etiket isabeti 17/20 → 16/20: İK CV'si × muhasebe ilanı doğru Excel
 eşleşmesiyle 17 → 33 oldu ve "Orta"ya geçti. Dört zorunludan birini karşılayan
 çiftin "Orta" alması eşik meselesi (DOG-124); eşleşme doğru olduğu için
 karşılık tutuldu.
+
+## K-101 · Skor mülakatı öngörüyor mu: ölçüm betiği ve kullanıcının kendi sinyali (DOG-124)
+
+**İlk ölçüm (21 Ekim 2026, üretim, salt okunur, yalnızca toplamlar):** 8 kayıtlı
+kullanıcı, panoyu kullanan 3. Başvurulmuş 8 analiz:
+
+| Bant | Sonuçlanan | Mülakat/teklif | Bekleyen |
+|---|---|---|---|
+| Yüksek (35+) | 3 | 3 | 1 |
+| Orta (22–34) | 1 | 0 | 0 |
+| Düşük (<22) | 1 | 0 | 2 |
+
+Yön tutarlı (yüksek skorlular mülakata döndü), ama 3 kişiden 5 sonuç. Eşikler
+bu veriyle değiştirilmiyor; K-100'deki etiket sapması (dört zorunludan biriyle
+"Orta") da bu yüzden bekliyor.
+
+**Karar:**
+- **İç ölçüm tekrarlanabilir:** `pnpm --filter @uyarla/web calibration`.
+  Salt okunur; analiz başına skor ve aşama, anonim hesaplar ve test alan
+  adları dışarıda. Bantta 10'dan az sonuç varsa oran yazılmıyor.
+- **Sonuçlanan:** mülakat, teklif, ret. "Başvuruldu" sonuç değil; cevapsızlık
+  sayılmıyor, çünkü ne kadar sonra "ses yok" sayılacağı bilinmiyor.
+- **Kullanıcıya:** panoda yalnızca kendi başvurularından, en az üçü
+  sonuçlanınca: "Yüksek uyumlu 3 sonuçlanmış başvurunun 2 tanesi mülakata
+  döndü." Başka kullanıcıların sonuçları kullanılmıyor. Az sayıda başvuruda
+  tesadüf payının büyük olduğu yazıyor.
+- Bantlar ekrandaki etiketle aynı eşikler (`scoreStatus`); iç ölçüm ve kullanıcı
+  sinyali aynı fonksiyonu (`outcomesByBand`) kullanıyor.
+- **Yapılmadı:** "rol türü"ne göre sinyal. İlan unvanları serbest metin;
+  gruplamak için önce unvan sınıflandırması gerekiyor.

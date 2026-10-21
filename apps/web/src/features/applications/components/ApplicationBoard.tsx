@@ -30,6 +30,7 @@ import {
   type BoardCard,
 } from "@/features/applications/board"
 import { ApplyCheck } from "@/features/applications/components/ApplyCheck"
+import { personalOutcomeSignal } from "@/features/applications/outcomes"
 
 /** Sürükle-bırak verisinin türü; başka sürüklemelerle karışmasın. */
 const DRAG_TYPE = "application/x-uyarla-kart"
@@ -101,6 +102,8 @@ export function ApplicationBoard() {
   const columns = groupByStage(cards)
   const appliedCount = cards.filter((k) => k.stage !== "saved").length
   const interviewCount = columns.interview.length + columns.offer.length
+  // Kendi sonuçlarından sinyal (DOG-124): en az üç başvuru sonuçlanınca.
+  const signal = personalOutcomeSignal(cards)
 
   return (
     <div>
@@ -138,6 +141,17 @@ export function ApplicationBoard() {
             </div>
           ))}
         </dl>
+      )}
+      {signal && (
+        <div className="mt-3 text-sm text-muted sm:max-w-lg">
+          <p className="m-0 font-semibold text-foreground">Senin sonuçların</p>
+          {signal.map((line) => (
+            <p key={line} className="m-0">
+              {line}
+            </p>
+          ))}
+          <p className="m-0 mt-0.5 text-xs">Yalnızca kendi başvuruların; az sayıda başvuruda tesadüf payı büyük.</p>
+        </div>
       )}
 
       {cards.length === 0 ? (
