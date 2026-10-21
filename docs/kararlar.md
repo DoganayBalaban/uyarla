@@ -3781,3 +3781,31 @@ bu veriyle değiştirilmiyor; K-100'deki etiket sapması (dört zorunludan biriy
   sinyali aynı fonksiyonu (`outcomesByBand`) kullanıyor.
 - **Yapılmadı:** "rol türü"ne göre sinyal. İlan unvanları serbest metin;
   gruplamak için önce unvan sınıflandırması gerekiyor.
+
+## K-102 · Arayüz shadcn/ui ile yenileniyor; önce altyapı (DOG-142, DOG-143)
+
+**Bağlam:** Kullanıcı 22 Ekim'de arayüz yenilemesini başlattı: shadcn tasarım
+diliyle kenar çubuklu bir dashboard, her özellik kendi sayfasında. Plan
+DOG-142'de (DOG-143–156). Tanıtım sayfasına dokunulmuyor.
+
+**Karar (altyapı):**
+- **React 19:** güncel shadcn bileşenleri `forwardRef` kullanmıyor; React 18'de
+  `asChild` tetikleyicinin ref'i kayboluyor ve açılır menü, tooltip
+  konumlanamıyordu. Geçişte tip hatası ve test kırılması çıkmadı; yerel
+  `next build` temiz.
+- **Tema değişkenleri shadcn adlarıyla** (`@theme inline`, `:root` ve `.dark`).
+  Marka kobaltı `primary`. Eskiden `muted` metin rengiydi, shadcn'de zemin
+  rengi: 361 kullanım `muted-foreground`'a taşındı (renk aynı, #6b6b73).
+  Tanıtım sayfası dahil görünüm değişmedi (üretimle yan yana karşılaştırıldı).
+- **Koyu tema:** `next-themes`, varsayılan açık. Seçim UI 2'de kullanıcı
+  menüsüne geliyor.
+- **Yazı tipi:** Geist `next/font` ile; Google Fonts isteği ve CSP'deki iki dış
+  kaynak kalktı.
+- **Grafik bileşeni:** shadcn'in `chart.tsx`'i renkleri ham HTML'li bir
+  `<style>` ile basıyordu (projede yasak, DOG-26). Değişkenler kapsayıcının
+  `style` özniteliğinde; `theme` alanı yerine `var(--chart-n)` kullanılıyor.
+- **shadcn CLI hatası:** `aliases.utils`'i yanlış çözüp `import { cn } from
+  "cn"` yazıyor ve `cn` adlı ilgisiz bir npm paketi ekliyor. İçe aktarmalar
+  `@/lib/cn`'e çevrildi, paket kaldırıldı; `lib/utils.ts` shadcn'in beklediği
+  yol.
+- **Vitrin:** `/ui` (yalnızca yerelde).

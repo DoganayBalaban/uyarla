@@ -66,7 +66,7 @@ export function DashboardView({
             <Inbox className="size-6" aria-hidden />
           </span>
           <p className="m-0 mt-4 font-heading text-xl font-extrabold">Henüz analiz yok.</p>
-          <p className="mt-2 text-muted">İlk ilanını yapıştır, birlikte başlayalım.</p>
+          <p className="mt-2 text-muted-foreground">İlk ilanını yapıştır, birlikte başlayalım.</p>
           <Link
             href="/analyze"
             className="mt-6 inline-flex items-center gap-2 rounded-button bg-brand-blue px-6 py-3 font-semibold text-white no-underline shadow-sm shadow-brand-blue/30"
@@ -137,7 +137,7 @@ function PendingList({ list }: { list: PendingItem[] }) {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{b.position}</span>
-                  <span className="block text-sm text-muted">{text}</span>
+                  <span className="block text-sm text-muted-foreground">{text}</span>
                 </span>
                 <span className="hidden shrink-0 items-center gap-1 text-sm font-semibold text-brand-blue sm:inline-flex">
                   {actionButton}
@@ -178,7 +178,7 @@ function RecentAnalyses({ cards, totalCount }: { cards: DashboardSummary["recent
               >
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{k.position}</span>
-                  <span className="block text-sm text-muted">
+                  <span className="block text-sm text-muted-foreground">
                     {DATE_FORMAT.format(new Date(k.createdAt))} · {STAGE_LABEL[k.stage]}
                   </span>
                 </span>
@@ -208,7 +208,7 @@ function ApplicationStages({ counts, totalCount }: { counts: Record<Stage, numbe
       <h2 id="basvurular" className="m-0 text-base font-bold">
         Başvuruların
       </h2>
-      <p className="m-0 mt-1 text-sm text-muted">{totalCount} ilan, aşamalarına göre.</p>
+      <p className="m-0 mt-1 text-sm text-muted-foreground">{totalCount} ilan, aşamalarına göre.</p>
 
       {/* Dağılım çubuğu: her aşama payı kadar. Sayılar aşağıdaki listede
           yazılı; çubuk yalnızca göz için, ekran okuyucudan gizli. */}
@@ -222,7 +222,7 @@ function ApplicationStages({ counts, totalCount }: { counts: Record<Stage, numbe
         {STAGES.map((a) => (
           <div key={a} className="flex items-center gap-2.5 text-sm">
             <span aria-hidden className={cn("size-2.5 rounded-full", STAGE_COLOR[a])} />
-            <dt className="flex-1 text-muted">{STAGE_LABEL[a]}</dt>
+            <dt className="flex-1 text-muted-foreground">{STAGE_LABEL[a]}</dt>
             <dd className="m-0 font-semibold tabular-nums">{counts[a]}</dd>
           </div>
         ))}
@@ -249,7 +249,7 @@ function SkillGaps({ list, analyses }: { list: SkillGap[]; analyses: number }) {
       <h2 id="eksik-kavramlar" className="m-0 text-base font-bold">
         Sık eksik kalan kavramlar
       </h2>
-      <p className="m-0 mt-1 text-sm text-muted">
+      <p className="m-0 mt-1 text-sm text-muted-foreground">
         Son {analyses} analizinde CV&apos;nde karşılığı bulunmayanlar. Deneyiminde varsa CV&apos;ne açıkça yaz; yoksa
         öğrenme listene ekleyebilirsin.
       </p>
@@ -257,7 +257,7 @@ function SkillGaps({ list, analyses }: { list: SkillGap[]; analyses: number }) {
         {list.map((g) => (
           <li key={g.term} className="flex items-baseline justify-between gap-3 text-sm">
             <span className="min-w-0 font-medium">{g.term}</span>
-            <span className="shrink-0 text-xs text-muted tabular-nums">
+            <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
               {g.postings} ilanda{g.must > 0 ? ` · ${g.must} zorunlu` : ""}
             </span>
           </li>

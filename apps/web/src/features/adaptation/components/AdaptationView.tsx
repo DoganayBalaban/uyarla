@@ -208,7 +208,7 @@ export function AdaptationView({ id }: { id: string }) {
           <CircleAlert className="size-6" aria-hidden />
         </span>
         <h1 className="mt-4 text-2xl">Uyarlama tamamlanamadı</h1>
-        <p className="mt-2 text-sm text-muted">Birazdan tekrar dener misin? CV&apos;n ve ilanın kayıtlı.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Birazdan tekrar dener misin? CV&apos;n ve ilanın kayıtlı.</p>
         <Link
           href="/analyze"
           className="mt-6 inline-flex items-center gap-2 rounded-button bg-brand-blue px-5 py-3 font-semibold text-white no-underline"
@@ -293,9 +293,9 @@ export function AdaptationView({ id }: { id: string }) {
         <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-brand-blue/10 blur-3xl" />
         <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="max-w-md">
-            <p className="text-xs font-semibold tracking-wider text-muted uppercase">Uyarlama</p>
+            <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Uyarlama</p>
             <h1 className="mt-1 text-3xl">CV&apos;n hazır</h1>
-            <p className="mt-2 text-sm text-muted">
+            <p className="mt-2 text-sm text-muted-foreground">
               {diff > 0
                 ? userEdited
                   ? `Seçimlerin ve düzenlemelerinle skorun ${diff} puan arttı. Her değişikliği aşağıda görebilir, istemediğini eski hâline döndürebilirsin.`
@@ -311,10 +311,10 @@ export function AdaptationView({ id }: { id: string }) {
           <div className="flex items-center gap-4 self-center md:self-auto">
             <div className="text-center">
               <ScoreRing score={before} size={92} className="opacity-60 grayscale" />
-              <p className="mt-1 text-xs font-semibold text-muted">Önce</p>
+              <p className="mt-1 text-xs font-semibold text-muted-foreground">Önce</p>
             </div>
             <div className="flex flex-col items-center gap-1">
-              <ArrowRight className="size-5 text-muted" aria-hidden />
+              <ArrowRight className="size-5 text-muted-foreground" aria-hidden />
               {diff !== 0 && (
                 <span
                   className={cn(
@@ -349,7 +349,7 @@ export function AdaptationView({ id }: { id: string }) {
                       Uyarısız {acceptable} değişikliği tek seferde yeni hâline alabilirsin.
                     </p>
                     {alignmentTerms.length > 0 && (
-                      <p className="m-0 mt-0.5 text-muted">
+                      <p className="m-0 mt-0.5 text-muted-foreground">
                         Bunlarda şu terimleri kullandık: {alignmentTerms.join(", ")}. Hepsi deneyimini doğru anlatıyorsa onayla.
                       </p>
                     )}
@@ -358,7 +358,7 @@ export function AdaptationView({ id }: { id: string }) {
                   <p className="m-0 font-semibold">Değişikliklerin hepsi seçili.</p>
                 )}
                 {flaggedPending > 0 && (
-                  <p className="m-0 mt-0.5 text-muted">
+                  <p className="m-0 mt-0.5 text-muted-foreground">
                     Uyarılı {flaggedPending} madde bu işleme dahil değil; onlara tek tek bakman gerekiyor.
                   </p>
                 )}
@@ -406,7 +406,7 @@ export function AdaptationView({ id }: { id: string }) {
                   onClick={() => setView(v)}
                   className={cn(
                     "rounded-[8px] px-4 py-1.5 font-semibold transition",
-                    view === v ? "bg-brand-blue text-white" : "text-muted hover:text-foreground",
+                    view === v ? "bg-brand-blue text-white" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {label}
@@ -431,13 +431,13 @@ export function AdaptationView({ id }: { id: string }) {
               {state.document && (
                 <motion.section {...entrance(0.04)} className="rounded-card border border-border bg-card p-5 sm:p-6">
                   <h2 className="m-0 text-lg">Başlık satırı</h2>
-                  <p className="mt-1 text-sm text-muted">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Adının altındaki satır. İşe alımcılar çoğu zaman unvanla arıyor; deneyimin uyuyorsa ilandaki unvanı
                     buraya yazabilirsin. Konumun ve bağlantıların da bu satırdaysa silme: indirilen CV&apos;den de çıkar.
                   </p>
                   {draft.headline && <VerificationWarning v={draft.headline.verification} />}
                   <p className="m-0 mt-3 font-semibold">
-                    {state.document.after.headline ?? <span className="font-normal text-muted">CV&apos;nde başlık satırı yok.</span>}
+                    {state.document.after.headline ?? <span className="font-normal text-muted-foreground">CV&apos;nde başlık satırı yok.</span>}
                   </p>
                   <EditText
                     text={state.document.after.headline ?? ""}
@@ -478,7 +478,7 @@ export function AdaptationView({ id }: { id: string }) {
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h2 className="m-0 text-lg">Deneyim maddeleri</h2>
                   {changedBullets.length > 0 && (
-                    <p className="m-0 text-sm text-muted">
+                    <p className="m-0 text-sm text-muted-foreground">
                       {decided}/{changedBullets.length} karar verildi
                     </p>
                   )}
@@ -491,7 +491,7 @@ export function AdaptationView({ id }: { id: string }) {
                     />
                   </div>
                 ) : (
-                  <p className="mt-2 text-sm text-muted">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     Maddelerinde ilanın terimleriyle anlatılabilecek bir şey bulamadık, o yüzden olduğu gibi bıraktık.
                   </p>
                 )}
@@ -507,7 +507,7 @@ export function AdaptationView({ id }: { id: string }) {
                         )}
                       >
                         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                          <span className="text-xs font-semibold text-muted">
+                          <span className="text-xs font-semibold text-muted-foreground">
                             Madde {order}
                             {bullet.decision === "pending" && <span className="ml-2 text-brand-blue">· Karar bekliyor</span>}
                           </span>
@@ -527,7 +527,7 @@ export function AdaptationView({ id }: { id: string }) {
                         {(bullet.alignments?.length ?? 0) > 0 && (
                           <ul className="mt-3 space-y-1.5">
                             {bullet.alignments!.map((a) => (
-                              <li key={a.term} className="flex gap-2 text-sm text-muted">
+                              <li key={a.term} className="flex gap-2 text-sm text-muted-foreground">
                                 <Link2 className="mt-0.5 size-3.5 shrink-0 text-brand-blue" aria-hidden />
                                 <span>
                                   <span className="font-semibold text-foreground">{a.term}</span>, senin{" "}
@@ -551,7 +551,7 @@ export function AdaptationView({ id }: { id: string }) {
 
                 {unchangedBullets.length > 0 && (
                   <details className="group mt-4">
-                    <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-muted">
+                    <summary className="flex cursor-pointer list-none items-center gap-1 text-sm text-muted-foreground">
                       Olduğu gibi kalan maddeler ({unchangedBullets.length})
                       <ChevronDown className="size-4 transition group-open:rotate-180" aria-hidden />
                     </summary>
@@ -579,7 +579,7 @@ export function AdaptationView({ id }: { id: string }) {
 
               <motion.section {...entrance(0.14)} className="rounded-card border border-border bg-card p-5 sm:p-6">
                 <h2 className="m-0 text-lg">Beceriler</h2>
-                <p className="mt-1 text-sm text-muted">
+                <p className="mt-1 text-sm text-muted-foreground">
                   {added.size > 0
                     ? "İlanın aradığı ve deneyim maddelerinde geçen beceriler listeye eklendi; ilana en çok uyanlar başa alındı. Hiçbir beceri silinmedi."
                     : "İlana en çok uyanlar başa alındı. Hiçbir beceri eklenmedi veya silinmedi."}
@@ -593,7 +593,7 @@ export function AdaptationView({ id }: { id: string }) {
                         added.has(b) ? "border-brand-blue/40 bg-brand-blue/10" : "border-border bg-background",
                       )}
                     >
-                      <span className="text-xs font-semibold text-muted tabular-nums">{i + 1}</span>
+                      <span className="text-xs font-semibold text-muted-foreground tabular-nums">{i + 1}</span>
                       {b}
                       {added.has(b) && (
                         <span className="text-[11px] font-semibold text-brand-blue dark:text-brand-blue-light">CV&apos;nden</span>
@@ -617,12 +617,12 @@ export function AdaptationView({ id }: { id: string }) {
               İndir
             </h2>
             {pendingCount > 0 ? (
-              <p className="mt-2 text-sm text-muted">
+              <p className="mt-2 text-sm text-muted-foreground">
                 <span className="font-semibold text-foreground">{pendingCount} madde</span> için karar bekliyoruz. Karar
                 verince indirme açılır.
               </p>
             ) : (
-              <p className="mt-2 text-sm text-muted">Seçtiğin hâllerle CV&apos;ni indirebilirsin.</p>
+              <p className="mt-2 text-sm text-muted-foreground">Seçtiğin hâllerle CV&apos;ni indirebilirsin.</p>
             )}
             {errorMessage && (
               <p role="alert" className="mt-2 text-sm text-brand-red dark:text-[#f87171]">
@@ -669,13 +669,13 @@ export function AdaptationView({ id }: { id: string }) {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block font-semibold text-foreground">Başvuru panosu</span>
-              <span className="block text-muted">Bu başvuruyu takip et</span>
+              <span className="block text-muted-foreground">Bu başvuruyu takip et</span>
             </span>
-            <ArrowRight className="size-4 text-muted" aria-hidden />
+            <ArrowRight className="size-4 text-muted-foreground" aria-hidden />
           </Link>
 
           {/* Marka rehberi §11: yapay zekâ şeffaflığı ve uydurmama ilkesi. */}
-          <p className="flex gap-2 px-1 text-xs text-muted">
+          <p className="flex gap-2 px-1 text-xs text-muted-foreground">
             <ShieldCheck className="size-4 shrink-0 text-brand-green dark:text-[#4ade80]" aria-hidden />
             Metinler yapay zekâ ile yeniden yazıldı. Hiçbir deneyim, beceri veya sertifika eklenmedi; eğitim ve
             sertifikalarına hiç dokunulmadı.
@@ -708,7 +708,7 @@ function LayoutChoice({
 }) {
   return (
     <div className="mt-4">
-      <p className="m-0 text-xs font-semibold tracking-wider text-muted uppercase">Belge düzeni</p>
+      <p className="m-0 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Belge düzeni</p>
       <div role="radiogroup" aria-label="Belge düzeni" className="mt-1.5 inline-flex rounded-button bg-background p-1 text-sm">
         {(
           [
@@ -725,7 +725,7 @@ function LayoutChoice({
             onClick={() => layout !== value && onChange(value)}
             className={cn(
               "rounded-[8px] px-3 py-1.5 font-semibold transition disabled:opacity-50",
-              layout === value ? "bg-card text-brand-blue shadow-sm" : "text-muted hover:text-foreground",
+              layout === value ? "bg-card text-brand-blue shadow-sm" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {label}
@@ -733,7 +733,7 @@ function LayoutChoice({
         ))}
       </div>
       {layout === "onePage" && (
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-2 text-sm text-muted-foreground">
           {omittedCount === 0
             ? "Sıkı yerleşimle tek sayfaya sığıyor; içerikten bir şey çıkmadı."
             : (

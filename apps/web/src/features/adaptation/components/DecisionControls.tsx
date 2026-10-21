@@ -40,7 +40,7 @@ export function DecisionToggle({
             onClick={() => onSelect(s.d)}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 font-semibold transition disabled:cursor-default",
-              selected ? "bg-card text-brand-blue shadow-sm" : "text-muted hover:text-foreground",
+              selected ? "bg-card text-brand-blue shadow-sm" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {selected && <Check className="size-3.5" strokeWidth={3} aria-hidden />}

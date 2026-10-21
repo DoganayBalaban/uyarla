@@ -51,10 +51,10 @@ export function ApplicationDetail({ analysisId }: { analysisId: string }) {
   const [tab, setTab] = useState<Tab>("summary")
   const [askApply, setAskApply] = useState(false)
 
-  if (cardsQuery.isPending) return <LoaderCircle className="size-5 text-muted motion-safe:animate-spin" aria-hidden />
+  if (cardsQuery.isPending) return <LoaderCircle className="size-5 text-muted-foreground motion-safe:animate-spin" aria-hidden />
   if (cardsQuery.isError) {
     return apiStatus(cardsQuery.error) === 401 ? (
-      <p className="text-muted">
+      <p className="text-muted-foreground">
         Başvurunu görmek için <Link href={loginPath(`/applications/${analysisId}`)}>giriş yap</Link>.
       </p>
     ) : (
@@ -65,7 +65,7 @@ export function ApplicationDetail({ analysisId }: { analysisId: string }) {
     )
   }
   const card = cardsQuery.data.find((c) => c.analysisId === analysisId)
-  if (!card) return <p className="text-muted">Bu başvuruyu panonda bulamadık.</p>
+  if (!card) return <p className="text-muted-foreground">Bu başvuruyu panonda bulamadık.</p>
 
   function update(change: CardChange) {
     if (change.stage && shouldAskBeforeApplying(card!, change.stage)) {
@@ -77,12 +77,12 @@ export function ApplicationDetail({ analysisId }: { analysisId: string }) {
 
   return (
     <div>
-      <Link href="/applications" className="inline-flex items-center gap-1.5 text-sm text-muted no-underline hover:text-foreground">
+      <Link href="/applications" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground no-underline hover:text-foreground">
         <ArrowLeft className="size-4" aria-hidden />
         Başvuru panosu
       </Link>
       <h1 className="m-0 mt-4 text-3xl">{card.position}</h1>
-      <p className="m-0 mt-1 text-muted">
+      <p className="m-0 mt-1 text-muted-foreground">
         {[card.company, `analiz ${DATE.format(new Date(card.createdAt))}`].filter(Boolean).join(" · ")}
       </p>
 
@@ -96,7 +96,7 @@ export function ApplicationDetail({ analysisId }: { analysisId: string }) {
             onClick={() => setTab(t.id)}
             className={cn(
               "rounded-[8px] px-3.5 py-1.5 font-medium transition",
-              tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground",
+              tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {t.label}
@@ -160,7 +160,7 @@ function SummaryTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: Ca
             {card.score} · {badge.text}
           </span>
         )}
-        <label className="flex items-center gap-2 text-muted">
+        <label className="flex items-center gap-2 text-muted-foreground">
           Aşama
           <select
             value={card.stage}
@@ -174,10 +174,10 @@ function SummaryTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: Ca
             ))}
           </select>
         </label>
-        {deadline && <span className="text-muted">{deadline.text}</span>}
+        {deadline && <span className="text-muted-foreground">{deadline.text}</span>}
       </div>
       {card.readiness && (card.readiness.missingMust > 0 || card.readiness.titleMissing) && (
-        <p className="m-0 text-muted">
+        <p className="m-0 text-muted-foreground">
           {[
             card.readiness.missingMust > 0 ? `${card.readiness.missingMust} zorunlu gereksinim CV'nde görünmüyor` : null,
             card.readiness.titleMissing ? "ilandaki unvan CV'nde geçmiyor" : null,
@@ -192,7 +192,7 @@ function SummaryTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: Ca
           <Link href={resultPath(card.analysisId)} className={link}>
             Analiz sonucu
           </Link>
-          <span className="text-muted"> · gereksinimler, eksik kavramlar, ilan metni</span>
+          <span className="text-muted-foreground"> · gereksinimler, eksik kavramlar, ilan metni</span>
         </li>
         <li>
           {card.adaptation ? (
@@ -200,7 +200,7 @@ function SummaryTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: Ca
               <Link href={`/adapt/${card.adaptation.id}`} className={link}>
                 Uyarlanmış CV
               </Link>
-              <span className="text-muted"> · CV, ön yazı ve form yanıtları</span>
+              <span className="text-muted-foreground"> · CV, ön yazı ve form yanıtları</span>
             </>
           ) : (
             <button type="button" onClick={() => void adapt()} disabled={adapting} className={cn(link, "disabled:opacity-50")}>
@@ -221,7 +221,7 @@ function SummaryTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: Ca
 function MessagesTab({ card }: { card: BoardCard }) {
   return (
     <div className="text-sm">
-      <p className="m-0 text-muted">
+      <p className="m-0 text-muted-foreground">
         Taslaklar gönderdiğin CV&apos;den ve ön yazından; biz göndermiyoruz, kopyalayıp kendin gönderirsin.
       </p>
       <FollowUpPanel card={card} />
@@ -233,7 +233,7 @@ function MessagesTab({ card }: { card: BoardCard }) {
 function InterviewTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: CardChange) => void }) {
   return (
     <div className="space-y-3 text-sm">
-      <label className="flex items-center gap-2 text-muted">
+      <label className="flex items-center gap-2 text-muted-foreground">
         Mülakat günü
         <input
           type="date"
@@ -247,10 +247,10 @@ function InterviewTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: 
           <Link href={`/applications/${card.analysisId}/mulakat`} className={link}>
             Mülakat hazırlığı
           </Link>
-          <span className="text-muted"> · olası sorular, cevap iskeletleri ve yazılı pratik</span>
+          <span className="text-muted-foreground"> · olası sorular, cevap iskeletleri ve yazılı pratik</span>
         </p>
       ) : (
-        <p className="m-0 text-muted">Aşamayı &quot;Mülakat&quot; yapınca hazırlık paketi açılır.</p>
+        <p className="m-0 text-muted-foreground">Aşamayı &quot;Mülakat&quot; yapınca hazırlık paketi açılır.</p>
       )}
     </div>
   )
@@ -284,7 +284,7 @@ function NoteTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: CardC
           {errors.note.message}
         </p>
       )}
-      <p className="m-0 mt-1 text-xs text-muted">{isDirty ? "Kutudan çıkınca kaydedilir." : "Yalnızca sen görürsün."}</p>
+      <p className="m-0 mt-1 text-xs text-muted-foreground">{isDirty ? "Kutudan çıkınca kaydedilir." : "Yalnızca sen görürsün."}</p>
     </form>
   )
 }

@@ -78,7 +78,7 @@ export function ResumeUpload({
         <span className="font-semibold">
           CV&apos;ni buraya bırak ya da <span className="text-brand-blue dark:text-brand-blue-light">seç</span>
         </span>
-        <span className="text-sm text-muted">PDF veya Word (DOCX) · en fazla 10 MB</span>
+        <span className="text-sm text-muted-foreground">PDF veya Word (DOCX) · en fazla 10 MB</span>
         <input
           ref={inputValue}
           id="cv"
@@ -104,12 +104,12 @@ export function ResumeUpload({
             </span>
             <div className="min-w-0 flex-1">
               <p className="m-0 truncate font-semibold">{file.name}</p>
-              <p className="m-0 text-xs text-muted">{sizePx(file.size)} · hazır</p>
+              <p className="m-0 text-xs text-muted-foreground">{sizePx(file.size)} · hazır</p>
             </div>
             <button
               type="button"
               onClick={remove}
-              className="grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-background hover:text-foreground"
+              className="grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
               aria-label="Dosyayı kaldır"
             >
               <X className="size-4" aria-hidden />

@@ -13,7 +13,7 @@ export function ImpactBadge({ impact, className }: { impact: ScoreImpact; classN
         "inline-block rounded-full px-2 py-0.5 align-middle text-[11px] font-semibold whitespace-nowrap",
         impact.tone === "scored"
           ? "bg-brand-blue/10 text-brand-blue"
-          : "border border-border bg-background text-muted",
+          : "border border-border bg-background text-muted-foreground",
         className,
       )}
     >

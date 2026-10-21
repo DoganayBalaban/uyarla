@@ -27,7 +27,7 @@ export function ApplyCheck({ card, onApply, onClose }: { card: BoardCard; onAppl
         <h2 id="apply-check-title" className="m-0 text-lg">
           Önce uyarlamak ister misin?
         </h2>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-2 text-sm text-muted-foreground">
           {card.position}: {gaps.join("; ")}. Deneyiminde varsa uyarlamada görünür kılabiliriz; olmayan bir şeyi
           eklemiyoruz.
         </p>
@@ -47,7 +47,7 @@ export function ApplyCheck({ card, onApply, onClose }: { card: BoardCard; onAppl
           >
             Yine de başvurdum
           </button>
-          <button type="button" onClick={onClose} className="px-3 py-2.5 text-sm font-semibold text-muted">
+          <button type="button" onClick={onClose} className="px-3 py-2.5 text-sm font-semibold text-muted-foreground">
             Vazgeç
           </button>
         </div>

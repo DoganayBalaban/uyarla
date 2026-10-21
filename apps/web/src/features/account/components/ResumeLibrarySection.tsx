@@ -36,17 +36,17 @@ export function ResumeLibrarySection() {
     <section className="rounded-card border border-border bg-card p-6">
       <div className="flex items-center justify-between gap-3">
         <h2 className="m-0 text-lg">CV&apos;lerim</h2>
-        <span className="text-sm text-muted">{resumes.length}/{LIBRARY_MAX}</span>
+        <span className="text-sm text-muted-foreground">{resumes.length}/{LIBRARY_MAX}</span>
       </div>
-      <p className="m-0 mt-1 text-sm text-muted">
+      <p className="m-0 mt-1 text-sm text-muted-foreground">
         Analizde yeniden yüklemek yerine buradan seçersin; temel CV yeni analizde seçili gelir. Kaldırdığın CV&apos;yle
         yapılmış analizler panoda kalır.
       </p>
 
       {library.isPending ? (
-        <LoaderCircle className="mt-4 size-5 motion-safe:animate-spin text-muted" aria-hidden />
+        <LoaderCircle className="mt-4 size-5 motion-safe:animate-spin text-muted-foreground" aria-hidden />
       ) : resumes.length === 0 ? (
-        <p className="mt-4 text-sm text-muted">Henüz kayıtlı CV&apos;n yok.</p>
+        <p className="mt-4 text-sm text-muted-foreground">Henüz kayıtlı CV&apos;n yok.</p>
       ) : (
         <ul className="mt-4 grid list-none gap-2 p-0">
           {resumes.map((resume) => (
@@ -64,7 +64,7 @@ export function ResumeLibrarySection() {
           <button type="button" disabled={full} onClick={() => setAdding(true)} className="rounded-button bg-brand-blue px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
             CV ekle
           </button>
-          {full && <p className="mt-2 text-sm text-muted">En fazla {LIBRARY_MAX} CV kaydedebilirsin. Yeni eklemek için birini kaldır.</p>}
+          {full && <p className="mt-2 text-sm text-muted-foreground">En fazla {LIBRARY_MAX} CV kaydedebilirsin. Yeni eklemek için birini kaldır.</p>}
         </div>
       )}
     </section>
@@ -187,17 +187,17 @@ function AddResumeForm({ onDone, onError }: { onDone: () => void; onError: (mess
 function ResumeApplications({ resume }: { resume: LibraryResume }) {
   const apps = resume.applications ?? []
   const total = resume.applicationCount ?? apps.length
-  if (total === 0) return <p className="m-0 mt-2 pl-6 text-xs text-muted">Bu CV&apos;yle henüz analiz yapmadın.</p>
+  if (total === 0) return <p className="m-0 mt-2 pl-6 text-xs text-muted-foreground">Bu CV&apos;yle henüz analiz yapmadın.</p>
   return (
     <div className="mt-2 pl-6 text-xs">
-      <p className="m-0 text-muted">Bu CV&apos;yle analiz ettiğin ilanlar ({total}):</p>
+      <p className="m-0 text-muted-foreground">Bu CV&apos;yle analiz ettiğin ilanlar ({total}):</p>
       <ul className="m-0 mt-1 list-none space-y-0.5 p-0">
         {apps.map((a) => (
           <li key={a.analysisId} className="truncate">
             <Link href={`/analyze?analiz=${encodeURIComponent(a.analysisId)}`} className="font-medium text-foreground underline-offset-2 hover:underline">
               {a.company ? `${a.company} · ${a.position}` : a.position}
             </Link>
-            {isStage(a.stage) && <span className="text-muted"> · {STAGE_LABEL[a.stage]}</span>}
+            {isStage(a.stage) && <span className="text-muted-foreground"> · {STAGE_LABEL[a.stage]}</span>}
           </li>
         ))}
       </ul>

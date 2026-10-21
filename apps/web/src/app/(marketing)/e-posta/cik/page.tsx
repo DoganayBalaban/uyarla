@@ -21,7 +21,7 @@ export default async function UnsubscribePage({
     <PageShell width="narrow">
       <h1 className="font-heading text-3xl font-extrabold tracking-tight">E-posta tercihleri</h1>
       {!target || hata ? (
-        <p className="mt-4 text-muted">
+        <p className="mt-4 text-muted-foreground">
           Bu bağlantı geçerli değil ya da eskimiş. E-posta tercihlerini{" "}
           <Link href="/account" className="font-medium text-brand-blue">
             Hesabım
@@ -29,7 +29,7 @@ export default async function UnsubscribePage({
           sayfasından değiştirebilirsin.
         </p>
       ) : tamam ? (
-        <p className="mt-4 text-muted">
+        <p className="mt-4 text-muted-foreground">
           Kapattık; artık {CATEGORY_LABEL[target.category]} gelmeyecek. Fikrini değiştirirsen{" "}
           <Link href="/account" className="font-medium text-brand-blue">
             Hesabım
@@ -38,7 +38,7 @@ export default async function UnsubscribePage({
         </p>
       ) : (
         <>
-          <p className="mt-4 text-muted">
+          <p className="mt-4 text-muted-foreground">
             {CATEGORY_LABEL[target.category].replace(/^./, (c) => c.toLocaleUpperCase("tr"))} kapatılsın mı? Giriş
             bağlantısı gibi hesabınla ilgili zorunlu e-postalar gelmeye devam eder.
           </p>

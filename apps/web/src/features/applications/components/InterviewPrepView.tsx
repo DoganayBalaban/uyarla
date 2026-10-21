@@ -61,10 +61,10 @@ export function InterviewPrepView({ analysisId }: { analysisId: string }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key(analysisId) }),
   })
 
-  if (query.isPending) return <LoaderCircle className="size-5 text-muted motion-safe:animate-spin" aria-hidden />
+  if (query.isPending) return <LoaderCircle className="size-5 text-muted-foreground motion-safe:animate-spin" aria-hidden />
   if (query.isError) {
     return (
-      <p className="text-muted">
+      <p className="text-muted-foreground">
         {apiStatus(query.error) === 404 ? "Bu başvuruyu bulamadık." : "Yükleyemedik. Sayfayı yenileyebilir misin?"}
       </p>
     )
@@ -85,18 +85,18 @@ export function InterviewPrepView({ analysisId }: { analysisId: string }) {
 
   return (
     <div className="space-y-6">
-      <Link href="/applications" className="inline-flex items-center gap-1 text-sm text-muted no-underline hover:text-foreground">
+      <Link href="/applications" className="inline-flex items-center gap-1 text-sm text-muted-foreground no-underline hover:text-foreground">
         <ArrowLeft className="size-4" aria-hidden />
         Başvuru panosu
       </Link>
       <div>
         <h1 className="m-0 font-heading text-3xl font-extrabold tracking-tight">Mülakat hazırlığı</h1>
-        <p className="mt-2 text-muted">
+        <p className="mt-2 text-muted-foreground">
           {data.position}
           {data.company ? ` · ${data.company}` : ""}
           {data.interviewAt ? ` · ${DATE.format(new Date(`${data.interviewAt}T00:00:00Z`))}` : ""}
         </p>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-2 text-sm text-muted-foreground">
           Gönderdiğin CV&apos;den ve ön yazından hazırlandı. Kağıtta olmayan bir iddiayı mülakatta da kurma; köşeli
           parantezli yerleri kendi bildiğinle doldur.
           {data.adaptationId && (
@@ -161,22 +161,22 @@ export function PrepSections({ prep, practice }: { prep: InterviewPrep; practice
           {prep.questions.map((q, i) => (
             <li key={i} className="text-sm">
               <p className="m-0 font-semibold">
-                {q.question} <span className="ml-1 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted">{KIND_LABEL[q.kind]}</span>
+                {q.question} <span className="ml-1 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground">{KIND_LABEL[q.kind]}</span>
               </p>
-              <p className="m-0 mt-1 text-muted">{q.why}</p>
+              <p className="m-0 mt-1 text-muted-foreground">{q.why}</p>
               {q.evidence.length > 0 && (
                 <p className="m-0 mt-2">
                   <span className="font-medium">CV&apos;ndeki dayanağın:</span> {q.evidence.join(" · ")}
                 </p>
               )}
               <dl className="m-0 mt-2 grid grid-cols-[6rem_1fr] gap-x-2 gap-y-1 rounded-button bg-background p-3">
-                <dt className="text-muted">Durum</dt>
+                <dt className="text-muted-foreground">Durum</dt>
                 <dd className="m-0">{q.star.situation}</dd>
-                <dt className="text-muted">Görev</dt>
+                <dt className="text-muted-foreground">Görev</dt>
                 <dd className="m-0">{q.star.task}</dd>
-                <dt className="text-muted">Eylem</dt>
+                <dt className="text-muted-foreground">Eylem</dt>
                 <dd className="m-0">{q.star.action}</dd>
-                <dt className="text-muted">Sonuç</dt>
+                <dt className="text-muted-foreground">Sonuç</dt>
                 <dd className="m-0">{q.star.result}</dd>
               </dl>
               {q.verification.status === "flagged" && <Flag issues={q.verification.issues} />}
@@ -191,12 +191,12 @@ export function PrepSections({ prep, practice }: { prep: InterviewPrep; practice
       {prep.consistency.length > 0 && (
         <section className="rounded-card border border-border bg-card p-5">
           <h2 className="m-0 text-lg">Savunmaya hazır ol</h2>
-          <p className="mt-1 text-sm text-muted">Görüşmeci CV&apos;ndeki bu iddiaların üstüne gidebilir.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Görüşmeci CV&apos;ndeki bu iddiaların üstüne gidebilir.</p>
           <ul className="mt-3 space-y-2 text-sm">
             {prep.consistency.map((c, i) => (
               <li key={i}>
                 <span className="font-medium">{c.claim}</span>
-                <span className="block text-muted">
+                <span className="block text-muted-foreground">
                   {c.reason === "quantity"
                     ? "Bu sayıyı neye göre ölçtüğünü, başlangıç noktasını ve senin payını anlatabilmelisin."
                     : "Bu maddeyi ilanın diliyle yeniden yazdık; kendi kelimelerinle ve bir örnekle anlatabilmelisin."}
@@ -210,7 +210,7 @@ export function PrepSections({ prep, practice }: { prep: InterviewPrep; practice
       {prep.bridges.length > 0 && (
         <section className="rounded-card border border-border bg-card p-5">
           <h2 className="m-0 text-lg">Eksik kalan gereksinimler</h2>
-          <p className="mt-1 text-sm text-muted">Soru gelirse sahiplenme; dürüst bir köprü kur.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Soru gelirse sahiplenme; dürüst bir köprü kur.</p>
           <ul className="mt-3 space-y-3 text-sm">
             {prep.bridges.map((b, i) => (
               <li key={i}>
@@ -277,7 +277,7 @@ function PracticeBox({ analysisId, questionIndex, entries }: { analysisId: strin
       {latest?.status === "done" && latest.feedback && <PracticeResult answer={latest.answer} feedback={latest.feedback} />}
       {latest?.status === "failed" && <p className="m-0 mt-2 text-brand-red">Cevabını değerlendiremedik. Tekrar dener misin?</p>}
       {running ? (
-        <p className="m-0 mt-2 flex items-center gap-2 text-muted" role="status">
+        <p className="m-0 mt-2 flex items-center gap-2 text-muted-foreground" role="status">
           <LoaderCircle className="size-4 text-brand-blue motion-safe:animate-spin" aria-hidden />
           Cevabını okuyoruz…
         </p>
@@ -301,13 +301,13 @@ function PracticeBox({ analysisId, questionIndex, entries }: { analysisId: strin
             >
               Geri bildirim al
             </button>
-            <span className="text-xs text-muted">
+            <span className="text-xs text-muted-foreground">
               {words} kelime · önerilen {ANSWER_MIN_WORDS}–{ANSWER_MAX_WORDS} · {left} hakkın kaldı
             </span>
           </div>
         </div>
       ) : (
-        <p className="m-0 mt-2 text-muted">Bu soru için geri bildirim hakkın doldu.</p>
+        <p className="m-0 mt-2 text-muted-foreground">Bu soru için geri bildirim hakkın doldu.</p>
       )}
       {error && (
         <p role="alert" className="m-0 mt-2 text-brand-red dark:text-[#f87171]">
@@ -321,10 +321,10 @@ function PracticeBox({ analysisId, questionIndex, entries }: { analysisId: strin
 function PracticeResult({ answer, feedback }: { answer: string; feedback: NonNullable<PracticeEntry["feedback"]> }) {
   return (
     <div className="mt-3 space-y-2">
-      <p className="m-0 whitespace-pre-line rounded-button bg-background p-2 text-muted">{answer}</p>
+      <p className="m-0 whitespace-pre-line rounded-button bg-background p-2 text-muted-foreground">{answer}</p>
       <ul className="m-0 flex list-none flex-wrap gap-3 p-0">
         {(Object.keys(STAR_LABEL) as Array<keyof typeof STAR_LABEL>).map((k) => (
-          <li key={k} className={`flex items-center gap-1 ${feedback.star[k] ? "text-brand-green" : "text-muted"}`}>
+          <li key={k} className={`flex items-center gap-1 ${feedback.star[k] ? "text-brand-green" : "text-muted-foreground"}`}>
             {feedback.star[k] ? <Check className="size-4" aria-hidden /> : <X className="size-4" aria-hidden />}
             {STAR_LABEL[k]}
             <span className="sr-only">{feedback.star[k] ? " var" : " eksik"}</span>
@@ -332,7 +332,7 @@ function PracticeResult({ answer, feedback }: { answer: string; feedback: NonNul
         ))}
       </ul>
       {feedback.length !== "ok" && (
-        <p className="m-0 text-muted">
+        <p className="m-0 text-muted-foreground">
           {feedback.words} kelime;{" "}
           {feedback.length === "short" ? "biraz kısa, bir örnek ya da sonuç ekleyebilirsin." : "uzun, mülakatta iki dakikayı geçer; kısalt."}
         </p>

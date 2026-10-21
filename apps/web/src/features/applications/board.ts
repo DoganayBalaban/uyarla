@@ -26,7 +26,7 @@ export const STAGE_LABEL: Record<Stage, string> = {
  * bildirdiği için durum renkleri burada yerinde (rehber §9.2).
  */
 export const STAGE_COLOR: Record<Stage, string> = {
-  saved: "bg-muted",
+  saved: "bg-muted-foreground",
   applied: "bg-brand-blue",
   interview: "bg-brand-amber",
   offer: "bg-brand-green",

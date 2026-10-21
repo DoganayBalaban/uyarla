@@ -25,7 +25,7 @@ export function AccessStatus({ showCta = true, className }: { showCta?: boolean;
       </span>
       <div className="min-w-0 flex-1">
         <p className="font-semibold">{summary.title}</p>
-        {summary.detail && <p className="mt-0.5 text-sm text-muted">{summary.detail}</p>}
+        {summary.detail && <p className="mt-0.5 text-sm text-muted-foreground">{summary.detail}</p>}
       </div>
       {showCta && (
         <Link

@@ -62,7 +62,7 @@ export function AccountView() {
           <CircleCheck className="size-6" aria-hidden />
         </span>
         <h1 className="mt-4 text-2xl">Hesabın silindi</h1>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-2 text-sm text-muted-foreground">
           CV&apos;n, ilanların ve analizlerin kalıcı olarak silindi. Bir gün
           yine iş arıyorsan buradayız.
         </p>
@@ -83,7 +83,7 @@ export function AccountView() {
           <UserRound className="size-6" aria-hidden />
         </span>
         <h1 className="mt-4 text-2xl">Hesabım</h1>
-        <p className="mt-2 text-sm text-muted">Devam etmek için giriş yapman gerekiyor.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Devam etmek için giriş yapman gerekiyor.</p>
         <Link
           href={loginPath("/account")}
           className="mt-6 inline-flex items-center gap-2 rounded-button bg-brand-blue px-6 py-3 font-semibold text-white no-underline shadow-sm shadow-brand-blue/30"
@@ -111,12 +111,12 @@ export function AccountView() {
             {/* Anonim oturumun e-postası Better Auth'un ürettiği bir yer tutucu
                 (…@anonymous.placeholder.invalid); göstermek kafa karıştırırdı. */}
             {registered ? (
-              <p className="m-0 mt-0.5 flex items-center gap-1.5 truncate text-sm text-muted">
+              <p className="m-0 mt-0.5 flex items-center gap-1.5 truncate text-sm text-muted-foreground">
                 <Mail className="size-3.5 shrink-0" aria-hidden />
                 {currentUser.email}
               </p>
             ) : (
-              <p className="m-0 mt-0.5 text-sm text-muted">Kayıtsız oturum</p>
+              <p className="m-0 mt-0.5 text-sm text-muted-foreground">Kayıtsız oturum</p>
             )}
           </div>
         </div>
@@ -143,7 +143,7 @@ export function AccountView() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block font-semibold text-foreground">Başvuru panosu</span>
-              <span className="block text-muted">Analizlerin ve başvuruların</span>
+              <span className="block text-muted-foreground">Analizlerin ve başvuruların</span>
             </span>
           </Link>
           <Link
@@ -155,7 +155,7 @@ export function AccountView() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block font-semibold text-foreground">Verilerin</span>
-              <span className="block text-muted">KVKK aydınlatma metni</span>
+              <span className="block text-muted-foreground">KVKK aydınlatma metni</span>
             </span>
           </Link>
           {/* KVKK md. 11 (DOG-63): bütün veri tek ZIP'te. Düz bağlantı: tarayıcı
@@ -170,7 +170,7 @@ export function AccountView() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block font-semibold text-foreground">Verilerimi indir</span>
-              <span className="block text-muted">CV'lerin, analizlerin, uyarlamaların</span>
+              <span className="block text-muted-foreground">CV'lerin, analizlerin, uyarlamaların</span>
             </span>
           </a>
         </div>
@@ -182,7 +182,7 @@ export function AccountView() {
             </span>
             <div>
               <h2 className="m-0 text-lg">Verilerini sil</h2>
-              <p className="m-0 mt-1 text-sm text-muted">
+              <p className="m-0 mt-1 text-sm text-muted-foreground">
                 CV&apos;n, yapıştırdığın ilanlar, analizlerin ve uyarlamaların
                 silinir. Geri alınamaz.
               </p>

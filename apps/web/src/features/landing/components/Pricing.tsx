@@ -26,9 +26,9 @@ export function Pricing({ plans }: { plans: PlanOffer[] }) {
 
         <div className="mx-auto mt-10 grid max-w-5xl gap-6 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
           <div className="flex h-full flex-col rounded-card border border-border bg-card p-5">
-            <p className="text-sm font-semibold text-muted">Ücretsiz</p>
+            <p className="text-sm font-semibold text-muted-foreground">Ücretsiz</p>
             <p className="mt-2 text-3xl font-bold tracking-tight">0 TL</p>
-            <p className="mt-1 text-sm text-muted">Sınırsız skor · 1 uyarlama</p>
+            <p className="mt-1 text-sm text-muted-foreground">Sınırsız skor · 1 uyarlama</p>
             <div className="mt-auto pt-4">
               <Link
                 href="/analyze"
@@ -70,7 +70,7 @@ export function Pricing({ plans }: { plans: PlanOffer[] }) {
               ))}
             </ul>
           </div>
-          <p className="flex max-w-xs items-start gap-1.5 text-xs text-muted">
+          <p className="flex max-w-xs items-start gap-1.5 text-xs text-muted-foreground">
             <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             <span>
               Tek seferlik ödeme, fiyatlara KDV dahil. Ödeme Polar üzerinden; kart bilgin bize gelmez.{" "}

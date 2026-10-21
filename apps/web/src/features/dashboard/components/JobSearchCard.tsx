@@ -37,7 +37,7 @@ export function JobSearchCard({ initialKeywords }: { initialKeywords: string }) 
       </h2>
       <div className="mt-3 space-y-2 text-sm">
         <label className="block">
-          <span className="text-muted">Rol</span>
+          <span className="text-muted-foreground">Rol</span>
           <input
             value={keywords}
             onChange={(e) => {
@@ -54,9 +54,9 @@ export function JobSearchCard({ initialKeywords }: { initialKeywords: string }) 
             Hedef rolüm olarak kaydet
           </button>
         )}
-        {saved && <p className="m-0 text-xs text-muted">Hedef rolün güncellendi.</p>}
+        {saved && <p className="m-0 text-xs text-muted-foreground">Hedef rolün güncellendi.</p>}
         <label className="block">
-          <span className="text-muted">Şehir (isteğe bağlı)</span>
+          <span className="text-muted-foreground">Şehir (isteğe bağlı)</span>
           <input
             value={city}
             onChange={(e) => setCity(e.target.value)}
@@ -77,22 +77,22 @@ export function JobSearchCard({ initialKeywords }: { initialKeywords: string }) 
                 className="flex items-center justify-between gap-1 rounded-button border border-border px-3 py-2 font-medium no-underline hover:border-brand-blue/40"
               >
                 {l.label}
-                <ExternalLink className="size-3.5 text-muted" aria-hidden />
+                <ExternalLink className="size-3.5 text-muted-foreground" aria-hidden />
               </a>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-3 text-sm text-muted">Aramak istediğin rolü yaz.</p>
+        <p className="mt-3 text-sm text-muted-foreground">Aramak istediğin rolü yaz.</p>
       )}
-      <p className="m-0 mt-3 text-sm text-muted">
+      <p className="m-0 mt-3 text-sm text-muted-foreground">
         Beğendiğin ilanın bağlantısını ya da metnini{" "}
         <Link href="/analyze" className="font-medium text-brand-blue">
           yapıştır
         </Link>
         , uyumunu hemen ölçelim.
       </p>
-      <p className="m-0 mt-2 text-sm text-muted">
+      <p className="m-0 mt-2 text-sm text-muted-foreground">
         <Link href="/linkedin" className="font-medium text-brand-blue">
           LinkedIn profilini
         </Link>{" "}

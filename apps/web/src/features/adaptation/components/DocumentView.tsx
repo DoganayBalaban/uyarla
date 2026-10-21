@@ -155,9 +155,9 @@ export function DocumentView({
           <div key={i}>
             <p className="m-0 font-semibold">
               {job.title}
-              {job.company && <span className="font-normal text-muted"> · {job.company}</span>}
+              {job.company && <span className="font-normal text-muted-foreground"> · {job.company}</span>}
             </p>
-            {job.dates && <p className="m-0 text-xs text-muted">{job.dates}</p>}
+            {job.dates && <p className="m-0 text-xs text-muted-foreground">{job.dates}</p>}
             {bulletList(job.bullets, { experienceIndex: i })}
             {editable && <AddBullet where={{ experienceIndex: i }} busy={busy} onBullet={onBullet!} />}
           </div>
@@ -175,9 +175,9 @@ export function DocumentView({
           <div key={i}>
             <p className="m-0 font-semibold">
               {p.name}
-              {p.role && <span className="font-normal text-muted"> · {p.role}</span>}
+              {p.role && <span className="font-normal text-muted-foreground"> · {p.role}</span>}
             </p>
-            {p.dates && <p className="m-0 text-xs text-muted">{p.dates}</p>}
+            {p.dates && <p className="m-0 text-xs text-muted-foreground">{p.dates}</p>}
             {p.bullets.length > 0 && bulletList(p.bullets, { projectIndex: i })}
             {editable && <AddBullet where={{ projectIndex: i }} busy={busy} onBullet={onBullet!} />}
           </div>
@@ -195,9 +195,9 @@ export function DocumentView({
             <div key={i}>
               <p className="m-0 font-semibold">
                 {e.school}
-                {e.detail && <span className="font-normal text-muted"> · {e.detail}</span>}
+                {e.detail && <span className="font-normal text-muted-foreground"> · {e.detail}</span>}
               </p>
-              {e.dates && <p className="m-0 text-xs text-muted">{e.dates}</p>}
+              {e.dates && <p className="m-0 text-xs text-muted-foreground">{e.dates}</p>}
             </div>
           ))}
         </div>
@@ -263,7 +263,7 @@ export function DocumentView({
                 onClick={() => setMode(m.mode)}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-[8px] px-3 py-1.5 font-semibold transition",
-                  selected ? "bg-card text-brand-blue shadow-sm" : "text-muted hover:text-foreground",
+                  selected ? "bg-card text-brand-blue shadow-sm" : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {selected && <Check className="size-3.5" strokeWidth={3} aria-hidden />}
@@ -273,7 +273,7 @@ export function DocumentView({
           })}
         </div>
       </div>
-      <p className="mt-1 text-sm text-muted">
+      <p className="mt-1 text-sm text-muted-foreground">
         {mode === "diff"
           ? "İndireceğin CV, değişen yerler işaretli."
           : mode === "after"
@@ -286,7 +286,7 @@ export function DocumentView({
             <input type="checkbox" checked={highlight} onChange={(e) => setHighlight(e.target.checked)} className="size-4 accent-brand-blue" />
             İlanın terimlerini vurgula
           </label>
-          <p className="m-0 mt-1 text-muted">
+          <p className="m-0 mt-1 text-muted-foreground">
             İlanın {coverage.found.length + coverage.missing.length} teriminden {coverage.found.length} tanesi bu hâlde geçiyor.
             {missingMust.length > 0 && (
               <>
@@ -304,11 +304,11 @@ export function DocumentView({
       )}
 
       <div className="mt-5 flex flex-col gap-6 rounded-button border border-border bg-background/60 p-4 text-sm sm:p-6">
-        {s.headline && <p className="m-0 font-semibold text-muted">{s.headline}</p>}
+        {s.headline && <p className="m-0 font-semibold text-muted-foreground">{s.headline}</p>}
 
         {s.summary && (
           <div>
-            <h3 className="m-0 mb-2 text-xs font-bold tracking-wider text-muted uppercase">Özet</h3>
+            <h3 className="m-0 mb-2 text-xs font-bold tracking-wider text-muted-foreground uppercase">Özet</h3>
             {text(s.summary)}
           </div>
         )}
@@ -320,12 +320,12 @@ export function DocumentView({
         {(mode === "before" ? (document.before.otherSections ?? []) : (document.after.otherSections ?? [])).map((o, i) => (
           <div key={i}>
             {o.key ? header(o.key, o.heading, { user: !!o.id }) : (
-              <h3 className="m-0 mb-2 text-xs font-bold tracking-wider text-muted uppercase">{o.heading}</h3>
+              <h3 className="m-0 mb-2 text-xs font-bold tracking-wider text-muted-foreground uppercase">{o.heading}</h3>
             )}
             {o.key && hiddenKeys.has(o.key) ? null : (
             <>
             {o.id && mode !== "before" && (
-              <p className={cn("m-0 mb-1 text-xs", flaggedSections.has(o.id) ? "font-medium text-brand-amber" : "text-muted")}>
+              <p className={cn("m-0 mb-1 text-xs", flaggedSections.has(o.id) ? "font-medium text-brand-amber" : "text-muted-foreground")}>
                 {flaggedSections.has(o.id)
                   ? "Senin bölümün; CV'nde olmayan bir sayı ya da ilan terimi var, kontrol et."
                   : "Senin bölümün."}
@@ -364,8 +364,8 @@ function BulletItem({
   // Kullanıcının kaldırdığı madde (DOG-92): tek sayfa çıkarımı gibi.
   if (line.removed && mode !== "before") {
     return (
-      <li className="text-muted">
-        <p className="m-0 leading-relaxed line-through decoration-muted/60">{line.after}</p>
+      <li className="text-muted-foreground">
+        <p className="m-0 leading-relaxed line-through decoration-muted-foreground/60">{line.after}</p>
         <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs">
           Belgeden kaldırdın.
           {onRestore && line.id && (
@@ -381,8 +381,8 @@ function BulletItem({
   // kiplerde üstü çizili ve geri alınabilir.
   if (line.omitted && mode !== "before") {
     return (
-      <li className="text-muted">
-        <p className="m-0 leading-relaxed line-through decoration-muted/60">{line.after}</p>
+      <li className="text-muted-foreground">
+        <p className="m-0 leading-relaxed line-through decoration-muted-foreground/60">{line.after}</p>
         <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs">
           Tek sayfa için çıkarıldı.
           {onRestore && line.id && (
@@ -403,7 +403,7 @@ function BulletItem({
     <li>
       {text(line)}
       {line.userWritten && mode !== "before" && (
-        <span className={cn("mt-0.5 block text-xs", flagged ? "font-medium text-brand-amber" : "text-muted")}>
+        <span className={cn("mt-0.5 block text-xs", flagged ? "font-medium text-brand-amber" : "text-muted-foreground")}>
           {flagged
             ? "Senin maddenin; CV'nde olmayan bir sayı ya da ilan terimi var, kontrol et: mülakatta anlatabileceğin bir şey olmalı."
             : "Senin maddenin."}
@@ -440,7 +440,7 @@ function BulletControls({
   busy: boolean
   onBullet: (op: BulletOp) => Promise<string | null>
 }) {
-  const small = "inline-flex items-center gap-0.5 text-xs text-muted hover:text-foreground disabled:opacity-40"
+  const small = "inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-40"
   return (
     <span className="mt-0.5 flex flex-wrap items-center gap-x-3">
       <button type="button" disabled={busy || first} onClick={() => void onBullet({ op: "move", id, direction: "up", ...where })} className={small} aria-label="Yukarı taşı">
@@ -461,7 +461,7 @@ function BulletControls({
             const target = targets[Number(e.target.value)]
             if (target) void onBullet({ op: "relocate", id, ...target.where })
           }}
-          className="w-auto max-w-44 rounded border border-border bg-card px-1 py-0.5 text-xs text-muted"
+          className="w-auto max-w-44 rounded border border-border bg-card px-1 py-0.5 text-xs text-muted-foreground"
         >
           <option value="">Başka yere taşı…</option>
           {targets.map((t, k) => (
@@ -523,7 +523,7 @@ function AddBullet({
         placeholder={"experienceIndex" in where ? "Bu işte yaptığın ve CV'nde yazmayan bir şey" : "Bu projede yaptığın ve CV'nde yazmayan bir şey"}
         className="w-full rounded-button border border-border bg-card p-2 text-sm"
       />
-      <p className="m-0 text-xs text-muted">
+      <p className="m-0 text-xs text-muted-foreground">
         CV&apos;nde olmayan bir sayı ya da ilan terimi yazarsan &quot;kontrol et&quot; uyarısı çıkar; mülakatta anlatabileceğin
         bir şey olmalı.
       </p>
@@ -536,7 +536,7 @@ function AddBullet({
         <button type="submit" disabled={busy || !text.trim()} className="rounded-button bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">
           Ekle
         </button>
-        <button type="button" onClick={() => setText(null)} className="px-2 py-1.5 text-xs font-semibold text-muted">
+        <button type="button" onClick={() => setText(null)} className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
           Vazgeç
         </button>
       </div>
@@ -563,14 +563,14 @@ function SectionOrder({
   busy: boolean
   onSection: (op: SectionOp) => Promise<string | null>
 }) {
-  const small = "text-muted hover:text-foreground disabled:opacity-30"
+  const small = "text-muted-foreground hover:text-foreground disabled:opacity-30"
   return (
     <div className="mt-3 text-sm">
-      <p className="m-0 text-muted">Bölüm sırası:</p>
+      <p className="m-0 text-muted-foreground">Bölüm sırası:</p>
       <ol className="m-0 mt-1 flex list-none flex-wrap gap-2 p-0">
         {order.map((k, i) => (
           <li key={k} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs">
-            <span className="tabular-nums text-muted">{i + 1}.</span>
+            <span className="tabular-nums text-muted-foreground">{i + 1}.</span>
             {SECTION_LABEL[k]}
             <button type="button" disabled={busy || i === 0} onClick={() => void onSection({ op: "move", section: k, direction: "up" })} className={small} aria-label={`${SECTION_LABEL[k]} yukarı`}>
               <ArrowUp className="size-3.5" aria-hidden />
@@ -631,7 +631,7 @@ function AddSection({ busy, onSection }: { busy: boolean; onSection: (op: Sectio
         placeholder="Her satır ayrı bir madde"
         className="mt-2 w-full rounded-button border border-border bg-card p-2 text-sm"
       />
-      <p className="m-0 text-xs text-muted">Belgede diğer bölümlerin sonunda yer alır. En fazla 12 satır.</p>
+      <p className="m-0 text-xs text-muted-foreground">Belgede diğer bölümlerin sonunda yer alır. En fazla 12 satır.</p>
       {error && (
         <p role="alert" className="m-0 mt-1 text-xs text-brand-red dark:text-[#f87171]">
           {error}
@@ -641,7 +641,7 @@ function AddSection({ busy, onSection }: { busy: boolean; onSection: (op: Sectio
         <button type="submit" disabled={busy || !heading.trim() || !text.trim()} className="rounded-button bg-brand-blue px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50">
           Ekle
         </button>
-        <button type="button" onClick={() => setOpen(false)} className="px-2 py-1.5 text-xs font-semibold text-muted">
+        <button type="button" onClick={() => setOpen(false)} className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
           Vazgeç
         </button>
       </div>
@@ -670,7 +670,7 @@ function SectionHeader({
 }) {
   const [renaming, setRenaming] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const small = "text-xs font-normal tracking-normal normal-case text-muted hover:text-foreground disabled:opacity-40"
+  const small = "text-xs font-normal tracking-normal normal-case text-muted-foreground hover:text-foreground disabled:opacity-40"
   if (renaming !== null && onSection) {
     return (
       <form
@@ -696,10 +696,10 @@ function SectionHeader({
         <button type="submit" disabled={busy} className="rounded-button bg-brand-blue px-2.5 py-1 text-xs font-semibold text-white disabled:opacity-50">
           Kaydet
         </button>
-        <button type="button" onClick={() => setRenaming(null)} className="text-xs font-semibold text-muted">
+        <button type="button" onClick={() => setRenaming(null)} className="text-xs font-semibold text-muted-foreground">
           Vazgeç
         </button>
-        <span className="w-full text-xs text-muted">Boş bırakırsan varsayılan ada döner.</span>
+        <span className="w-full text-xs text-muted-foreground">Boş bırakırsan varsayılan ada döner.</span>
         {error && (
           <span role="alert" className="w-full text-xs text-brand-red dark:text-[#f87171]">
             {error}
@@ -712,7 +712,7 @@ function SectionHeader({
     <h3
       className={cn(
         "m-0 mb-2 flex flex-wrap items-center gap-x-3 text-xs font-bold tracking-wider uppercase",
-        hidden ? "text-muted/60 line-through" : "text-muted",
+        hidden ? "text-muted-foreground/60 line-through" : "text-muted-foreground",
       )}
     >
       {title}

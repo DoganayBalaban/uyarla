@@ -83,7 +83,7 @@ export function ApplicationBoard() {
           <LayoutGrid className="size-6" aria-hidden />
         </span>
         <h1 className="mt-4 text-2xl">Başvuru panon</h1>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-2 text-sm text-muted-foreground">
           Hangi ilana hangi CV ile başvurduğunu görmek için giriş yap. Kayıtsız yaptığın
           analizler hesabına taşınır.
         </p>
@@ -136,14 +136,14 @@ export function ApplicationBoard() {
             ] as const
           ).map(([labelText, count]) => (
             <div key={labelText} className="rounded-card border border-border bg-card px-4 py-3">
-              <dt className="text-xs font-semibold text-muted">{labelText}</dt>
+              <dt className="text-xs font-semibold text-muted-foreground">{labelText}</dt>
               <dd className="m-0 font-heading text-2xl font-extrabold tabular-nums">{count}</dd>
             </div>
           ))}
         </dl>
       )}
       {signal && (
-        <div className="mt-3 text-sm text-muted sm:max-w-lg">
+        <div className="mt-3 text-sm text-muted-foreground sm:max-w-lg">
           <p className="m-0 font-semibold text-foreground">Senin sonuçların</p>
           {signal.map((line) => (
             <p key={line} className="m-0">
@@ -161,7 +161,7 @@ export function ApplicationBoard() {
           </span>
           {/* Rehber §10.2: boş pano metni, birebir. */}
           <p className="m-0 mt-4 font-heading text-xl font-extrabold">Henüz başvuru yok.</p>
-          <p className="mt-2 text-muted">İlk ilanını yapıştır, birlikte başlayalım.</p>
+          <p className="mt-2 text-muted-foreground">İlk ilanını yapıştır, birlikte başlayalım.</p>
           <Link
             href="/analyze"
             className="mt-6 inline-flex items-center gap-2 rounded-button bg-brand-blue px-6 py-3 font-semibold text-white no-underline shadow-sm shadow-brand-blue/30"
@@ -199,12 +199,12 @@ export function ApplicationBoard() {
                 <h2 className="m-0 flex items-center gap-2 text-sm">
                   <span aria-hidden className={cn("size-2 rounded-full", STAGE_COLOR[cardStage])} />
                   {STAGE_LABEL[cardStage]}
-                  <span className="ml-auto rounded-full bg-card px-2 py-0.5 text-xs font-semibold text-muted tabular-nums">
+                  <span className="ml-auto rounded-full bg-card px-2 py-0.5 text-xs font-semibold text-muted-foreground tabular-nums">
                     {columns[cardStage].length}
                   </span>
                 </h2>
                 {columns[cardStage].length > 0 && (
-                  <p className="m-0 mt-1 text-xs text-muted">{COLUMN_HINT[cardStage]}</p>
+                  <p className="m-0 mt-1 text-xs text-muted-foreground">{COLUMN_HINT[cardStage]}</p>
                 )}
               </header>
               <div className="flex min-h-16 flex-1 flex-col gap-2.5">
@@ -223,7 +223,7 @@ export function ApplicationBoard() {
                   ))}
                 </AnimatePresence>
                 {columns[cardStage].length === 0 && (
-                  <p className="m-0 grid flex-1 place-items-center rounded-button border border-dashed border-border px-3 py-5 text-center text-xs text-muted">
+                  <p className="m-0 grid flex-1 place-items-center rounded-button border border-dashed border-border px-3 py-5 text-center text-xs text-muted-foreground">
                     Kartı buraya bırak
                   </p>
                 )}
@@ -293,10 +293,10 @@ function BoardCardView({
             {card.position}
           </Link>
           {/* Aynı pozisyona farklı şirketlerden başvurular ayrılsın (DOG-64). */}
-          {card.company && <span className="mt-0.5 block text-xs font-normal text-muted">{card.company}</span>}
+          {card.company && <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{card.company}</span>}
         </h3>
         <GripVertical
-          className="mt-0.5 size-4 shrink-0 cursor-grab text-muted opacity-0 transition group-hover:opacity-100"
+          className="mt-0.5 size-4 shrink-0 cursor-grab text-muted-foreground opacity-0 transition group-hover:opacity-100"
           aria-hidden
         />
       </div>
@@ -309,7 +309,7 @@ function BoardCardView({
             {card.score} · {labelText.text}
           </span>
         )}
-        <span className="inline-flex items-center gap-1 text-xs text-muted">
+        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
           <CalendarDays className="size-3.5" aria-hidden />
           {DATE_FORMAT.format(new Date(card.createdAt))}
         </span>
@@ -325,14 +325,14 @@ function BoardCardView({
               deadline.tone === "soon"
                 ? "rounded-full bg-brand-red/10 px-2 py-0.5 text-xs font-semibold text-brand-red dark:text-[#f87171]"
                 : deadline.tone === "past"
-                  ? "rounded-full bg-background px-2 py-0.5 text-xs text-muted line-through decoration-muted/60"
-                  : "rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted"
+                  ? "rounded-full bg-background px-2 py-0.5 text-xs text-muted-foreground line-through decoration-muted-foreground/60"
+                  : "rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground"
             }
           >
             {deadline.text}
           </span>
         )}
-        {card.noteText && <StickyNote className="size-3.5 text-muted" aria-label="Notu var" />}
+        {card.noteText && <StickyNote className="size-3.5 text-muted-foreground" aria-label="Notu var" />}
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">

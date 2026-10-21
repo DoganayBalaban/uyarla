@@ -80,7 +80,7 @@ export function Navbar() {
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
                       "inline-flex items-center gap-2 rounded-button px-2.5 py-2 text-sm font-medium no-underline transition-colors sm:px-3",
-                      isActive ? "bg-brand-blue/10 text-brand-blue" : "text-muted hover:bg-background hover:text-foreground",
+                      isActive ? "bg-brand-blue/10 text-brand-blue" : "text-muted-foreground hover:bg-background hover:text-foreground",
                     )}
                   >
                     <Icon className="size-4" aria-hidden />
@@ -147,7 +147,7 @@ function MarketingLinks() {
             aria-current={isActive ? "location" : undefined}
             className={cn(
               "relative hidden rounded-button px-3 py-2 text-sm font-medium no-underline transition-colors md:inline-flex",
-              isActive ? "text-brand-blue" : "text-muted hover:text-foreground",
+              isActive ? "text-brand-blue" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {isActive && (
@@ -256,7 +256,7 @@ function AccountMenu({ userName, userEmail, isActive }: { userName: string; user
         aria-label="Hesap menüsü"
         onClick={() => setOpen((a) => !a)}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-full py-1 pr-2 pl-1 text-muted transition-colors hover:bg-background hover:text-foreground",
+          "inline-flex items-center gap-1.5 rounded-full py-1 pr-2 pl-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground",
           (open || isActive) && "bg-background text-foreground",
         )}
       >
@@ -281,23 +281,23 @@ function AccountMenu({ userName, userEmail, isActive }: { userName: string; user
               {userName}
             </p>
             {userName !== userEmail && (
-              <p className="m-0 mt-0.5 truncate text-xs text-muted" title={userEmail}>
+              <p className="m-0 mt-0.5 truncate text-xs text-muted-foreground" title={userEmail}>
                 {userEmail}
               </p>
             )}
           </div>
           <div className="my-1 h-px bg-border" role="separator" />
           <Link role="menuitem" tabIndex={-1} onClick={() => setOpen(false)} href="/account" className={item}>
-            <Settings className="size-4 text-muted" aria-hidden />
+            <Settings className="size-4 text-muted-foreground" aria-hidden />
             Hesap ayarları
           </Link>
           <div className="my-1 h-px bg-border" role="separator" />
           <Link role="menuitem" tabIndex={-1} onClick={() => setOpen(false)} href="/privacy" className={item}>
-            <ShieldCheck className="size-4 text-muted" aria-hidden />
+            <ShieldCheck className="size-4 text-muted-foreground" aria-hidden />
             KVKK aydınlatma metni
           </Link>
           <Link role="menuitem" tabIndex={-1} onClick={() => setOpen(false)} href="/terms" className={item}>
-            <FileText className="size-4 text-muted" aria-hidden />
+            <FileText className="size-4 text-muted-foreground" aria-hidden />
             Kullanım koşulları
           </Link>
           <div className="my-1 h-px bg-border" role="separator" />
@@ -311,7 +311,7 @@ function AccountMenu({ userName, userEmail, isActive }: { userName: string; user
             }}
             className={item}
           >
-            <LogOut className="size-4 text-muted" aria-hidden />
+            <LogOut className="size-4 text-muted-foreground" aria-hidden />
             Çıkış yap
           </button>
         </div>

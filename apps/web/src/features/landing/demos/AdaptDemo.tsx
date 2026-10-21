@@ -60,12 +60,12 @@ export function AdaptDemo() {
         {BULLETS.map((b) => (
           <div key={b.id} className="rounded-xl border border-border p-4">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs font-semibold text-muted">{b.label}</span>
+              <span className="text-xs font-semibold text-muted-foreground">{b.label}</span>
               <DecisionToggle id={b.id} value={decisions[b.id]} onChange={(d) => set(b.id, d)} />
             </div>
             <BulletText segments={b.segments} decision={decisions[b.id]} />
             {decisions[b.id] !== "old" && (
-              <ul className="mt-2 flex flex-col gap-1 text-xs text-muted">
+              <ul className="mt-2 flex flex-col gap-1 text-xs text-muted-foreground">
                 {b.evidence.map((e) => (
                   <li key={e.term} className="flex gap-1.5">
                     <Link2 size={13} className="mt-0.5 shrink-0" />
@@ -84,7 +84,7 @@ export function AdaptDemo() {
         <button
           type="button"
           onClick={() => setDecisions({})}
-          className="mt-3 inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-muted hover:text-foreground"
+          className="mt-3 inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
         >
           <RotateCcw size={12} /> Baştan dene
         </button>

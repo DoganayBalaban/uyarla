@@ -19,7 +19,7 @@ export function PlatformTips({ platform }: { platform: PlatformId | null | undef
               href={tip.source.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-0.5 text-xs whitespace-nowrap text-muted"
+              className="inline-flex items-center gap-0.5 text-xs whitespace-nowrap text-muted-foreground"
             >
               Kaynak: {tip.source.label}
               <ExternalLink className="size-3" aria-hidden />

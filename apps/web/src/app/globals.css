@@ -1,26 +1,24 @@
 @import "tailwindcss";
+/* shadcn bileşenlerinin giriş/çıkış animasyonları (animate-in, fade-in…). */
+@import "tw-animate-css";
 
-/* `dark:` sınıfları yalnızca `.dark` altında çalışsın. Bu sınıf hiçbir yerde
-   verilmiyor, yani koyu tema kapalı; bileşenlerdeki `dark:` yazımları
-   ileride tema geri açılırsa diye duruyor. */
+/* `dark:` sınıfları `.dark` altında çalışıyor; tema next-themes ile <html>'e
+   veriliyor (DOG-143). Varsayılan açık tema. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /**
- * Marka rehberi §9.2 ve §9.5'teki token'lar.
+ * Tema iki katmanlı (DOG-143, shadcn/ui):
  *
- * İKİ KATMAN var ve ikisi de gerekli:
+ *   1. Sabit marka renkleri (brand-blue, brand-green…), yarıçaplar, yazı ve
+ *      animasyonlar: `@theme` içinde, temaya göre değişmiyor.
+ *   2. Anlamsal roller shadcn adlarıyla (background, card, primary, muted,
+ *      muted-foreground, border, ring, sidebar…): `:root` ve `.dark`'ta
+ *      tanımlı, `@theme inline` ile Tailwind'e açılıyor. `bg-card`,
+ *      `text-muted-foreground` koyu temayı kendiliğinden izliyor.
  *
- *   1. Sabit marka renkleri (brand-blue, brand-green, brand-amber…) — temaya göre değişmiyor.
- *   2. Semantik roller (background, foreground, card, border, muted) — koyu temada takas oluyor.
- *
- * İkisi de `@theme` üzerinden Tailwind'e açılıyor, yani `bg-brand-blue` ve
- * `bg-background` ikisi de çalışıyor. Semantik olanlar `var()` üzerinden
- * bağlandığı için `bg-background` koyu temayı KENDİLİĞİNDEN izliyor — her yere
- * `dark:` yazmak gerekmiyor.
- *
- * Bu model tanıtım sayfasının CSS modülüyle de ortak: o da aynı semantik
- * değişkenleri okuyor. İki ayrı tema mekanizması tutmak, zamanla ikisinin
- * ayrışması demek olurdu.
+ * Eskiden `muted` metin rengiydi; shadcn'de zemin rengi. Kullanımlar
+ * `muted-foreground`'a taşındı (DOG-143). Tanıtım sayfasının CSS modülü de
+ * aynı değişkenleri okuyor.
  */
 @theme {
   /* Sabit marka renkleri. Palet "mürekkep + kobalt" (7 Ekim 2026): logo
@@ -38,19 +36,9 @@
   --color-brand-amber: #f59e0b;
   --color-brand-red: #dc2626;
 
-  /* Semantik roller; aşağıdaki :root bloğunda tanımlı ve koyu temada takas. */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-border: var(--border);
-  --color-muted: var(--muted);
-
   /* Marka rehberi §9.5: buton 10px, kart 16px. */
   --radius-button: 10px;
   --radius-card: 16px;
-
-  --font-heading: Geist, system-ui, -apple-system, sans-serif;
-  --font-body: Geist, system-ui, -apple-system, sans-serif;
 
   /* Giriş ekranının görsel paneli. Kullanan yerde `motion-safe:` ile
      açılıyor; hareket azaltmayı seçen kullanıcı durağan görüyor. */
@@ -83,12 +71,87 @@
   }
 }
 
-/**
- * Semantik roller. Tanıtım sayfasının CSS modülü bu adları bekliyor
- * (`var(--brand-blue)`, `var(--background)` …), o yüzden sabit renkler de burada
- * yeniden yayımlanıyor.
- */
+@theme inline {
+  /* Geist, next/font ile (app/layout.tsx); değişken <html>'de. */
+  --font-sans: var(--font-geist), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-geist), system-ui, -apple-system, sans-serif;
+  --font-body: var(--font-geist), system-ui, -apple-system, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
 :root {
+  --radius: 0.625rem;
+
+  --background: #fafaf9;
+  --foreground: #111114;
+  --card: #ffffff;
+  --card-foreground: #111114;
+  --popover: #ffffff;
+  --popover-foreground: #111114;
+  /* Tek vurgu kobalt. */
+  --primary: #2f4be0;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #6b6b73;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --destructive: #dc2626;
+  --border: #e7e5e4;
+  --input: #e7e5e4;
+  --ring: #93a4ff;
+  --chart-1: #2f4be0;
+  --chart-2: #6f84f0;
+  --chart-3: #16a34a;
+  --chart-4: #f59e0b;
+  --chart-5: #a1a1aa;
+  --sidebar: #f5f5f4;
+  --sidebar-foreground: #111114;
+  --sidebar-primary: #2f4be0;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e9e9ec;
+  --sidebar-accent-foreground: #111114;
+  --sidebar-border: #e7e5e4;
+  --sidebar-ring: #93a4ff;
+
+  /* Tanıtım sayfasının CSS modülü bu adları okuyor. */
   --brand-blue: var(--color-brand-blue);
   --brand-night: var(--color-brand-night);
   --brand-ink: var(--color-brand-ink);
@@ -100,21 +163,53 @@
   --brand-green: var(--color-brand-green);
   --brand-amber: var(--color-brand-amber);
   --brand-red: var(--color-brand-red);
-
-  --background: #fafaf9;
-  --foreground: #111114;
-  --card: #ffffff;
-  --border: #e7e5e4;
-  --muted: #6b6b73;
-
   --button-radius: var(--radius-button);
   --card-radius: var(--radius-card);
+
+  color-scheme: light;
 }
 
-/* Site her zaman açık temada: beyaz zemin, siyah metin. Sistem koyu modda
-   olsa da değişmiyor; tarayıcının form öğeleri de açık kalsın diye. */
-:root {
-  color-scheme: light;
+.dark {
+  --background: #0b0b0d;
+  --foreground: #f4f4f5;
+  --card: #141417;
+  --card-foreground: #f4f4f5;
+  --popover: #141417;
+  --popover-foreground: #f4f4f5;
+  /* Koyu zeminde okunur kobalt. */
+  --primary: #5b72ff;
+  --primary-foreground: #ffffff;
+  --secondary: #222226;
+  --secondary-foreground: #f4f4f5;
+  --muted: #222226;
+  --muted-foreground: #a1a1aa;
+  --accent: #222226;
+  --accent-foreground: #f4f4f5;
+  --destructive: #f87171;
+  --border: #2a2a2e;
+  --input: #2a2a2e;
+  --ring: #5b72ff;
+  --chart-1: #5b72ff;
+  --chart-2: #93a4ff;
+  --chart-3: #4ade80;
+  --chart-4: #fbbf24;
+  --chart-5: #71717a;
+  --sidebar: #101012;
+  --sidebar-foreground: #f4f4f5;
+  --sidebar-primary: #5b72ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #222226;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-border: #2a2a2e;
+  --sidebar-ring: #5b72ff;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
 }
 
 body {
@@ -124,7 +219,6 @@ body {
   margin: 0;
   line-height: 1.55;
 }
-
 
 h1,
 h2,

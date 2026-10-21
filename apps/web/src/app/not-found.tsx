@@ -11,7 +11,7 @@ export default function NotFound() {
       <h1 className="mt-3 font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
         Aradığın sayfa burada değil.
       </h1>
-      <p className="mt-4 max-w-xl text-muted">
+      <p className="mt-4 max-w-xl text-muted-foreground">
         Bağlantı eskimiş ya da adres yanlış yazılmış olabilir. Analizlerin ve başvuruların yerinde duruyor.
       </p>
       <div className="mt-8 flex flex-wrap gap-3">

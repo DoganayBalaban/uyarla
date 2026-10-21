@@ -42,7 +42,7 @@ export function ResumePicker({
           <FileText className="size-5 shrink-0 text-brand-blue" aria-hidden />
           <span className="min-w-0 flex-1">
             <span className="block truncate font-semibold">{resumeTitle(resume)}</span>
-            <span className="text-xs text-muted">{DATE.format(new Date(resume.createdAt))}</span>
+            <span className="text-xs text-muted-foreground">{DATE.format(new Date(resume.createdAt))}</span>
           </span>
           {resume.isDefault && (
             <span className="inline-flex items-center gap-1 rounded-full bg-brand-amber/15 px-2 py-0.5 text-xs font-semibold">
@@ -58,7 +58,7 @@ export function ResumePicker({
         )}
       >
         <input type="radio" name="libraryResume" className="sr-only" checked={selectedId === null} onChange={onUploadNew} />
-        <UploadCloud className="size-5 shrink-0 text-muted" aria-hidden />
+        <UploadCloud className="size-5 shrink-0 text-muted-foreground" aria-hidden />
         <span className="font-semibold">Yeni dosya yükle</span>
       </label>
     </div>

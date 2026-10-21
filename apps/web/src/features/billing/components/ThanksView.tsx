@@ -39,14 +39,14 @@ export function ThanksView({ returnTo, since }: { returnTo: string | null; since
     return (
       <div className="mx-auto max-w-md text-center">
         <h1 className="text-2xl">Erişimin açıldı</h1>
-        <p className="mt-2 text-muted">{formatPassEnd(status.data.passEndsAt)} tarihine kadar istediğin kadar uyarlayabilirsin.</p>
+        <p className="mt-2 text-muted-foreground">{formatPassEnd(status.data.passEndsAt)} tarihine kadar istediğin kadar uyarlayabilirsin.</p>
       </div>
     )
   }
   return (
     <div className="mx-auto max-w-md text-center">
       <h1 className="text-2xl">{elapsed === "gaveUp" ? "Ödemen henüz görünmüyor" : "Ödemen alınıyor…"}</h1>
-      <p className="mt-2 text-muted">
+      <p className="mt-2 text-muted-foreground">
         {elapsed === "gaveUp"
           ? `Ödemen alındıysa erişimin kısa süre içinde açılır; sayfayı yenileyerek bakabilirsin. Açılmazsa ${LEGAL.support} adresine yaz.`
           : elapsed === "slow"

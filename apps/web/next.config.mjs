@@ -27,15 +27,16 @@ const isDev = process.env.NODE_ENV === "development"
  * React'in kaçışlaması; `dangerouslySetInnerHTML` kullanılmıyor (testte
  * yasak).
  *
- * Dış kaynaklar: Google Fonts (app/layout.tsx) ve tarayıcı hata izlemesinin
- * gönderdiği Sentry AB alımı (DOG-62). Geliştirmede React Refresh eval
+ * Dış kaynak: tarayıcı hata izlemesinin gönderdiği Sentry AB alımı (DOG-62).
+ * Yazı tipi next/font ile aynı kaynaktan (DOG-143). Geliştirmede React Refresh eval
  * kullanıyor.
  */
 const CSP = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",
+  // Geist next/font ile aynı kaynaktan (DOG-143).
+  "font-src 'self'",
   "img-src 'self' data: blob:",
   "connect-src 'self' https://*.ingest.de.sentry.io",
   "frame-ancestors 'none'",

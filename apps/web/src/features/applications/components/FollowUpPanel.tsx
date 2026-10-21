@@ -69,7 +69,7 @@ export function FollowUpPanel({ card }: { card: BoardCard }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-foreground"
+        className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
       >
         <MessageSquareText className="size-3.5" aria-hidden />
         {LABEL[kind].open}
@@ -79,7 +79,7 @@ export function FollowUpPanel({ card }: { card: BoardCard }) {
 
   return (
     <div className="mt-3 rounded-button border border-border bg-background p-3 text-sm">
-      <p className="m-0 text-muted">
+      <p className="m-0 text-muted-foreground">
         {kind === "followup"
           ? "Gönderdiğin CV ve ön yazıdan, yeni bir şey eklemeden kısa bir takip mesajı."
           : "Mülakat sonrası kısa bir teşekkür notu. Köşeli parantezli yere görüşmeden bir konu yaz ya da sil."}{" "}
@@ -87,7 +87,7 @@ export function FollowUpPanel({ card }: { card: BoardCard }) {
       </p>
 
       {running && (
-        <p className="mt-2 flex items-center gap-2 text-muted" role="status">
+        <p className="mt-2 flex items-center gap-2 text-muted-foreground" role="status">
           <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden />
           Yazıyoruz…
         </p>
@@ -137,10 +137,10 @@ export function FollowUpPanel({ card }: { card: BoardCard }) {
           >
             {latest ? "Yeniden yaz" : LABEL[kind].write}
           </button>
-          {latest && <span className="text-xs text-muted">{left} hakkın kaldı</span>}
+          {latest && <span className="text-xs text-muted-foreground">{left} hakkın kaldı</span>}
         </div>
       )}
-      {!running && left <= 0 && <p className="mt-2 text-xs text-muted">Bu başvuru için taslak hakkın doldu.</p>}
+      {!running && left <= 0 && <p className="mt-2 text-xs text-muted-foreground">Bu başvuru için taslak hakkın doldu.</p>}
       {error && (
         <p role="alert" className="mt-2 text-brand-red dark:text-[#f87171]">
           {error}
@@ -198,7 +198,7 @@ export function OutreachPanel({ card }: { card: BoardCard }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-foreground"
+        className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
       >
         <MessageSquareText className="size-3.5" aria-hidden />
         {LABEL.outreach.open}
@@ -209,13 +209,13 @@ export function OutreachPanel({ card }: { card: BoardCard }) {
   const select = "rounded-button border border-border bg-card px-2 py-1.5"
   return (
     <div className="mt-3 rounded-button border border-border bg-background p-3 text-sm">
-      <p className="m-0 text-muted">
+      <p className="m-0 text-muted-foreground">
         Şirketten birine kısa bir mesaj. Alıcının adını &ldquo;[ad]&rdquo; yerine sen yaz; ortak bir geçmişiniz varsa
         aşağıya ekle, biz uydurmuyoruz. Göndermeden önce oku.
       </p>
 
       {running && (
-        <p className="mt-2 flex items-center gap-2 text-muted" role="status">
+        <p className="mt-2 flex items-center gap-2 text-muted-foreground" role="status">
           <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden />
           Yazıyoruz…
         </p>
@@ -289,11 +289,11 @@ export function OutreachPanel({ card }: { card: BoardCard }) {
             >
               {latest ? "Yeniden yaz" : LABEL.outreach.write}
             </button>
-            {latest && <span className="text-xs text-muted">{left} hakkın kaldı</span>}
+            {latest && <span className="text-xs text-muted-foreground">{left} hakkın kaldı</span>}
           </div>
         </div>
       )}
-      {!running && left <= 0 && <p className="mt-2 text-xs text-muted">Bu başvuru için mesaj hakkın doldu.</p>}
+      {!running && left <= 0 && <p className="mt-2 text-xs text-muted-foreground">Bu başvuru için mesaj hakkın doldu.</p>}
       {error && (
         <p role="alert" className="mt-2 text-brand-red dark:text-[#f87171]">
           {error}

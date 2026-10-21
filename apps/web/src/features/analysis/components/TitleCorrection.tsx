@@ -9,7 +9,7 @@ import { useState } from "react"
  */
 const primary =
   "rounded-button bg-brand-blue px-3.5 py-2 font-semibold text-white transition hover:bg-brand-blue/90 disabled:opacity-50"
-const secondary = "rounded-button px-3 py-2 font-semibold text-muted transition hover:text-foreground"
+const secondary = "rounded-button px-3 py-2 font-semibold text-muted-foreground transition hover:text-foreground"
 
 export function TitleCorrection({
   position,
@@ -61,7 +61,7 @@ export function TitleCorrection({
       }}
     >
       <label className="block">
-        <span className="text-muted">İlanda yazan unvan:</span>
+        <span className="text-muted-foreground">İlanda yazan unvan:</span>
         <input
           type="text"
           value={value}
@@ -70,7 +70,7 @@ export function TitleCorrection({
           className="mt-1.5 w-full rounded-button border border-border bg-background px-2.5 py-1.5"
         />
       </label>
-      <p className="mt-2 text-xs text-muted">
+      <p className="mt-2 text-xs text-muted-foreground">
         Yalnızca ilanın ne yazdığını düzeltiyorsun; unvan ilan metninde geçmeli. Skor CV&apos;ndekine göre yeniden
         hesaplanır.
       </p>

@@ -23,7 +23,7 @@ export type { Stage as Asama, StageState as AsamaDurumu }
 
 
 const STATE_STYLE: Record<StageState, { label: string; textClass: string; bgClass: string }> = {
-  pending: { label: "Sırada", textClass: "text-muted", bgClass: "bg-card border-border" },
+  pending: { label: "Sırada", textClass: "text-muted-foreground", bgClass: "bg-card border-border" },
   active: { label: "Çalışıyor", textClass: "text-brand-blue dark:text-brand-blue-light", bgClass: "bg-brand-blue/10 border-brand-blue/50" },
   done: { label: "Tamam", textClass: "text-brand-green dark:text-[#4ade80]", bgClass: "bg-brand-green/10 border-brand-green/50" },
   error: { label: "Olmadı", textClass: "text-brand-red dark:text-[#f87171]", bgClass: "bg-brand-red/10 border-brand-red/50" },
@@ -78,9 +78,9 @@ export function StageTimeline({
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <h2 className="m-0 text-lg">{heading}</h2>
-          {subtitle && <p className="m-0 mt-1 text-sm text-muted">{subtitle}</p>}
+          {subtitle && <p className="m-0 mt-1 text-sm text-muted-foreground">{subtitle}</p>}
         </div>
-        <span className="shrink-0 rounded-full bg-background px-2.5 py-1 text-xs font-semibold tabular-nums text-muted">
+        <span className="shrink-0 rounded-full bg-background px-2.5 py-1 text-xs font-semibold tabular-nums text-muted-foreground">
           {doneCount}/{stages.length}
         </span>
       </header>
@@ -116,7 +116,7 @@ export function StageTimeline({
                     <span
                       className={cn(
                         "font-semibold",
-                        a.status === "pending" ? "text-muted" : "text-foreground",
+                        a.status === "pending" ? "text-muted-foreground" : "text-foreground",
                       )}
                     >
                       {a.title}
@@ -132,7 +132,7 @@ export function StageTimeline({
                       {d.label}
                     </span>
                   </div>
-                  {a.description && <p className="m-0 mt-0.5 text-sm text-muted">{a.description}</p>}
+                  {a.description && <p className="m-0 mt-0.5 text-sm text-muted-foreground">{a.description}</p>}
                 </div>
               </motion.li>
             )

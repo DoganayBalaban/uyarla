@@ -214,7 +214,7 @@ export function ScoreResult({
               onClick={() => setTab(value)}
               className={cn(
                 "rounded-[8px] px-4 py-1.5 font-semibold transition",
-                tab === value ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground",
+                tab === value ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {label}
@@ -251,7 +251,7 @@ export function ScoreResult({
           <ScoreRing score={exclusion.score} size={148} className="shrink-0 self-center sm:self-auto" />
 
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold tracking-wider text-muted uppercase">Uyum skoru</p>
+            <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Uyum skoru</p>
             <h1 className="mt-1 text-2xl sm:text-3xl">
               {exclusion.active.length} gereksinimin{" "}
               <span className={state.textClass}>{satisfiedCount} tanesi</span> karşılanıyor
@@ -282,19 +282,19 @@ export function ScoreResult({
               </p>
             )}
             {result.titleMatch && (result.scoringRevision ?? 1) >= 2 && (
-              <p className="mt-1 text-sm text-muted">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {TITLE_LINE[result.titleMatch.level]} ({result.titleMatch.position}); unvan skora bir zorunlu gereksinim
                 gibi katılıyor.
               </p>
             )}
             {(result.facts?.length ?? 0) > 0 && (
-              <p className="mt-1 text-sm text-muted">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Daha önce anlattığın {result.facts!.length} deneyim bu analizde kanıt sayıldı; Hesabım&apos;dan
                 görebilir, unutabilirsin.
               </p>
             )}
             {(exclusion.excludedCount > 0 || correctedCount > 0) && (
-              <p className="mt-1 text-sm text-muted">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {exclusion.excludedCount > 0 && `İşaretlediğin ${exclusion.excludedCount} gereksinim skora katılmıyor. `}
                 {correctedCount > 0 && `İlanın ${correctedCount} şartını düzelttin. `}
                 İlk skor {result.score}.
@@ -302,7 +302,7 @@ export function ScoreResult({
             )}
             {/* K2'de iki katılımcı düşük skoru "işe uygun değilim" diye okudu
                 (DOG-103). Skor CV ile ilanın örtüşmesi; çerçeve bunu söylüyor. */}
-            <p className="mt-2 text-sm text-muted">
+            <p className="mt-2 text-sm text-muted-foreground">
               {missing > 0
                 ? "Bu skor CV'nin ilanla ne kadar örtüştüğünü ölçer, işe uygunluğunu değil. Eksiklerden deneyiminde olanları CV'nde görünür kılarsan skor yükselir. Uyarladığımızda bunu deneyiminin izin verdiği ölçüde yapıyoruz; olmayan bir şeyi eklemiyoruz."
                 : "CV'n bu ilanın istediklerini karşılıyor. Yine de anlatımı ilanın diline yaklaştırabilirsin."}
@@ -336,7 +336,7 @@ export function ScoreResult({
                 </button>
               )}
             </div>
-            {onAdapt && adaptNote && <p className="mt-2 text-sm text-muted">{adaptNote}</p>}
+            {onAdapt && adaptNote && <p className="mt-2 text-sm text-muted-foreground">{adaptNote}</p>}
 
             {error && (
               <p
@@ -357,7 +357,7 @@ export function ScoreResult({
           role={sourceWarning.tone === "strong" ? "alert" : undefined}
           className={cn(
             "m-0 flex gap-2 rounded-card border p-4 text-sm",
-            sourceWarning.tone === "strong" ? "border-brand-red/30 bg-brand-red/[0.06]" : "border-border bg-card text-muted",
+            sourceWarning.tone === "strong" ? "border-brand-red/30 bg-brand-red/[0.06]" : "border-border bg-card text-muted-foreground",
           )}
         >
           <ShieldAlert
@@ -407,7 +407,7 @@ export function ScoreResult({
             <h2 className="m-0 text-lg">
               Gereksinimler <ImpactBadge impact={impacts.requirements} className="ml-1" />
             </h2>
-            <p className="m-0 mt-1 text-sm text-muted">{impacts.requirements.hint}</p>
+            <p className="m-0 mt-1 text-sm text-muted-foreground">{impacts.requirements.hint}</p>
           </div>
           <div role="tablist" aria-label="Gereksinimleri süz" className="inline-flex rounded-button bg-background p-1 text-sm">
             {(
@@ -425,7 +425,7 @@ export function ScoreResult({
                 onClick={() => setFilter(val)}
                 className={cn(
                   "rounded-[8px] px-3 py-1.5 font-medium transition",
-                  activeFilter === val ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground",
+                  activeFilter === val ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {label}
@@ -435,7 +435,7 @@ export function ScoreResult({
         </div>
 
         {visible.length === 0 ? (
-          <p className="mt-4 text-sm text-muted">Bu süzgeçte gereksinim yok.</p>
+          <p className="mt-4 text-sm text-muted-foreground">Bu süzgeçte gereksinim yok.</p>
         ) : (
           <ul className="mt-4 divide-y divide-border">
             {visible.map(({ item, index, excluded }) => (
@@ -460,18 +460,18 @@ export function ScoreResult({
           <h2 className="m-0 text-lg">
             Mülakatta anlaşılacaklar {impacts.soft && <ImpactBadge impact={impacts.soft} className="ml-1" />}
           </h2>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 text-sm text-muted-foreground">
             Bu kişisel nitelikler CV&apos;den değil görüşmede anlaşılır; skora katılmıyor ve eksik sayılmıyor.
             Deneyimlerinde örneği varsa mülakatta anlatmaya hazırlan.
           </p>
           <ul className="mt-3 space-y-1.5 text-sm">
             {exclusion.softRows.map(({ item, index }) => (
               <li key={index} className="flex items-start gap-2">
-                <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-muted" />
+                <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-muted-foreground" />
                 <span className="min-w-0">
                   {item.requirement.text}
                   {item.status === "matched" && item.evidence && (
-                    <span className="text-muted">
+                    <span className="text-muted-foreground">
                       {" "}
                       · {item.evidence.fact ? "Anlattığın deneyimde" : "CV'nde"}: {item.evidence.text}
                     </span>
@@ -486,12 +486,12 @@ export function ScoreResult({
       {/* Eksik kavramlar. */}
       <motion.div {...entrance(0.2)} id="kavramlar" className="scroll-mt-24 rounded-card border border-border bg-card p-5 sm:p-6">
         <h2 className="m-0 text-lg">CV&apos;nde görünmeyen kavramlar</h2>
-        <p className="mt-1 text-sm text-muted">
+        <p className="mt-1 text-sm text-muted-foreground">
           İlanda geçen ama CV&apos;nde karşılığını bulamadığımız kavramlar. Deneyiminde varsa açıkça yazmak skoru
           yükseltir.
         </p>
         {exclusion.missingKeywords.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">İlanın her kavramı CV&apos;nde görünüyor.</p>
+          <p className="mt-3 text-sm text-muted-foreground">İlanın her kavramı CV&apos;nde görünüyor.</p>
         ) : (
           <ul className="mt-4 flex flex-wrap gap-2">
             {exclusion.missingKeywords.map((k) => (
@@ -508,11 +508,11 @@ export function ScoreResult({
       </motion.div>
 
       <details className="group rounded-card border border-border bg-card px-5 py-4">
-        <summary className="flex cursor-pointer list-none items-center justify-between text-sm text-muted">
+        <summary className="flex cursor-pointer list-none items-center justify-between text-sm text-muted-foreground">
           Teknik ayrıntı
           <ChevronDown className="size-4 transition group-open:rotate-180" aria-hidden />
         </summary>
-        <p className="mt-3 text-sm text-muted">
+        <p className="mt-3 text-sm text-muted-foreground">
           {durationMs} ms · {tokenUsage} token · {modelId}
         </p>
         <pre className="mt-2 max-h-[32rem] overflow-x-auto rounded-button border border-border bg-background p-4 text-xs">
@@ -571,8 +571,8 @@ function RequirementRow({
 
   if (excluded) {
     return (
-      <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3 text-muted">
-        <span className="min-w-0 flex-1 line-through decoration-muted/60">{item.requirement.text}</span>
+      <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3 text-muted-foreground">
+        <span className="min-w-0 flex-1 line-through decoration-muted-foreground/60">{item.requirement.text}</span>
         <span className="text-xs">{exclusionLabel(mark)} · skora katılmıyor</span>
         {onChange && (
           <button
@@ -611,7 +611,7 @@ function RequirementRow({
         </span>
         <span className="min-w-0 flex-1">
           <span className="font-medium">{item.requirement.text}</span>
-          <span className="ml-2 inline-block rounded-full bg-background px-2 py-0.5 align-middle text-[11px] font-semibold text-muted">
+          <span className="ml-2 inline-block rounded-full bg-background px-2 py-0.5 align-middle text-[11px] font-semibold text-muted-foreground">
             {importanceLabel}
           </span>
           {partial && (
@@ -622,13 +622,13 @@ function RequirementRow({
         </span>
         {item.evidence && (
           <ChevronDown
-            className={cn("mt-1 size-4 shrink-0 text-muted transition", open && "rotate-180")}
+            className={cn("mt-1 size-4 shrink-0 text-muted-foreground transition", open && "rotate-180")}
             aria-hidden
           />
         )}
       </button>
       {item.evidence && open && (
-        <p className="mt-2 ml-8 rounded-button border-l-2 border-brand-green/60 bg-background px-3 py-2 text-sm text-muted">
+        <p className="mt-2 ml-8 rounded-button border-l-2 border-brand-green/60 bg-background px-3 py-2 text-sm text-muted-foreground">
           {item.evidence.fact ? (
             <>
               <span className="font-semibold text-foreground">Daha önce anlattığın deneyimde:</span> {item.evidence.text}{" "}
@@ -642,14 +642,14 @@ function RequirementRow({
         </p>
       )}
       {correction && (
-        <p className="mt-1 ml-8 text-xs text-muted">
+        <p className="mt-1 ml-8 text-xs text-muted-foreground">
           Şartı düzelttin:{" "}
           {correction.minYears !== undefined && `en az ${correction.minYears} yıl`}
           {correction.terms && correction.terms.join(", ")}
         </p>
       )}
       {reported && (
-        <p className="mt-1 ml-8 text-xs text-muted">
+        <p className="mt-1 ml-8 text-xs text-muted-foreground">
           Bildirdin, teşekkürler. Bu ifadeyi CV&apos;nde ilanın kelimeleriyle yazarsan ATS de bulur.
         </p>
       )}
@@ -658,7 +658,7 @@ function RequirementRow({
       {(onChange || onShowInPosting) && panel === null && (
         <div
           className={cn(
-            "mt-1 ml-8 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted",
+            "mt-1 ml-8 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground",
             !inlineFix && "sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100",
           )}
         >
@@ -729,7 +729,7 @@ function ConditionsCard({
   return (
     <motion.div {...motionProps} id="sartlar" className="scroll-mt-24 rounded-card border border-border bg-card p-5 sm:p-6">
       <h2 className="m-0 text-lg">Şartlar {impact && <ImpactBadge impact={impact} className="ml-1" />}</h2>
-      <p className="mt-1 text-sm text-muted">
+      <p className="mt-1 text-sm text-muted-foreground">
         İlanın yetkinlik dışındaki şartları. Skora katılmıyor; CV&apos;n çoğunu söylemez, başvurmadan önce kendin
         kontrol et.
       </p>
@@ -771,7 +771,7 @@ function ConditionLine({ ok, text, note }: { ok: boolean; text: string; note: st
       )}
       <span className="min-w-0">
         {text}
-        <span className="text-muted"> · {note}</span>
+        <span className="text-muted-foreground"> · {note}</span>
       </span>
     </li>
   )
@@ -782,9 +782,9 @@ function ResultNavPanel({ score, items, onSelect }: { score: number; items: Resu
   const state = scoreStatus(score)
   return (
     <aside aria-label="Sonuç özeti" className="sticky top-24 hidden rounded-card border border-border bg-card p-4 lg:block">
-      <p className="m-0 text-xs font-semibold tracking-wider text-muted uppercase">Uyum skoru</p>
+      <p className="m-0 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Uyum skoru</p>
       <p className={cn("m-0 mt-1 font-heading text-3xl font-extrabold", state.textClass)}>{score}</p>
-      <p className="m-0 text-xs text-muted">{state.label}</p>
+      <p className="m-0 text-xs text-muted-foreground">{state.label}</p>
       <ul className="m-0 mt-4 list-none space-y-3 p-0">
         {items.map((item) => (
           <li key={item.key}>
@@ -863,7 +863,7 @@ function PostingTextView({
   return (
     <div className="rounded-card border border-border bg-card p-5 sm:p-6">
       {highlight && (
-        <p className="m-0 mb-3 flex flex-wrap items-center gap-2 text-sm text-muted">
+        <p className="m-0 mb-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <span>
             Vurgulanan: <span className="font-medium text-foreground">{highlight.label}</span>
             {spans.length === 0 && " · ilan metninde bu kelimelerle geçmiyor; çıkarım ilanı farklı ifade etmiş olabilir."}
@@ -896,7 +896,7 @@ function PostingTextView({
 function PositionCorrectionNote({ position, onUndo }: { position: string; onUndo?: () => Promise<void> }) {
   const [saving, setSaving] = useState(false)
   return (
-    <p className="m-0 mt-2 px-1 text-xs text-muted">
+    <p className="m-0 mt-2 px-1 text-xs text-muted-foreground">
       İlanın unvanını “{position}” olarak düzelttin; unvan eşleşmesi ve skor buna göre.{" "}
       {onUndo && (
         <button
