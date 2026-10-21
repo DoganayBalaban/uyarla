@@ -17,6 +17,8 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { FormatReportCard as FormatReport, type FormatReportView } from "@/features/analysis/components/FormatReport"
+import { ImpactBadge } from "@/features/analysis/components/ImpactBadge"
+import { scoreImpacts, type ScoreImpact } from "@/features/analysis/scoreImpact"
 import { ScoreRing } from "@/features/analysis/components/ScoreRing"
 import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
 import { scoreStatus } from "@/lib/scoreStatus"
@@ -148,6 +150,8 @@ export function ScoreResult({
   // Kendi eşiğimiz (DOG-91): zorunluların tamamı ve unvan.
   const ready = readiness(result)
   const format = withTitleFinding(result.format, result.titleMatch)
+  // Skor etkisi rozetleri (DOG-132): formülün ağırlıklarından.
+  const impacts = scoreImpacts(result.scoringRevision)
   // Yapışkan özet (DOG-131): sayılar bu sayfanın zaten gösterdiği veriden.
   const visibleLanguages = (result.languageChecks ?? []).filter((c) => c.status !== "absent" && !result.excluded?.includes(c.index))
   const navItems = resultNav({
@@ -352,7 +356,7 @@ export function ScoreResult({
 
       {format && (
         <motion.div {...entrance(0.08)} id="bicim" className="scroll-mt-24">
-          <FormatReport report={format} />
+          <FormatReport report={format} impact={impacts.format} titleImpact={impacts.title} />
         </motion.div>
       )}
 
@@ -360,13 +364,19 @@ export function ScoreResult({
         conditions={exclusion.conditionRows.map(({ item }) => item)}
         // Dil CV'de hiç yoksa gereksinim listesinde zaten eksik görünüyor.
         languages={visibleLanguages}
+        impact={impacts.conditions}
         motionProps={entrance(0.11)}
       />
 
       {/* Gereksinimler. */}
       <motion.div {...entrance(0.14)} id="gereksinimler" className="scroll-mt-24 rounded-card border border-border bg-card p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="m-0 text-lg">Gereksinimler</h2>
+          <div>
+            <h2 className="m-0 text-lg">
+              Gereksinimler <ImpactBadge impact={impacts.requirements} className="ml-1" />
+            </h2>
+            <p className="m-0 mt-1 text-sm text-muted">{impacts.requirements.hint}</p>
+          </div>
           <div role="tablist" aria-label="Gereksinimleri süz" className="inline-flex rounded-button bg-background p-1 text-sm">
             {(
               [
@@ -415,7 +425,9 @@ export function ScoreResult({
       {/* Kişisel nitelikler (DOG-103): skora katılmıyor, eksik sayılmıyor. */}
       {exclusion.softRows.length > 0 && (
         <motion.div {...entrance(0.17)} className="rounded-card border border-border bg-card p-5 sm:p-6">
-          <h2 className="m-0 text-lg">Mülakatta anlaşılacaklar</h2>
+          <h2 className="m-0 text-lg">
+            Mülakatta anlaşılacaklar {impacts.soft && <ImpactBadge impact={impacts.soft} className="ml-1" />}
+          </h2>
           <p className="mt-1 text-sm text-muted">
             Bu kişisel nitelikler CV&apos;den değil görüşmede anlaşılır; skora katılmıyor ve eksik sayılmıyor.
             Deneyimlerinde örneği varsa mülakatta anlatmaya hazırlan.
@@ -652,16 +664,18 @@ function RequirementRow({
 function ConditionsCard({
   conditions,
   languages,
+  impact,
   motionProps,
 }: {
   conditions: RequirementResult[]
   languages: LanguageCheck[]
+  impact: ScoreImpact | null
   motionProps: object
 }) {
   if (conditions.length === 0 && languages.length === 0) return null
   return (
     <motion.div {...motionProps} id="sartlar" className="scroll-mt-24 rounded-card border border-border bg-card p-5 sm:p-6">
-      <h2 className="m-0 text-lg">Şartlar</h2>
+      <h2 className="m-0 text-lg">Şartlar {impact && <ImpactBadge impact={impact} className="ml-1" />}</h2>
       <p className="mt-1 text-sm text-muted">
         İlanın yetkinlik dışındaki şartları. Skora katılmıyor; CV&apos;n çoğunu söylemez, başvurmadan önce kendin
         kontrol et.

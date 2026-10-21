@@ -3590,3 +3590,22 @@ puanlayabiliyor.
 
 Bir "Hakkında" metni 49 kelimeyle hedefin altında; ekranda kelime sayısı
 gösteriliyor.
+
+## K-94 · Skor etkisi rozetleri formülden türüyor (DOG-132)
+
+Sonuç bölümlerinin başlığında skora katılıp katılmadığını söyleyen bir rozet
+var. Jobscan'in "Yüksek/Orta skor etkisi" etiketleri kopyalanmadı; bizim
+rozetlerimiz `DEFAULT_SCORING_CONFIG`'ten hesaplanıyor
+(`features/analysis/scoreImpact.ts`). Formül değişince rozet de değişiyor,
+ekranda formülle çelişen elle yazılmış bir iddia kalmıyor.
+
+- **Gereksinimler:** "Skoru belirler"; altında `mustWeight / niceWeight`
+  oranı ("zorunlu, tercih edilenin 2 katı").
+- **Unvan bulgusu:** "Skoru etkiler"; `titleWeight` zorunluya eşitse "bir
+  zorunlu gereksinim kadar".
+- **Mülakatta anlaşılacaklar, Şartlar:** `unscoredTypes`'ta oldukları için
+  "Skora katılmıyor".
+- **CV kontrolü:** "Skora katılmıyor"; içindeki unvan bulgusu kendi rozetini
+  taşıyor.
+- **Eski formülle (sürüm 1) skorlanmış analizlerde** unvan, kişisel nitelik ve
+  şart rozeti gösterilmiyor; o formülde bunlar farklı sayılıyordu.
