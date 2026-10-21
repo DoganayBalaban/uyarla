@@ -1,7 +1,6 @@
 import "@/app/globals.css"
 import type { Metadata } from "next"
 import { AnalysisNotice } from "@/features/analysis/components/AnalysisNotice"
-import { Navbar } from "@/components/layout/Navbar"
 import { QueryProvider } from "@/components/providers/QueryProvider"
 import { WebAnalytics } from "@/components/providers/WebAnalytics"
 import { ThemeProvider } from "@/components/providers/ThemeProvider"
@@ -42,8 +41,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <TooltipProvider delayDuration={300}>
             <QueryProvider>
-              {/* Bütün sayfaların tek üst çubuğu; giriş ekranında kendini gizliyor. */}
-              <Navbar />
+              {/* Üst çubuk route group'larda: tanıtımda Navbar, uygulamada
+                  kenar çubuğu kabuğu (DOG-144). */}
               {children}
               {/* Süren analizi her sayfada izleyen sağ alt bildirimi. */}
               <AnalysisNotice />
