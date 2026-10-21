@@ -3590,3 +3590,134 @@ puanlayabiliyor.
 
 Bir "Hakkında" metni 49 kelimeyle hedefin altında; ekranda kelime sayısı
 gösteriliyor.
+
+## K-94 · Skor etkisi rozetleri formülden türüyor (DOG-132)
+
+Sonuç bölümlerinin başlığında skora katılıp katılmadığını söyleyen bir rozet
+var. Jobscan'in "Yüksek/Orta skor etkisi" etiketleri kopyalanmadı; bizim
+rozetlerimiz `DEFAULT_SCORING_CONFIG`'ten hesaplanıyor
+(`features/analysis/scoreImpact.ts`). Formül değişince rozet de değişiyor,
+ekranda formülle çelişen elle yazılmış bir iddia kalmıyor.
+
+- **Gereksinimler:** "Skoru belirler"; altında `mustWeight / niceWeight`
+  oranı ("zorunlu, tercih edilenin 2 katı").
+- **Unvan bulgusu:** "Skoru etkiler"; `titleWeight` zorunluya eşitse "bir
+  zorunlu gereksinim kadar".
+- **Mülakatta anlaşılacaklar, Şartlar:** `unscoredTypes`'ta oldukları için
+  "Skora katılmıyor".
+- **CV kontrolü:** "Skora katılmıyor"; içindeki unvan bulgusu kendi rozetini
+  taşıyor.
+- **Eski formülle (sürüm 1) skorlanmış analizlerde** unvan, kişisel nitelik ve
+  şart rozeti gösterilmiyor; o formülde bunlar farklı sayılıyordu.
+
+## K-95 · Satır içi düzeltmeler; unvan da ilanın düzeltmesi (DOG-134)
+
+Jobscan'de düzeltme, kontrol satırının hemen altında. Bizde DOG-90
+düzeltmeleri satırın fareyle açılan menüsündeydi, unvan için de hiç yoktu.
+
+- **Unvan bulgusu:** altında "İlandaki unvan yanlış mı okunmuş? Düzelt".
+  Kullanıcı ilandaki unvanı yazıyor; unvan eşleşmesi ve skor yeniden
+  hesaplanıyor (`result.positionCorrection`).
+  - **Dürüstlük sınırı:** yazılan unvan ilan metninde geçmeli
+    (`positionInPosting`, skorlamayla aynı eşleşme). Geçmiyorsa 422 "Bu unvan
+    ilan metninde geçmiyor." Bu bir ilan düzeltmesi, CV hakkında beyan
+    değil; kullanıcı kendi unvanını yazıp skoru şişiremiyor.
+  - **Geri alma:** bulgu düzeltmeyle kaybolabildiği için (unvan artık
+    eşleşiyor) not CV kontrolü kartının altında duruyor.
+- **Yıl ve bölüm satırları:** eksikse "Yıl/Bölüm yanlış mı okunmuş? Düzelt"
+  hep görünür. Yıl istemeyen deneyim satırında genel "Şartı düzelt" yine
+  fareyle görünüyor.
+- **Uyarlamanın önce/sonra skoru** artık düzeltilmiş ilanla hesaplanıyor
+  (`loadAdaptation().scoringPosting`). Önce skoru (Analysis.score)
+  düzeltmeleri içeriyordu, sonra skoru içermiyordu; düzeltilen şart sonra
+  skorunda eksik sayılıp farkı yanlış gösterebiliyordu (DOG-90'dan beri).
+- **Yapılmadı:**
+  - Biçim bulgularına "nasıl düzeltilir" bağlantısı: açıklamalar yolu zaten
+    anlatıyor, uygulamada gidilecek bir düzeltme yeri yok (hesapta yalnızca
+    telefon var).
+  - Hedef unvanı uyarlanmış CV'nin başlığına ekleme: düzenleyici başlık
+    satırını kapsamıyor; DOG-92'nin serbest düzenleyici kısmına kaldı.
+
+## K-96 · Uyarlamada başlık satırını kullanıcı düzenliyor (DOG-92)
+
+**Bağlam:** DOG-134'te "hedef unvanı CV başlığına ekleme" kaldı: uyarlama
+başlık satırını değiştirmiyordu, düzenleyici de kapsamıyordu. K2'de 5
+kişiden 2'si CV'yi "olduğu gibi göndermem" dedi; serbest düzenleyiciye
+(bölüm/madde ekleme, taşıma) geçmeden önceki küçük adım bu.
+
+- **Taslakta `headline`** (isteğe bağlı): yalnızca kullanıcı yazıyor,
+  uyarlama dokunmuyor. `applyAdaptation` uyguluyor; indirilen CV, belge
+  görünümü, canlı skor ve unvan eşleşmesi aynı başlığı kullanıyor.
+- **Doğrulama maddelerdeki gibi (K-83):** CV'de olmayan ilan terimi "kontrol
+  et" alıyor ama engellenmiyor; yazan kullanıcı. CV'nin kendi başlığına
+  dönüş düzenlemeyi siliyor. En fazla 160 karakter.
+- **Risk:** ayrıştırıcı konumu ve bağlantıları da bu satıra koyabiliyor
+  (`extract/header.ts`). Satırı baştan yazan kullanıcı bağlantıları
+  indirilen CV'den de siler; ekranda bunu söyleyen bir uyarı var.
+- **DOG-92'de kalan:** bölüm ve madde ekleme, taşıma.
+
+## K-97 · Madde ekleme, kaldırma ve taşıma (DOG-92, serbest düzenleyicinin ilk adımı)
+
+**Bağlam:** K2'de 5 kişiden 2'si uyarlanmış CV'yi "olduğu gibi göndermem"
+dedi. Düzenleme yalnızca var olan maddenin metniyle sınırlıydı (K-83).
+
+**Karar:**
+- **Tek kaynak:** bir işin maddeleri `jobBullets`'tan (core/adapt/bullets.ts):
+  CV maddeleri (kabul edilen yeniden yazımla), katkılar (DOG-94), kullanıcı
+  maddeleri; kullanıcı sırası uygulanmış, kaldırılan ve tek sayfa için
+  çıkarılanlar işaretli. `applyAdaptation` (indirme, skor) ve belge görünümü
+  aynı listeyi kullanıyor; ekran ile indirilen CV ayrışamaz.
+- **Taslakta yeni alanlar:** `userBullets` (kimlik `u<n>`), `removed`,
+  `bulletOrder` (iş başına kimlik sırası). Kimlikler konumdan geliyor; sıra
+  değişince belge görünümü maddeleri `bulletIds` ile eşliyor.
+- **Kaldırma tek sayfa `omitted`'ından ayrı:** strateji "tam"a dönünce
+  `omitted` sıfırlanıyor, kullanıcının kaldırdığı kalıyor. İkisi de üstü
+  çizili ve geri alınabilir; kullanıcının kendi maddesi kaldırılınca siliniyor.
+- **Kullanıcı maddesi düzenleme gibi kontrol ediliyor (K-83):** CV'de olmayan
+  sayı ya da ilan terimi "kontrol et" alıyor ama engellenmiyor. Skora
+  katılıyor; yazan kullanıcı ve bu onun CV'si.
+- **Ayrı uç yok:** karar ucuna `{ bullet: { op } }` (12 fonksiyon sınırı).
+- **Kapsam dışı (sonraki adım):** proje maddelerini ekleme ve taşıma, bölüm
+  ekleme ve bölüm sırası, işler arası taşıma.
+
+## K-98 · Proje maddeleri, bölüm sırası ve kullanıcı bölümleri (DOG-92, altıncı adım)
+
+- **Projeler işlerle aynı kodla:** `groupBullets` iş ve projeyi bir "grup"
+  olarak ele alıyor. Kullanıcı maddesi `projectIndex` taşıyabiliyor; sıra
+  anahtarı projede `p<n>`. Katkılar (DOG-94) yalnızca işlere ekleniyor.
+- **Bölüm sırası:** taslakta `sectionOrder`. Ekrandaki ve indirilen sıra aynı
+  kuralla (`document/model` `sectionOrder`): kullanıcının seçimi, yoksa CV'nin
+  sırası, yoksa varsayılan; ilk işini arayanda eğitim önde (DOG-55).
+  İçeriği olmayan bölümün üstünden atlanıyor; yoksa projesi olmayan CV'de
+  "eğitimi yukarı al" görünmez bir yer değişimi olurdu.
+- **Kullanıcı bölümleri:** taslakta `userSections` (kimlik `s<n>`). Belgede CV'nin
+  kendi diğer bölümlerinden sonra. Satırlar maddeler gibi kontrol ediliyor
+  (uyarı var, engel yok). En fazla 12 satır, başlık en fazla 60 karakter.
+- **Kapsam dışı:** maddeyi işler arası taşımak, CV'nin kendi bölümlerini
+  silmek ya da yeniden adlandırmak.
+
+## K-99 · Düzenleyicinin son adımı: işler arası taşıma, bölüm kaldırma ve adlandırma (DOG-92)
+
+- **Maddeyi başka işe ya da projeye taşıma:** taslakta `bulletPlacement`
+  (madde kimliği → grup anahtarı). `groupBullets` tüm maddeleri doğal
+  yerleriyle kurup yerleşimi uyguluyor; taşınan madde yeni yerinde sona
+  ekleniyor ve oradan da sıralanabiliyor. Kimlik değişmiyor, ekran önceki
+  hâlini yine kimlikten buluyor. Kendi yerine dönen madde taşınmış sayılmıyor.
+- **Bölüm kaldırma ve adlandırma:** taslakta `sectionEdits` (`hidden`,
+  `titles`). Anahtarlar yapılandırılmış bölümler, `languages`,
+  `certifications`, CV'nin diğer bölümleri (`o<n>`) ve kullanıcınınkiler
+  (`s<n>`). Gizlenen bölüm belgede ve skorda yok, geri alınabilir. Yeni ad
+  profile `sectionTitles` olarak gidiyor; belge modeli onu kullanıyor (diğer
+  başlıklar gibi büyük harf). Profil şeması LLM'e gitmiyor; alan isteğe bağlı.
+- **Uçtan uca denemede bulunan iki sorun:**
+  - Belge görünümü diller ve sertifikaları hiç göstermiyordu; kullanıcı
+    "Sertifikalar" bölümü yok sanıp ekleyince indirilen CV'de iki
+    "SERTİFİKALAR" çıktı. Görünüm artık becerilerin ardında ikisini de
+    çiziyor (belgeyle aynı yer) ve eğitim bölümünü de gösteriyor.
+  - Üstteki "Deneyimini ilanın terimleriyle anlattık; skorun N puan arttı"
+    cümlesi, artışı kullanıcının kendi düzenlemesi getirdiğinde de
+    uyarlamaya mal ediyordu. Kullanıcı düzenlediyse "Seçimlerin ve
+    düzenlemelerinle skorun N puan arttı".
+- **DOG-92 burada kapanıyor.** Jobscan'deki araç çubuğu, sürükle-bırak ve geri
+  al/ileri al yok; düzenleme kalıcı ve her adım geri alınabilir (Geri al,
+  Kaldır/Sil). "Temel CV olarak kaydet" DOG-137'ye aitti ve yapılmadı.

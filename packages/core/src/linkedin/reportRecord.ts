@@ -36,7 +36,13 @@ export interface LinkedInReport {
   suggestions?: { headline: LinkedInSuggestion; about: LinkedInSuggestion } | null
 }
 
+/**
+ * Raporun o anki adımı (DOG-136); worker yazıyor. Yoksa ilk adım: profil
+ * okunuyor. Ekran yalnızca bunu gösteriyor, ilerleme uydurulmuyor.
+ */
+export type LinkedInReportStage = "reading" | "scoring" | "writing"
+
 export type LinkedInReportRecord =
-  | { status: "running"; analysisIds: string[]; createdAt: string }
+  | { status: "running"; analysisIds: string[]; createdAt: string; stage?: LinkedInReportStage }
   | { status: "failed"; analysisIds: string[]; createdAt: string }
   | { status: "done"; analysisIds: string[]; createdAt: string; report: LinkedInReport }

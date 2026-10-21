@@ -34,6 +34,10 @@ import {
   editItem,
   previewEdit,
   restoreBullet,
+  changeBullet,
+  changeSection,
+  type BulletOp,
+  type SectionOp,
   setLayout,
   useAdaptation,
 } from "@/features/adaptation/api"
@@ -131,6 +135,37 @@ export function AdaptationView({ id }: { id: string }) {
       queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
     } catch {
       // Kaydedilemediyse madde çıkarılmış olarak kalıyor; tekrar denenebilir.
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  /** Madde ekle, kaldır, taşı (DOG-92); hata mesajını döndürüyor. */
+  async function bulletChange(op: BulletOp): Promise<string | null> {
+    setIsBusy(true)
+    try {
+      const parsed = await changeBullet(id, op)
+      // Madde sayısı değişince tek sayfa sonucu bayatlıyor.
+      setOnePage(null)
+      queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
+      return null
+    } catch (error) {
+      return apiErrorMessage(error, "Kaydedemedik. Tekrar dener misin?")
+    } finally {
+      setIsBusy(false)
+    }
+  }
+
+  /** Bölüm sırası, bölüm ekle ya da sil (DOG-92); hata mesajını döndürüyor. */
+  async function sectionChange(op: SectionOp): Promise<string | null> {
+    setIsBusy(true)
+    try {
+      const parsed = await changeSection(id, op)
+      setOnePage(null)
+      queryClient.setQueryData<AdaptationState>(adaptationQueryKey(id), (d) => (d ? { ...d, ...parsed } : d))
+      return null
+    } catch (error) {
+      return apiErrorMessage(error, "Kaydedemedik. Tekrar dener misin?")
     } finally {
       setIsBusy(false)
     }
@@ -237,6 +272,17 @@ export function AdaptationView({ id }: { id: string }) {
           transition: { duration: 0.4, delay: delayMs, ease: [0.22, 1, 0.36, 1] as const },
         }
 
+  // Kullanıcı kendisi düzenlediyse (DOG-92) artışı uyarlamaya mal etmiyoruz.
+  const userEdited =
+    !!draft?.headline ||
+    !!draft?.summary.edited ||
+    !!draft?.bullets.some((b) => b.edited) ||
+    !!draft?.userBullets?.length ||
+    !!draft?.userSections?.length ||
+    Object.keys(draft?.bulletPlacement ?? {}).length > 0 ||
+    !!draft?.removed?.length ||
+    !!draft?.sectionEdits?.hidden?.length
+
   return (
     <div className="space-y-6">
       {/* Skor kartı: önce → sonra. Skor ekranın en büyük öğesi (§9.5). */}
@@ -251,7 +297,9 @@ export function AdaptationView({ id }: { id: string }) {
             <h1 className="mt-1 text-3xl">CV&apos;n hazır</h1>
             <p className="mt-2 text-sm text-muted">
               {diff > 0
-                ? `Deneyimini ilanın terimleriyle anlattık; skorun ${diff} puan arttı. Her değişikliği aşağıda görebilir, istemediğini eski hâline döndürebilirsin.`
+                ? userEdited
+                  ? `Seçimlerin ve düzenlemelerinle skorun ${diff} puan arttı. Her değişikliği aşağıda görebilir, istemediğini eski hâline döndürebilirsin.`
+                  : `Deneyimini ilanın terimleriyle anlattık; skorun ${diff} puan arttı. Her değişikliği aşağıda görebilir, istemediğini eski hâline döndürebilirsin.`
                 : pendingAlignment > 0
                   ? `${pendingAlignment} maddede deneyimini ilanın terimiyle anlattık. Doğru bulduklarını onayladığında skorun güncellenir.`
                   : after === before
@@ -368,9 +416,40 @@ export function AdaptationView({ id }: { id: string }) {
           )}
 
           {view === "document" && state.document ? (
-            <DocumentView document={state.document} draft={draft} onRestore={(b) => void restore(b)} terms={state.postingTerms ?? []} />
+            <DocumentView
+              document={state.document}
+              draft={draft}
+              onRestore={(b) => void restore(b)}
+              onBullet={bulletChange}
+              onSection={sectionChange}
+              busy={busy}
+              terms={state.postingTerms ?? []}
+            />
           ) : (
             <>
+              {/* Başlık satırı (DOG-92): uyarlama değiştirmiyor, yalnızca kullanıcı. */}
+              {state.document && (
+                <motion.section {...entrance(0.04)} className="rounded-card border border-border bg-card p-5 sm:p-6">
+                  <h2 className="m-0 text-lg">Başlık satırı</h2>
+                  <p className="mt-1 text-sm text-muted">
+                    Adının altındaki satır. İşe alımcılar çoğu zaman unvanla arıyor; deneyimin uyuyorsa ilandaki unvanı
+                    buraya yazabilirsin. Konumun ve bağlantıların da bu satırdaysa silme: indirilen CV&apos;den de çıkar.
+                  </p>
+                  {draft.headline && <VerificationWarning v={draft.headline.verification} />}
+                  <p className="m-0 mt-3 font-semibold">
+                    {state.document.after.headline ?? <span className="font-normal text-muted">CV&apos;nde başlık satırı yok.</span>}
+                  </p>
+                  <EditText
+                    text={state.document.after.headline ?? ""}
+                    edited={!!draft.headline}
+                    busy={busy}
+                    onSave={(text) => saveEdit("headline", text)}
+                    terms={state.postingTerms ?? []}
+                    onPreview={(text, signal) => previewEdit(id, "headline", text, signal)}
+                    currentScore={state.scoreAfter ?? null}
+                  />
+                </motion.section>
+              )}
               {draft.summary.original && (
                 <motion.section {...entrance(0.06)} className="rounded-card border border-border bg-card p-5 sm:p-6">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

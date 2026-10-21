@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { JobPostingData, Requirement } from "../schemas/job.js"
-import { conceptKey, correctPosting, profileExclusions } from "./exclusions.js"
+import { conceptKey, correctPosting, positionInPosting, profileExclusions } from "./exclusions.js"
 
 const req = (text: string, terms: Array<string | [string, ...string[]]>, type: Requirement["type"] = "skill"): Requirement => ({
   text,
@@ -66,5 +66,21 @@ describe("correctPosting", () => {
     const fixed = correctPosting(posting, { 3: { terms: ["  ", ""] }, 99: { minYears: 1 } })
     expect(fixed.requirements[3]!.concepts.map((c) => c.term)).toEqual(["Bilgisayar Mühendisliği"])
     expect(fixed.requirements).toHaveLength(posting.requirements.length)
+  })
+})
+
+describe("position correction (DOG-134)", () => {
+  it("replaces the position only when given", () => {
+    expect(correctPosting(posting, {}, "Dijital Pazarlama Uzmanı").position).toBe("Dijital Pazarlama Uzmanı")
+    expect(correctPosting(posting, {}, "  ").position).toBe(posting.position)
+    expect(correctPosting(posting, {}).position).toBe(posting.position)
+  })
+
+  it("accepts only a title that the posting text contains", () => {
+    const raw = "Firmamız için Dijital Pazarlama Uzmanı arıyoruz (K/E)."
+    expect(positionInPosting(raw, "Dijital Pazarlama Uzmanı")).toBe(true)
+    expect(positionInPosting(raw, "dijital pazarlama uzmanları")).toBe(true)
+    expect(positionInPosting(raw, "Pazarlama Müdürü")).toBe(false)
+    expect(positionInPosting(null, "Dijital Pazarlama Uzmanı")).toBe(false)
   })
 })

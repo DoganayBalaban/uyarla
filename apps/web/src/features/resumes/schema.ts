@@ -32,7 +32,20 @@ export interface LibraryResume {
   fileName: string | null
   createdAt: string
   isDefault: boolean
+  /** Bu CV'yle yapılmış analizler, en yeni önce (DOG-137); en fazla LIBRARY_APPLICATIONS_SHOWN. */
+  applications?: LibraryApplication[]
+  /** Toplam sayı; listede gösterilenden fazla olabilir. */
+  applicationCount?: number
 }
+
+export interface LibraryApplication {
+  analysisId: string
+  position: string
+  company: string | null
+  stage: string
+}
+
+export const LIBRARY_APPLICATIONS_SHOWN = 3
 
 /** `POST /api/resumes/[id]`: LinkedIn profil raporu iste (DOG-69). */
 export const linkedinReportRequestSchema = z.object({

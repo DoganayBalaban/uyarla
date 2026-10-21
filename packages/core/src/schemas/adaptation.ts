@@ -118,6 +118,63 @@ export const AdaptationDraftSchema = z.object({
    * Skor ve indirme bu maddeler olmadan hesaplanıyor.
    */
   omitted: z.array(z.string()).optional(),
+  /**
+   * Kullanıcının düzenlediği başlık satırı (DOG-92, DOG-134): adının altındaki
+   * satır. Uyarlama başlığı kendiliğinden değiştirmiyor; yalnızca kullanıcı
+   * yazıyor. Doğrulama maddelerdeki gibi: CV'de olmayan ilan terimi "kontrol
+   * et" uyarısı alıyor ama engellenmiyor. Yoksa CV'nin kendi başlığı.
+   */
+  headline: z.object({ text: z.string(), verification: VerificationSchema }).optional(),
+  /**
+   * Kullanıcının yazdığı yeni maddeler (DOG-92). Kimlik "u<n>"; CV'deki
+   * maddelerin konumdan gelen kimlikleriyle çakışmıyor. Doğrulama
+   * düzenlemedeki gibi: uyarı var, engel yok.
+   */
+  userBullets: z
+    .array(
+      z.object({
+        id: z.string(),
+        /** Deneyim maddesi; proje maddesinde yok. */
+        experienceIndex: z.number().int().nonnegative().optional(),
+        /** Proje maddesi (DOG-92, altıncı adım). */
+        projectIndex: z.number().int().nonnegative().optional(),
+        text: z.string(),
+        verification: VerificationSchema,
+      }),
+    )
+    .optional(),
+  /**
+   * Kullanıcının belgeden kaldırdığı maddeler (DOG-92). Tek sayfa
+   * `omitted`'ından ayrı: strateji değişince sıfırlanmıyor.
+   */
+  removed: z.array(z.string()).optional(),
+  /**
+   * Grup başına madde sırası (DOG-92): anahtar deneyimde sırası ("0"),
+   * projede "p" önekli ("p0"). Yoksa doğal sıra.
+   */
+  bulletOrder: z.record(z.string(), z.array(z.string())).optional(),
+  /** Kullanıcının seçtiği bölüm sırası (DOG-92); yoksa CV'nin kendi sırası. */
+  sectionOrder: z.array(z.enum(["experience", "projects", "education", "skills"])).optional(),
+  /**
+   * Kullanıcının eklediği bölümler (DOG-92): belgede diğer bölümlerin sonunda.
+   * Satırlar maddeler gibi kontrol ediliyor; uyarı var, engel yok.
+   */
+  userSections: z
+    .array(z.object({ id: z.string(), heading: z.string(), lines: z.array(z.string()), verification: VerificationSchema }))
+    .optional(),
+  /**
+   * Maddenin taşındığı yer (DOG-92): madde kimliği → grup anahtarı ("0", "p1").
+   * Yoksa maddenin kendi işi ya da projesi.
+   */
+  bulletPlacement: z.record(z.string(), z.string()).optional(),
+  /**
+   * Bölüm düzenlemeleri (DOG-92). Anahtar: yapılandırılmış bölüm adı
+   * ("experience"), CV'nin diğer bölümü ("o0") ya da kullanıcı bölümü ("s1").
+   * Gizlenen bölüm belgede ve skorda yok; geri alınabilir.
+   */
+  sectionEdits: z
+    .object({ hidden: z.array(z.string()).optional(), titles: z.record(z.string(), z.string()).optional() })
+    .optional(),
 })
 
 export type TermAlignment = z.infer<typeof TermAlignmentSchema>

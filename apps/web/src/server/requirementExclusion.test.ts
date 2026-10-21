@@ -84,6 +84,22 @@ describe("parseAnalysisPatch (DOG-90)", () => {
   })
 })
 
+describe("parseAnalysisPatch position (DOG-134)", () => {
+  it("reads a title correction without a requirement index", () => {
+    expect(parseAnalysisPatch({ action: "position", position: "  Dijital Pazarlama Uzmanı " })).toEqual({
+      action: "position", position: "Dijital Pazarlama Uzmanı",
+    })
+    expect(parseAnalysisPatch({ action: "position", position: null })).toEqual({ action: "position", position: null })
+  })
+
+  it("rejects an empty, too long or non-string title", () => {
+    expect(parseAnalysisPatch({ action: "position", position: "  " })).toBeNull()
+    expect(parseAnalysisPatch({ action: "position", position: "x".repeat(121) })).toBeNull()
+    expect(parseAnalysisPatch({ action: "position", position: 3 })).toBeNull()
+    expect(parseAnalysisPatch({ action: "position" })).toBeNull()
+  })
+})
+
 describe("markRequirement / unmarkRequirement (DOG-90)", () => {
   const concepts = [{ term: "Docker", synonyms: [] }, { term: "Kubernetes", synonyms: ["k8s"] }]
   const base = { requirements: [{ requirement: { concepts } }, { requirement: { concepts: [] } }] }

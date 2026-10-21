@@ -1,5 +1,5 @@
 import { resumeLanguage, type Language } from "../normalize/language.js"
-import type { ResumeProfile, StructuredSection } from "../schemas/resume.js"
+import type { ResumeProfile, StructuredSection, TitledSection } from "../schemas/resume.js"
 
 /**
  * Bir kayıt: iş, proje ya da okul. Başlık satırı üç parça (DOG-106): kalın
@@ -99,7 +99,7 @@ export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions
   if (profile.experience.length > 0) {
     built.experience = [
       {
-        title: b.experience,
+        title: titleOf(profile, "experience", b.experience),
         entries: profile.experience.map((job) => ({
           heading: job.title,
           organization: job.company,
@@ -116,7 +116,7 @@ export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions
   if (projects.length > 0) {
     built.projects = [
       {
-        title: b.projects,
+        title: titleOf(profile, "projects", b.projects),
         entries: projects.map((p) => ({
           heading: p.name,
           organization: p.role,
@@ -130,7 +130,7 @@ export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions
   if (profile.education.length > 0) {
     built.education = [
       {
-        title: b.education,
+        title: titleOf(profile, "education", b.education),
         entries: profile.education.map((edu) => ({
           heading: edu.school,
           organization: [edu.degree, edu.field].filter(Boolean).join(" · ") || null,
@@ -146,18 +146,18 @@ export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions
   // bloktalar (bölümleme de onları beceri bloğuna koyuyor).
   const skillSections: DocumentSection[] = []
   if (profile.skills.length > 0) {
-    skillSections.push({ title: b.skills, entries: [], rows: skillRows(profile) })
+    skillSections.push({ title: titleOf(profile, "skills", b.skills), entries: [], rows: skillRows(profile) })
   }
   if (profile.languages.length > 0) {
     skillSections.push({
-      title: b.languages,
+      title: titleOf(profile, "languages", b.languages),
       entries: [],
       rows: [{ label: null, text: profile.languages.join(", ") }],
     })
   }
   if (profile.certifications.length > 0) {
     skillSections.push({
-      title: b.certifications,
+      title: titleOf(profile, "certifications", b.certifications),
       entries: [{ heading: null, organization: null, date: null, lines: profile.certifications }],
     })
   }
@@ -200,7 +200,27 @@ const DEFAULT_ORDER: StructuredSection[] = ["experience", "projects", "education
  * "mevcut formatımı bozmasın" istendi ve eğitimi sona koyan aday bunu
  * bilerek yapmış.
  */
-function sectionOrder(profile: ResumeProfile, options: DocumentOptions): StructuredSection[] {
+/** Bölüm başlığı: kullanıcının verdiği ad (DOG-92), yoksa varsayılan; diğer başlıklar gibi büyük harf. */
+function titleOf(profile: ResumeProfile, kind: TitledSection, fallback: string): string {
+  const custom = profile.sectionTitles?.[kind]?.trim()
+  if (!custom) return fallback
+  return custom.toLocaleUpperCase(resumeLanguage(profile) === "tr" ? "tr" : "en")
+}
+
+/** Belgedeki yapılandırılmış bölüm başlıkları (DOG-92): ekran indirmeyle aynısını göstersin. */
+export function sectionHeadings(profile: ResumeProfile): Record<TitledSection, string> {
+  const b = HEADINGS[resumeLanguage(profile)]
+  return {
+    experience: titleOf(profile, "experience", b.experience),
+    projects: titleOf(profile, "projects", b.projects),
+    education: titleOf(profile, "education", b.education),
+    skills: titleOf(profile, "skills", b.skills),
+    languages: titleOf(profile, "languages", b.languages),
+    certifications: titleOf(profile, "certifications", b.certifications),
+  }
+}
+
+export function sectionOrder(profile: ResumeProfile, options: DocumentOptions = {}): StructuredSection[] {
   const known = profile.sectionOrder ?? []
   if (known.length === 0) {
     if (!options.educationFirst) return DEFAULT_ORDER

@@ -5,6 +5,8 @@ import { ChevronDown, CircleCheck, OctagonAlert, ScanText, TriangleAlert, Wand2 
 import type { FormatFinding, FormatReport } from "@uyarla/core/format/check"
 import { cn } from "@/lib/cn"
 import { fixHint } from "@/features/analysis/formatFixes"
+import { ImpactBadge } from "@/features/analysis/components/ImpactBadge"
+import { TITLE_FINDING_CODES, type ScoreImpact } from "@/features/analysis/scoreImpact"
 
 // Tipler core'dan: web kendi kopyasını tutarsa bir anahtar değiştiğinde
 // TypeScript uyarmıyor ve ekran sessizce boş kalıyor (DOG-39).
@@ -19,7 +21,19 @@ export type FormatReportView = Pick<FormatReport, "findings" | "passed">
  * Bulgular 21st.dev'deki "alert" bileşenlerinin desenini izliyor: ikon,
  * başlık, açıklama; seviye sol kenar rengi ve etiketle birlikte.
  */
-export function FormatReportCard({ report }: { report: FormatReportView }) {
+export function FormatReportCard({
+  report,
+  impact,
+  titleImpact,
+  titleAction,
+}: {
+  report: FormatReportView
+  /** Skor etkisi rozetleri (DOG-132); yalnızca analiz sonucunda. */
+  impact?: ScoreImpact
+  titleImpact?: ScoreImpact | null
+  /** Unvan bulgusunun altındaki düzeltme (DOG-134). */
+  titleAction?: React.ReactNode
+}) {
   const problemCount = report.findings.filter((b) => b.severity === "problem").length
   // Eski kayıtlarda grup yok: hepsi okunabilirlik bulgusu (DOG-86).
   const readability = report.findings.filter((b) => b.group !== "content")
@@ -34,7 +48,9 @@ export function FormatReportCard({ report }: { report: FormatReportView }) {
             <ScanText className="size-5" aria-hidden />
           </span>
           <div>
-            <h2 className="m-0 text-lg">CV kontrolü</h2>
+            <h2 className="m-0 text-lg">
+              CV kontrolü {impact && <ImpactBadge impact={impact} className="ml-1" />}
+            </h2>
             <p className="m-0 text-sm text-muted">Başvuru sistemleri CV&apos;ni doğru okuyabilir mi, işe alımcı ne görüyor?</p>
           </div>
         </div>
@@ -59,7 +75,12 @@ export function FormatReportCard({ report }: { report: FormatReportView }) {
           {readability.length > 0 && (
             <ul className="mt-5 space-y-2.5">
               {readability.map((b) => (
-                <FindingItem key={b.code} finding={b} />
+                <FindingItem
+                  key={b.code}
+                  finding={b}
+                  impact={TITLE_FINDING_CODES.includes(b.code) ? titleImpact : null}
+                  action={TITLE_FINDING_CODES.includes(b.code) ? titleAction : null}
+                />
               ))}
             </ul>
           )}
@@ -68,7 +89,12 @@ export function FormatReportCard({ report }: { report: FormatReportView }) {
               <h3 className="m-0 text-sm font-semibold text-muted">İşe alımcı gözüyle</h3>
               <ul className="mt-2.5 space-y-2.5">
                 {content.map((b) => (
-                  <FindingItem key={b.code} finding={b} />
+                  <FindingItem
+                  key={b.code}
+                  finding={b}
+                  impact={TITLE_FINDING_CODES.includes(b.code) ? titleImpact : null}
+                  action={TITLE_FINDING_CODES.includes(b.code) ? titleAction : null}
+                />
                 ))}
               </ul>
             </div>
@@ -96,7 +122,15 @@ export function FormatReportCard({ report }: { report: FormatReportView }) {
   )
 }
 
-function FindingItem({ finding: b }: { finding: FormatFinding }) {
+function FindingItem({
+  finding: b,
+  impact,
+  action,
+}: {
+  finding: FormatFinding
+  impact?: ScoreImpact | null
+  action?: React.ReactNode
+}) {
   const isProblem = b.severity === "problem"
   const Icon = isProblem ? OctagonAlert : TriangleAlert
   const hint = fixHint(b.code)
@@ -115,6 +149,7 @@ function FindingItem({ finding: b }: { finding: FormatFinding }) {
         <p className="m-0 font-semibold">
           <span className="sr-only">{isProblem ? "Sorun: " : "Uyarı: "}</span>
           {b.title}
+          {impact && <ImpactBadge impact={impact} className="ml-2" />}
         </p>
         <p className="m-0 mt-0.5 text-sm text-muted">{b.description}</p>
         {b.examples && b.examples.length > 0 && (
@@ -144,6 +179,7 @@ function FindingItem({ finding: b }: { finding: FormatFinding }) {
             )}
           </p>
         )}
+        {action}
       </div>
       <span
         aria-hidden

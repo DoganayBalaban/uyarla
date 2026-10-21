@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { AdaptationDraft } from "../schemas/adaptation.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { EDIT_MAX_LENGTH, editDraftItem } from "./edit.js"
+import { EDIT_MAX_LENGTH, HEADLINE_MAX_LENGTH, editDraftItem } from "./edit.js"
 import { applyAdaptation } from "./profile.js"
 
 const profile: ResumeProfile = {
@@ -87,5 +87,33 @@ describe("editDraftItem (DOG-92)", () => {
     expect(() => editDraftItem(draft, "0-0", "   ", { profile, posting })).toThrow()
     expect(() => editDraftItem(draft, "0-0", "a".repeat(EDIT_MAX_LENGTH + 1), { profile, posting })).toThrow()
     expect(() => editDraftItem(draft, "9-9", "metin", { profile, posting })).toThrow()
+  })
+})
+
+describe("headline edit (DOG-92, DOG-134)", () => {
+  const withHeadline = { ...profile, headline: "Geliştirici" }
+
+  it("takes the user's headline into the document and title match", () => {
+    const out = editDraftItem(draft, "headline", "Frontend Geliştirici · React", { profile: withHeadline, posting })
+    expect(out.headline).toMatchObject({ text: "Frontend Geliştirici · React", verification: { status: "ok" } })
+    expect(applyAdaptation(withHeadline, out).headline).toBe("Frontend Geliştirici · React")
+    // Düzenlenmemiş taslakta CV'nin kendi başlığı.
+    expect(applyAdaptation(withHeadline, draft).headline).toBe("Geliştirici")
+  })
+
+  it("flags a posting term the CV doesn't have, but keeps the user's text", () => {
+    const out = editDraftItem(draft, "headline", "Kubernetes uzmanı", { profile: withHeadline, posting })
+    expect(out.headline?.verification.status).toBe("flagged")
+    expect(applyAdaptation(withHeadline, out).headline).toBe("Kubernetes uzmanı")
+  })
+
+  it("going back to the CV's own headline removes the edit", () => {
+    const edited = editDraftItem(draft, "headline", "Frontend Geliştirici", { profile: withHeadline, posting })
+    const back = editDraftItem(edited, "headline", "  Geliştirici ", { profile: withHeadline, posting })
+    expect(back).not.toHaveProperty("headline")
+  })
+
+  it("rejects a headline longer than one line", () => {
+    expect(() => editDraftItem(draft, "headline", "a".repeat(HEADLINE_MAX_LENGTH + 1), { profile: withHeadline, posting })).toThrow()
   })
 })

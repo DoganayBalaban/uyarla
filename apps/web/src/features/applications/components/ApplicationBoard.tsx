@@ -2,9 +2,6 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useRouter } from "next/navigation"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import {
   ArrowRight,
@@ -18,17 +15,13 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/cn"
 import { loginPath } from "@/lib/returnPath"
-import { resultPath } from "@/features/analysis/paths"
-import { apiErrorBody, apiStatus } from "@/lib/api"
+import { apiStatus } from "@/lib/api"
 import { PageHeader } from "@/components/layout/PageShell"
-import { startAdaptation } from "@/features/adaptation/api"
-import { plansPath } from "@/features/billing/paywall"
 import { useApplicationCards, useUpdateCard, type CardChange } from "@/features/applications/api"
 import {
   STAGES,
   STAGE_LABEL,
   STAGE_COLOR,
-  NOTE_MAX_LENGTH,
   deadlineBadge,
   groupByStage,
   scoreBadge,
@@ -36,19 +29,24 @@ import {
   type Stage,
   type BoardCard,
 } from "@/features/applications/board"
-import { noteFormSchema, type NoteFormValues } from "@/features/applications/schema"
-import { FollowUpPanel, OutreachPanel } from "@/features/applications/components/FollowUpPanel"
+import { ApplyCheck } from "@/features/applications/components/ApplyCheck"
 
 /** Sürükle-bırak verisinin türü; başka sürüklemelerle karışmasın. */
 const DRAG_TYPE = "application/x-uyarla-kart"
 
 const DATE_FORMAT = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short" })
 
-/** Sütun başlığının altındaki kısa metin; rehber §6.2 tonunda. */
-const COLUMN_HINT: Partial<Record<Stage, string>> = {
+/**
+ * Sütun başlığının altındaki kısa metin; rehber §6.2 tonunda. Her sütunda
+ * kartın o aşamada sunduğu şeye yönlendiriyor (DOG-135); hatırlatma e-postası
+ * anılmıyor, ürün e-postaları açık değil (DOG-130).
+ */
+const COLUMN_HINT: Record<Stage, string> = {
   saved: "Skorunu aldın, henüz başvurmadın.",
-  rejected: "Bu olmadı, olur.",
+  applied: "Cevap gelmediyse başvuruyu açıp takip mesajı yazabilirsin.",
+  interview: "Başvuruyu aç: mülakat günü, hazırlık paketi ve teşekkür notu orada.",
   offer: "Tebrikler!",
+  rejected: "Bu olmadı, olur.",
 }
 
 export function ApplicationBoard() {
@@ -191,7 +189,7 @@ export function ApplicationBoard() {
                     {columns[cardStage].length}
                   </span>
                 </h2>
-                {COLUMN_HINT[cardStage] && columns[cardStage].length > 0 && (
+                {columns[cardStage].length > 0 && (
                   <p className="m-0 mt-1 text-xs text-muted">{COLUMN_HINT[cardStage]}</p>
                 )}
               </header>
@@ -234,58 +232,6 @@ export function ApplicationBoard() {
   )
 }
 
-/**
- * Başvuru kapısı (DOG-91): skor düşükken "önce uyarlamak ister misin?".
- * Durdurmuyor; uyarlama "Uyarla"daki akışla (giriş ve paket dönüşü dahil).
- */
-function ApplyCheck({ card, onApply, onClose }: { card: BoardCard; onApply: () => void; onClose: () => void }) {
-  const r = card.readiness!
-  const gaps = [
-    r.missingMust > 0 ? `${r.missingMust} zorunlu gereksinim CV'nde görünmüyor` : null,
-    r.titleMissing ? "ilandaki unvan CV'nde geçmiyor" : null,
-  ].filter(Boolean)
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/30 p-4" onClick={onClose}>
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="apply-check-title"
-        className="w-full max-w-md rounded-card border border-border bg-card p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.key === "Escape" && onClose()}
-      >
-        <h2 id="apply-check-title" className="m-0 text-lg">
-          Önce uyarlamak ister misin?
-        </h2>
-        <p className="mt-2 text-sm text-muted">
-          {card.position}: {gaps.join("; ")}. Deneyiminde varsa uyarlamada görünür kılabiliriz; olmayan bir şeyi
-          eklemiyoruz.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Link
-            href={`/analyze?uyarla=${encodeURIComponent(card.analysisId)}`}
-            autoFocus
-            className="inline-flex items-center gap-2 rounded-button bg-brand-blue px-4 py-2.5 font-semibold text-white no-underline"
-          >
-            Önce uyarla
-            <ArrowRight className="size-4" aria-hidden />
-          </Link>
-          <button
-            type="button"
-            onClick={onApply}
-            className="rounded-button border border-border px-4 py-2.5 text-sm font-semibold hover:border-foreground/25"
-          >
-            Yine de başvurdum
-          </button>
-          <button type="button" onClick={onClose} className="px-3 py-2.5 text-sm font-semibold text-muted">
-            Vazgeç
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 /** Yüklenirken sütunların kabaca şekli. */
 function BoardSkeleton() {
   return (
@@ -312,49 +258,11 @@ function BoardCardView({
   card: BoardCard
   onUpdate: (id: string, change: CardChange) => void
 }) {
-  const [noteOpen, setNoteOpen] = useState(false)
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<NoteFormValues>({
-    resolver: zodResolver(noteFormSchema),
-    values: { note: card.noteText ?? "" },
-  })
-  const [adapting, setAdapting] = useState(false)
-  const [adaptError, setAdaptError] = useState<string | null>(null)
-  const router = useRouter()
   const labelText = card.score === null ? null : scoreBadge(card.score)
   const deadline = deadlineBadge(card)
-
-  async function adapt() {
-    setAdapting(true)
-    setAdaptError(null)
-    try {
-      const { adaptationId } = await startAdaptation(card.analysisId)
-      router.push(`/adapt/${adaptationId}`)
-    } catch (error) {
-      const body = await apiErrorBody(error)
-      // Ücretsiz hak bitti (DOG-34): paket ekranına, dönüşte uyarlama başlıyor.
-      if (body.code === "payment_required") {
-        router.push(plansPath(`/analyze?uyarla=${encodeURIComponent(card.analysisId)}`))
-        return
-      }
-      // Günlük sınır ve diğer hatalar kartta (DOG-80): önceden yutuluyordu,
-      // düğme sessizce eski hâline dönüyordu.
-      setAdaptError(
-        body.code === "daily_cap" && body.error ? body.error : "Uyarlamayı başlatamadık. Birazdan tekrar dener misin?",
-      )
-      setAdapting(false)
-    }
-  }
-
-  // Odak kutudan çıkınca kaydediliyor; şemadan geçmeyen not kutuyu açık
-  // bırakıp hatayı gösteriyor. Şema metni kırpıyor.
-  const saveNote = handleSubmit(({ note }) => {
-    setNoteOpen(false)
-    if (note !== (card.noteText ?? "")) onUpdate(card.analysisId, { note })
-  })
+  // Not, mesajlar, mülakat ve uyarlama başvuru detayında (DOG-138); kart
+  // yalnızca başlık, skor, tarihler ve aşama.
+  const detail = `/applications/${encodeURIComponent(card.analysisId)}`
 
   return (
     <article
@@ -367,12 +275,7 @@ function BoardCardView({
     >
       <div className="flex items-start gap-1.5">
         <h3 className="m-0 flex-1 text-[15px] leading-snug">
-          {/* Analiz sonucuna kalıcı adres; önceden sonuca geri dönmenin yolu yoktu (K3). */}
-          <Link
-            href={resultPath(card.analysisId)}
-            draggable={false}
-            className="text-foreground no-underline hover:text-brand-blue hover:underline"
-          >
+          <Link href={detail} draggable={false} className="text-foreground no-underline hover:text-brand-blue hover:underline">
             {card.position}
           </Link>
           {/* Aynı pozisyona farklı şirketlerden başvurular ayrılsın (DOG-64). */}
@@ -415,46 +318,8 @@ function BoardCardView({
             {deadline.text}
           </span>
         )}
+        {card.noteText && <StickyNote className="size-3.5 text-muted" aria-label="Notu var" />}
       </div>
-
-      {/* Mülakat günü (DOG-98): aşama "Mülakat" iken ya da tarih girildiyse. */}
-      {(card.stage === "interview" || card.interviewAt) && (
-        <label className="mt-3 flex items-center gap-2 text-xs text-muted">
-          Mülakat günü
-          <input
-            type="date"
-            value={card.interviewAt ?? ""}
-            onChange={(e) => onUpdate(card.analysisId, { interviewAt: e.target.value || null })}
-            className="rounded-button border border-border bg-card px-2 py-1 text-xs text-foreground"
-          />
-        </label>
-      )}
-
-      {noteOpen ? (
-        <>
-          <textarea
-            autoFocus
-            maxLength={NOTE_MAX_LENGTH}
-            {...register("note", { onBlur: () => void saveNote() })}
-            rows={3}
-            placeholder="Şirket, görüştüğün kişi, tarih…"
-            aria-invalid={errors.note ? true : undefined}
-            className="mt-3 w-full rounded-button border border-border bg-background p-2 text-sm dark:bg-white/5"
-          />
-          {errors.note && (
-            <p role="alert" className="mt-1 text-xs text-brand-amber">
-              {errors.note.message}
-            </p>
-          )}
-        </>
-      ) : card.noteText ? (
-        <button
-          onClick={() => setNoteOpen(true)}
-          className="mt-3 block w-full rounded-button bg-background p-2 text-left text-sm text-foreground dark:bg-white/5"
-        >
-          {card.noteText}
-        </button>
-      ) : null}
 
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
         <label className="sr-only" htmlFor={`asama-${card.analysisId}`}>
@@ -472,48 +337,14 @@ function BoardCardView({
             </option>
           ))}
         </select>
-
-        {card.adaptation ? (
-          <Link href={`/adapt/${card.adaptation.id}`} className="text-sm font-semibold text-brand-blue dark:text-brand-blue-light">
-            Uyarlamayı aç
-          </Link>
-        ) : (
-          <button
-            onClick={() => void adapt()}
-            disabled={adapting}
-            className="text-sm font-semibold text-brand-blue dark:text-brand-blue-light disabled:opacity-50"
-          >
-            {adapting ? "Hazırlanıyor…" : "Uyarla"}
-          </button>
-        )}
-
-        {!noteOpen && !card.noteText && (
-          <button
-            onClick={() => setNoteOpen(true)}
-            className="ml-auto inline-flex items-center gap-1 text-sm text-muted hover:text-foreground"
-          >
-            <StickyNote className="size-3.5" aria-hidden />
-            Not ekle
-          </button>
-        )}
-      </div>
-      {adaptError && (
-        <p role="alert" className="mt-2 text-sm text-brand-red dark:text-[#f87171]">
-          {adaptError}
-        </p>
-      )}
-      {/* Mülakat hazırlık paketi (DOG-118). */}
-      {card.stage === "interview" && (
         <Link
-          href={`/applications/${card.analysisId}/mulakat`}
-          className="mt-2 mr-3 inline-flex text-sm font-semibold text-brand-blue no-underline dark:text-brand-blue-light"
+          href={detail}
+          draggable={false}
+          className="ml-auto text-sm font-semibold text-brand-blue no-underline dark:text-brand-blue-light"
         >
-          Mülakat hazırlığı
+          Aç
         </Link>
-      )}
-      {/* Takip mesajı ya da teşekkür notu taslağı (DOG-117). */}
-      <FollowUpPanel card={card} />
-      <OutreachPanel card={card} />
+      </div>
     </article>
   )
 }

@@ -1,7 +1,7 @@
 import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
-import { conceptKey, correctPosting } from "@uyarla/core/score/exclusions"
+import { conceptKey, correctPosting, positionInPosting } from "@uyarla/core/score/exclusions"
 import { scoreProfile } from "@uyarla/core/score/live"
 import { analysisProfile, markFactEvidence } from "@uyarla/core/adapt/facts"
 import type { ScoreResult } from "@uyarla/core/score/score"
@@ -79,6 +79,8 @@ export async function GET(
  * - `correct`: ilanın şartını düzelt (deneyimde en az yıl, eğitimde terimler);
  *   sonuç kayıtlı CV profiliyle yeniden hesaplanıyor (LLM yok, gömmeler
  *   önbellekten).
+ * - `position`: ilanın unvanını düzelt (DOG-134). Yalnızca ilan metninde geçen
+ *   bir unvan kabul ediliyor; unvan eşleşmesi ve skor yeniden hesaplanıyor.
  * İlk skor sonucun içinde (result.score) kalıyor; Analysis.score düzeltilmiş
  * skor (K-67).
  */
@@ -101,7 +103,7 @@ export async function PATCH(
     }
 
     const result = analysis!.result as unknown as StoredResult
-    if (patch.requirementIndex >= result.requirements.length) {
+    if (patch.action !== "position" && patch.requirementIndex >= result.requirements.length) {
       return NextResponse.json({ error: "Gereksinim bulunamadı." }, { status: 404 })
     }
 
@@ -113,19 +115,29 @@ export async function PATCH(
       updated = unmarkRequirement(result, patch.requirementIndex)
     } else {
       const posting = postingOf(analysis!.jobPosting)
-      const type = posting.requirements[patch.requirementIndex]?.type
-      // Yıl yalnız deneyimde, terim yalnız eğitimde düzeltiliyor; CV hakkında beyan alınmıyor.
-      if ((patch.minYears != null && type !== "experience") || (patch.terms != null && type !== "education")) {
-        return NextResponse.json({ error: "Bu şart düzeltilemiyor." }, { status: 422 })
+      let corrections = result.corrections ?? {}
+      let position = result.positionCorrection ?? null
+      if (patch.action === "correct") {
+        const type = posting.requirements[patch.requirementIndex]?.type
+        // Yıl yalnız deneyimde, terim yalnız eğitimde düzeltiliyor; CV hakkında beyan alınmıyor.
+        if ((patch.minYears != null && type !== "experience") || (patch.terms != null && type !== "education")) {
+          return NextResponse.json({ error: "Bu şart düzeltilemiyor." }, { status: 422 })
+        }
+        corrections = mergeCorrection(result.corrections, patch.requirementIndex, patch)
+      } else {
+        // İlanın düzeltmesi, CV hakkında beyan değil: unvan ilanda geçmeli.
+        if (patch.position !== null && !positionInPosting(analysis!.jobPosting.rawText, patch.position)) {
+          return NextResponse.json({ error: "Bu unvan ilan metninde geçmiyor." }, { status: 422 })
+        }
+        position = patch.position === posting.position ? null : patch.position
       }
       const stored = (analysis!.resumeVersion?.profile ?? null) as ResumeProfile | null
       if (!stored) return NextResponse.json({ error: "Bu analizin CV'si bulunamadı." }, { status: 409 })
       // Analize katılan olgular (DOG-116) yeniden hesapta da kanıt.
       const profile = analysisProfile(stored, result)
 
-      const corrections = mergeCorrection(result.corrections, patch.requirementIndex, patch)
       const fresh = markFactEvidence(
-        await scoreProfile({ profile, posting: correctPosting(posting, corrections) }, cachedEmbedding()),
+        await scoreProfile({ profile, posting: correctPosting(posting, corrections, position) }, cachedEmbedding()),
         result.facts ?? [],
       )
       updated = {
@@ -136,6 +148,7 @@ export async function PATCH(
         // Yeniden hesap güncel formülle; eski analizde de sürüm onu söylemeli.
         scoringRevision: fresh.scoringRevision,
         corrections,
+        positionCorrection: position ?? undefined,
       }
     }
 

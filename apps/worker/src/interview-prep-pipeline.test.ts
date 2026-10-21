@@ -30,6 +30,9 @@ describe("runInterviewPrep (DOG-118)", () => {
     const { store, state } = memoryStore({ ...context("running").record!, practice: [{ id: "p1", questionIndex: 0, answer: "x", status: "done", createdAt: "" }] } as never)
     await runInterviewPrep({ llm: llm as never, store }, { analysisId: "a1" })
     expect(state.record).toMatchObject({ status: "done", attempts: 1, prep: { askThem: ["Ekip?"] }, practice: [{ id: "p1" }] })
+    // Yazma adımı kayda yazılmıştı; bitmiş kayıtta kalmıyor (DOG-136).
+    expect(store.updatePrep).toHaveBeenCalledTimes(2)
+    expect(state.record).not.toHaveProperty("stage")
   })
 
   it("leaves a done or missing record alone", async () => {

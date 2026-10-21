@@ -79,3 +79,22 @@ describe("documentSections · projects (DOG-105)", () => {
     expect(documentSections(document, { bullets: [] }).projects).toEqual([])
   })
 })
+
+describe("documentSections · bullet editor (DOG-92)", () => {
+  it("pairs by id when the order changed and marks removed and user-written bullets", () => {
+    const moved = {
+      ...document,
+      after: { ...document.after, experience: [{ ...job(["Benim maddem", "b", "A"]), bulletIds: ["u1", "0-1", "0-0"] }] },
+    }
+    const s = documentSections(moved, {
+      bullets: [],
+      removed: ["0-1"],
+      userBullets: [{ id: "u1", experienceIndex: 0, text: "Benim maddem", verification: { status: "ok", issues: [] } }],
+    })
+    expect(s.experience[0]!.bullets.map((b) => [b.id, b.before, b.after, b.removed, b.userWritten])).toEqual([
+      ["u1", "", "Benim maddem", false, true],
+      ["0-1", "b", "b", true, false],
+      ["0-0", "a", "A", false, false],
+    ])
+  })
+})

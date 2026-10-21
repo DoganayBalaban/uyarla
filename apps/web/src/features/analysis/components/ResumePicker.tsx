@@ -46,7 +46,7 @@ export function ResumePicker({
           </span>
           {resume.isDefault && (
             <span className="inline-flex items-center gap-1 rounded-full bg-brand-amber/15 px-2 py-0.5 text-xs font-semibold">
-              <Star className="size-3" aria-hidden /> Varsayılan
+              <Star className="size-3" aria-hidden /> Temel CV
             </span>
           )}
         </label>

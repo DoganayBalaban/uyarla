@@ -126,6 +126,11 @@ export interface ScoreResult {
    * ilanla yeniden hesaplanmış; `score` yine ilk skor.
    */
   corrections?: Record<number, RequirementCorrection>
+  /**
+   * Kullanıcının düzelttiği ilan unvanı (DOG-134). Yalnızca ilan metninde
+   * geçen bir unvan kabul ediliyor; varsa `titleMatch` bununla hesaplanmış.
+   */
+  positionCorrection?: string
 }
 
 /**

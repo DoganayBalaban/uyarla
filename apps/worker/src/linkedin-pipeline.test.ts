@@ -42,8 +42,9 @@ describe("runLinkedInReport (DOG-69)", () => {
     const { store, saved } = storeWith({ status: "running", analysisIds: ["a1"], createdAt: "" })
     const llm = { extract: vi.fn(async () => ({ data: { baslik: "Frontend Geliştirici | React", hakkinda: "React ile panel geliştirdim." }, tokens: 3 })) }
     await runLinkedInReport({ llm: llm as never, embedding: embedding as never, modelId: "m", store }, { resumeId: "r1" })
-    expect(saved).toHaveLength(1)
-    const rec = saved[0]!
+    // Adımlar sırayla kayda yazılıyor, sonra rapor (DOG-136).
+    expect(saved.map((r) => (r.status === "running" ? r.stage : r.status))).toEqual(["scoring", "writing", "done"])
+    const rec = saved.at(-1)!
     expect(rec.status).toBe("done")
     if (rec.status !== "done") throw new Error("beklenmedik")
     expect(rec.report.commonMissing.map((m) => m.term)).toEqual(["Docker"])
@@ -55,7 +56,7 @@ describe("runLinkedInReport (DOG-69)", () => {
     const { store, saved } = storeWith({ status: "running", analysisIds: ["a1"], createdAt: "" })
     const llm = { extract: vi.fn(async () => { throw new Error("model düştü") }) }
     await runLinkedInReport({ llm: llm as never, embedding: embedding as never, modelId: "m", store }, { resumeId: "r1" })
-    expect(saved[0]).toMatchObject({ status: "done", report: { suggestions: null } })
+    expect(saved.at(-1)).toMatchObject({ status: "done", report: { suggestions: null } })
   })
 
   it("does not redo a finished report", async () => {

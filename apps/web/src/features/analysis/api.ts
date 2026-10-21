@@ -71,6 +71,19 @@ export async function updateRequirement(
   ).data
 }
 
+/** İlan unvanının düzeltmesi (DOG-134); null düzeltmeyi kaldırıyor. */
+export async function updatePosition(
+  analysisId: string,
+  position: string | null,
+): Promise<{ result: ScoreResultView; score: number }> {
+  return (
+    await api.patch<{ result: ScoreResultView; score: number }>(`/analysis/${encodeURIComponent(analysisId)}`, {
+      action: "position",
+      position,
+    })
+  ).data
+}
+
 export const analysisQueryKey = (analysisId: string) => ["analysis", analysisId] as const
 
 /**

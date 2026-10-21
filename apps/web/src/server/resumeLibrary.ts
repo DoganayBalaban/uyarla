@@ -1,7 +1,7 @@
 import type { FileStore } from "@uyarla/core/storage/fileStore"
 import { PermanentError } from "@uyarla/core/errors"
 import type { prisma } from "@uyarla/db"
-import { LIBRARY_MAX, type LibraryResume, type ResumePatch } from "@/features/resumes/schema"
+import { LIBRARY_APPLICATIONS_SHOWN, LIBRARY_MAX, type LibraryApplication, type LibraryResume, type ResumePatch } from "@/features/resumes/schema"
 import { AuthError } from "@/server/authz"
 import { storeUploadedResume } from "@/server/storeUpload"
 
@@ -58,14 +58,52 @@ function toLibraryResume(row: {
   return { ...row, createdAt: row.createdAt.toISOString() }
 }
 
-/** Varsayılan önce, sonra en yeni kaydedilen. */
-export async function listLibrary(db: ResumeDb, userId: string): Promise<LibraryResume[]> {
+/**
+ * Varsayılan önce, sonra en yeni kaydedilen. Her CV'nin altında o CV'yle
+ * yapılmış analizler (DOG-137): hangi başvuruya hangi CV gitti, kütüphaneden
+ * de görünsün.
+ */
+export async function listLibrary(db: Pick<Db, "resume" | "analysis">, userId: string): Promise<LibraryResume[]> {
   const rows = await db.resume.findMany({
     where: { userId, savedAt: { not: null } },
     orderBy: [{ isDefault: "desc" }, { savedAt: "desc" }],
     select: LIBRARY_SELECT,
   })
-  return rows.map(toLibraryResume)
+  if (rows.length === 0) return []
+  const analyses = await db.analysis.findMany({
+    where: { userId, status: "done", resumeVersion: { resumeId: { in: rows.map((r) => r.id) } } },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      stage: true,
+      jobPosting: { select: { position: true, company: true } },
+      resumeVersion: { select: { resumeId: true } },
+    },
+  })
+  const byResume = groupApplications(
+    analyses.map((a) => ({
+      resumeId: a.resumeVersion!.resumeId,
+      analysisId: a.id,
+      position: a.jobPosting.position,
+      company: a.jobPosting.company,
+      stage: a.stage,
+    })),
+  )
+  return rows.map((row) => ({ ...toLibraryResume(row), ...(byResume.get(row.id) ?? { applications: [], applicationCount: 0 }) }))
+}
+
+/** Analizleri CV'ye göre gruplar; girdi en yeni önce sıralı. */
+export function groupApplications(
+  rows: Array<LibraryApplication & { resumeId: string }>,
+): Map<string, { applications: LibraryApplication[]; applicationCount: number }> {
+  const out = new Map<string, { applications: LibraryApplication[]; applicationCount: number }>()
+  for (const { resumeId, ...app } of rows) {
+    const entry = out.get(resumeId) ?? { applications: [], applicationCount: 0 }
+    entry.applicationCount++
+    if (entry.applications.length < LIBRARY_APPLICATIONS_SHOWN) entry.applications.push(app)
+    out.set(resumeId, entry)
+  }
+  return out
 }
 
 export function countLibrary(db: ResumeDb, userId: string): Promise<number> {

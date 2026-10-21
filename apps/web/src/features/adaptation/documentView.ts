@@ -18,6 +18,10 @@ export interface DocumentLine {
   pending: boolean
   /** Tek sayfa için çıkarıldı (DOG-93): indirilecek belgede yok, geri alınabilir. */
   omitted: boolean
+  /** Kullanıcı kaldırdı (DOG-92): indirilecek belgede yok, geri alınabilir. */
+  removed: boolean
+  /** Kullanıcının kendi yazdığı madde (DOG-92); kaldırınca siliniyor. */
+  userWritten: boolean
 }
 
 export interface DocumentSections {
@@ -31,11 +35,13 @@ export interface DocumentSections {
 
 export function documentSections(
   document: { before: DocumentOutline; after: DocumentOutline },
-  draft: Pick<Draft, "bullets" | "omitted">,
+  draft: Pick<Draft, "bullets" | "omitted" | "removed" | "userBullets">,
 ): DocumentSections {
   const { before, after } = document
   const pending = new Set(draft.bullets.filter((b) => b.decision === "pending").map((b) => b.id))
   const omitted = new Set(draft.omitted ?? [])
+  const removed = new Set(draft.removed ?? [])
+  const userWritten = new Set((draft.userBullets ?? []).map((u) => u.id))
   const line = (b: string, a: string, id: string | null = null): DocumentLine => ({
     id,
     before: b,
@@ -43,7 +49,17 @@ export function documentSections(
     changed: b !== a,
     pending: id !== null && pending.has(id),
     omitted: id !== null && omitted.has(id),
+    removed: id !== null && removed.has(id),
+    userWritten: id !== null && userWritten.has(id),
   })
+  // CV'deki maddenin önceki hâli kimliğinden ("deneyim-madde"); katkı ve
+  // kullanıcı maddesinin önceki hâli yok, tamamı eklenmiş.
+  const beforeOf = (id: string) => {
+    const job = /^(\d+)-(\d+)$/.exec(id)
+    if (job) return before.experience[Number(job[1])]?.bullets[Number(job[2])] ?? ""
+    const project = /^p(\d+)-(\d+)$/.exec(id)
+    return project ? (before.projects?.[Number(project[1])]?.bullets[Number(project[2])] ?? "") : ""
+  }
   const beforeSkills = new Set(before.skills)
 
   return {
@@ -53,18 +69,21 @@ export function documentSections(
       company: job.company,
       title: job.title,
       dates: [job.startDate, job.endDate].filter(Boolean).join(" – "),
-      bullets: job.bullets.map((text, j) =>
-        // Önceki hâlde olmayan madde kullanıcının katkısı (DOG-94): tamamı eklenmiş.
-        line(before.experience[i]?.bullets[j] ?? "", text, `${i}-${j}`),
-      ),
+      bullets: job.bullets.map((text, j) => {
+        // Kimlik varsa (DOG-92) sıra değişse de doğru eşleşiyor; eski
+        // yanıtlarda konum. Önceki hâlde olmayan madde katkı ya da kullanıcı maddesi.
+        const id = job.bulletIds?.[j] ?? `${i}-${j}`
+        return line(job.bulletIds ? beforeOf(id) : (before.experience[i]?.bullets[j] ?? ""), text, id)
+      }),
     })),
     projects: (after.projects ?? []).map((p, i) => ({
       name: p.name,
       role: p.role,
       dates: p.dates,
-      bullets: p.bullets.map((text, j) =>
-        line(before.projects?.[i]?.bullets[j] ?? "", text, `p${i}-${j}`),
-      ),
+      bullets: p.bullets.map((text, j) => {
+        const id = p.bulletIds?.[j] ?? `p${i}-${j}`
+        return line(p.bulletIds ? beforeOf(id) : (before.projects?.[i]?.bullets[j] ?? ""), text, id)
+      }),
     })),
     skills: after.skills.map((name) => ({ name, added: !beforeSkills.has(name) })),
   }

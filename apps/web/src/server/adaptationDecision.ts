@@ -1,9 +1,26 @@
 import { AdaptationDraftSchema, hasPendingDecisions, type AdaptationDraft } from "@uyarla/core/schemas/adaptation"
 import { applyAdaptation } from "@uyarla/core/adapt/profile"
+import {
+  addUserBullet,
+  addUserSection,
+  groupBullets,
+  moveBullet,
+  moveSection,
+  removeBullet,
+  hideSection,
+  relocateBullet,
+  removeUserSection,
+  renameSection,
+  restoreSection,
+  restoreBullet as restoreDraftBullet,
+} from "@uyarla/core/adapt/bullets"
+import { sectionHeadings, sectionOrder, type DocumentOptions } from "@uyarla/core/document/model"
+import type { StructuredSection } from "@uyarla/core/schemas/resume"
 import { analysisProfile } from "@uyarla/core/adapt/facts"
 import { CachedEmbeddingProvider, redisVectorStore } from "@uyarla/core/llm/embeddingCache"
 import { OpenAiCompatibleEmbeddingProvider, embeddingConfigFromEnv } from "@uyarla/core/llm/embedding"
 import { rescore } from "@uyarla/core/adapt/rescore"
+import { correctPosting, type RequirementCorrection } from "@uyarla/core/score/exclusions"
 import type { JobPostingData } from "@uyarla/core/schemas/job"
 import type { ResumeProfile } from "@uyarla/core/schemas/resume"
 import { prisma } from "@uyarla/db"
@@ -99,7 +116,7 @@ export function nextStatus(draft: AdaptationDraft): "draft" | "ready" {
 export async function loadAdaptation(id: string) {
   const adaptation = await prisma.adaptation.findUnique({
     where: { id },
-    include: { analysis: { include: { resumeVersion: true, jobPosting: true } } },
+    include: { analysis: { include: { resumeVersion: true, jobPosting: true, user: { select: { goal: true } } } } },
   })
   if (!adaptation) return null
 
@@ -115,6 +132,11 @@ export async function loadAdaptation(id: string) {
     language: analysis.jobPosting.language as never,
     requirements: analysis.jobPosting.requirements as never,
   }
+  // Önce skoru (Analysis.score) şart ve unvan düzeltmeleriyle (DOG-90,
+  // DOG-134); sonra skoru da aynı ilanla hesaplanmalı, yoksa düzeltilen
+  // şart sonra skorunda eksik sayılıp farkı yanlış gösterir.
+  const fixes = (analysis.result ?? {}) as { corrections?: Record<number, RequirementCorrection>; positionCorrection?: string }
+  const scoringPosting = correctPosting(posting, fixes.corrections ?? {}, fixes.positionCorrection)
 
   // Kayıt henüz yazılmamışken draft boş bir nesne; parse etmeye çalışmıyoruz.
   const draft: AdaptationDraft | null =
@@ -126,6 +148,10 @@ export async function loadAdaptation(id: string) {
     adaptation,
     profile,
     posting,
+    /** Skor hesapları için düzeltmeleri uygulanmış ilan. */
+    scoringPosting,
+    /** Belge seçenekleri: ilk işini arayanda eğitim önde (DOG-55); bölüm sırası buna bağlı. */
+    documentOptions: { educationFirst: analysis.user.goal === "first_job" },
     draft,
     scoreBefore: analysis.score,
     /** Skor formülünün sürümü (DOG-103); eski analizlerde 1. */
@@ -200,8 +226,110 @@ export async function applyLayout(
 
 /** Kullanıcı tek sayfa için çıkarılan bir maddeyi geri alıyor (DOG-93). */
 export function restoreBullet(draft: AdaptationDraft, bulletId: string): AdaptationDraft {
-  if (!(draft.omitted ?? []).includes(bulletId)) throw new Error(`Çıkarılmış madde yok: ${bulletId}`)
-  return { ...draft, omitted: draft.omitted!.filter((id) => id !== bulletId) }
+  // Tek sayfa için çıkarılan (DOG-93) ya da kullanıcının kaldırdığı (DOG-92).
+  if (!(draft.omitted ?? []).includes(bulletId) && !(draft.removed ?? []).includes(bulletId)) {
+    throw new Error(`Çıkarılmış madde yok: ${bulletId}`)
+  }
+  return restoreDraftBullet(draft, bulletId)
+}
+
+/**
+ * Madde düzenleyici işlemi (DOG-92): ekle, kaldır, taşı. Grup bir iş
+ * (`experienceIndex`) ya da proje (`projectIndex`).
+ */
+type Where = { experienceIndex: number } | { projectIndex: number }
+export type BulletOp =
+  | ({ op: "add"; text: string } & Where)
+  | { op: "remove"; id: string }
+  | ({ op: "move"; id: string; direction: "up" | "down" } & Where)
+  /** Başka bir işe ya da projeye taşı; `Where` hedef. */
+  | ({ op: "relocate"; id: string } & Where)
+
+/** Bölüm işlemi (DOG-92): sırayı değiştir, kendi bölümünü ekle ya da sil. */
+export type SectionOp =
+  | { op: "move"; section: StructuredSection; direction: "up" | "down" }
+  | { op: "add"; heading: string; text: string }
+  | { op: "remove"; id: string }
+  | { op: "hide"; key: string }
+  | { op: "restore"; key: string }
+  | { op: "rename"; key: string; title: string }
+
+const SECTIONS: readonly StructuredSection[] = ["experience", "projects", "education", "skills"]
+const isIndex = (x: unknown): x is number => typeof x === "number" && Number.isInteger(x) && x >= 0
+const isDirection = (x: unknown): x is "up" | "down" => x === "up" || x === "down"
+
+function whereOf(v: Record<string, unknown>): Where | null {
+  if (isIndex(v.experienceIndex)) return { experienceIndex: v.experienceIndex }
+  if (isIndex(v.projectIndex)) return { projectIndex: v.projectIndex }
+  return null
+}
+
+/** Gövdedeki madde işlemini doğrular; geçersizse null. */
+export function parseBulletOp(value: unknown): BulletOp | null {
+  if (!value || typeof value !== "object") return null
+  const v = value as Record<string, unknown>
+  if (v.op === "remove") return typeof v.id === "string" && v.id ? { op: "remove", id: v.id } : null
+  const where = whereOf(v)
+  if (!where) return null
+  if (v.op === "add" && typeof v.text === "string") return { op: "add", text: v.text, ...where }
+  if (v.op === "move" && typeof v.id === "string" && isDirection(v.direction)) return { op: "move", id: v.id, direction: v.direction, ...where }
+  if (v.op === "relocate" && typeof v.id === "string" && v.id) return { op: "relocate", id: v.id, ...where }
+  return null
+}
+
+/** Gövdedeki bölüm işlemini doğrular; geçersizse null. */
+export function parseSectionOp(value: unknown): SectionOp | null {
+  if (!value || typeof value !== "object") return null
+  const v = value as Record<string, unknown>
+  if (v.op === "move" && SECTIONS.includes(v.section as StructuredSection) && isDirection(v.direction)) {
+    return { op: "move", section: v.section as StructuredSection, direction: v.direction }
+  }
+  if (v.op === "add" && typeof v.heading === "string" && typeof v.text === "string") return { op: "add", heading: v.heading, text: v.text }
+  if (v.op === "remove" && typeof v.id === "string" && v.id) return { op: "remove", id: v.id }
+  if ((v.op === "hide" || v.op === "restore") && typeof v.key === "string" && v.key) return { op: v.op, key: v.key }
+  if (v.op === "rename" && typeof v.key === "string" && v.key && typeof v.title === "string") return { op: "rename", key: v.key, title: v.title }
+  return null
+}
+
+const groupOf = (w: Where) =>
+  "experienceIndex" in w ? { kind: "experience" as const, index: w.experienceIndex } : { kind: "project" as const, index: w.projectIndex }
+
+export function applyBulletOp(
+  draft: AdaptationDraft,
+  op: BulletOp,
+  context: { profile: ResumeProfile; posting: JobPostingData },
+): AdaptationDraft {
+  if (op.op === "remove") return removeBullet(draft, op.id)
+  if (op.op === "add") return addUserBullet(draft, groupOf(op), op.text, context)
+  if (op.op === "relocate") return relocateBullet(draft, context.profile, op.id, groupOf(op))
+  return moveBullet(draft, context.profile, groupOf(op), op.id, op.direction)
+}
+
+export function applySectionOp(
+  draft: AdaptationDraft,
+  op: SectionOp,
+  context: { profile: ResumeProfile; posting: JobPostingData; options: DocumentOptions },
+): AdaptationDraft {
+  if (op.op === "add") return addUserSection(draft, op.heading, op.text, context)
+  if (op.op === "remove") return removeUserSection(draft, op.id)
+  if (op.op === "hide") return hideSection(draft, op.key)
+  if (op.op === "restore") return restoreSection(draft, op.key)
+  if (op.op === "rename") return renameSection(draft, op.key, op.title)
+  // Taşıma belgede şu an görünen sıradan: CV'nin sırası ya da varsayılan.
+  const applied = applyAdaptation(context.profile, draft)
+  const present = new Set<StructuredSection>(
+    (
+      [
+        ["experience", applied.experience.length],
+        ["projects", applied.projects?.length ?? 0],
+        ["education", applied.education.length],
+        ["skills", applied.skills.length],
+      ] as const
+    )
+      .filter(([, n]) => n > 0)
+      .map(([k]) => k),
+  )
+  return moveSection(draft, sectionOrder(applied, context.options), op.section, op.direction, present)
 }
 
 /**
@@ -231,10 +359,30 @@ export async function computeScoreBefore(
 export interface DocumentOutline {
   headline: string | null
   summary: string | null
-  experience: Array<{ company: string; title: string; startDate: string; endDate: string; bullets: string[] }>
+  experience: Array<{
+    company: string
+    title: string
+    startDate: string
+    endDate: string
+    bullets: string[]
+    /** `bullets` ile aynı sırada kimlikler (DOG-92); sıra değişince ekran kimlikle eşliyor. */
+    bulletIds?: string[]
+  }>
   /** Projeler ve diğer bölümler (DOG-105); indirilen belgede de var. */
-  projects: Array<{ name: string; role: string | null; dates: string | null; bullets: string[] }>
-  otherSections: Array<{ heading: string; lines: string[] }>
+  projects: Array<{ name: string; role: string | null; dates: string | null; bullets: string[]; bulletIds?: string[] }>
+  /** Kullanıcının eklediği bölümün kimliği var (DOG-92); silinebiliyor. `key` bölüm düzenlemelerinin anahtarı. */
+  otherSections: Array<{ heading: string; lines: string[]; id?: string; key?: string }>
+  /** Eğitim satırları (DOG-92): ekranda bölüm olarak görünsün, adı ve gizlenmesi düzenlenebilsin. */
+  education?: Array<{ school: string; detail: string | null; dates: string | null }>
+  /** Belgedeki bölüm sırası (DOG-92), indirmeyle aynı kuralla. */
+  sectionOrder?: StructuredSection[]
+  /** Bölümlerin belgedeki başlıkları (DOG-92); diller ve sertifikalar dahil. */
+  sectionTitles?: Record<string, string>
+  /** Becerilerin ardından gelen diller ve sertifikalar (DOG-92): belgede var, ekranda da görünsün. */
+  languages?: string[]
+  certifications?: string[]
+  /** Belgeden kaldırılan bölümlerin anahtarları (DOG-92). */
+  hiddenSections?: string[]
   skills: string[]
 }
 
@@ -248,11 +396,44 @@ export interface DocumentOutline {
 export function adaptationDocument(
   profile: ResumeProfile | null,
   draft: AdaptationDraft | null,
+  options: DocumentOptions = {},
 ): { before: DocumentOutline; after: DocumentOutline } | null {
   if (!profile || !draft) return null
-  // Tek sayfa için çıkarılanlar (DOG-93) burada düşmüyor: ekran maddeleri
-  // konumla eşliyor ve onları üstü çizili, geri alınabilir gösteriyor.
-  return { before: outline(profile), after: outline(applyAdaptation(profile, { ...draft, omitted: [] })) }
+  // Tek sayfa için çıkarılanlar (DOG-93) ve kullanıcının kaldırdıkları
+  // (DOG-92) burada düşmüyor: ekran onları üstü çizili, geri alınabilir
+  // gösteriyor. Maddeler indirmeyle aynı listeden (groupBullets).
+  // Gizlenen bölümler (DOG-92) de çiziliyor: ekran onları kapalı, geri alınabilir gösteriyor.
+  const hidden = draft.sectionEdits?.hidden ?? []
+  const applied = applyAdaptation(profile, {
+    ...draft,
+    omitted: [],
+    removed: [],
+    sectionEdits: { ...draft.sectionEdits, hidden: [] },
+  })
+  const after = outline(applied)
+  const own = (profile.otherSections ?? []).length
+  return {
+    before: { ...outline(profile), sectionOrder: sectionOrder(profile, options), sectionTitles: sectionHeadings(profile) },
+    after: {
+      ...after,
+      sectionTitles: sectionHeadings(applied),
+      hiddenSections: hidden,
+      experience: after.experience.map((job, i) => {
+        const list = groupBullets(profile, draft, { kind: "experience", index: i })
+        return { ...job, bullets: list.map((b) => b.text), bulletIds: list.map((b) => b.id) }
+      }),
+      projects: after.projects.map((project, i) => {
+        const list = groupBullets(profile, draft, { kind: "project", index: i })
+        return { ...project, bullets: list.map((b) => b.text), bulletIds: list.map((b) => b.id) }
+      }),
+      // CV'nin kendi bölümlerinden ("o<n>") sonra kullanıcınınkiler ("s<n>"), aynı sırayla.
+      otherSections: after.otherSections.map((o, k) => {
+        const userId = k >= own ? draft.userSections?.[k - own]?.id : undefined
+        return { ...o, key: userId ?? `o${k}`, ...(userId ? { id: userId } : {}) }
+      }),
+      sectionOrder: sectionOrder(applied, options),
+    },
+  }
 }
 
 function outline(p: ResumeProfile): DocumentOutline {
@@ -273,6 +454,13 @@ function outline(p: ResumeProfile): DocumentOutline {
       bullets: x.bullets.map((b) => b.text),
     })),
     otherSections: p.otherSections ?? [],
+    languages: p.languages,
+    certifications: p.certifications,
+    education: p.education.map((e) => ({
+      school: e.school,
+      detail: [e.degree, e.field].filter(Boolean).join(", ") || null,
+      dates: [e.startDate, e.endDate].filter(Boolean).join(" – ") || null,
+    })),
     skills: p.skills,
   }
 }
