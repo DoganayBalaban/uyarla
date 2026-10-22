@@ -134,6 +134,23 @@ export function AnalyzeView() {
   useEffect(() => {
     if (window.location.hash === "#ornek-ilanlar") setPostingTab("sample")
   }, [])
+  // İş ara'daki "İlanı getir ve analiz et" (DOG-150): `?ilan=<bağlantı>`.
+  // Bağlantı kutuya giriyor, ilan bir kez kendiliğinden getiriliyor.
+  const postingFromSearch = useRef(false)
+  useEffect(() => {
+    if (postingFromSearch.current) return
+    const url = new URL(window.location.href)
+    const link = url.searchParams.get("ilan")
+    if (!link) return
+    postingFromSearch.current = true
+    url.searchParams.delete("ilan")
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash)
+    setValue("postingUrl", link)
+    setPostingTab("link")
+    void fetchPosting()
+    // fetchPosting her çizimde yeniden tanımlanıyor; efekt yalnızca ilk açılışta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Kayıtlı kullanıcının CV kütüphanesi (DOG-50). Anonimde istek gitmiyor.
   const { data: sessionData } = useSession()
