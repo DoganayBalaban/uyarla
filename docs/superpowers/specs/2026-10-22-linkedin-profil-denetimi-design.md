@@ -1,8 +1,8 @@
 # LinkedIn profil denetimi: bölüm bölüm teşhis ve yeniden yazım
 
-**Tarih:** 22 Ekim 2026 · **Durum:** Tasarım sohbette onaylandı, spec incelemede ·
+**Tarih:** 22 Ekim 2026 · **Issue:** DOG-157 · **Durum:** Spec onaylandı; plan `docs/superpowers/plans/2026-10-22-linkedin-profil-denetimi.md` ·
 **İlgili:** DOG-69 (bugünkü LinkedIn raporu), DOG-67 (kazıma yok kararı),
-DOG-136 (aşamalar), K-104 (bekleme ekranları). Linear kaydı plan aşamasında açılacak.
+DOG-136 (aşamalar), K-104 (bekleme ekranları).
 
 ## 1. Amaç
 
