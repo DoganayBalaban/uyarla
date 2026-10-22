@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { PageShell } from "@/components/layout/PageShell"
+import { AppPage } from "@/components/layout/app-shell/AppPage"
 import { LinkedInView } from "@/features/linkedin/components/LinkedInView"
 import { loginPath } from "@/lib/returnPath"
 import { getSession } from "@/server/authz"
@@ -11,8 +11,12 @@ export default async function LinkedInPage() {
   const session = await getSession()
   if (!session || session.user.isAnonymous) redirect(loginPath("/linkedin"))
   return (
-    <PageShell width="narrow">
+    <AppPage
+      title="LinkedIn profilin"
+      description="Profilini hedeflediğin ilanlarla karşılaştır: eksik kalan beceriler, başlık ve “Hakkında” önerileri. Profiline dokunmuyoruz; önerileri LinkedIn'de sen uygularsın."
+      width="narrow"
+    >
       <LinkedInView />
-    </PageShell>
+    </AppPage>
   )
 }
