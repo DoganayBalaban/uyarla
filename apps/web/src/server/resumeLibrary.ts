@@ -137,6 +137,8 @@ export async function createResume(
     fileName: string
     saveToLibrary: boolean | "required"
     label?: string | null
+    /** Yapıştırılan CV'de metin baştan belli (DOG-101); worker dosyadan çıkarmıyor. */
+    rawText?: string
   },
 ): Promise<{ resumeId: string; savedToLibrary: boolean }> {
   return db.$transaction(async (tx) => {
@@ -158,7 +160,7 @@ export async function createResume(
         filePath: input.filePath,
         fileName: input.fileName,
         label: input.label ?? null,
-        rawText: "",
+        rawText: input.rawText ?? "",
         savedAt: save ? new Date() : null,
         isDefault: makeDefault,
       },

@@ -10,6 +10,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {
   ArrowRight,
   ClipboardPaste,
+  Compass,
+  Eye,
   FileCheck2,
   Gauge,
   Info,
@@ -21,6 +23,7 @@ import {
   Sparkles,
   SquareKanban,
   TriangleAlert,
+  Upload,
 } from "lucide-react"
 import { AppPage } from "@/components/layout/app-shell/AppPage"
 import { PageActions } from "@/components/layout/app-shell/PageActions"
@@ -90,6 +93,8 @@ const STAGES = [
 ]
 
 type PostingTab = "text" | "link" | "sample"
+/** CV'nin nasıl verileceği: dosya ya da yapıştırılan metin (DOG-101). */
+type ResumeInput = "file" | "text"
 
 function StepHeading({ number, heading, hint }: { number: number; heading: string; hint: string }) {
   return (
@@ -128,6 +133,19 @@ export function AnalyzeView() {
   const resumeFile = watch("cv") as File | undefined
   const postingUrl = watch("postingUrl") ?? ""
   const saveToLibrary = watch("saveToLibrary") ?? false
+  const [resumeInput, setResumeInput] = useState<ResumeInput>("file")
+  /** Dosya ile metin arasında geçiş; diğerinin değeri formdan çıkıyor (şema tam birini istiyor). */
+  function switchResumeInput(next: ResumeInput) {
+    setResumeInput(next)
+    clearErrors(["cv", "cvText"])
+    if (next === "text") {
+      setPickedMode(true)
+      setValue("cv", undefined)
+      setValue("cvText", getValues("cvText") ?? "")
+    } else {
+      setValue("cvText", undefined)
+    }
+  }
   // İlanın nasıl ekleneceği (DOG-146). Genel bakışın "Örnek ilanla dene"si
   // #ornek-ilanlar ile örnek sekmesini açıyor.
   const [postingTab, setPostingTab] = useState<PostingTab>("text")
@@ -196,7 +214,7 @@ export function AnalyzeView() {
     const next = preselectResumeId({
       resumes,
       current: getValues("resumeId"),
-      hasFile: getValues("cv") !== undefined,
+      hasFile: getValues("cv") !== undefined || getValues("cvText") !== undefined,
       picked: pickedMode,
     })
     if (next !== undefined) setValue("resumeId", next ?? undefined)
@@ -443,6 +461,9 @@ export function AnalyzeView() {
     const body = new FormData()
     if (values.resumeId) {
       body.append("resumeId", values.resumeId)
+    } else if (values.cvText !== undefined) {
+      body.append("cvText", values.cvText)
+      if (registered && values.saveToLibrary) body.append("saveToLibrary", "true")
     } else {
       body.append("cv", values.cv as File)
       if (registered && values.saveToLibrary) body.append("saveToLibrary", "true")
@@ -493,6 +514,8 @@ export function AnalyzeView() {
     // Yeni analizde CV seçimi baştan: az önce kütüphaneye kaydedilen dosya
     // artık bir kart olarak seçilebiliyor.
     setValue("cv", undefined)
+    setValue("cvText", undefined)
+    setResumeInput("file")
     setValue("resumeId", undefined)
     setPickedMode(false)
     setPollJobId(null)
@@ -575,6 +598,7 @@ export function AnalyzeView() {
   }
 
   const jobError = errors.jobText?.message
+  const cvTextError = errors.cvText?.message
   return (
     <AppPage
       title="CV'ni ilanla karşılaştır"
@@ -634,6 +658,8 @@ export function AnalyzeView() {
                   setPickedMode(true)
                   setValue("resumeId", id, { shouldValidate: !!errors.cv })
                   setValue("cv", undefined)
+                  setValue("cvText", undefined)
+                  setResumeInput("file")
                 }}
                 onUploadNew={() => {
                   setPickedMode(true)
@@ -643,18 +669,54 @@ export function AnalyzeView() {
             )}
             {(!registered || resumes.length === 0 || selectedResumeId === null) && (
               <div className={registered && resumes.length > 0 ? "mt-3" : undefined}>
-                <ResumeUpload
-                  value={resumeFile ?? null}
-                  error={errors.cv?.message}
-                  onChange={(file) => {
-                    // Dosya seçen kullanıcının seçimi korunuyor: kütüphane sonradan
-                    // yenilense de varsayılan CV dosyanın yerine geçmiyor.
-                    if (file) setPickedMode(true)
-                    // Kaldırınca hata gösterilmesin; eksik dosyayı gönderimde şema söylüyor.
-                    setValue("cv", (file ?? undefined) as File | undefined, { shouldValidate: file !== null })
-                    if (!file) clearErrors("cv")
-                  }}
-                />
+                <Tabs value={resumeInput} onValueChange={(v) => switchResumeInput(v as ResumeInput)} className="gap-3">
+                  <TabsList className="w-full sm:w-fit">
+                    <TabsTrigger value="file">
+                      <Upload aria-hidden /> Dosya
+                    </TabsTrigger>
+                    <TabsTrigger value="text">
+                      <ClipboardPaste aria-hidden /> Metni yapıştır
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="file">
+                    <ResumeUpload
+                      value={resumeFile ?? null}
+                      error={errors.cv?.message}
+                      onChange={(file) => {
+                        // Dosya seçen kullanıcının seçimi korunuyor: kütüphane sonradan
+                        // yenilense de varsayılan CV dosyanın yerine geçmiyor.
+                        if (file) setPickedMode(true)
+                        // Kaldırınca hata gösterilmesin; eksik dosyayı gönderimde şema söylüyor.
+                        setValue("cv", (file ?? undefined) as File | undefined, { shouldValidate: file !== null })
+                        if (!file) clearErrors("cv")
+                      }}
+                    />
+                  </TabsContent>
+                  <TabsContent value="text">
+                    {/* Dosyası elinde olmayan ya da telefondan gelen için (DOG-101). */}
+                    <Label htmlFor="cvText" className="sr-only">
+                      CV metni
+                    </Label>
+                    <Textarea
+                      id="cvText"
+                      {...register("cvText")}
+                      rows={10}
+                      aria-invalid={cvTextError ? true : undefined}
+                      aria-describedby={cvTextError ? "cvText-error" : "cvText-hint"}
+                      placeholder="CV'nin tamamını yapıştır: iletişim, deneyim, eğitim ve beceriler."
+                      className="min-h-56 resize-y leading-relaxed"
+                    />
+                    {cvTextError ? (
+                      <p id="cvText-error" role="alert" className="m-0 mt-2 text-sm text-brand-amber">
+                        {cvTextError}
+                      </p>
+                    ) : (
+                      <p id="cvText-hint" className="m-0 mt-2 text-xs text-muted-foreground">
+                        Uyum skoru ve eksikler metinden çıkıyor. Biçim kontrolü dosyanın kendisine baktığı için metinde yapılmıyor.
+                      </p>
+                    )}
+                  </TabsContent>
+                </Tabs>
                 {registered &&
                   (libraryFull ? (
                     <p className="m-0 mt-2 text-sm text-muted-foreground">Kütüphanende {LIBRARY_MAX} CV var; bu dosya kaydedilmeyecek.</p>
@@ -826,8 +888,25 @@ export function AnalyzeView() {
                   </li>
                 ))}
               </ul>
+              {/* Yüklemeden önce raporu görmek isteyen için (DOG-101). */}
+              <Button asChild variant="outline" size="sm" className="mt-4 w-full">
+                <Link href="/ornek-rapor">
+                  <Eye aria-hidden /> Örnek raporu gör
+                </Link>
+              </Button>
             </CardContent>
           </Card>
+          <Link
+            href="/nereden-baslamali"
+            className="flex items-center gap-3 rounded-xl border bg-card p-4 text-sm transition-colors hover:border-primary/50 hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <Compass className="size-4 shrink-0 text-primary" aria-hidden />
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium">Nereden başlayacağını bilmiyor musun?</span>
+              <span className="text-muted-foreground">Dört soruyla ilk adımını bulalım.</span>
+            </span>
+            <ArrowRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+          </Link>
           <div className="flex gap-3 rounded-xl border bg-muted/40 p-4 text-sm text-muted-foreground">
             <ShieldCheck className="mt-0.5 size-4 shrink-0 text-brand-green dark:text-[#4ade80]" aria-hidden />
             <p className="m-0">

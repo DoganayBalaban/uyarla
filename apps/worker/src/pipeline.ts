@@ -149,6 +149,10 @@ async function formatReport(
 ): Promise<FormatReport | null> {
   try {
     const { buffer, filename } = await store.getResumeFile(resumeId)
+    // Yapıştırılan CV metni (DOG-101) .txt olarak saklanıyor. Okuma sırası,
+    // sütun ve üst bilgi kontrolleri kullanıcının asıl dosyası hakkında bir
+    // şey söylemez; "geçti" demek yanıltır. Arayüz kontrolü göstermiyor.
+    if (filename.toLowerCase().endsWith(".txt")) return null
     return await checkFormat({ buffer, filename, text })
   } catch (error) {
     console.warn("[pipeline] biçim kontrolü atlandı", error)

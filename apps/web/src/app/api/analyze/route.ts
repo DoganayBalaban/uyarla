@@ -11,10 +11,13 @@ import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 import { findPreviousAnalysis } from "@/server/duplicatePosting"
 import { createResume, findLibraryResume } from "@/server/resumeLibrary"
 import { storeUploadedResume } from "@/server/storeUpload"
-import { validateJobText, validateUpload } from "@/server/upload"
+import { validateJobText, validateResumeText, validateUpload } from "@/server/upload"
 import { sanitizeSourceUrl } from "@/features/analysis/platforms"
 
 export const runtime = "nodejs"
+
+/** Yapıştırılan CV'nin kütüphanedeki adı; kullanıcı CV'lerim'de değiştirebilir. */
+const PASTED_RESUME = { fileName: "yapistirilan-cv.txt", label: "Yapıştırılan CV" }
 
 /**
  * İş oluşturma. Bu route ince: doğrular, kaydeder, kuyruğa atar.
@@ -26,11 +29,17 @@ export async function POST(request: Request) {
     const resumeIdField = form.get("resumeId")
     const libraryResumeId = typeof resumeIdField === "string" && resumeIdField ? resumeIdField : null
     const file = form.get("cv")
+    const cvTextField = form.get("cvText")
 
-    // İki yol: kütüphanedeki CV (dosya yok) ya da yeni dosya. Doğrulama
-    // oturumdan önce: geçersiz istek için anonim kullanıcı açılmasın.
+    // Üç yol: kütüphanedeki CV (dosya yok), yapıştırılan metin (DOG-101) ya
+    // da yeni dosya. Doğrulama oturumdan önce: geçersiz istek için anonim
+    // kullanıcı açılmasın.
     let jobText: string
+    let cvText: string | null = null
     if (libraryResumeId) {
+      jobText = validateJobText(String(form.get("jobText") ?? ""))
+    } else if (typeof cvTextField === "string") {
+      cvText = validateResumeText(cvTextField)
       jobText = validateJobText(String(form.get("jobText") ?? ""))
     } else {
       jobText = validateUpload(file, String(form.get("jobText") ?? "")).jobText
@@ -82,6 +91,17 @@ export async function POST(request: Request) {
       // Aynı Resume satırı: worker rawText önbelleğini kullanıyor, dosya
       // yeniden okunmuyor. Başkasının ya da kaldırılmış CV 404 (K-35).
       resumeId = (await findLibraryResume(prisma, user.id, libraryResumeId)).id
+    } else if (cvText !== null) {
+      // Metin .txt olarak depoya da yazılıyor: veri dışa aktarımı ve hesap
+      // silme Resume.filePath üzerinden çalışıyor (KVKK). Worker metni
+      // rawText'ten alıyor; biçim kontrolü .txt'de atlanıyor.
+      const wantsSave = form.get("saveToLibrary") === "true" && !user.isAnonymous
+      const text = cvText
+      const created = await storeUploadedResume(fileStoreFromEnv(), Buffer.from(text, "utf8"), "cv.txt", (filePath) =>
+        createResume(prisma, { userId: user.id, filePath, ...PASTED_RESUME, saveToLibrary: wantsSave, rawText: text }),
+      )
+      resumeId = created.resumeId
+      if (wantsSave) savedToLibrary = created.savedToLibrary
     } else {
       const upload = file as File
       // Metin çıkarma worker'da yapılıyor, burada değil (spec §4.2): pdf-parse'ın

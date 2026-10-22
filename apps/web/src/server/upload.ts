@@ -1,5 +1,5 @@
 import { PermanentError } from "@uyarla/core/errors"
-import { analysisFormSchema, jobTextSchema, resumeFileSchema } from "@/features/analysis/schema"
+import { analysisFormSchema, jobTextSchema, normalizeResumeText, resumeFileSchema, resumeTextSchema } from "@/features/analysis/schema"
 import { firstIssue } from "@/lib/validation"
 
 /**
@@ -33,4 +33,14 @@ export function validateJobText(jobText: string): string {
     throw new PermanentError(message, code)
   }
   return parsed.data
+}
+
+/** Yapıştırılan CV metni (DOG-101); normalize edilmiş metni döndürüyor. */
+export function validateResumeText(text: string): string {
+  const parsed = resumeTextSchema.safeParse(text)
+  if (!parsed.success) {
+    const { message, code } = firstIssue(parsed.error)
+    throw new PermanentError(message, code)
+  }
+  return normalizeResumeText(parsed.data)
 }

@@ -22,7 +22,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const profile = session && !session.user.isAnonymous ? await getProfile(prisma, session.user.id) : null
   const cookieStore = await cookies()
   const deferred = cookieStore.has(ONBOARDING_DEFERRED_COOKIE)
-  const sidebarOpen = cookieStore.get("sidebar_state")?.value !== "false"
+  // Çerez yoksa ilk ziyaret: kayıtlıda açık, anonimde kapalı. İlk denemede
+  // ekranı analiz formu doldursun, menü değil (DOG-101).
+  const sidebarCookie = cookieStore.get("sidebar_state")?.value
+  const sidebarOpen = sidebarCookie ? sidebarCookie !== "false" : !!session && !session.user.isAnonymous
   const redirectToOnboarding = shouldRedirectToOnboarding(
     session ? { isAnonymous: session.user.isAnonymous, onboardedAt: profile?.onboardedAt ?? null } : null,
     deferred,
