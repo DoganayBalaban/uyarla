@@ -4,7 +4,7 @@ import { Fragment, Suspense } from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import { breadcrumbs } from "@/components/layout/app-shell/navigation"
-import { PageActionsSlot } from "@/components/layout/app-shell/PageActions"
+import { PageActionsSlot, usePageCrumb } from "@/components/layout/app-shell/PageActions"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -35,7 +35,9 @@ export function SiteHeader() {
 }
 
 function Crumbs() {
-  const crumbs = breadcrumbs(usePathname(), useSearchParams())
+  const path = breadcrumbs(usePathname(), useSearchParams())
+  const last = usePageCrumb()
+  const crumbs = last && path.length > 1 ? [...path.slice(0, -1), { label: last }] : path
   return (
     <Breadcrumb className="min-w-0">
       <BreadcrumbList className="flex-nowrap">
