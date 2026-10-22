@@ -1,5 +1,8 @@
 "use client"
 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { useProfile, useSaveProfile } from "@/features/account/api"
 import { CONSENT_TEXT } from "@/features/account/consent"
 import type { ProfilePatchInput } from "@/features/onboarding/api"
@@ -37,32 +40,38 @@ export function NotificationsSection() {
   ]
 
   return (
-    <section className="rounded-card border border-border bg-card p-6">
-      <h2 className="m-0 text-lg">E-posta tercihleri</h2>
-      <p className="m-0 mt-1 text-sm text-muted-foreground">
-        Giriş bağlantısı, ödeme onayı ve hesap silme gibi hesabınla ilgili e-postalar her zaman gider. Hiçbir e-postayı
-        günde birden fazla göndermiyoruz.
-      </p>
-      {rows.map((row) => (
-        <label key={row.key} className="mt-4 flex cursor-pointer items-start gap-3">
-          <input
-            type="checkbox"
-            checked={row.checked}
-            disabled={busy}
-            onChange={(e) => save.mutate({ [row.key]: e.target.checked } as ProfilePatchInput)}
-            className="mt-1 size-4 accent-brand-blue"
-          />
-          <span>
-            <span className="block text-sm font-medium">{row.title}</span>
-            <span className="block text-sm text-muted-foreground">{row.text}</span>
-          </span>
-        </label>
-      ))}
-      {save.isError && (
-        <p role="alert" className="mt-3 text-sm text-brand-red">
-          Kaydedemedik. Birazdan tekrar dener misin?
-        </p>
-      )}
-    </section>
+    <Card className="shadow-xs">
+      <CardHeader>
+        <CardTitle className="text-base">E-posta tercihleri</CardTitle>
+        <CardDescription>
+          Giriş bağlantısı, ödeme onayı ve hesap silme gibi hesabınla ilgili e-postalar her zaman gider. Hiçbir e-postayı
+          günde birden fazla göndermiyoruz.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ul className="m-0 list-none divide-y p-0">
+          {rows.map((row) => (
+            <li key={row.key} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+              <Label htmlFor={`bildirim-${row.key}`} className="block cursor-pointer font-normal">
+                <span className="block text-sm font-medium">{row.title}</span>
+                <span className="mt-0.5 block text-sm text-muted-foreground">{row.text}</span>
+              </Label>
+              <Switch
+                id={`bildirim-${row.key}`}
+                checked={row.checked}
+                disabled={busy}
+                onCheckedChange={(checked) => save.mutate({ [row.key]: checked } as ProfilePatchInput)}
+                className="mt-0.5"
+              />
+            </li>
+          ))}
+        </ul>
+        {save.isError && (
+          <p role="alert" className="m-0 mt-3 text-sm text-destructive">
+            Kaydedemedik. Birazdan tekrar dener misin?
+          </p>
+        )}
+      </CardContent>
+    </Card>
   )
 }

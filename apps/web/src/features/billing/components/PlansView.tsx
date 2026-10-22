@@ -4,8 +4,14 @@ import { Check, LoaderCircle, Lock } from "lucide-react"
 import { useRef, useState } from "react"
 import { createCheckout, useBillingStatus } from "@/features/billing/api"
 import { AccessStatus } from "@/features/billing/components/AccessStatus"
-import { PlanCardBody } from "@/features/billing/components/PlanCard"
-import { payLabel, stackNote } from "@/features/billing/format"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { cn } from "@/lib/cn"
+import { PLAN_LABEL, payLabel, perDay, stackNote } from "@/features/billing/format"
 import { PASS_FEATURES, cheapestPerDay, recommendedPlan, type PlanKey, type PlanOffer } from "@/features/billing/plans"
 import { apiErrorMessage } from "@/lib/api"
 
@@ -21,7 +27,7 @@ export function PlansView({ plans, returnTo }: { plans: PlanOffer[]; returnTo: s
   const [consent, setConsent] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const consentRef = useRef<HTMLInputElement>(null)
+  const consentRef = useRef<HTMLButtonElement>(null)
   const status = useBillingStatus()
   const note = status.data ? stackNote(status.data) : null
   const recommended = recommendedPlan(plans)
@@ -48,107 +54,116 @@ export function PlansView({ plans, returnTo }: { plans: PlanOffer[]; returnTo: s
 
   if (plans.length === 0) {
     return (
-      <div className="mx-auto max-w-xl text-center">
-        <h1 className="text-2xl">Paketler şu an kapalı</h1>
-        <p className="mt-2 text-muted-foreground">Birazdan tekrar dener misin? Sorun sürerse iletisim@uyarla.com.tr adresine yaz.</p>
-      </div>
+      <Card className="mx-auto max-w-xl items-center py-10 text-center">
+        <CardContent>
+          <h1 className="m-0 text-xl font-semibold">Paketler şu an kapalı</h1>
+          <p className="m-0 mt-2 text-sm text-muted-foreground">
+            Birazdan tekrar dener misin? Sorun sürerse iletisim@uyarla.com.tr adresine yaz.
+          </p>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
     <div className="mx-auto max-w-4xl">
       <header className="text-center">
-        <h1 className="text-2xl sm:text-3xl">Erişim dönemini seç</h1>
-        <p className="mx-auto mt-2 max-w-xl text-muted-foreground">
+        <h1 className="m-0 text-2xl font-semibold tracking-tight sm:text-3xl">Erişim dönemini seç</h1>
+        <p className="mx-auto mt-2 mb-0 max-w-xl text-muted-foreground">
           Süre boyunca istediğin kadar CV uyarla ve ön yazı oluştur. Tek seferlik ödeme, otomatik yenileme yok.
         </p>
       </header>
 
       <AccessStatus showCta={false} className="mx-auto mt-6 max-w-2xl" />
 
-      <fieldset className="mt-8">
-        <legend className="sr-only">Paket</legend>
-        <div className="grid gap-6 sm:grid-cols-3 sm:gap-4">
-          {plans.map((p) => (
-            <label key={p.key} className="block cursor-pointer">
-              <input
-                type="radio"
-                name="plan"
-                value={p.key}
-                checked={selected === p.key}
-                onChange={() => setSelected(p.key)}
-                className="peer sr-only"
+      <RadioGroup
+        value={selected ?? ""}
+        onValueChange={(v) => setSelected(v as PlanKey)}
+        aria-label="Paket"
+        className="mt-8 grid gap-4 sm:grid-cols-3"
+      >
+        {plans.map((p) => {
+          const isRecommended = recommended?.key === p.key
+          const isCheapest = cheapest?.key === p.key && cheapest.key !== recommended?.key
+          const day = perDay(p.priceTry, p.days)
+          return (
+            <Label
+              key={p.key}
+              htmlFor={`paket-${p.key}`}
+              className={cn(
+                "relative flex cursor-pointer flex-col rounded-xl border bg-card p-5 font-normal shadow-xs transition",
+                "hover:border-primary/40 has-data-[state=checked]:border-primary has-data-[state=checked]:ring-2 has-data-[state=checked]:ring-primary/20",
+                isRecommended && "bg-gradient-to-b from-primary/5 to-card",
+              )}
+            >
+              {isRecommended && <Badge className="absolute -top-2.5 left-5">Önerilen</Badge>}
+              <span className="flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold text-muted-foreground">{PLAN_LABEL[p.key]}</span>
+                <RadioGroupItem id={`paket-${p.key}`} value={p.key} />
+              </span>
+              <span className="mt-3 text-3xl font-semibold tracking-tight tabular-nums">
+                {p.priceTry !== null ? `${p.priceTry} TL` : "—"}
+              </span>
+              <span className="mt-1 text-sm text-muted-foreground">
+                {p.days} gün erişim
+                {day && <> · {day}</>}
+              </span>
+              {isCheapest && <span className="mt-3 text-xs font-semibold text-brand-green">Günlük en uygun</span>}
+            </Label>
+          )
+        })}
+      </RadioGroup>
+
+      <Card className="mt-6 py-0 shadow-xs">
+        <CardContent className="grid gap-6 p-5 sm:p-6 md:grid-cols-[1fr_minmax(0,22rem)]">
+          <div>
+            <p className="m-0 text-sm font-semibold">Her pakette</p>
+            <ul className="m-0 mt-3 list-none space-y-2 p-0">
+              {PASS_FEATURES.map((feature) => (
+                <li key={feature} className="flex gap-2 text-sm">
+                  <Check className="mt-0.5 size-4 shrink-0 text-brand-green" aria-hidden />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {note && <p className="m-0 rounded-lg bg-primary/5 px-3 py-2 text-sm">{note}</p>}
+            <Label className="flex items-start gap-2.5 text-sm font-normal leading-snug">
+              <Checkbox
+                ref={consentRef}
+                checked={consent}
+                onCheckedChange={(v) => {
+                  setConsent(v === true)
+                  if (v === true) setError(null)
+                }}
+                aria-invalid={error && !consent ? true : undefined}
+                className="mt-0.5"
               />
-              <div className="h-full rounded-card peer-focus-visible:ring-2 peer-focus-visible:ring-brand-blue peer-focus-visible:ring-offset-2">
-                <PlanCardBody
-                  plan={p}
-                  recommended={recommended?.key === p.key}
-                  cheapest={cheapest?.key === p.key && cheapest.key !== recommended?.key}
-                  selected={selected === p.key}
-                />
-              </div>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      <div className="mt-6 grid gap-6 rounded-card border border-border bg-card p-5 sm:p-6 md:grid-cols-[1fr_minmax(0,22rem)]">
-        <div>
-          <p className="text-sm font-semibold">Her pakette</p>
-          <ul className="mt-3 space-y-2">
-            {PASS_FEATURES.map((feature) => (
-              <li key={feature} className="flex gap-2 text-sm">
-                <Check className="mt-0.5 size-4 shrink-0 text-brand-green" aria-hidden />
-                {feature}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          {note && <p className="rounded-button bg-brand-blue/5 px-3 py-2 text-sm">{note}</p>}
-          <label className="flex items-start gap-2.5 text-sm">
-            <input
-              ref={consentRef}
-              type="checkbox"
-              checked={consent}
-              onChange={(e) => {
-                setConsent(e.target.checked)
-                if (e.target.checked) setError(null)
-              }}
-              className="mt-0.5 size-4 shrink-0 accent-brand-blue"
-            />
-            <span>
-              Erişimin hemen başlamasını ve bu nedenle cayma hakkımı kaybedeceğimi kabul ediyorum.{" "}
-              <a href="/refund" target="_blank" rel="noreferrer" className="font-medium text-brand-blue underline underline-offset-2">
-                İade ve cayma koşulları
-              </a>
-            </span>
-          </label>
-          <button
-            type="button"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-button bg-brand-blue px-5 py-3 font-semibold text-white shadow-sm shadow-brand-blue/30 transition hover:bg-brand-blue/90 disabled:cursor-wait disabled:opacity-70"
-            disabled={busy || !plan}
-            onClick={() => void pay()}
-          >
-            {busy && <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden />}
-            {busy
-              ? "Ödeme sayfası açılıyor…"
-              : plan
-                ? payLabel(plan)
-                : "Paket seç"}
-          </button>
-          {error && (
-            <p role="alert" className="text-sm text-brand-red">
-              {error}
+              <span>
+                Erişimin hemen başlamasını ve bu nedenle cayma hakkımı kaybedeceğimi kabul ediyorum.{" "}
+                <a href="/refund" target="_blank" rel="noreferrer" className="font-medium text-primary underline underline-offset-2">
+                  İade ve cayma koşulları
+                </a>
+              </span>
+            </Label>
+            <Button type="button" size="lg" className="w-full" disabled={busy || !plan} onClick={() => void pay()}>
+              {busy && <LoaderCircle className="motion-safe:animate-spin" aria-hidden />}
+              {busy ? "Ödeme sayfası açılıyor…" : plan ? payLabel(plan) : "Paket seç"}
+            </Button>
+            {error && (
+              <p role="alert" className="m-0 text-sm text-destructive">
+                {error}
+              </p>
+            )}
+            <p className="m-0 flex items-start gap-1.5 text-xs text-muted-foreground">
+              <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+              Ödeme Polar üzerinden alınır; kart bilgin uyarla&apos;ya gelmez. Fiyatlara KDV dahil, faturan e-postana gönderilir.
             </p>
-          )}
-          <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
-            <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-            Ödeme Polar üzerinden alınır; kart bilgin uyarla&apos;ya gelmez. Fiyatlara KDV dahil, faturan e-postana gönderilir.
-          </p>
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
