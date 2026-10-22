@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -63,6 +64,16 @@ export function ResumeLibrary() {
   const full = isLibraryFull(resumes)
   const [adding, setAdding] = useState(false)
   const reducedMotion = useReducedMotion() ?? false
+  // Komut menüsündeki "CV ekle" (DOG-154): `?ekle=1` diyaloğu açıyor; sayfa
+  // zaten açıkken de (adres değişince) çalışsın diye arama parametresinden.
+  const wantsAdd = useSearchParams().get("ekle") === "1"
+  useEffect(() => {
+    if (!wantsAdd) return
+    const url = new URL(window.location.href)
+    url.searchParams.delete("ekle")
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash)
+    setAdding(true)
+  }, [wantsAdd])
 
   return (
     <section aria-labelledby="cv-kutuphanesi">

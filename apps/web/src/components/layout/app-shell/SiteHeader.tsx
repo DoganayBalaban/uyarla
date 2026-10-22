@@ -4,6 +4,7 @@ import { Fragment, Suspense } from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import { breadcrumbs } from "@/components/layout/app-shell/navigation"
+import { CommandMenu } from "@/components/layout/app-shell/CommandMenu"
 import { PageActionsSlot, usePageCrumb } from "@/components/layout/app-shell/PageActions"
 import {
   Breadcrumb,
@@ -29,7 +30,10 @@ export function SiteHeader() {
       <Suspense fallback={null}>
         <Crumbs />
       </Suspense>
-      <PageActionsSlot className="ml-auto flex items-center gap-2" />
+      <div className="ml-auto flex items-center gap-2">
+        <CommandMenu />
+        <PageActionsSlot className="flex items-center gap-2 empty:hidden" />
+      </div>
     </header>
   )
 }
