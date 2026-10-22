@@ -151,6 +151,54 @@ describe("extractPostingText · LinkedIn without JSON-LD (Ekim 2026)", () => {
   })
 })
 
+describe("extractPostingText · LinkedIn signed-in search view (eklenti, Ekim 2026)", () => {
+  // Oturum açılmış arama ekranından eklentinin okuduğu sayfanın satırları
+  // (kişi adları değiştirildi): solda liste, sağda seçili ilan, ardından
+  // başvuran analizleri ve şirket tanıtımı.
+  const lines = [
+    "Tercihlerinize uygun iş ilanları",
+    "99+ sonuç",
+    "Senior Agentic AI Engineer",
+    "ING Hubs Türkiye",
+    "İstanbul, Türkiye (Hybrid)",
+    "AI / LLM Engineer",
+    "TEB",
+    "Coderspace",
+    "Intelligent Automation Consultant",
+    "İstanbul, Türkiye · 1 hafta önce · 100’den fazla başvuru",
+    "Kolay Başvuru",
+    "İşe alım ekibiyle tanışın",
+    "Ayşe Örnek",
+    "Mesaj gönderin",
+    "İş ilanı hakkında",
+    "Our partner, a global FMCG company, is looking for an Intelligent Automation Consultant to join its international team.",
+    "What you bring",
+    "- 5+ years of hands-on UiPath experience (Studio, Orchestrator, AI Agent Builder)",
+    "- 3+ years on IT projects involving SAP S/4HANA, SAP BTP or SAP BDC",
+    "… daha fazla",
+    "İş ilanını yayınlayan kişi tarafından eklenen gereksinimler",
+    "• UiPath ile 5 yılın üzerinde çalışma deneyimi",
+    "Bu işe başvuranlarla ilgili analizler",
+    "Bu iş ilanına başvuranlar arasında, Giriş düzeyinde olanların oranı %44",
+    "Şirket hakkında",
+    "Türkiye'nin en büyük teknoloji kariyer platformuyuz.",
+    "Daha fazla göster",
+  ]
+  const page = `<html><head><title>Intelligent Automation Consultant | Coderspace | LinkedIn</title></head><body>
+    <header>LinkedIn menü</header><main>${lines.map((l) => `<div>${l}</div>`).join("")}</main></body></html>`
+
+  it("keeps only the selected posting and its added requirements", () => {
+    const posting = extractPostingText(page, "www.linkedin.com")
+    expect(posting).toMatchObject({ position: "Intelligent Automation Consultant", company: "Coderspace", source: "sayfa" })
+    expect(posting!.text.startsWith("Intelligent Automation Consultant — Coderspace\n\nOur partner")).toBe(true)
+    expect(posting!.text).toContain("- 3+ years on IT projects involving SAP S/4HANA")
+    expect(posting!.text).toContain("• UiPath ile 5 yılın üzerinde çalışma deneyimi")
+    for (const noise of ["Tercihlerinize", "ING Hubs", "Ayşe Örnek", "… daha fazla", "%44", "kariyer platformuyuz", "Daha fazla göster"]) {
+      expect(posting!.text).not.toContain(noise)
+    }
+  })
+})
+
 describe("extractPostingText · yenibiris (DOG-70)", () => {
   // Gerçek sayfanın sadeleştirilmiş hâli: JSON-LD açıklaması kısaltılmış ve
   // kelimenin ortasında kesilmiş; tam ilan sayfa gövdesinde.

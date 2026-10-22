@@ -158,6 +158,10 @@ interface SiteRule {
   ending: RegExp[]
   /** <title>'dan pozisyon adını temizler. */
   titleText?: (raw: string) => string
+  /** <title>'dan şirket adı; yoksa null. */
+  titleCompany?: (raw: string) => string | null
+  /** Aralıkta kalan ama ilanın parçası olmayan satırlar ("… daha fazla"). */
+  dropLines?: RegExp[]
   /**
    * JSON-LD açıklaması kısaltılmış: ilan sayfa gövdesinden okunuyor. Pozisyon
    * ve şirket yine JSON-LD'den.
@@ -196,10 +200,26 @@ const SITE_RULES: SiteRule[] = [
     titleText: (raw) => raw.replace(/\s*İş İlanı\s*-.*$/i, "").trim(),
   },
   {
-    // Açıklama kutusu bulunamazsa (LinkedIn düzeni değişirse) sayfa metni
-    // kriterler ve benzer ilanlar başlamadan kesiliyor.
+    // İki LinkedIn görünümü:
+    // - Herkese açık ilan sayfası: açıklama kutusu (linkedinPosting); kutu
+    //   bulunamazsa sayfa metni kriterler ve benzer ilanlardan önce kesiliyor.
+    // - Oturum açılmış arama ekranı (eklenti, Ekim 2026): <main>'de solda
+    //   ilan listesi, sağda seçili ilan. İlan "İş ilanı hakkında" başlığıyla
+    //   başlıyor; ardından başvuran analizleri ve şirket tanıtımı geliyor.
+    //   Sekme başlığı "Pozisyon | Şirket | LinkedIn".
     domain: "linkedin.com",
+    startedAt: /^(İş ilanı hakkında|About the job)$/i,
+    titleText: (raw) => raw.split(" | ")[0]!.trim(),
+    titleCompany: (raw) => {
+      const parts = raw.split(" | ").map((p) => p.trim())
+      return parts.length >= 3 && /^LinkedIn/i.test(parts.at(-1)!) ? parts[1] || null : null
+    },
+    dropLines: [/^…\s*(daha fazla|more|see more)$/i],
     ending: [
+      /^Bu işe başvuranlarla ilgili analizler$/i,
+      /^Başvuran diğer adaylara kıyasla/i,
+      /^(Şirket hakkında|About the company)$/i,
+      /^(Şirketle ilgili analizler|Company insights)$/i,
       /^(Kıdem düzeyi|Seniority level)$/i,
       /^(Benzer iş ilanları|Similar jobs)$/i,
       /^(Diğer görüntülenenler|People also viewed)$/i,
@@ -231,7 +251,11 @@ function truncate(text: string, rule: SiteRule | undefined): string {
   const endings = [...(rule?.ending ?? []), ...COMMON_ENDINGS]
   const endIndex = rows.findIndex((s) => endings.some((b) => b.test(s.trim())))
   if (endIndex !== -1) rows = rows.slice(0, endIndex)
-  return rows.join("\n").trim()
+  const drop = rule?.dropLines ?? []
+  return rows
+    .filter((s) => !drop.some((d) => d.test(s.trim())))
+    .join("\n")
+    .trim()
 }
 
 /**
@@ -263,7 +287,7 @@ export function extractPostingText(html: string, host?: string): ExtractedPostin
   const titleText = rawTitle ? decodeEntities(rawTitle).trim() : null
   const position =
     configured?.position ?? (titleText && rule?.titleText ? rule.titleText(titleText) : titleText)
-  const company = configured?.company ?? null
+  const company = configured?.company ?? (titleText && rule?.titleCompany ? rule.titleCompany(titleText) : null)
   const heading = [position, company].filter(Boolean).join(" — ")
   return {
     text: heading ? `${heading}\n\n${bodyText}` : bodyText,
