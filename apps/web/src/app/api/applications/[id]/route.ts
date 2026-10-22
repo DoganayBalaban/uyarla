@@ -15,6 +15,8 @@ import { firstIssue } from "@/lib/validation"
 import { randomUUID } from "node:crypto"
 import { ADAPT_JOB_OPTIONS, FOLLOW_UP_JOB, FORM_ANSWER_JOB, INTERVIEW_PREP_JOB, PRACTICE_JOB } from "@uyarla/worker/adapt-queue"
 import { MAX_PREP_ATTEMPTS, type InterviewPrepRecord } from "@uyarla/core/interview/prep"
+import type { ResumeProfile } from "@uyarla/core/schemas/resume"
+import { prepWaitingPreview } from "@/features/applications/prepWaiting"
 import { addPractice, PRACTICE_ERROR_MESSAGE } from "@/server/practice"
 import { addFormAnswer, FORM_ANSWER_ERROR_MESSAGE } from "@/server/formAnswers"
 import { adaptQueue } from "@/server/adaptQueue"
@@ -227,7 +229,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       },
     })
     ensureOwner(row?.userId ?? null, session)
+    const prep = (row!.interviewPrep ?? null) as InterviewPrepRecord | null
     return NextResponse.json({
+      // Hazırlık sürerken bekleme ekranının malzemesi (K-104); bitince yok.
+      prepPreview: prep?.status === "running" ? await runningPrepPreview(id) : null,
       position: positionName(row!.jobPosting.position, row!.jobPosting.rawText),
       company: row!.jobPosting.company,
       stage: row!.stage,
@@ -242,4 +247,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     console.error("[api/applications/[id]] GET", error)
     return NextResponse.json({ error: "Bir şeyler ters gitti." }, { status: 500 })
   }
+}
+
+/** CV kesiti ve karşılanmayan şartlar; yalnızca hazırlık sürerken okunuyor. */
+async function runningPrepPreview(analysisId: string) {
+  const analysis = await prisma.analysis.findUnique({
+    where: { id: analysisId },
+    select: { result: true, resumeVersion: { select: { profile: true } } },
+  })
+  return prepWaitingPreview((analysis?.resumeVersion?.profile ?? null) as ResumeProfile | null, analysis?.result ?? null)
 }

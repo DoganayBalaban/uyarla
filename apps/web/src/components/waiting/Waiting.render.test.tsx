@@ -2,6 +2,8 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { AnalysisWaiting } from "@/features/analysis/components/AnalysisWaiting"
 import { AdaptationWaiting } from "@/features/adaptation/components/AdaptationWaiting"
+import { InterviewPrepWaiting } from "@/features/applications/components/InterviewPrepWaiting"
+import { LinkedInWaiting } from "@/features/linkedin/components/LinkedInWaiting"
 
 const text = (html: string) => html.replace(/<[^>]+>/g, " ")
 
@@ -65,5 +67,46 @@ describe("AdaptationWaiting", () => {
   it("says nothing is missing only when the analysis really left nothing missing", () => {
     const html = renderToStaticMarkup(<AdaptationWaiting stage="rewriting" scoreBefore={60} preview={{ ...preview, missing: [] }} />)
     expect(html).toContain("Eksik kavram kalmadı")
+  })
+})
+
+describe("LinkedInWaiting", () => {
+  const postings = [
+    { id: "a", position: "Dijital Pazarlama Uzmanı", company: "Örnek Marka" },
+    { id: "b", position: "Performans Uzmanı", company: null },
+  ]
+
+  it("shows the selected postings by name and uses h2 under the page title", () => {
+    const html = renderToStaticMarkup(<LinkedInWaiting stage="scoring" profileLabel="Profile.pdf" postings={postings} />)
+    expect(html).toContain("İlanlarla karşılaştırıyoruz")
+    expect(html).toContain("Dijital Pazarlama Uzmanı")
+    expect(html).toContain("Örnek Marka")
+    expect(html).toContain("Profile.pdf")
+    expect(html).toMatch(/<h2[^>]*>İlanlarla karşılaştırıyoruz<\/h2>/)
+    expect(html).not.toContain("<h1")
+  })
+
+  it("switches the profile sheet to writing in the last stage", () => {
+    const html = renderToStaticMarkup(<LinkedInWaiting stage="writing" profileLabel={null} postings={[]} />)
+    expect(html).toContain("Başlık ve Hakkında önerisi yazıyoruz")
+    expect(html).toContain("Başlık · Hakkında")
+  })
+})
+
+describe("InterviewPrepWaiting", () => {
+  it("lists the unmet requirements the bridges are written for", () => {
+    const html = renderToStaticMarkup(
+      <InterviewPrepWaiting stage="writing" preview={{ lines: ["Ay sonu kapanışlarını yaptım."], gaps: ["SAP deneyimi"] }} />,
+    )
+    expect(html).toContain("Olası soruları ve cevap iskeletlerini yazıyoruz")
+    expect(html).toContain("Ay sonu kapanışlarını yaptım.")
+    expect(html).toContain("SAP deneyimi")
+    expect(html).toContain("Davranışsal")
+  })
+
+  it("has no unmet-requirements box when there are none or the preview is missing", () => {
+    for (const preview of [null, { lines: [], gaps: [] }]) {
+      expect(renderToStaticMarkup(<InterviewPrepWaiting stage="reading" preview={preview} />)).not.toContain("karşılanmayan şartları")
+    }
   })
 })

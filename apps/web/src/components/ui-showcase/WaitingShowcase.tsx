@@ -6,6 +6,8 @@ import { ADAPTATION_STEPS, AdaptationWaiting } from "@/features/adaptation/compo
 import { ANALYSIS_STEPS, AnalysisWaiting } from "@/features/analysis/components/AnalysisWaiting"
 import { SAMPLE_REPORT_POSTING } from "@/features/analysis/sampleReport"
 import { previewLines } from "@/components/waiting/text"
+import { InterviewPrepWaiting, PREP_STEPS } from "@/features/applications/components/InterviewPrepWaiting"
+import { LinkedInWaiting, REPORT_STEPS } from "@/features/linkedin/components/LinkedInWaiting"
 
 /** Kurgusal örnek (eval cv-d-pazarlama); gerçek kişi değil. */
 const RESUME = `Deniz Aksoy
@@ -22,11 +24,20 @@ const PREVIEW = {
   startedAt: new Date().toISOString(),
 }
 
+type Screen = "analysis" | "adaptation" | "linkedin" | "interview"
+
+const STEPS: Record<Screen, Array<{ id: string; short: string }>> = {
+  analysis: ANALYSIS_STEPS,
+  adaptation: ADAPTATION_STEPS,
+  linkedin: REPORT_STEPS,
+  interview: PREP_STEPS,
+}
+
 export function WaitingShowcase() {
-  const [screen, setScreen] = useState<"analysis" | "adaptation">("analysis")
+  const [screen, setScreen] = useState<Screen>("analysis")
   const [stage, setStage] = useState<string>("reading_resume")
   const [withInput, setWithInput] = useState(true)
-  const steps = screen === "analysis" ? ANALYSIS_STEPS : ADAPTATION_STEPS
+  const steps = STEPS[screen]
 
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-10">
@@ -37,12 +48,14 @@ export function WaitingShowcase() {
           value={screen}
           onValueChange={(v) => {
             if (!v) return
-            setScreen(v as typeof screen)
-            setStage(v === "analysis" ? ANALYSIS_STEPS[0]!.id : ADAPTATION_STEPS[0]!.id)
+            setScreen(v as Screen)
+            setStage(STEPS[v as Screen][0]!.id)
           }}
         >
           <ToggleGroupItem value="analysis">Analiz</ToggleGroupItem>
           <ToggleGroupItem value="adaptation">Uyarlama</ToggleGroupItem>
+          <ToggleGroupItem value="linkedin">LinkedIn</ToggleGroupItem>
+          <ToggleGroupItem value="interview">Mülakat</ToggleGroupItem>
         </ToggleGroup>
         <ToggleGroup type="single" variant="outline" value={stage} onValueChange={(v) => v && setStage(v)}>
           {steps.map((s) => (
@@ -57,6 +70,26 @@ export function WaitingShowcase() {
         </ToggleGroup>
       </div>
 
+      {screen === "linkedin" && (
+        <LinkedInWaiting
+          stage={stage}
+          profileLabel={withInput ? "Profile.pdf" : null}
+          postings={
+            withInput
+              ? [
+                  { id: "a", position: "Dijital Pazarlama Uzmanı", company: "Örnek Marka" },
+                  { id: "b", position: "Performans Pazarlama Uzmanı", company: null },
+                ]
+              : []
+          }
+        />
+      )}
+      {screen === "interview" && (
+        <InterviewPrepWaiting
+          stage={stage}
+          preview={withInput ? { lines: PREVIEW.lines, gaps: ["Google Analytics 4 ile raporlama", "Excel'de pivot tablo ve temel formüller"] } : null}
+        />
+      )}
       {screen === "analysis" ? (
         <AnalysisWaiting
           stage={stage}
@@ -66,9 +99,9 @@ export function WaitingShowcase() {
               : null
           }
         />
-      ) : (
+      ) : screen === "adaptation" ? (
         <AdaptationWaiting stage={stage} scoreBefore={withInput ? 34 : null} preview={withInput ? PREVIEW : null} />
-      )}
+      ) : null}
     </main>
   )
 }
