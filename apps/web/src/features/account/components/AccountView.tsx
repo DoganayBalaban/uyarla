@@ -5,7 +5,7 @@ import { useState } from "react"
 import {
   CircleCheck,
   Download,
-  LayoutGrid,
+  FileText,
   LoaderCircle,
   Mail,
   ShieldCheck,
@@ -19,9 +19,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useDeleteAccount } from "@/features/account/api"
 import { PageHeader } from "@/components/layout/PageShell"
 import { ProfileSection } from "@/features/account/components/ProfileSection"
-import { ResumeLibrarySection } from "@/features/account/components/ResumeLibrarySection"
 import { ExcludedConceptsSection } from "@/features/account/components/ExcludedConceptsSection"
-import { FactsSection } from "@/features/account/components/FactsSection"
 import { NotificationsSection } from "@/features/account/components/NotificationsSection"
 import { PassSection } from "@/features/billing/components/PassSection"
 
@@ -126,24 +124,23 @@ export function AccountView() {
           <>
             <ProfileSection />
             <PassSection />
-            <ResumeLibrarySection />
             <ExcludedConceptsSection />
-            <FactsSection />
             <NotificationsSection />
           </>
         )}
 
         <div className="grid gap-3 sm:grid-cols-3">
+          {/* CV kütüphanesi ve anlattığın deneyimler kendi sayfasında (DOG-149). */}
           <Link
-            href="/applications"
+            href="/cvs"
             className="flex items-center gap-3 rounded-card border border-border bg-card p-4 text-sm no-underline transition hover:border-brand-blue/40"
           >
             <span className="grid size-9 shrink-0 place-items-center rounded-button bg-brand-blue/10 text-brand-blue">
-              <LayoutGrid className="size-4" aria-hidden />
+              <FileText className="size-4" aria-hidden />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block font-semibold text-foreground">Başvuru panosu</span>
-              <span className="block text-muted-foreground">Analizlerin ve başvuruların</span>
+              <span className="block font-semibold text-foreground">CV&apos;lerim</span>
+              <span className="block text-muted-foreground">Kütüphane ve anlattığın deneyimler</span>
             </span>
           </Link>
           <Link

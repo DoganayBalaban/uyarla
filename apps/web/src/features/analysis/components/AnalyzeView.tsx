@@ -153,10 +153,29 @@ export function AnalyzeView() {
   const selectedResumeId = watch("resumeId") ?? null
   const [libraryNote, setLibraryNote] = useState<string | null>(null)
 
+  // CV'lerim'deki "Bu CV'yle analiz et" (DOG-149): `?cv=<id>`. Adresten
+  // siliniyor; kütüphane gelince o CV seçiliyor.
+  const requestedResume = useRef<string | null>(null)
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const id = url.searchParams.get("cv")
+    if (!id) return
+    requestedResume.current = id
+    url.searchParams.delete("cv")
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash)
+  }, [])
+
   // Kütüphane gelince varsayılan CV ön seçili; kullanıcı seçtiyse ya da dosya
   // yüklediyse dokunulmuyor (kurallar preselectResumeId'de, testli).
   const [pickedMode, setPickedMode] = useState(false)
   useEffect(() => {
+    const requested = requestedResume.current
+    if (requested && resumes.some((r) => r.id === requested)) {
+      requestedResume.current = null
+      setPickedMode(true)
+      setValue("resumeId", requested)
+      return
+    }
     const next = preselectResumeId({
       resumes,
       current: getValues("resumeId"),
