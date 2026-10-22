@@ -21,14 +21,9 @@ import {
   type PracticeEntry,
 } from "@uyarla/core/interview/practiceRecord"
 import { api, apiErrorMessage, apiStatus } from "@/lib/api"
-import { StageTimeline } from "@/features/analysis/components/StageTimeline"
-import { deriveStageStates } from "@/features/analysis/stageStates"
+import { InterviewPrepWaiting } from "@/features/applications/components/InterviewPrepWaiting"
+import type { PrepWaitingPreview } from "@/features/applications/prepWaiting"
 
-/** Paketin gerçek adımları (DOG-136); hangisinde olduğunu worker kayda yazıyor. */
-const PREP_STAGES = [
-  { id: "reading", title: "Gönderdiğin belgeleri okuyoruz", description: "Başvurduğun CV, ön yazı ve ilanın eksik kalan şartları." },
-  { id: "writing", title: "Olası soruları ve cevap iskeletlerini yazıyoruz", description: "Kanıtlar CV'nden birebir alınıyor ve kontrol ediliyor." },
-]
 
 interface PrepData {
   position: string
@@ -38,6 +33,8 @@ interface PrepData {
   adaptationId: string | null
   interviewPrep: InterviewPrepRecord | null
   prepAttemptsLeft: number
+  /** Hazırlık sürerken bekleme ekranının malzemesi (K-104). */
+  prepPreview?: PrepWaitingPreview | null
 }
 
 const key = (id: string) => ["interview-prep", id] as const
@@ -123,11 +120,7 @@ export function InterviewPrepView({ analysisId }: { analysisId: string }) {
       </header>
 
       {running && record?.status === "running" && (
-        <StageTimeline
-          heading="Hazırlık paketin hazırlanıyor"
-          subtitle="Bir dakika kadar sürebilir."
-          stages={deriveStageStates(PREP_STAGES, record.stage ?? null)}
-        />
+        <InterviewPrepWaiting stage={record.stage ?? null} startedAt={Date.parse(record.createdAt)} preview={data.prepPreview ?? null} />
       )}
       {record?.status === "failed" && <p className="m-0 text-sm text-destructive">Hazırlık paketini yazamadık. Tekrar dener misin?</p>}
 

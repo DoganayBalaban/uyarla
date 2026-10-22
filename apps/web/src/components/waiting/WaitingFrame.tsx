@@ -33,6 +33,7 @@ export function WaitingFrame({
   startedAt,
   facts,
   footnote,
+  headingLevel = 1,
   children,
 }: {
   eyebrow: string
@@ -42,6 +43,8 @@ export function WaitingFrame({
   startedAt?: number | null
   facts: string[]
   footnote?: string
+  /** Sayfanın kendi başlığı varsa (LinkedIn, mülakat) çerçeve h2 kullanıyor. */
+  headingLevel?: 1 | 2
   children: React.ReactNode
 }) {
   const reducedMotion = useReducedMotion() ?? false
@@ -51,6 +54,7 @@ export function WaitingFrame({
   const activeIndex = Math.max(0, states.findIndex((s) => s.status === "active"))
   const active = steps[activeIndex]!
   const elapsed = useElapsed(startedAt ?? null)
+  const Heading = headingLevel === 1 ? "h1" : "h2"
 
   return (
     <div>
@@ -71,7 +75,7 @@ export function WaitingFrame({
                 exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
                 transition={{ duration: 0.25, ease: [0.2, 0, 0, 1] }}
               >
-                <h1 className="m-0 mt-1 text-xl font-semibold tracking-tight">{active.title}</h1>
+                <Heading className="m-0 mt-1 text-xl font-semibold tracking-tight">{active.title}</Heading>
                 <p className="m-0 mt-1 text-sm text-muted-foreground">{active.description}</p>
               </motion.div>
             </AnimatePresence>

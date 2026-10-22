@@ -20,7 +20,7 @@ const MAX_LINES = 7
 const MAX_LINE_LENGTH = 140
 const MAX_MISSING = 8
 
-type ProfileLike = Pick<ResumeProfile, "headline" | "summary"> & {
+export type ProfileLike = Pick<ResumeProfile, "headline" | "summary"> & {
   experience: Array<{ bullets: Array<{ text: string }> }>
 }
 
@@ -41,7 +41,8 @@ function isResult(value: unknown): value is ResultLike {
   return !!v && Array.isArray(v.requirements) && Array.isArray(v.missingKeywords)
 }
 
-export function waitingPreview(profile: ProfileLike | null, analysisResult: unknown, startedAt: Date): WaitingPreview {
+/** CV'nin bekleme ekranında gösterilen kesiti: özet ve ilk deneyim maddeleri. */
+export function resumeLines(profile: ProfileLike | null): string[] {
   const lines: string[] = []
   if (profile?.summary?.trim()) lines.push(shorten(profile.summary))
   for (const job of profile?.experience ?? []) {
@@ -50,6 +51,11 @@ export function waitingPreview(profile: ProfileLike | null, analysisResult: unkn
       if (bullet.text.trim()) lines.push(shorten(bullet.text))
     }
   }
+  return lines
+}
+
+export function waitingPreview(profile: ProfileLike | null, analysisResult: unknown, startedAt: Date): WaitingPreview {
+  const lines = resumeLines(profile)
 
   let missing: string[] = []
   if (isResult(analysisResult)) {

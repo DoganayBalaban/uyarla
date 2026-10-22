@@ -3847,4 +3847,10 @@ süre, sahne, aşama çubuğu ve dönen kısa bilgiler. Sahnede yalnızca gerçe
   bekleme ekranı değil, kısa bir "Sonuç açılıyor…".
 - Yerelde aşama seçerek görmek için `/ui/waiting` (üretimde 404).
 
-LinkedIn raporu ve mülakat hazırlığı şimdilik eski `StageTimeline`'da.
+LinkedIn raporu ve mülakat hazırlığı da aynı çerçevede (#221): LinkedIn'de
+profil PDF'i ve seçilen ilanlar (panodaki pozisyon ve şirket adıyla),
+karşılaştırmada ilanlar sırayla taranıyor, son aşamada "Başlık · Hakkında"
+yazılıyor. Mülakatta CV kesiti, soru kartları (teknik, davranışsal, boşluk;
+tanımlar hazırlık istemindekiyle aynı) ve ilanın karşılanmayan zorunlu
+şartları (köprüler bunlar için yazılıyor). `GET /api/applications/[id]`
+hazırlık sürerken `prepPreview` döndürüyor. Eski `StageTimeline` silindi.
