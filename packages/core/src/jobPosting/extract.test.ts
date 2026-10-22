@@ -110,6 +110,47 @@ describe("extractPostingText · LinkedIn (DOG-70)", () => {
   })
 })
 
+describe("extractPostingText · LinkedIn without JSON-LD (Ekim 2026)", () => {
+  // Gerçek herkese açık ilan sayfasının sadeleştirilmiş hâli: JSON-LD yok;
+  // üst kart, giriş çağrıları, açıklama kutusu, kriterler ve benzer ilanlar.
+  const page = `<html><head><title>AI / LLM Engineer - TEB — İstanbul, Türkiye | LinkedIn İş İlanları</title></head><body>
+    <main><section class="top-card-layout">
+      <h1 class="top-card-layout__title topcard__title">AI / LLM Engineer</h1>
+      <a class="topcard__org-name-link topcard__flavor--black-link" href="https://tr.linkedin.com/company/teb">
+        TEB
+      </a><span class="topcard__flavor--bullet">İstanbul, Türkiye</span>
+      <button>Başvur</button><p>E-posta ile oturum açın</p><p>LinkedIn‘de yeni misiniz? Hemen katılın</p>
+    </section>
+    <div class="description__text description__text--rich"><section class="show-more-less-html" data-max-lines="5">
+      <div class="show-more-less-html__markup show-more-less-html__markup--clamp-after-5 relative overflow-hidden">
+        <p><strong>About the Role</strong></p><p><br></p><p>We are looking for an <strong>AI / LLM Engineer</strong> with minimum 1-2 years of experience.</p>
+        <p><strong>Required Qualifications</strong></p><ul><li>Hands-on experience with Vector Databases (e.g., Pinecone, Qdrant).</li><li>Strong proficiency in Python.</li></ul>
+      </div>
+      <button class="show-more-less-html__button show-more-less-button">Show more</button>
+    </section></div>
+    <ul class="description__job-criteria-list"><li><h3 class="description__job-criteria-subheader">Kıdem düzeyi</h3><span>Uzman</span></li></ul>
+    <section class="similar-jobs"><h2>Benzer iş ilanları</h2><ul><li>Agentic AI Engineer · Melontik</li></ul></section>
+    </main></body></html>`
+
+  it("reads the description box and the top card, nothing else", () => {
+    const posting = extractPostingText(page, "tr.linkedin.com")
+    expect(posting).toMatchObject({ position: "AI / LLM Engineer", company: "TEB", source: "sayfa" })
+    expect(posting!.text.startsWith("AI / LLM Engineer — TEB\n\nAbout the Role")).toBe(true)
+    expect(posting!.text).toContain("- Strong proficiency in Python.")
+    for (const noise of ["oturum açın", "Hemen katılın", "Show more", "Kıdem düzeyi", "Benzer iş ilanları", "Melontik"]) {
+      expect(posting!.text).not.toContain(noise)
+    }
+  })
+
+  it("falls back to the page text cut before criteria and similar jobs", () => {
+    const changed = page.replace(/show-more-less-html__markup/g, "description-box")
+    const posting = extractPostingText(changed, "www.linkedin.com")
+    expect(posting!.text).toContain("Strong proficiency in Python.")
+    expect(posting!.text).not.toContain("Kıdem düzeyi")
+    expect(posting!.text).not.toContain("Melontik")
+  })
+})
+
 describe("extractPostingText · yenibiris (DOG-70)", () => {
   // Gerçek sayfanın sadeleştirilmiş hâli: JSON-LD açıklaması kısaltılmış ve
   // kelimenin ortasında kesilmiş; tam ilan sayfa gövdesinde.
