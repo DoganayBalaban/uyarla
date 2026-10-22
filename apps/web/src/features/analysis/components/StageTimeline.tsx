@@ -2,6 +2,9 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { Check, Clock, LoaderCircle, TriangleAlert } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import type { Stage, StageState } from "@/features/analysis/stageStates"
 import { cn } from "@/lib/cn"
 
@@ -18,12 +21,13 @@ export type { Stage as Asama, StageState as AsamaDurumu }
  * bağlayan ray, aktif aşamada nabız ve durum etiketi. Renkler marka
  * token'larından.
  *
- * İlerleme uydurulmuyor: aşama durumu sunucudan geliyor, yüzde gösterilmiyor.
+ * İlerleme uydurulmuyor: aşama durumu sunucudan geliyor; çubuk yalnızca biten
+ * aşama sayısını gösteriyor (DOG-146), tahmini süre ya da yüzde yok.
  */
 
 
 const STATE_STYLE: Record<StageState, { label: string; textClass: string; bgClass: string }> = {
-  pending: { label: "Sırada", textClass: "text-muted", bgClass: "bg-card border-border" },
+  pending: { label: "Sırada", textClass: "text-muted-foreground", bgClass: "bg-card border-border" },
   active: { label: "Çalışıyor", textClass: "text-brand-blue dark:text-brand-blue-light", bgClass: "bg-brand-blue/10 border-brand-blue/50" },
   done: { label: "Tamam", textClass: "text-brand-green dark:text-[#4ade80]", bgClass: "bg-brand-green/10 border-brand-green/50" },
   error: { label: "Olmadı", textClass: "text-brand-red dark:text-[#f87171]", bgClass: "bg-brand-red/10 border-brand-red/50" },
@@ -71,20 +75,18 @@ export function StageTimeline({
   const doneCount = stages.filter((a) => a.status === "done").length
 
   return (
-    <section
-      className={cn("rounded-card border border-border bg-card p-5 shadow-sm sm:p-6", className)}
-      aria-label={heading}
-    >
-      <header className="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="m-0 text-lg">{heading}</h2>
-          {subtitle && <p className="m-0 mt-1 text-sm text-muted">{subtitle}</p>}
+    <Card className={cn("gap-5 shadow-xs", className)} aria-label={heading} role="region">
+      <CardHeader>
+        <CardTitle className="text-lg">{heading}</CardTitle>
+        {subtitle && <CardDescription>{subtitle}</CardDescription>}
+        <div className="col-span-full mt-3 flex items-center gap-3">
+          <Progress value={(doneCount / Math.max(1, stages.length)) * 100} aria-label="Biten aşamalar" className="h-1.5" />
+          <Badge variant="secondary" className="shrink-0 tabular-nums">
+            {doneCount}/{stages.length}
+          </Badge>
         </div>
-        <span className="shrink-0 rounded-full bg-background px-2.5 py-1 text-xs font-semibold tabular-nums text-muted">
-          {doneCount}/{stages.length}
-        </span>
-      </header>
-
+      </CardHeader>
+      <CardContent>
       <ol className="m-0 list-none p-0">
         <AnimatePresence initial={false}>
           {stages.map((a, i) => {
@@ -116,7 +118,7 @@ export function StageTimeline({
                     <span
                       className={cn(
                         "font-semibold",
-                        a.status === "pending" ? "text-muted" : "text-foreground",
+                        a.status === "pending" ? "text-muted-foreground" : "text-foreground",
                       )}
                     >
                       {a.title}
@@ -132,13 +134,14 @@ export function StageTimeline({
                       {d.label}
                     </span>
                   </div>
-                  {a.description && <p className="m-0 mt-0.5 text-sm text-muted">{a.description}</p>}
+                  {a.description && <p className="m-0 mt-0.5 text-sm text-muted-foreground">{a.description}</p>}
                 </div>
               </motion.li>
             )
           })}
         </AnimatePresence>
       </ol>
-    </section>
+      </CardContent>
+    </Card>
   )
 }

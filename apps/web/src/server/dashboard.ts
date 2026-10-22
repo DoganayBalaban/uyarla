@@ -4,6 +4,7 @@ import { type DashboardSummary, summarize } from "@/features/dashboard/summary"
 import { GAP_WINDOW, skillGaps, type SkillGap } from "@/features/dashboard/skillGaps"
 import { suggestionQuery } from "@uyarla/core/jobSuggest/query"
 import type { ResumeProfile } from "@uyarla/core/schemas/resume"
+import { searchSuggestions } from "@/features/jobs/suggestions"
 
 /**
  * Dashboard'un verisi: kullanıcının adı, tamamlanmış analizlerinin özeti ve
@@ -33,6 +34,54 @@ export async function getDashboardData(userId: string): Promise<{
     }),
     prisma.excludedConcept.findMany({ where: { userId }, select: { key: true } }),
   ])
+  const profile = await searchProfile(userId)
+  const report = skillGaps(
+    recent.map((r) => r.result),
+    excluded.map((e) => e.key),
+  )
+  return {
+    name: user?.name ?? null,
+    targetRole: user?.targetRole ?? null,
+    summary: summarize(rows.map(toBoardCard)),
+    gaps: { list: report.gaps, analyses: report.analyses },
+    searchKeywords: suggestionQuery(profile, { targetRole: user?.targetRole }).keywords,
+  }
+}
+
+/**
+ * "İş ara" sayfasının verisi (DOG-150): dashboard'la aynı sorgu kuralı, öneri
+ * rozetleri ve son analizlerin sık eksik kavramları ("aramana ekle").
+ */
+export async function getJobSearchData(userId: string): Promise<{
+  keywords: string
+  roles: string[]
+  skills: string[]
+  gaps: SkillGap[]
+}> {
+  const [user, profile, recent, excluded] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { targetRole: true } }),
+    searchProfile(userId),
+    prisma.analysis.findMany({
+      where: { userId, status: "done" },
+      orderBy: { createdAt: "desc" },
+      take: GAP_WINDOW,
+      select: { result: true },
+    }),
+    prisma.excludedConcept.findMany({ where: { userId }, select: { key: true } }),
+  ])
+  const targetRole = user?.targetRole ?? null
+  const report = skillGaps(
+    recent.map((r) => r.result),
+    excluded.map((e) => e.key),
+  )
+  return {
+    keywords: suggestionQuery(profile, { targetRole }).keywords,
+    ...searchSuggestions(profile, targetRole),
+    gaps: report.gaps,
+  }
+}
+
+async function searchProfile(userId: string): Promise<ResumeProfile> {
   // Sorgunun profili: kütüphanedeki varsayılan CV, yoksa son analizin CV'si.
   const version =
     (await prisma.resumeVersion.findFirst({
@@ -45,16 +94,5 @@ export async function getDashboardData(userId: string): Promise<{
       orderBy: { createdAt: "desc" },
       select: { profile: true },
     }))
-  const profile = (version?.profile ?? { experience: [], skills: [] }) as unknown as ResumeProfile
-  const report = skillGaps(
-    recent.map((r) => r.result),
-    excluded.map((e) => e.key),
-  )
-  return {
-    name: user?.name ?? null,
-    targetRole: user?.targetRole ?? null,
-    summary: summarize(rows.map(toBoardCard)),
-    gaps: { list: report.gaps, analyses: report.analyses },
-    searchKeywords: suggestionQuery(profile, { targetRole: user?.targetRole }).keywords,
-  }
+  return (version?.profile ?? { experience: [], skills: [] }) as unknown as ResumeProfile
 }

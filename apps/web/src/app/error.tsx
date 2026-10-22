@@ -4,6 +4,7 @@ import { reportClientError } from "@/lib/clientErrors"
 import { recoverFromStaleChunk } from "@/lib/staleChunk"
 import Link from "next/link"
 import { useEffect } from "react"
+import { Navbar } from "@/components/layout/Navbar"
 import { PageShell } from "@/components/layout/PageShell"
 
 /**
@@ -19,33 +20,37 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
     reportClientError(error)
   }, [error])
 
+  // Kök sınırda route group kabı yok; üst çubuğu kendisi çiziyor (DOG-144).
   return (
-    <PageShell width="narrow" className="sm:pt-20">
-      <div role="alert">
-        <h1 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-          Bir şeyler ters gitti.
-        </h1>
-        <p className="mt-4 max-w-xl text-muted">
-          Sorun bizde, senin yaptığın bir şeyden değil. Tekrar denemek çoğu zaman yetiyor; olmazsa birkaç dakika sonra
-          yeniden gel.
-        </p>
-        {error.digest && <p className="mt-3 text-xs text-muted">Hata kodu: {error.digest}</p>}
-        <div className="mt-8 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={reset}
-            className="rounded-button bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-blue/90"
-          >
-            Tekrar dene
-          </button>
-          <Link
-            href="/"
-            className="rounded-button border border-border px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-card"
-          >
-            Ana sayfaya dön
-          </Link>
+    <>
+      <Navbar />
+      <PageShell width="narrow" className="sm:pt-20">
+        <div role="alert">
+          <h1 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+            Bir şeyler ters gitti.
+          </h1>
+          <p className="mt-4 max-w-xl text-muted-foreground">
+            Sorun bizde, senin yaptığın bir şeyden değil. Tekrar denemek çoğu zaman yetiyor; olmazsa birkaç dakika sonra
+            yeniden gel.
+          </p>
+          {error.digest && <p className="mt-3 text-xs text-muted-foreground">Hata kodu: {error.digest}</p>}
+          <div className="mt-8 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={reset}
+              className="rounded-button bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-blue/90"
+            >
+              Tekrar dene
+            </button>
+            <Link
+              href="/"
+              className="rounded-button border border-border px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-card"
+            >
+              Ana sayfaya dön
+            </Link>
+          </div>
         </div>
-      </div>
-    </PageShell>
+      </PageShell>
+    </>
   )
 }

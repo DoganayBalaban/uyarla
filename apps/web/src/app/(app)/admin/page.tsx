@@ -1,6 +1,6 @@
 import { prisma } from "@uyarla/db"
 import { notFound } from "next/navigation"
-import { PageHeader, PageShell } from "@/components/layout/PageShell"
+import { AppPage } from "@/components/layout/app-shell/AppPage"
 import { FunnelReport } from "@/features/admin/components/FunnelReport"
 import { getSession } from "@/server/authz"
 import { computeFunnel, isAdmin } from "@/server/funnel"
@@ -29,12 +29,11 @@ export default async function AdminPage() {
   ])
 
   return (
-    <PageShell width="medium">
-      <PageHeader title="Huni" description="Analizi tamamlayan kişilerin kayıt, uyarlama ve indirmeye geçişi." />
+    <AppPage title="Huni" description="Analizi tamamlayan kişilerin kayıt, uyarlama ve indirmeye geçişi.">
       <div className="space-y-6">
         <FunnelReport title="Son 7 gün" summary={week} />
         <FunnelReport title="Son 30 gün" summary={month} />
       </div>
-    </PageShell>
+    </AppPage>
   )
 }

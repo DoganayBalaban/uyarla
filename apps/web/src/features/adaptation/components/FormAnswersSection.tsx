@@ -56,12 +56,12 @@ export function FormAnswersSection({
   }
 
   return (
-    <section className="rounded-card border border-border bg-card p-5 sm:p-6">
+    <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
       <h2 className="m-0 flex items-center gap-2 text-lg">
         <ClipboardList className="size-5 text-brand-blue" aria-hidden />
         Form sorusu yanıtla
       </h2>
-      <p className="mt-1 text-sm text-muted">
+      <p className="mt-1 text-sm text-muted-foreground">
         Başvuru formundaki soruyu ve varsa sınırını yapıştır. Yanıtı gönderdiğin CV&apos;den ve ön yazından yazıyoruz;
         köşeli parantezli yeri kendi gerekçenle doldur.
       </p>
@@ -124,7 +124,7 @@ export function FormAnswersSection({
           </div>
         </div>
       ) : (
-        <p className="mt-4 text-sm text-muted">Bu başvuru için form yanıtı hakkın doldu.</p>
+        <p className="mt-4 text-sm text-muted-foreground">Bu başvuru için form yanıtı hakkın doldu.</p>
       )}
       {error && (
         <p role="alert" className="mt-2 text-sm text-brand-red dark:text-[#f87171]">
@@ -143,7 +143,7 @@ function AnswerItem({ answer }: { answer: FormAnswerRecord }) {
     <li className="list-none rounded-button border border-border p-3 text-sm">
       <p className="m-0 font-semibold">{answer.question}</p>
       {answer.status === "running" && (
-        <p className="m-0 mt-2 flex items-center gap-2 text-muted" role="status">
+        <p className="m-0 mt-2 flex items-center gap-2 text-muted-foreground" role="status">
           <LoaderCircle className="size-4 text-brand-blue motion-safe:animate-spin" aria-hidden />
           Yanıtı yazıyoruz…
         </p>
@@ -158,7 +158,7 @@ function AnswerItem({ answer }: { answer: FormAnswerRecord }) {
               <span>Kontrol et: {answer.verification.issues.map((i) => i.detail).join(" ")}</span>
             </p>
           )}
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted">
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             {size !== null && answer.limit && (
               <span className={cn(over && "font-semibold text-brand-red")}>
                 {size}/{answer.limit.max} {UNIT_LABEL[answer.limit.unit]}

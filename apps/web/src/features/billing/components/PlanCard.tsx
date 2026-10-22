@@ -34,11 +34,11 @@ export function PlanCardBody({
           Önerilen
         </span>
       )}
-      <p className="text-sm font-semibold text-muted">{PLAN_LABEL[plan.key]}</p>
+      <p className="text-sm font-semibold text-muted-foreground">{PLAN_LABEL[plan.key]}</p>
       <p className="mt-2 text-3xl font-bold tracking-tight">
         {plan.priceTry !== null ? `${plan.priceTry} TL` : "—"}
       </p>
-      <p className="mt-1 text-sm text-muted">
+      <p className="mt-1 text-sm text-muted-foreground">
         {plan.days} gün erişim
         {perDay(plan.priceTry, plan.days) && <> · {perDay(plan.priceTry, plan.days)}</>}
       </p>

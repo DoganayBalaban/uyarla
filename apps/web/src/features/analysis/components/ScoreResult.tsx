@@ -8,13 +8,26 @@ import {
   ChevronDown,
   CircleAlert,
   CircleCheck,
+  Ellipsis,
   LoaderCircle,
-  RotateCcw,
   ShieldAlert,
   Sparkles,
   Target,
   X,
 } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { cn } from "@/lib/cn"
 import { FormatReportCard as FormatReport, type FormatReportView } from "@/features/analysis/components/FormatReport"
 import { ImpactBadge } from "@/features/analysis/components/ImpactBadge"
@@ -36,7 +49,7 @@ import type { TitleMatch } from "@uyarla/core/score/title"
 import type { LanguageCheck } from "@uyarla/core/score/languages"
 import type { RequirementAction } from "@/features/analysis/api"
 import { CorrectPanel, MarkPanel } from "@/features/analysis/components/RequirementFixes"
-import { correctionKind, exclusionLabel } from "@/features/analysis/requirementFix"
+import { correctionKind, exclusionLabel, requirementMenu } from "@/features/analysis/requirementFix"
 import { requiredYears } from "@uyarla/core/score/duration"
 
 export interface RequirementResult {
@@ -114,7 +127,6 @@ export function ScoreResult({
   error,
   onAdapt,
   adaptNote,
-  onYeniAnaliz,
   onRequirementChange,
   onPositionChange,
   platform,
@@ -136,7 +148,6 @@ export function ScoreResult({
   onAdapt?: () => void
   /** Uyarla düğmesinin altında: bu uyarlamanın neyi harcayacağı (DOG-81). */
   adaptNote?: string | null
-  onYeniAnaliz?: () => void
   /** Gereksinimi işaretler, işareti kaldırır ya da şartını düzeltir (DOG-90); yoksa düğmeler çıkmıyor. */
   onRequirementChange?: (requirementIndex: number, change: RequirementAction) => Promise<void>
   /** İlan unvanını düzeltir (DOG-134); null düzeltmeyi kaldırıyor. */
@@ -192,180 +203,108 @@ export function ScoreResult({
           transition: { duration: 0.4, delay: delayMs, ease: [0.22, 1, 0.36, 1] as const },
         }
 
-  return (
-    <div className="lg:grid lg:grid-cols-[12.5rem_minmax(0,1fr)] lg:items-start lg:gap-6">
-    <ResultNavPanel score={exclusion.score} items={navItems} onSelect={goTo} />
-    <section className="space-y-6">
-      <ResultNavStrip items={navItems} onSelect={goTo} />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-      {postingText && (
-        <div role="tablist" aria-label="Sonuç görünümü" className="inline-flex rounded-button bg-background p-1 text-sm">
-          {(
-            [
-              ["report", "Rapor"],
-              ["posting", "İlan metni"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              role="tab"
-              aria-selected={tab === value}
-              onClick={() => setTab(value)}
-              className={cn(
-                "rounded-[8px] px-4 py-1.5 font-semibold transition",
-                tab === value ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground",
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
-      <ResultGuide
-        impacts={impacts}
-        onGo={(target) => {
-          setTab("report")
-          // Rapor sekmesi görünür olduktan sonra kaydır.
-          requestAnimationFrame(() =>
-            document.getElementById(target)?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" }),
-          )
-        }}
-      />
-      </div>
-      {postingText && tab === "posting" && (
-        <PostingTextView text={postingText} highlight={highlight} onClear={() => setHighlight(null)} />
-      )}
-      <div className={cn("space-y-6", tab === "posting" && "hidden")}>
+  const report = (
+    <div className="space-y-6">
       {/* Skor kartı. */}
-      <motion.div
-        {...entrance(0)}
-        id="skor"
-        className="relative scroll-mt-24 overflow-hidden rounded-card border border-border bg-card p-6 shadow-sm sm:p-8"
-      >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-brand-blue/10 blur-3xl"
-        />
-        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
-          <ScoreRing score={exclusion.score} size={148} className="shrink-0 self-center sm:self-auto" />
+      <motion.div {...entrance(0)} id="skor" className="scroll-mt-20">
+        <Card className="relative overflow-hidden py-0 shadow-xs">
+          <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-primary/10 blur-3xl" />
+          <CardContent className="relative flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:p-8">
+            <ScoreRing score={exclusion.score} size={148} className="shrink-0 self-center sm:self-auto" />
 
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold tracking-wider text-muted uppercase">Uyum skoru</p>
-            <h1 className="mt-1 text-2xl sm:text-3xl">
-              {exclusion.active.length} gereksinimin{" "}
-              <span className={state.textClass}>{satisfiedCount} tanesi</span> karşılanıyor
-            </h1>
-            {/* Zorunlular ayrıca: işe alımcının ilk baktığı yer (DOG-66). Sayının
-                ardından ek getirmiyoruz; "5'i / 6'sı" sayıya göre değişiyor. */}
-            {(summary.mustTotal > 0 || summary.partial > 0) && (
-              <p className="mt-1.5 text-sm font-medium text-foreground">
-                {summary.mustTotal > 0 && (
-                  <>
-                    Zorunlu gereksinimler: {summary.mustMatched} / {summary.mustTotal} karşılanıyor
-                  </>
-                )}
-                {summary.mustTotal > 0 && summary.partial > 0 && " · "}
-                {partialNote(summary)}
-              </p>
-            )}
-            {ready && (
-              <p
-                className={`mt-1.5 flex gap-1.5 text-sm font-medium ${ready.ready ? "text-brand-green dark:text-[#4ade80]" : "text-foreground"}`}
-              >
-                {ready.ready ? (
-                  <CircleCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
-                ) : (
-                  <Target className="mt-0.5 size-4 shrink-0 text-brand-amber" aria-hidden />
-                )}
-                <span>{readinessHint(ready)}</span>
-              </p>
-            )}
-            {result.titleMatch && (result.scoringRevision ?? 1) >= 2 && (
-              <p className="mt-1 text-sm text-muted">
-                {TITLE_LINE[result.titleMatch.level]} ({result.titleMatch.position}); unvan skora bir zorunlu gereksinim
-                gibi katılıyor.
-              </p>
-            )}
-            {(result.facts?.length ?? 0) > 0 && (
-              <p className="mt-1 text-sm text-muted">
-                Daha önce anlattığın {result.facts!.length} deneyim bu analizde kanıt sayıldı; Hesabım&apos;dan
-                görebilir, unutabilirsin.
-              </p>
-            )}
-            {(exclusion.excludedCount > 0 || correctedCount > 0) && (
-              <p className="mt-1 text-sm text-muted">
-                {exclusion.excludedCount > 0 && `İşaretlediğin ${exclusion.excludedCount} gereksinim skora katılmıyor. `}
-                {correctedCount > 0 && `İlanın ${correctedCount} şartını düzelttin. `}
-                İlk skor {result.score}.
-              </p>
-            )}
-            {/* K2'de iki katılımcı düşük skoru "işe uygun değilim" diye okudu
-                (DOG-103). Skor CV ile ilanın örtüşmesi; çerçeve bunu söylüyor. */}
-            <p className="mt-2 text-sm text-muted">
-              {missing > 0
-                ? "Bu skor CV'nin ilanla ne kadar örtüştüğünü ölçer, işe uygunluğunu değil. Eksiklerden deneyiminde olanları CV'nde görünür kılarsan skor yükselir. Uyarladığımızda bunu deneyiminin izin verdiği ölçüde yapıyoruz; olmayan bir şeyi eklemiyoruz."
-                : "CV'n bu ilanın istediklerini karşılıyor. Yine de anlatımı ilanın diline yaklaştırabilirsin."}
-            </p>
-
-            <div className="mt-5 flex flex-wrap gap-2.5">
-              {onAdapt && (
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-button bg-brand-blue px-5 py-3 font-semibold text-white shadow-sm shadow-brand-blue/30 transition hover:bg-brand-blue/90 disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={adapting}
-                  onClick={onAdapt}
-                >
-                  {adapting ? (
-                    <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden />
-                  ) : (
-                    <Sparkles className="size-4" aria-hidden />
+            <div className="min-w-0 flex-1">
+              <p className="m-0 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Uyum skoru</p>
+              <h1 className="m-0 mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
+                {exclusion.active.length} gereksinimin <span className={state.textClass}>{satisfiedCount} tanesi</span>{" "}
+                karşılanıyor
+              </h1>
+              {/* Zorunlular ayrıca: işe alımcının ilk baktığı yer (DOG-66). Sayının
+                  ardından ek getirmiyoruz; "5'i / 6'sı" sayıya göre değişiyor. */}
+              {(summary.mustTotal > 0 || summary.partial > 0) && (
+                <p className="m-0 mt-1.5 text-sm font-medium text-foreground">
+                  {summary.mustTotal > 0 && (
+                    <>
+                      Zorunlu gereksinimler: {summary.mustMatched} / {summary.mustTotal} karşılanıyor
+                    </>
                   )}
-                  {adapting ? "Hazırlanıyor…" : "CV'mi bu ilana uyarla"}
-                  {!adapting && <ArrowRight className="size-4" aria-hidden />}
-                </button>
+                  {summary.mustTotal > 0 && summary.partial > 0 && " · "}
+                  {partialNote(summary)}
+                </p>
               )}
-              {onYeniAnaliz && (
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-button border border-border bg-card px-4 py-3 text-sm font-semibold transition hover:border-brand-blue/40 hover:text-brand-blue"
-                  onClick={onYeniAnaliz}
+              {ready && (
+                <p
+                  className={cn(
+                    "m-0 mt-2 inline-flex gap-1.5 rounded-md px-2 py-1 text-sm font-medium",
+                    ready.ready ? "bg-brand-green/10 text-brand-green dark:text-[#4ade80]" : "bg-brand-amber/10 text-foreground",
+                  )}
                 >
-                  <RotateCcw className="size-4" aria-hidden />
-                  Yeni analiz
-                </button>
+                  {ready.ready ? (
+                    <CircleCheck className="mt-0.5 size-4 shrink-0" aria-hidden />
+                  ) : (
+                    <Target className="mt-0.5 size-4 shrink-0 text-brand-amber" aria-hidden />
+                  )}
+                  <span>{readinessHint(ready)}</span>
+                </p>
+              )}
+              {result.titleMatch && (result.scoringRevision ?? 1) >= 2 && (
+                <p className="m-0 mt-1.5 text-sm text-muted-foreground">
+                  {TITLE_LINE[result.titleMatch.level]} ({result.titleMatch.position}); unvan skora bir zorunlu gereksinim
+                  gibi katılıyor.
+                </p>
+              )}
+              {(result.facts?.length ?? 0) > 0 && (
+                <p className="m-0 mt-1 text-sm text-muted-foreground">
+                  Daha önce anlattığın {result.facts!.length} deneyim bu analizde kanıt sayıldı; CV&apos;lerim&apos;den
+                  görebilir, unutabilirsin.
+                </p>
+              )}
+              {(exclusion.excludedCount > 0 || correctedCount > 0) && (
+                <p className="m-0 mt-1 text-sm text-muted-foreground">
+                  {exclusion.excludedCount > 0 && `İşaretlediğin ${exclusion.excludedCount} gereksinim skora katılmıyor. `}
+                  {correctedCount > 0 && `İlanın ${correctedCount} şartını düzelttin. `}
+                  İlk skor {result.score}.
+                </p>
+              )}
+              {/* K2'de iki katılımcı düşük skoru "işe uygun değilim" diye okudu
+                  (DOG-103). Skor CV ile ilanın örtüşmesi; çerçeve bunu söylüyor. */}
+              <p className="m-0 mt-2 text-sm text-muted-foreground">
+                {missing > 0
+                  ? "Bu skor CV'nin ilanla ne kadar örtüştüğünü ölçer, işe uygunluğunu değil. Eksiklerden deneyiminde olanları CV'nde görünür kılarsan skor yükselir. Uyarladığımızda bunu deneyiminin izin verdiği ölçüde yapıyoruz; olmayan bir şeyi eklemiyoruz."
+                  : "CV'n bu ilanın istediklerini karşılıyor. Yine de anlatımı ilanın diline yaklaştırabilirsin."}
+              </p>
+
+              {onAdapt && (
+                <div className="mt-5">
+                  <Button size="lg" disabled={adapting} onClick={onAdapt} className="group">
+                    {adapting ? <LoaderCircle className="motion-safe:animate-spin" aria-hidden /> : <Sparkles aria-hidden />}
+                    {adapting ? "Hazırlanıyor…" : "CV'mi bu ilana uyarla"}
+                    {!adapting && <ArrowRight className="transition-transform group-hover:translate-x-0.5" aria-hidden />}
+                  </Button>
+                  {adaptNote && <p className="m-0 mt-2 text-sm text-muted-foreground">{adaptNote}</p>}
+                </div>
+              )}
+
+              {error && (
+                <Alert variant="destructive" className="mt-4">
+                  <CircleAlert aria-hidden />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
               )}
             </div>
-            {onAdapt && adaptNote && <p className="mt-2 text-sm text-muted">{adaptNote}</p>}
-
-            {error && (
-              <p
-                role="alert"
-                className="mt-4 flex items-start gap-2 rounded-button bg-brand-red/10 px-3 py-2 text-sm text-brand-red dark:text-[#f87171]"
-              >
-                <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-                {error}
-              </p>
-            )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </motion.div>
 
       {sourceWarning && (
-        <motion.p
-          {...entrance(0.05)}
-          role={sourceWarning.tone === "strong" ? "alert" : undefined}
-          className={cn(
-            "m-0 flex gap-2 rounded-card border p-4 text-sm",
-            sourceWarning.tone === "strong" ? "border-brand-red/30 bg-brand-red/[0.06]" : "border-border bg-card text-muted",
-          )}
-        >
-          <ShieldAlert
-            className={cn("mt-0.5 size-4 shrink-0", sourceWarning.tone === "strong" ? "text-brand-red" : "text-brand-amber")}
-            aria-hidden
-          />
-          <span>{sourceWarning.text}</span>
-        </motion.p>
+        <motion.div {...entrance(0.05)}>
+          <Alert
+            role={sourceWarning.tone === "strong" ? "alert" : "status"}
+            className={cn(sourceWarning.tone === "strong" ? "border-brand-red/30 bg-brand-red/[0.06]" : "text-muted-foreground")}
+          >
+            <ShieldAlert className={sourceWarning.tone === "strong" ? "text-brand-red" : "text-brand-amber"} aria-hidden />
+            <AlertDescription className={sourceWarning.tone === "strong" ? "text-foreground" : undefined}>{sourceWarning.text}</AlertDescription>
+          </Alert>
+        </motion.div>
       )}
 
       {platform && (
@@ -375,7 +314,7 @@ export function ScoreResult({
       )}
 
       {format && (
-        <motion.div {...entrance(0.08)} id="bicim" className="scroll-mt-24">
+        <motion.div {...entrance(0.08)} id="bicim" className="scroll-mt-20">
           <FormatReport
             report={format}
             impact={impacts.format}
@@ -401,126 +340,184 @@ export function ScoreResult({
       />
 
       {/* Gereksinimler. */}
-      <motion.div {...entrance(0.14)} id="gereksinimler" className="scroll-mt-24 rounded-card border border-border bg-card p-5 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="m-0 text-lg">
-              Gereksinimler <ImpactBadge impact={impacts.requirements} className="ml-1" />
-            </h2>
-            <p className="m-0 mt-1 text-sm text-muted">{impacts.requirements.hint}</p>
-          </div>
-          <div role="tablist" aria-label="Gereksinimleri süz" className="inline-flex rounded-button bg-background p-1 text-sm">
-            {(
-              [
-                ["all", `Hepsi · ${exclusion.rows.length}`],
-                ["missing", `Eksik · ${missing}`],
-                ["satisfied", `Karşılanan · ${satisfiedCount}`],
-              ] as const
-            ).map(([val, label]) => (
-              <button
-                key={val}
-                type="button"
-                role="tab"
-                aria-selected={activeFilter === val}
-                onClick={() => setFilter(val)}
-                className={cn(
-                  "rounded-[8px] px-3 py-1.5 font-medium transition",
-                  activeFilter === val ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground",
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {visible.length === 0 ? (
-          <p className="mt-4 text-sm text-muted">Bu süzgeçte gereksinim yok.</p>
-        ) : (
-          <ul className="mt-4 divide-y divide-border">
-            {visible.map(({ item, index, excluded }) => (
-              <RequirementRow
-                key={`${activeFilter}-${index}`}
-                item={item}
-                excluded={excluded}
-                mark={result.exclusions?.[index]}
-                reported={result.reports?.some((r) => r.index === index) ?? false}
-                correction={result.corrections?.[index]}
-                onChange={onRequirementChange ? (change) => onRequirementChange(index, change) : undefined}
-                onShowInPosting={postingText ? () => showInPosting(item) : undefined}
-              />
-            ))}
-          </ul>
-        )}
+      <motion.div {...entrance(0.14)} id="gereksinimler" className="scroll-mt-20">
+        <Card className="gap-4 shadow-xs">
+          <CardHeader className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <CardTitle className="text-base">
+                Gereksinimler <ImpactBadge impact={impacts.requirements} className="ml-1" />
+              </CardTitle>
+              <CardDescription className="mt-1">{impacts.requirements.hint}</CardDescription>
+            </div>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              value={activeFilter}
+              onValueChange={(v) => v && setFilter(v as FilterBar)}
+              aria-label="Gereksinimleri süz"
+            >
+              {(
+                [
+                  ["all", `Hepsi · ${exclusion.rows.length}`],
+                  ["missing", `Eksik · ${missing}`],
+                  ["satisfied", `Karşılanan · ${satisfiedCount}`],
+                ] as const
+              ).map(([val, label]) => (
+                <ToggleGroupItem key={val} value={val} className="px-3">
+                  {label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </CardHeader>
+          <CardContent>
+            {visible.length === 0 ? (
+              <p className="m-0 text-sm text-muted-foreground">Bu süzgeçte gereksinim yok.</p>
+            ) : (
+              <ul className="m-0 list-none divide-y p-0">
+                {visible.map(({ item, index, excluded }) => (
+                  <RequirementRow
+                    key={`${activeFilter}-${index}`}
+                    item={item}
+                    excluded={excluded}
+                    mark={result.exclusions?.[index]}
+                    reported={result.reports?.some((r) => r.index === index) ?? false}
+                    correction={result.corrections?.[index]}
+                    onChange={onRequirementChange ? (change) => onRequirementChange(index, change) : undefined}
+                    onShowInPosting={postingText ? () => showInPosting(item) : undefined}
+                  />
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* Kişisel nitelikler (DOG-103): skora katılmıyor, eksik sayılmıyor. */}
       {exclusion.softRows.length > 0 && (
-        <motion.div {...entrance(0.17)} className="rounded-card border border-border bg-card p-5 sm:p-6">
-          <h2 className="m-0 text-lg">
-            Mülakatta anlaşılacaklar {impacts.soft && <ImpactBadge impact={impacts.soft} className="ml-1" />}
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            Bu kişisel nitelikler CV&apos;den değil görüşmede anlaşılır; skora katılmıyor ve eksik sayılmıyor.
-            Deneyimlerinde örneği varsa mülakatta anlatmaya hazırlan.
-          </p>
-          <ul className="mt-3 space-y-1.5 text-sm">
-            {exclusion.softRows.map(({ item, index }) => (
-              <li key={index} className="flex items-start gap-2">
-                <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-muted" />
-                <span className="min-w-0">
-                  {item.requirement.text}
-                  {item.status === "matched" && item.evidence && (
-                    <span className="text-muted">
-                      {" "}
-                      · {item.evidence.fact ? "Anlattığın deneyimde" : "CV'nde"}: {item.evidence.text}
+        <motion.div {...entrance(0.17)}>
+          <Card className="gap-3 shadow-xs">
+            <CardHeader>
+              <CardTitle className="text-base">
+                Mülakatta anlaşılacaklar {impacts.soft && <ImpactBadge impact={impacts.soft} className="ml-1" />}
+              </CardTitle>
+              <CardDescription>
+                Bu kişisel nitelikler CV&apos;den değil görüşmede anlaşılır; skora katılmıyor ve eksik sayılmıyor.
+                Deneyimlerinde örneği varsa mülakatta anlatmaya hazırlan.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="m-0 list-none space-y-1.5 p-0 text-sm">
+                {exclusion.softRows.map(({ item, index }) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-muted-foreground" />
+                    <span className="min-w-0">
+                      {item.requirement.text}
+                      {item.status === "matched" && item.evidence && (
+                        <span className="text-muted-foreground">
+                          {" "}
+                          · {item.evidence.fact ? "Anlattığın deneyimde" : "CV'nde"}: {item.evidence.text}
+                        </span>
+                      )}
                     </span>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
         </motion.div>
       )}
 
       {/* Eksik kavramlar. */}
-      <motion.div {...entrance(0.2)} id="kavramlar" className="scroll-mt-24 rounded-card border border-border bg-card p-5 sm:p-6">
-        <h2 className="m-0 text-lg">CV&apos;nde görünmeyen kavramlar</h2>
-        <p className="mt-1 text-sm text-muted">
-          İlanda geçen ama CV&apos;nde karşılığını bulamadığımız kavramlar. Deneyiminde varsa açıkça yazmak skoru
-          yükseltir.
-        </p>
-        {exclusion.missingKeywords.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">İlanın her kavramı CV&apos;nde görünüyor.</p>
-        ) : (
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {exclusion.missingKeywords.map((k) => (
-              <li
-                key={k}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-sm"
-              >
-                <span aria-hidden className="size-1.5 rounded-full bg-brand-coral" />
-                {k}
-              </li>
-            ))}
-          </ul>
-        )}
+      <motion.div {...entrance(0.2)} id="kavramlar" className="scroll-mt-20">
+        <Card className="gap-3 shadow-xs">
+          <CardHeader>
+            <CardTitle className="text-base">CV&apos;nde görünmeyen kavramlar</CardTitle>
+            <CardDescription>
+              İlanda geçen ama CV&apos;nde karşılığını bulamadığımız kavramlar. Deneyiminde varsa açıkça yazmak skoru
+              yükseltir.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {exclusion.missingKeywords.length === 0 ? (
+              <p className="m-0 text-sm text-muted-foreground">İlanın her kavramı CV&apos;nde görünüyor.</p>
+            ) : (
+              <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
+                {exclusion.missingKeywords.map((k) => (
+                  <li key={k}>
+                    <Badge variant="outline" className="gap-1.5 px-2.5 py-1 text-sm font-normal">
+                      <span aria-hidden className="size-1.5 rounded-full bg-brand-coral" />
+                      {k}
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </motion.div>
 
-      <details className="group rounded-card border border-border bg-card px-5 py-4">
-        <summary className="flex cursor-pointer list-none items-center justify-between text-sm text-muted">
+      <details className="group rounded-xl border bg-card px-5 py-4">
+        <summary className="flex cursor-pointer list-none items-center justify-between text-sm text-muted-foreground">
           Teknik ayrıntı
           <ChevronDown className="size-4 transition group-open:rotate-180" aria-hidden />
         </summary>
-        <p className="mt-3 text-sm text-muted">
+        <p className="mt-3 text-sm text-muted-foreground">
           {durationMs} ms · {tokenUsage} token · {modelId}
         </p>
-        <pre className="mt-2 max-h-[32rem] overflow-x-auto rounded-button border border-border bg-background p-4 text-xs">
+        <pre className="mt-2 max-h-[32rem] overflow-x-auto rounded-lg border bg-muted/40 p-4 text-xs">
           {JSON.stringify(result, null, 2)}
         </pre>
       </details>
-      </div>
-    </section>
+    </div>
+  )
+
+  const guide = (
+    <ResultGuide
+      impacts={impacts}
+      onGo={(target) => {
+        setTab("report")
+        // Rapor sekmesi görünür olduktan sonra kaydır.
+        requestAnimationFrame(() =>
+          document.getElementById(target)?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" }),
+        )
+      }}
+    />
+  )
+
+  return (
+    <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+      <ResultNavPanel score={exclusion.score} items={navItems} onSelect={goTo} />
+      <section className="min-w-0 space-y-4">
+        <ResultNavStrip items={navItems} onSelect={goTo} />
+        {postingText ? (
+          <Tabs value={tab} onValueChange={(v) => setTab(v as "report" | "posting")} className="gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <TabsList aria-label="Sonuç görünümü">
+                <TabsTrigger value="report" className="px-4">
+                  Rapor
+                </TabsTrigger>
+                <TabsTrigger value="posting" className="px-4">
+                  İlan metni
+                </TabsTrigger>
+              </TabsList>
+              {guide}
+            </div>
+            {/* Rapor gizlenince kaybolmasın: süzgeç ve açık satırlar korunuyor. */}
+            <TabsContent value="report" forceMount className="data-[state=inactive]:hidden">
+              {report}
+            </TabsContent>
+            <TabsContent value="posting">
+              <PostingTextView text={postingText} highlight={highlight} onClear={() => setHighlight(null)} />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <>
+            <div className="flex justify-end">{guide}</div>
+            {report}
+          </>
+        )}
+      </section>
     </div>
   )
 }
@@ -566,69 +563,92 @@ function RequirementRow({
     !done &&
     !!onChange &&
     (kind === "terms" || (kind === "years" && (item.requirement.minYears ?? requiredYears(item.requirement.text)) != null))
+  const actions = requirementMenu({
+    canChange: !!onChange,
+    canShowInPosting: !!onShowInPosting,
+    kind,
+    inlineFix,
+    corrected: correction !== undefined,
+  })
   const partial = isPartial(item)
   const importanceLabel = IMPORTANCE_LABEL[item.requirement.importance] ?? item.requirement.importance
 
   if (excluded) {
     return (
-      <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3 text-muted">
-        <span className="min-w-0 flex-1 line-through decoration-muted/60">{item.requirement.text}</span>
+      <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3 text-sm text-muted-foreground">
+        <span className="min-w-0 flex-1 line-through decoration-muted-foreground/60">{item.requirement.text}</span>
         <span className="text-xs">{exclusionLabel(mark)} · skora katılmıyor</span>
         {onChange && (
-          <button
+          <Button
             type="button"
+            variant="link"
+            size="sm"
             disabled={saving}
             onClick={() => void send({ action: "include" })}
-            className="text-xs font-semibold text-brand-blue underline-offset-2 hover:underline disabled:opacity-50"
+            className="h-auto px-0 text-xs"
           >
             Geri al
-          </button>
+          </Button>
         )}
       </li>
     )
   }
 
   return (
-    <li className="group py-3">
-      <button
-        type="button"
-        className="flex w-full items-start gap-3 text-left"
-        aria-expanded={item.evidence ? open : undefined}
-        onClick={() => item.evidence && setOpen((a) => !a)}
-        disabled={!item.evidence}
-      >
-        <span
-          className={cn(
-            "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full",
-            done
-              ? "bg-brand-green/15 text-brand-green dark:text-[#4ade80]"
-              : // Kırmızı "başarısız" okunuyordu (DOG-103); eksik, kapatılabilecek bir şey.
-                "bg-brand-amber/10 text-brand-amber",
-          )}
+    <li className="py-3">
+      <div className="flex items-start gap-2">
+        <button
+          type="button"
+          className="flex min-w-0 flex-1 items-start gap-3 rounded-md text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          aria-expanded={item.evidence ? open : undefined}
+          onClick={() => item.evidence && setOpen((a) => !a)}
+          disabled={!item.evidence}
         >
-          {done ? <Check className="size-3" strokeWidth={3} aria-hidden /> : <X className="size-3" strokeWidth={3} aria-hidden />}
-          <span className="sr-only">{partial ? "Kısmen karşılanıyor" : done ? "Karşılanıyor" : "CV'nde görünmüyor"}</span>
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="font-medium">{item.requirement.text}</span>
-          <span className="ml-2 inline-block rounded-full bg-background px-2 py-0.5 align-middle text-[11px] font-semibold text-muted">
-            {importanceLabel}
+          <span
+            className={cn(
+              "mt-0.5 grid size-5 shrink-0 place-items-center rounded-full",
+              done
+                ? "bg-brand-green/15 text-brand-green dark:text-[#4ade80]"
+                : // Kırmızı "başarısız" okunuyordu (DOG-103); eksik, kapatılabilecek bir şey.
+                  "bg-brand-amber/10 text-brand-amber",
+            )}
+          >
+            {done ? <Check className="size-3" strokeWidth={3} aria-hidden /> : <X className="size-3" strokeWidth={3} aria-hidden />}
+            <span className="sr-only">{partial ? "Kısmen karşılanıyor" : done ? "Karşılanıyor" : "CV'nde görünmüyor"}</span>
           </span>
-          {partial && (
-            <span className="ml-1.5 inline-block rounded-full bg-brand-amber/10 px-2 py-0.5 align-middle text-[11px] font-semibold text-brand-amber">
-              Kısmen
-            </span>
+          <span className="min-w-0 flex-1 text-sm">
+            <span className="font-medium">{item.requirement.text}</span>
+            <Badge variant="secondary" className="ml-2 align-middle text-[11px] text-muted-foreground">
+              {importanceLabel}
+            </Badge>
+            {partial && <Badge className="ml-1.5 bg-brand-amber/10 align-middle text-[11px] text-brand-amber">Kısmen</Badge>}
+          </span>
+          {item.evidence && (
+            <ChevronDown className={cn("mt-0.5 size-4 shrink-0 text-muted-foreground transition", open && "rotate-180")} aria-hidden />
           )}
-        </span>
-        {item.evidence && (
-          <ChevronDown
-            className={cn("mt-1 size-4 shrink-0 text-muted transition", open && "rotate-180")}
-            aria-hidden
-          />
+        </button>
+        {actions.menu.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" variant="ghost" size="icon" className="-my-1 size-7 shrink-0 text-muted-foreground" aria-label="Gereksinim işlemleri">
+                <Ellipsis aria-hidden />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              {actions.menu.map((a) => (
+                <DropdownMenuItem
+                  key={a.key}
+                  onSelect={() => (a.key === "show" ? onShowInPosting?.() : setPanel(a.key))}
+                >
+                  {a.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
-      </button>
+      </div>
       {item.evidence && open && (
-        <p className="mt-2 ml-8 rounded-button border-l-2 border-brand-green/60 bg-background px-3 py-2 text-sm text-muted">
+        <p className="mt-2 ml-8 rounded-md border-l-2 border-brand-green/60 bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
           {item.evidence.fact ? (
             <>
               <span className="font-semibold text-foreground">Daha önce anlattığın deneyimde:</span> {item.evidence.text}{" "}
@@ -642,68 +662,53 @@ function RequirementRow({
         </p>
       )}
       {correction && (
-        <p className="mt-1 ml-8 text-xs text-muted">
+        <p className="m-0 mt-1 ml-8 text-xs text-muted-foreground">
           Şartı düzelttin:{" "}
           {correction.minYears !== undefined && `en az ${correction.minYears} yıl`}
           {correction.terms && correction.terms.join(", ")}
         </p>
       )}
       {reported && (
-        <p className="mt-1 ml-8 text-xs text-muted">
+        <p className="m-0 mt-1 ml-8 text-xs text-muted-foreground">
           Bildirdin, teşekkürler. Bu ifadeyi CV&apos;nde ilanın kelimeleriyle yazarsan ATS de bulur.
         </p>
       )}
       {/* Kavram ayırma bazen ilanda olmayan bir şart üretiyor; kullanıcı
           düzeltebilsin, işaret de bize hata verisi olsun (DOG-90). */}
-      {(onChange || onShowInPosting) && panel === null && (
-        <div
-          className={cn(
-            "mt-1 ml-8 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted",
-            !inlineFix && "sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100",
-          )}
+      {actions.inline && (
+        <Button
+          type="button"
+          variant="link"
+          size="sm"
+          onClick={() => setPanel("correct")}
+          className="mt-0.5 ml-8 h-auto px-0 text-xs"
         >
-          {onShowInPosting && (
-            <button type="button" onClick={onShowInPosting} className="underline-offset-2 hover:text-foreground hover:underline">
-              İlanda göster
-            </button>
-          )}
-          {onChange && (
-          <button type="button" onClick={() => setPanel("mark")} className="underline-offset-2 hover:text-foreground hover:underline">
-            Bu şartta sorun var
-          </button>
-          )}
-          {onChange && kind && (
-            <button
-              type="button"
-              onClick={() => setPanel("correct")}
-              className={cn("underline-offset-2 hover:underline", inlineFix ? "font-semibold text-brand-blue" : "hover:text-foreground")}
-            >
-              {correction
-                ? "Düzeltmeyi değiştir"
-                : !inlineFix
-                  ? "Şartı düzelt"
-                  : kind === "years"
-                    ? "Yıl yanlış mı okunmuş? Düzelt"
-                    : "Bölüm yanlış mı okunmuş? Düzelt"}
-            </button>
-          )}
-        </div>
+          {actions.inline}
+        </Button>
       )}
-      {panel === "mark" && (
-        <MarkPanel saving={saving} onCancel={() => setPanel(null)} onSubmit={(m) => void send({ action: "exclude", ...m })} />
-      )}
-      {panel === "correct" && kind && (
-        <CorrectPanel
-          kind={kind}
-          initialYears={correction?.minYears ?? item.requirement.minYears}
-          initialTerms={correction?.terms ?? (item.requirement.concepts ?? []).map((c) => c.term)}
-          corrected={correction !== undefined}
-          saving={saving}
-          onCancel={() => setPanel(null)}
-          onRemove={() => void send({ action: "correct", minYears: null, terms: null })}
-          onSubmit={(c) => void send({ action: "correct", ...c })}
-        />
-      )}
+      <Dialog open={panel !== null} onOpenChange={(o) => !o && setPanel(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{panel === "mark" ? "Bu şartta ne sorun var?" : "İlanı yanlış mı okuduk?"}</DialogTitle>
+            <DialogDescription>{item.requirement.text}</DialogDescription>
+          </DialogHeader>
+          {panel === "mark" && (
+            <MarkPanel saving={saving} onCancel={() => setPanel(null)} onSubmit={(m) => void send({ action: "exclude", ...m })} />
+          )}
+          {panel === "correct" && kind && (
+            <CorrectPanel
+              kind={kind}
+              initialYears={correction?.minYears ?? item.requirement.minYears}
+              initialTerms={correction?.terms ?? (item.requirement.concepts ?? []).map((c) => c.term)}
+              corrected={correction !== undefined}
+              saving={saving}
+              onCancel={() => setPanel(null)}
+              onRemove={() => void send({ action: "correct", minYears: null, terms: null })}
+              onSubmit={(c) => void send({ action: "correct", ...c })}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </li>
   )
 }
@@ -727,36 +732,42 @@ function ConditionsCard({
 }) {
   if (conditions.length === 0 && languages.length === 0) return null
   return (
-    <motion.div {...motionProps} id="sartlar" className="scroll-mt-24 rounded-card border border-border bg-card p-5 sm:p-6">
-      <h2 className="m-0 text-lg">Şartlar {impact && <ImpactBadge impact={impact} className="ml-1" />}</h2>
-      <p className="mt-1 text-sm text-muted">
-        İlanın yetkinlik dışındaki şartları. Skora katılmıyor; CV&apos;n çoğunu söylemez, başvurmadan önce kendin
-        kontrol et.
-      </p>
-      <ul className="mt-3 space-y-2 text-sm">
-        {conditions.map((item, i) => (
-          <ConditionLine
-            key={`c${i}`}
-            ok={item.status === "matched"}
-            text={item.requirement.text}
-            note={item.status === "matched" && item.evidence ? `CV'nde: ${item.evidence.text}` : "Kontrol et"}
-          />
-        ))}
-        {languages.map((check) => (
-          <ConditionLine
-            key={`l${check.index}`}
-            ok={check.status === "ok"}
-            text={`${check.language}: ilan ${check.required} seviyesi istiyor`}
-            note={
-              check.status === "unknown"
-                ? `CV'nde seviye yazmıyor (${check.cvLine})`
-                : check.status === "below"
-                  ? `CV'nde ${check.found} yazıyor (${check.cvLine}); ilanın istediğinin altında`
-                  : `CV'nde ${check.found} (${check.cvLine})`
-            }
-          />
-        ))}
-      </ul>
+    <motion.div {...motionProps} id="sartlar" className="scroll-mt-20">
+      <Card className="gap-3 shadow-xs">
+        <CardHeader>
+          <CardTitle className="text-base">Şartlar {impact && <ImpactBadge impact={impact} className="ml-1" />}</CardTitle>
+          <CardDescription>
+            İlanın yetkinlik dışındaki şartları. Skora katılmıyor; CV&apos;n çoğunu söylemez, başvurmadan önce kendin
+            kontrol et.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="m-0 list-none space-y-2 p-0 text-sm">
+            {conditions.map((item, i) => (
+              <ConditionLine
+                key={`c${i}`}
+                ok={item.status === "matched"}
+                text={item.requirement.text}
+                note={item.status === "matched" && item.evidence ? `CV'nde: ${item.evidence.text}` : "Kontrol et"}
+              />
+            ))}
+            {languages.map((check) => (
+              <ConditionLine
+                key={`l${check.index}`}
+                ok={check.status === "ok"}
+                text={`${check.language}: ilan ${check.required} seviyesi istiyor`}
+                note={
+                  check.status === "unknown"
+                    ? `CV'nde seviye yazmıyor (${check.cvLine})`
+                    : check.status === "below"
+                      ? `CV'nde ${check.found} yazıyor (${check.cvLine}); ilanın istediğinin altında`
+                      : `CV'nde ${check.found} (${check.cvLine})`
+                }
+              />
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
     </motion.div>
   )
 }
@@ -771,7 +782,7 @@ function ConditionLine({ ok, text, note }: { ok: boolean; text: string; note: st
       )}
       <span className="min-w-0">
         {text}
-        <span className="text-muted"> · {note}</span>
+        <span className="text-muted-foreground"> · {note}</span>
       </span>
     </li>
   )
@@ -781,24 +792,28 @@ function ConditionLine({ ok, text, note }: { ok: boolean; text: string; note: st
 function ResultNavPanel({ score, items, onSelect }: { score: number; items: ResultNavItem[]; onSelect: (i: ResultNavItem) => void }) {
   const state = scoreStatus(score)
   return (
-    <aside aria-label="Sonuç özeti" className="sticky top-24 hidden rounded-card border border-border bg-card p-4 lg:block">
-      <p className="m-0 text-xs font-semibold tracking-wider text-muted uppercase">Uyum skoru</p>
-      <p className={cn("m-0 mt-1 font-heading text-3xl font-extrabold", state.textClass)}>{score}</p>
-      <p className="m-0 text-xs text-muted">{state.label}</p>
-      <ul className="m-0 mt-4 list-none space-y-3 p-0">
+    <aside aria-label="Sonuç özeti" className="sticky top-20 hidden rounded-xl border bg-card p-4 shadow-xs lg:block">
+      <p className="m-0 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Uyum skoru</p>
+      <p className={cn("m-0 mt-1 text-3xl font-semibold tabular-nums", state.textClass)}>{score}</p>
+      <p className="m-0 text-xs text-muted-foreground">{state.label}</p>
+      <ul className="m-0 mt-4 list-none space-y-1 p-0">
         {items.map((item) => (
           <li key={item.key}>
-            <button type="button" onClick={() => onSelect(item)} className="w-full text-left text-sm">
+            <button
+              type="button"
+              onClick={() => onSelect(item)}
+              className="w-full rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            >
               <span className="flex items-baseline justify-between gap-2">
                 <span className="font-medium">{item.label}</span>
-                <span className={cn("shrink-0 text-xs", item.issues === 0 ? "text-brand-green dark:text-[#4ade80]" : "text-brand-blue")}>
+                <span className={cn("shrink-0 text-xs", item.issues === 0 ? "text-brand-green dark:text-[#4ade80]" : "text-primary")}>
                   {navStatus(item)}
                 </span>
               </span>
               {item.progress && (
-                <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-background" aria-hidden>
+                <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
                   <span
-                    className="block h-full rounded-full bg-brand-blue"
+                    className="block h-full rounded-full bg-primary"
                     style={{ width: `${item.progress.total ? (item.progress.done / item.progress.total) * 100 : 0}%` }}
                   />
                 </span>
@@ -814,16 +829,18 @@ function ResultNavPanel({ score, items, onSelect }: { score: number; items: Resu
 /** Dar ekranda aynı satırlar, sayfanın üstünde kaydırılabilir şerit. */
 function ResultNavStrip({ items, onSelect }: { items: ResultNavItem[]; onSelect: (i: ResultNavItem) => void }) {
   return (
-    <nav aria-label="Sonuç bölümleri" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
+    <nav aria-label="Sonuç bölümleri" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden">
       {items.map((item) => (
-        <button
+        <Button
           key={item.key}
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => onSelect(item)}
-          className="shrink-0 rounded-full border border-border bg-card px-3 py-1 text-xs whitespace-nowrap"
+          className="shrink-0 rounded-full text-xs whitespace-nowrap"
         >
-          {item.label} · <span className={item.issues === 0 ? "text-brand-green dark:text-[#4ade80]" : "text-brand-blue"}>{navStatus(item)}</span>
-        </button>
+          {item.label} · <span className={item.issues === 0 ? "text-brand-green dark:text-[#4ade80]" : "text-primary"}>{navStatus(item)}</span>
+        </Button>
       ))}
     </nav>
   )
@@ -861,16 +878,16 @@ function PostingTextView({
   }
   if (at < text.length) parts.push({ text: text.slice(at), mark: false })
   return (
-    <div className="rounded-card border border-border bg-card p-5 sm:p-6">
+    <div className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
       {highlight && (
-        <p className="m-0 mb-3 flex flex-wrap items-center gap-2 text-sm text-muted">
+        <p className="m-0 mb-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <span>
             Vurgulanan: <span className="font-medium text-foreground">{highlight.label}</span>
             {spans.length === 0 && " · ilan metninde bu kelimelerle geçmiyor; çıkarım ilanı farklı ifade etmiş olabilir."}
           </span>
-          <button type="button" onClick={onClear} className="text-xs font-semibold text-brand-blue">
+          <Button type="button" variant="link" size="sm" onClick={onClear} className="h-auto px-0 text-xs">
             Vurguyu kaldır
-          </button>
+          </Button>
         </p>
       )}
       <p className="m-0 text-sm leading-relaxed whitespace-pre-line">
@@ -879,7 +896,7 @@ function PostingTextView({
             <mark
               key={i}
               ref={parts.findIndex((x) => x.mark) === i ? firstMark : undefined}
-              className="rounded bg-brand-blue/25 px-0.5 font-medium text-foreground ring-1 ring-brand-blue/40"
+              className="rounded bg-primary/20 px-0.5 font-medium text-foreground ring-1 ring-primary/40"
             >
               {p.text}
             </mark>
@@ -896,7 +913,7 @@ function PostingTextView({
 function PositionCorrectionNote({ position, onUndo }: { position: string; onUndo?: () => Promise<void> }) {
   const [saving, setSaving] = useState(false)
   return (
-    <p className="m-0 mt-2 px-1 text-xs text-muted">
+    <p className="m-0 mt-2 px-1 text-xs text-muted-foreground">
       İlanın unvanını “{position}” olarak düzelttin; unvan eşleşmesi ve skor buna göre.{" "}
       {onUndo && (
         <button
@@ -906,7 +923,7 @@ function PositionCorrectionNote({ position, onUndo }: { position: string; onUndo
             setSaving(true)
             onUndo().catch(() => {}).finally(() => setSaving(false))
           }}
-          className="font-semibold text-brand-blue underline-offset-2 hover:underline disabled:opacity-50"
+          className="font-semibold text-primary underline-offset-2 hover:underline disabled:opacity-50"
         >
           {saving ? "Geri alınıyor…" : "Geri al"}
         </button>

@@ -99,19 +99,17 @@ export function SocialLogin({ open, returnTo }: { open: Provider[]; returnTo: st
             aria-label={soon ? `${LABEL[s]} ile giriş yakında` : `${LABEL[s]} ile devam et`}
             aria-disabled={soon || undefined}
             className={cn(
-              "relative flex items-center justify-center gap-2 rounded-2xl border border-border px-3 py-3.5 text-sm font-semibold text-foreground transition disabled:translate-y-0 disabled:opacity-60",
-              soon
-                ? "cursor-not-allowed opacity-50"
-                : "hover:-translate-y-px hover:border-foreground/25 hover:bg-background dark:hover:bg-white/5",
+              "relative flex h-11 items-center justify-center gap-2 rounded-md border bg-background px-3 text-sm font-medium text-foreground shadow-xs transition-colors disabled:opacity-60",
+              soon ? "cursor-not-allowed opacity-50" : "hover:bg-accent",
             )}
           >
             {soon && (
-              <span className="absolute -top-2 right-2 rounded-full bg-background px-1.5 text-[10px] font-semibold text-muted ring-1 ring-border">
+              <span className="absolute -top-2 right-2 rounded-full bg-background px-1.5 text-[10px] font-semibold text-muted-foreground ring-1 ring-border">
                 yakında
               </span>
             )}
             {pendingCount === s ? (
-              <span className="size-5 animate-spin rounded-full border-2 border-border border-t-brand-blue" />
+              <span className="size-5 animate-spin rounded-full border-2 border-border border-t-primary" />
             ) : (
               <ProviderIcon s={s} />
             )}
@@ -121,7 +119,7 @@ export function SocialLogin({ open, returnTo }: { open: Provider[]; returnTo: st
         })}
       </div>
       {messageText && (
-        <p role="status" className="mt-3 text-sm text-muted">
+        <p role="status" className="mt-3 text-sm text-muted-foreground">
           {messageText}
         </p>
       )}

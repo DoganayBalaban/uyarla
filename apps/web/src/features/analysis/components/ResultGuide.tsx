@@ -1,7 +1,17 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CircleHelp, X } from "lucide-react"
+import { CircleHelp } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { cn } from "@/lib/cn"
 import type { ScoreImpacts } from "@/features/analysis/scoreImpact"
 
@@ -71,85 +81,72 @@ export function ResultGuide({ impacts, onGo }: { impacts: ScoreImpacts; onGo: (t
   const [seen, setSeen] = useState(true)
   useEffect(() => setSeen(readSeen()), [])
 
-  function close() {
-    setOpen(false)
+  function change(next: boolean) {
+    setOpen(next)
+    if (next) return
     markSeen()
     setSeen(true)
   }
 
   const step = steps[at]!
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => {
-          setAt(0)
-          setOpen(true)
-        }}
-        className={cn(
-          "inline-flex items-center gap-1.5 text-sm font-medium transition",
-          seen ? "text-muted hover:text-foreground" : "text-brand-blue",
-        )}
-      >
-        <CircleHelp className="size-4" aria-hidden />
-        Sonucu nasıl okuyacağım?
-      </button>
-      {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/30 p-4" onClick={close}>
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="result-guide-title"
-            className="w-full max-w-md rounded-card border border-border bg-card p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.key === "Escape" && close()}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <p className="m-0 text-xs font-semibold text-muted tabular-nums">
-                {at + 1} / {steps.length}
-              </p>
-              <button type="button" onClick={close} aria-label="Kapat" className="text-muted hover:text-foreground">
-                <X className="size-4" aria-hidden />
-              </button>
-            </div>
-            <h2 id="result-guide-title" className="m-0 mt-1 text-lg">
-              {step.title}
-            </h2>
-            <p className="mt-2 text-sm text-muted">{step.body}</p>
-            <div className="mt-5 flex flex-wrap items-center gap-2">
-              {at < steps.length - 1 ? (
-                <button
-                  type="button"
-                  autoFocus
-                  onClick={() => setAt(at + 1)}
-                  className="rounded-button bg-brand-blue px-4 py-2 text-sm font-semibold text-white"
-                >
-                  Sonraki
-                </button>
-              ) : (
-                <button type="button" autoFocus onClick={close} className="rounded-button bg-brand-blue px-4 py-2 text-sm font-semibold text-white">
-                  Anladım
-                </button>
-              )}
-              {at > 0 && (
-                <button type="button" onClick={() => setAt(at - 1)} className="px-3 py-2 text-sm font-semibold text-muted">
-                  Önceki
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  close()
-                  onGo(step.target)
-                }}
-                className="ml-auto text-sm font-semibold text-brand-blue"
-              >
-                Bölüme git
-              </button>
-            </div>
-          </div>
+    <Dialog open={open} onOpenChange={change}>
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setAt(0)}
+          className={cn(seen ? "text-muted-foreground" : "text-primary")}
+        >
+          <CircleHelp aria-hidden />
+          Sonucu nasıl okuyacağım?
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <p className="m-0 text-xs font-semibold text-muted-foreground tabular-nums">
+            {at + 1} / {steps.length}
+          </p>
+          <DialogTitle>{step.title}</DialogTitle>
+          <DialogDescription>{step.body}</DialogDescription>
+        </DialogHeader>
+        {/* Adım göstergesi; sayı yukarıda yazılı. */}
+        <div aria-hidden className="flex gap-1.5">
+          {steps.map((s, i) => (
+            <span key={s.title} className={cn("h-1 flex-1 rounded-full transition-colors", i <= at ? "bg-primary" : "bg-muted")} />
+          ))}
         </div>
-      )}
-    </>
+        <DialogFooter className="items-center gap-2 sm:justify-between">
+          <Button
+            type="button"
+            variant="link"
+            className="px-0"
+            onClick={() => {
+              change(false)
+              onGo(step.target)
+            }}
+          >
+            Bölüme git
+          </Button>
+          <div className="flex gap-2">
+            {at > 0 && (
+              <Button type="button" variant="ghost" onClick={() => setAt(at - 1)}>
+                Önceki
+              </Button>
+            )}
+            {at < steps.length - 1 ? (
+              <Button type="button" autoFocus onClick={() => setAt(at + 1)}>
+                Sonraki
+              </Button>
+            ) : (
+              <Button type="button" autoFocus onClick={() => change(false)}>
+                Anladım
+              </Button>
+            )}
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

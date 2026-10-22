@@ -35,12 +35,12 @@ export function ContributionsSection({
 }) {
   if (missing.length === 0 || experience.length === 0) return null
   return (
-    <section className="rounded-card border border-border bg-card p-5 sm:p-6">
-      <h2 className="m-0 text-lg">Eksik kalan zorunlular</h2>
-      <p className="mt-1 text-sm text-muted">
+    <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
+      <h2 className="m-0 text-base font-semibold">Eksik kalan zorunlular</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
         Bu gereksinimler için CV&apos;nde kanıt bulamadık, o yüzden yazmadık. Gerçekten yaptığın bir şeyse anlat; senin
         anlattığından bir madde yazalım. Anlatmadığın hiçbir şeyi eklemeyiz. Kabul ettiğin madde sonraki
-        analizlerinde de kanıt sayılır; Hesabım&apos;dan unutabilirsin.
+        analizlerinde de kanıt sayılır; CV&apos;lerim&apos;den unutabilirsin.
       </p>
       <ul className="mt-4 divide-y divide-border">
         {missing.map((r) => (
@@ -144,7 +144,7 @@ function RequirementContribution({
               placeholder="Kendi sözlerinle: ne yaptın, hangi araçla, sonuç ne oldu? Rakam varsa yaz."
               className="mt-1 block w-full rounded-button border border-border bg-card px-3 py-2"
             />
-            <span className="mt-1 block text-xs text-muted">
+            <span className="mt-1 block text-xs text-muted-foreground">
               {length < MIN_ANSWER ? `En az ${MIN_ANSWER} karakter (${length})` : `${length}/${MAX_ANSWER}`}
             </span>
           </label>
@@ -190,7 +190,7 @@ function ContributionItem({
 }) {
   if (item.status === "running") {
     return (
-      <p className="mt-2 flex items-center gap-2 text-sm text-muted">
+      <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
         <LoaderCircle className="size-4 animate-spin" aria-hidden />
         Anlattığını maddeye çeviriyoruz…
       </p>
@@ -201,7 +201,7 @@ function ContributionItem({
   }
   if (!item.text) {
     return (
-      <p className="mt-2 text-sm text-muted">
+      <p className="mt-2 text-sm text-muted-foreground">
         Anlattığından bir CV maddesi çıkaramadık. Ne yaptığını biraz daha somut anlatır mısın?
       </p>
     )
@@ -211,7 +211,7 @@ function ContributionItem({
   return (
     <div className="mt-3 rounded-button border border-border p-3">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs font-semibold text-muted">
+        <span className="text-xs font-semibold text-muted-foreground">
           {job ? `${job.title}${job.company ? ` · ${job.company}` : ""} işine eklenecek` : "Yeni madde"}
           {item.decision === "pending" && <span className="ml-2 text-brand-blue">· Karar bekliyor</span>}
         </span>
@@ -227,7 +227,7 @@ function ContributionItem({
       {(item.alignments?.length ?? 0) > 0 && (
         <ul className="mt-2 space-y-1">
           {item.alignments!.map((a) => (
-            <li key={a.term} className="flex gap-2 text-sm text-muted">
+            <li key={a.term} className="flex gap-2 text-sm text-muted-foreground">
               <Link2 className="mt-0.5 size-3.5 shrink-0 text-brand-blue" aria-hidden />
               <span>
                 <span className="font-semibold text-foreground">{a.term}</span>, senin{" "}
@@ -237,7 +237,7 @@ function ContributionItem({
           ))}
         </ul>
       )}
-      <p className="mt-2 mb-0 text-xs text-muted">Senin anlattığın: &ldquo;{item.answer}&rdquo;</p>
+      <p className="mt-2 mb-0 text-xs text-muted-foreground">Senin anlattığın: &ldquo;{item.answer}&rdquo;</p>
     </div>
   )
 }

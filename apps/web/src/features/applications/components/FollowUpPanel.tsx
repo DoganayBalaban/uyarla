@@ -69,7 +69,7 @@ export function FollowUpPanel({ card }: { card: BoardCard }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-foreground"
+        className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-md border bg-background px-3 text-sm font-medium shadow-xs transition-colors hover:bg-accent"
       >
         <MessageSquareText className="size-3.5" aria-hidden />
         {LABEL[kind].open}
@@ -78,8 +78,8 @@ export function FollowUpPanel({ card }: { card: BoardCard }) {
   }
 
   return (
-    <div className="mt-3 rounded-button border border-border bg-background p-3 text-sm">
-      <p className="m-0 text-muted">
+    <div className="mt-3 rounded-lg border bg-muted/30 p-4 text-sm">
+      <p className="m-0 text-muted-foreground">
         {kind === "followup"
           ? "Gönderdiğin CV ve ön yazıdan, yeni bir şey eklemeden kısa bir takip mesajı."
           : "Mülakat sonrası kısa bir teşekkür notu. Köşeli parantezli yere görüşmeden bir konu yaz ya da sil."}{" "}
@@ -87,12 +87,12 @@ export function FollowUpPanel({ card }: { card: BoardCard }) {
       </p>
 
       {running && (
-        <p className="mt-2 flex items-center gap-2 text-muted" role="status">
+        <p className="mt-2 flex items-center gap-2 text-muted-foreground" role="status">
           <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden />
           Yazıyoruz…
         </p>
       )}
-      {latest?.status === "failed" && <p className="mt-2 text-brand-red">Taslağı yazamadık. Tekrar dener misin?</p>}
+      {latest?.status === "failed" && <p className="mt-2 text-destructive">Taslağı yazamadık. Tekrar dener misin?</p>}
       {latest?.status === "done" && latest.text && (
         <div className="mt-2">
           {latest.verification?.status === "flagged" && (
@@ -106,11 +106,11 @@ export function FollowUpPanel({ card }: { card: BoardCard }) {
               <span className="font-semibold">Konu:</span> {latest.subject}
             </p>
           )}
-          <p className="m-0 whitespace-pre-line rounded-[8px] bg-card p-2.5 leading-relaxed">{latest.text}</p>
+          <p className="m-0 whitespace-pre-line rounded-md border bg-card p-3 leading-relaxed">{latest.text}</p>
           <button
             type="button"
             onClick={() => void copy()}
-            className="mt-2 inline-flex items-center gap-1.5 font-semibold text-brand-blue dark:text-brand-blue-light"
+            className="mt-2 inline-flex items-center gap-1.5 font-medium text-primary"
           >
             {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
             {copied ? "Kopyalandı" : "Kopyala"}
@@ -124,7 +124,7 @@ export function FollowUpPanel({ card }: { card: BoardCard }) {
             value={channel}
             onChange={(e) => setChannel(e.target.value as FollowUpChannel)}
             aria-label="Kanal"
-            className="rounded-button border border-border bg-card px-2 py-1.5"
+            className="h-8 rounded-md border border-input bg-transparent px-2 shadow-xs"
           >
             <option value="email">E-posta</option>
             <option value="linkedin">LinkedIn mesajı</option>
@@ -133,16 +133,16 @@ export function FollowUpPanel({ card }: { card: BoardCard }) {
             type="button"
             onClick={() => void write()}
             disabled={request.isPending}
-            className="rounded-button bg-brand-blue px-3 py-1.5 font-semibold text-white disabled:opacity-50"
+            className="inline-flex h-8 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
             {latest ? "Yeniden yaz" : LABEL[kind].write}
           </button>
-          {latest && <span className="text-xs text-muted">{left} hakkın kaldı</span>}
+          {latest && <span className="text-xs text-muted-foreground">{left} hakkın kaldı</span>}
         </div>
       )}
-      {!running && left <= 0 && <p className="mt-2 text-xs text-muted">Bu başvuru için taslak hakkın doldu.</p>}
+      {!running && left <= 0 && <p className="mt-2 text-xs text-muted-foreground">Bu başvuru için taslak hakkın doldu.</p>}
       {error && (
-        <p role="alert" className="mt-2 text-brand-red dark:text-[#f87171]">
+        <p role="alert" className="mt-2 text-destructive">
           {error}
         </p>
       )}
@@ -198,7 +198,7 @@ export function OutreachPanel({ card }: { card: BoardCard }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-foreground"
+        className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-md border bg-background px-3 text-sm font-medium shadow-xs transition-colors hover:bg-accent"
       >
         <MessageSquareText className="size-3.5" aria-hidden />
         {LABEL.outreach.open}
@@ -206,21 +206,21 @@ export function OutreachPanel({ card }: { card: BoardCard }) {
     )
   }
 
-  const select = "rounded-button border border-border bg-card px-2 py-1.5"
+  const select = "h-8 rounded-md border border-input bg-transparent px-2 shadow-xs"
   return (
-    <div className="mt-3 rounded-button border border-border bg-background p-3 text-sm">
-      <p className="m-0 text-muted">
+    <div className="mt-3 rounded-lg border bg-muted/30 p-4 text-sm">
+      <p className="m-0 text-muted-foreground">
         Şirketten birine kısa bir mesaj. Alıcının adını &ldquo;[ad]&rdquo; yerine sen yaz; ortak bir geçmişiniz varsa
         aşağıya ekle, biz uydurmuyoruz. Göndermeden önce oku.
       </p>
 
       {running && (
-        <p className="mt-2 flex items-center gap-2 text-muted" role="status">
+        <p className="mt-2 flex items-center gap-2 text-muted-foreground" role="status">
           <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden />
           Yazıyoruz…
         </p>
       )}
-      {latest?.status === "failed" && <p className="mt-2 text-brand-red">Mesajı yazamadık. Tekrar dener misin?</p>}
+      {latest?.status === "failed" && <p className="mt-2 text-destructive">Mesajı yazamadık. Tekrar dener misin?</p>}
       {latest?.status === "done" && latest.text && (
         <div className="mt-2">
           {latest.verification?.status === "flagged" && (
@@ -234,7 +234,7 @@ export function OutreachPanel({ card }: { card: BoardCard }) {
               <span className="font-semibold">Konu:</span> {latest.subject}
             </p>
           )}
-          <p className="m-0 whitespace-pre-line rounded-[8px] bg-card p-2.5 leading-relaxed">{latest.text}</p>
+          <p className="m-0 whitespace-pre-line rounded-md border bg-card p-3 leading-relaxed">{latest.text}</p>
           <button
             type="button"
             onClick={() => {
@@ -242,7 +242,7 @@ export function OutreachPanel({ card }: { card: BoardCard }) {
                 .writeText(latest.subject ? `${latest.subject}\n\n${latest.text}` : latest.text!)
                 .then(() => setCopied(true))
             }}
-            className="mt-2 inline-flex items-center gap-1.5 font-semibold text-brand-blue dark:text-brand-blue-light"
+            className="mt-2 inline-flex items-center gap-1.5 font-medium text-primary"
           >
             {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
             {copied ? "Kopyalandı" : "Kopyala"}
@@ -278,24 +278,24 @@ export function OutreachPanel({ card }: { card: BoardCard }) {
             maxLength={OUTREACH_NOTE_MAX_LENGTH}
             aria-label="Ortak bağlam (isteğe bağlı)"
             placeholder="İsteğe bağlı: ortak bir bağlam, ör. aynı üniversiteden mezunuz"
-            className="w-full rounded-button border border-border bg-card px-2 py-1.5"
+            className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 shadow-xs"
           />
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => void write()}
               disabled={request.isPending}
-              className="rounded-button bg-brand-blue px-3 py-1.5 font-semibold text-white disabled:opacity-50"
+              className="inline-flex h-8 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               {latest ? "Yeniden yaz" : LABEL.outreach.write}
             </button>
-            {latest && <span className="text-xs text-muted">{left} hakkın kaldı</span>}
+            {latest && <span className="text-xs text-muted-foreground">{left} hakkın kaldı</span>}
           </div>
         </div>
       )}
-      {!running && left <= 0 && <p className="mt-2 text-xs text-muted">Bu başvuru için mesaj hakkın doldu.</p>}
+      {!running && left <= 0 && <p className="mt-2 text-xs text-muted-foreground">Bu başvuru için mesaj hakkın doldu.</p>}
       {error && (
-        <p role="alert" className="mt-2 text-brand-red dark:text-[#f87171]">
+        <p role="alert" className="mt-2 text-destructive">
           {error}
         </p>
       )}

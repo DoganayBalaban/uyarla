@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/cn"
 import type { ScoreImpact } from "@/features/analysis/scoreImpact"
 
@@ -7,18 +8,17 @@ import type { ScoreImpact } from "@/features/analysis/scoreImpact"
  */
 export function ImpactBadge({ impact, className }: { impact: ScoreImpact; className?: string }) {
   return (
-    <span
+    <Badge
       title={impact.hint}
+      variant={impact.tone === "scored" ? "secondary" : "outline"}
       className={cn(
-        "inline-block rounded-full px-2 py-0.5 align-middle text-[11px] font-semibold whitespace-nowrap",
-        impact.tone === "scored"
-          ? "bg-brand-blue/10 text-brand-blue"
-          : "border border-border bg-background text-muted",
+        "align-middle text-[11px] font-semibold",
+        impact.tone === "scored" ? "bg-primary/10 text-primary" : "text-muted-foreground",
         className,
       )}
     >
       {impact.label}
       <span className="sr-only">: {impact.hint}</span>
-    </span>
+    </Badge>
   )
 }

@@ -13,7 +13,7 @@ export function DiffText({ original, rewritten }: { original: string; rewritten:
             className={
               part.kind === "added"
                 ? "rounded bg-brand-green/15 px-0.5 text-foreground decoration-brand-green/60 underline-offset-2"
-                : "text-muted line-through decoration-muted/60"
+                : "text-muted-foreground line-through decoration-muted-foreground/60"
             }
           >
             {part.text}{" "}

@@ -51,7 +51,7 @@ export function EditText({
           <Pencil className="size-3.5" aria-hidden />
           Düzenle
         </button>
-        {edited && <span className="text-muted">Yeni hâli senin düzenlemen.</span>}
+        {edited && <span className="text-muted-foreground">Yeni hâli senin düzenlemen.</span>}
       </div>
     )
   }
@@ -74,7 +74,7 @@ export function EditText({
       />
       {terms.length > 0 && <LiveTerms text={draft} terms={terms} />}
       {onPreview && <LiveScore preview={preview} currentScore={currentScore} />}
-      <p className="m-0 text-xs text-muted">
+      <p className="m-0 text-xs text-muted-foreground">
         CV&apos;nde olmayan bir sayı ya da ilan terimi eklersen &ldquo;kontrol et&rdquo; uyarısı çıkar; mülakatta
         savunabileceğin şeyleri yaz.
       </p>
@@ -87,7 +87,7 @@ export function EditText({
         >
           Kaydet
         </button>
-        <button type="button" onClick={() => setDraft(null)} disabled={busy} className="px-3 py-1.5 font-semibold text-muted">
+        <button type="button" onClick={() => setDraft(null)} disabled={busy} className="px-3 py-1.5 font-semibold text-muted-foreground">
           Vazgeç
         </button>
       </div>
@@ -104,7 +104,7 @@ export function EditText({
 function LiveTerms({ text, terms }: { text: string; terms: readonly PostingTerm[] }) {
   const found = termsIn(text, terms)
   return (
-    <p className="m-0 text-xs text-muted" aria-live="polite">
+    <p className="m-0 text-xs text-muted-foreground" aria-live="polite">
       {found.length === 0 ? (
         "Bu metinde ilanın terimlerinden biri geçmiyor."
       ) : (
@@ -169,8 +169,8 @@ function useLivePreview(draft: string | null, original: string, onPreview: Param
 
 function LiveScore({ preview, currentScore }: { preview: Preview; currentScore: number | null }) {
   if (preview.state === "idle") return null
-  if (preview.state === "loading") return <p className="m-0 text-xs text-muted">Skoru hesaplıyoruz…</p>
-  if (preview.state === "error") return <p className="m-0 text-xs text-muted">Skoru şimdi hesaplayamadık; kaydedince güncellenir.</p>
+  if (preview.state === "loading") return <p className="m-0 text-xs text-muted-foreground">Skoru hesaplıyoruz…</p>
+  if (preview.state === "error") return <p className="m-0 text-xs text-muted-foreground">Skoru şimdi hesaplayamadık; kaydedince güncellenir.</p>
   const score = preview.scoreAfter
   const diff = scoreDelta(score, currentScore)
   return (
@@ -185,7 +185,7 @@ function LiveScore({ preview, currentScore }: { preview: Preview; currentScore: 
               {diff})
             </span>
           )}
-          {diff === 0 && <span className="text-muted"> (değişmiyor)</span>}
+          {diff === 0 && <span className="text-muted-foreground"> (değişmiyor)</span>}
         </p>
       )}
       {preview.verification?.status === "flagged" && (

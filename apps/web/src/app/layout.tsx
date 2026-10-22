@@ -1,9 +1,12 @@
 import "@/app/globals.css"
 import type { Metadata } from "next"
 import { AnalysisNotice } from "@/features/analysis/components/AnalysisNotice"
-import { Navbar } from "@/components/layout/Navbar"
 import { QueryProvider } from "@/components/providers/QueryProvider"
 import { WebAnalytics } from "@/components/providers/WebAnalytics"
+import { ThemeProvider } from "@/components/providers/ThemeProvider"
+import { Toaster } from "@/components/ui/sonner"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { Geist } from "next/font/google"
 import { siteUrl } from "@/lib/site"
 
 const TITLE = "uyarla · Her ilana, doğru CV."
@@ -26,26 +29,27 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 }
 
+// Başlık ve metin tek aile: Geist. next/font sunucudan veriyor; Google Fonts
+// isteği ve düzen kayması yok.
+const geist = Geist({ subsets: ["latin", "latin-ext"], variable: "--font-geist", display: "swap" })
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr">
-      <head>
-        {/* Başlık ve metin tek aile: Geist. */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    // suppressHydrationWarning: tema sınıfı istemcide <html>'e ekleniyor.
+    <html lang="tr" className={geist.variable} suppressHydrationWarning>
       <body>
-        <QueryProvider>
-          {/* Bütün sayfaların tek üst çubuğu; giriş ekranında kendini gizliyor. */}
-          <Navbar />
-          {children}
-          {/* Süren analizi her sayfada izleyen sağ alt bildirimi. */}
-          <AnalysisNotice />
-        </QueryProvider>
+        <ThemeProvider>
+          <TooltipProvider delayDuration={300}>
+            <QueryProvider>
+              {/* Üst çubuk route group'larda: tanıtımda Navbar, uygulamada
+                  kenar çubuğu kabuğu (DOG-144). */}
+              {children}
+              {/* Süren analizi her sayfada izleyen sağ alt bildirimi. */}
+              <AnalysisNotice />
+            </QueryProvider>
+            <Toaster position="bottom-right" />
+          </TooltipProvider>
+        </ThemeProvider>
         <WebAnalytics />
       </body>
     </html>

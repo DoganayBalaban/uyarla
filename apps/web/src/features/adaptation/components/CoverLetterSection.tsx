@@ -71,15 +71,15 @@ export function CoverLetterSection({
   }
 
   return (
-    <section className="rounded-card border border-border bg-card p-5 sm:p-6">
+    <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <span className="grid size-9 shrink-0 place-items-center rounded-button bg-brand-blue/10 text-brand-blue">
             <Mail className="size-5" aria-hidden />
           </span>
           <div>
-            <h2 className="m-0 text-lg">Ön yazı</h2>
-            <p className="m-0 mt-0.5 text-sm text-muted">
+            <h2 className="m-0 text-base font-semibold">Ön yazı</h2>
+            <p className="m-0 mt-0.5 text-sm text-muted-foreground">
               Bu ilana ve CV&apos;ndeki gerçek deneyimine özel, üç paragraflık bir ön yazı.
             </p>
           </div>
@@ -113,7 +113,7 @@ export function CoverLetterSection({
 
       {running && (
         <div className="mt-5 space-y-2.5" role="status">
-          <p className="m-0 flex items-center gap-2 text-sm text-muted">
+          <p className="m-0 flex items-center gap-2 text-sm text-muted-foreground">
             <LoaderCircle className="size-4 text-brand-blue motion-safe:animate-spin" aria-hidden />
             Ön yazını yazıyoruz, sonra hiçbir şeyin uydurulmadığını kontrol ediyoruz…
           </p>
@@ -190,7 +190,7 @@ export function CoverLetterSection({
               Metin olarak indir
             </button>
           </div>
-          <p className="mt-4 text-xs text-muted">
+          <p className="mt-4 text-xs text-muted-foreground">
             Yapay zekâ ile yazıldı ve CV&apos;ndeki bilgilerle karşılaştırıldı. Göndermeden önce
             okuyup kendi sesine göre düzenle.
           </p>
@@ -244,7 +244,7 @@ export function LetterChecklist({ checks }: { checks: CoverLetterChecks }) {
           ) : (
             <TriangleAlert className="mt-0.5 size-4 shrink-0 text-brand-amber" aria-hidden />
           )}
-          <span className={row.ok ? "text-muted" : undefined}>{row.text}</span>
+          <span className={row.ok ? "text-muted-foreground" : undefined}>{row.text}</span>
         </li>
       ))}
     </ul>

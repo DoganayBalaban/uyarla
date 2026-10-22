@@ -26,7 +26,7 @@ export const STAGE_LABEL: Record<Stage, string> = {
  * bildirdiği için durum renkleri burada yerinde (rehber §9.2).
  */
 export const STAGE_COLOR: Record<Stage, string> = {
-  saved: "bg-muted",
+  saved: "bg-muted-foreground",
   applied: "bg-brand-blue",
   interview: "bg-brand-amber",
   offer: "bg-brand-green",
@@ -58,6 +58,25 @@ export interface BoardCard {
   adaptation: { id: string; status: string } | null
   /** Başvuruya hazır mı (DOG-91), uyarlamadan önceki analize göre; eski kayıtlarda null. */
   readiness: { ready: boolean; missingMust: number; titleMissing: boolean } | null
+  /** Mülakat hazırlık paketinin durumu (DOG-152); paket yoksa null. */
+  prep?: PrepStatus | null
+}
+
+export type PrepStatus = "running" | "ready" | "failed"
+
+/** Takılmış sayılan "hazırlanıyor" (worker düştüyse); uçla aynı süre. */
+const PREP_STALE_MS = 10 * 60_000
+
+/** Hazırlık kaydının durumu (DOG-152); paketin kendisi karta girmiyor. */
+export function prepStatus(record: unknown, now: Date = new Date()): PrepStatus | null {
+  if (!record || typeof record !== "object") return null
+  const r = record as { status?: unknown; prep?: unknown; createdAt?: unknown }
+  if (r.status === "running") {
+    const started = typeof r.createdAt === "string" ? Date.parse(r.createdAt) : NaN
+    return Number.isFinite(started) && now.getTime() - started > PREP_STALE_MS ? (r.prep ? "ready" : "failed") : "running"
+  }
+  if (r.prep) return "ready"
+  return r.status === "failed" ? "failed" : null
 }
 
 /** Panonun veritabanından okuduğu alanlar; iki uç da aynı seçimi kullanıyor. */
@@ -73,6 +92,7 @@ export const BOARD_SELECT = {
   result: true,
   jobPosting: { select: { position: true, company: true, rawText: true, deadline: true } },
   adaptation: { select: { id: true, status: true } },
+  interviewPrep: true,
 } as const
 
 /** Veritabanından gelen satır; yalnızca panonun okuduğu alanlar. */
@@ -88,6 +108,7 @@ export interface BoardRow {
   result?: unknown
   jobPosting: { position: string; company: string | null; rawText: string; deadline: Date | null }
   adaptation: { id: string; status: string } | null
+  interviewPrep?: unknown
 }
 
 /**
@@ -116,6 +137,7 @@ export function toBoardCard(s: BoardRow): BoardCard {
     createdAt: s.createdAt.toISOString(),
     adaptation: s.adaptation ? { id: s.adaptation.id, status: s.adaptation.status } : null,
     readiness: cardReadiness(s.result),
+    prep: prepStatus(s.interviewPrep),
   }
 }
 

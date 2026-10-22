@@ -3721,3 +3721,91 @@ dedi. Düzenleme yalnızca var olan maddenin metniyle sınırlıydı (K-83).
 - **DOG-92 burada kapanıyor.** Jobscan'deki araç çubuğu, sürükle-bırak ve geri
   al/ileri al yok; düzenleme kalıcı ve her adım geri alınabilir (Geri al,
   Kaldır/Sil). "Temel CV olarak kaydet" DOG-137'ye aitti ve yapılmadı.
+
+## K-100 · Aktarılabilir deneyim: ölçüldü, şimdilik ürüne alınmadı (DOG-100)
+
+**Soru:** Alan değiştiren adaya "doğrudan deneyimin yok ama şu deneyimin
+buna yakın" denebilir mi?
+
+**Ölçüm 1 · gömme benzerliği:** 20 çiftte eşiğin altında kalan (0,35–0,50) 74
+"yakın eşleşme"nin yaklaşık 10'u gerçekten ilgili. Alan değiştiren CV'lerde
+neredeyse hepsi anlamsız ("İşe alım" ← "fatura kesimi", "medikal estetik" ←
+"iş makinesi satışı"). Skorlamadaki "eşiğin altındaki en yakın maddeyi
+gösterme" kararı yerinde.
+
+**Ölçüm 2 · LLM köprüsü** (`pnpm eval:transferable`, alan değiştiren 7 çift):
+CV'den birebir alıntı şartı ve sayı kontrolüyle 23 eksik zorunlu
+gereksinimde 2 öneri. Biri aslında skorlayıcının kaçırdığı doğrudan eşleşme
+("MS Excel" ← "Excel'de rapor"), biri zayıf. Muhasebe → İK ve satış →
+pazarlamada sıfır; gerçekten aktarılabilir tek bağ (Muhtasar beyannamesi →
+SGK mevzuatı) iki istem sürümünde ve `gpt-4.1`'de de kaçtı. Uydurma yok,
+değer de yok.
+
+**Karar:** altyapı (göç, worker işi, uç, arayüz) kurulmadı.
+`score/transferable.ts` ve eval betiği duruyor; gerçek kullanıcı CV'leriyle
+yeniden ölçülebilsin.
+
+**Yan bulgu:** "MS Excel" / "Microsoft Excel" → "Excel" kelime öbeği karşılığı
+eklendi. Skor değerlendirmesinde isabet %94,5 → %95,4, kaçırma 5 → 4, uydurma
+aynı. Etiket isabeti 17/20 → 16/20: İK CV'si × muhasebe ilanı doğru Excel
+eşleşmesiyle 17 → 33 oldu ve "Orta"ya geçti. Dört zorunludan birini karşılayan
+çiftin "Orta" alması eşik meselesi (DOG-124); eşleşme doğru olduğu için
+karşılık tutuldu.
+
+## K-101 · Skor mülakatı öngörüyor mu: ölçüm betiği ve kullanıcının kendi sinyali (DOG-124)
+
+**İlk ölçüm (21 Ekim 2026, üretim, salt okunur, yalnızca toplamlar):** 8 kayıtlı
+kullanıcı, panoyu kullanan 3. Başvurulmuş 8 analiz:
+
+| Bant | Sonuçlanan | Mülakat/teklif | Bekleyen |
+|---|---|---|---|
+| Yüksek (35+) | 3 | 3 | 1 |
+| Orta (22–34) | 1 | 0 | 0 |
+| Düşük (<22) | 1 | 0 | 2 |
+
+Yön tutarlı (yüksek skorlular mülakata döndü), ama 3 kişiden 5 sonuç. Eşikler
+bu veriyle değiştirilmiyor; K-100'deki etiket sapması (dört zorunludan biriyle
+"Orta") da bu yüzden bekliyor.
+
+**Karar:**
+- **İç ölçüm tekrarlanabilir:** `pnpm --filter @uyarla/web calibration`.
+  Salt okunur; analiz başına skor ve aşama, anonim hesaplar ve test alan
+  adları dışarıda. Bantta 10'dan az sonuç varsa oran yazılmıyor.
+- **Sonuçlanan:** mülakat, teklif, ret. "Başvuruldu" sonuç değil; cevapsızlık
+  sayılmıyor, çünkü ne kadar sonra "ses yok" sayılacağı bilinmiyor.
+- **Kullanıcıya:** panoda yalnızca kendi başvurularından, en az üçü
+  sonuçlanınca: "Yüksek uyumlu 3 sonuçlanmış başvurunun 2 tanesi mülakata
+  döndü." Başka kullanıcıların sonuçları kullanılmıyor. Az sayıda başvuruda
+  tesadüf payının büyük olduğu yazıyor.
+- Bantlar ekrandaki etiketle aynı eşikler (`scoreStatus`); iç ölçüm ve kullanıcı
+  sinyali aynı fonksiyonu (`outcomesByBand`) kullanıyor.
+- **Yapılmadı:** "rol türü"ne göre sinyal. İlan unvanları serbest metin;
+  gruplamak için önce unvan sınıflandırması gerekiyor.
+
+## K-102 · Arayüz shadcn/ui ile yenileniyor; önce altyapı (DOG-142, DOG-143)
+
+**Bağlam:** Kullanıcı 22 Ekim'de arayüz yenilemesini başlattı: shadcn tasarım
+diliyle kenar çubuklu bir dashboard, her özellik kendi sayfasında. Plan
+DOG-142'de (DOG-143–156). Tanıtım sayfasına dokunulmuyor.
+
+**Karar (altyapı):**
+- **React 19:** güncel shadcn bileşenleri `forwardRef` kullanmıyor; React 18'de
+  `asChild` tetikleyicinin ref'i kayboluyor ve açılır menü, tooltip
+  konumlanamıyordu. Geçişte tip hatası ve test kırılması çıkmadı; yerel
+  `next build` temiz.
+- **Tema değişkenleri shadcn adlarıyla** (`@theme inline`, `:root` ve `.dark`).
+  Marka kobaltı `primary`. Eskiden `muted` metin rengiydi, shadcn'de zemin
+  rengi: 361 kullanım `muted-foreground`'a taşındı (renk aynı, #6b6b73).
+  Tanıtım sayfası dahil görünüm değişmedi (üretimle yan yana karşılaştırıldı).
+- **Koyu tema:** `next-themes`, varsayılan açık. Seçim UI 2'de kullanıcı
+  menüsüne geliyor.
+- **Yazı tipi:** Geist `next/font` ile; Google Fonts isteği ve CSP'deki iki dış
+  kaynak kalktı.
+- **Grafik bileşeni:** shadcn'in `chart.tsx`'i renkleri ham HTML'li bir
+  `<style>` ile basıyordu (projede yasak, DOG-26). Değişkenler kapsayıcının
+  `style` özniteliğinde; `theme` alanı yerine `var(--chart-n)` kullanılıyor.
+- **shadcn CLI hatası:** `aliases.utils`'i yanlış çözüp `import { cn } from
+  "cn"` yazıyor ve `cn` adlı ilgisiz bir npm paketi ekliyor. İçe aktarmalar
+  `@/lib/cn`'e çevrildi, paket kaldırıldı; `lib/utils.ts` shadcn'in beklediği
+  yol.
+- **Vitrin:** `/ui` (yalnızca yerelde).

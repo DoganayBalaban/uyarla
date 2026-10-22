@@ -5,7 +5,14 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, CircleAlert, LoaderCircle } from "lucide-react"
+import { CircleAlert, FileText, Gauge, LoaderCircle, MessagesSquare, Sparkles } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/cn"
 import { apiErrorBody, apiStatus } from "@/lib/api"
 import { loginPath } from "@/lib/returnPath"
@@ -14,18 +21,17 @@ import { startAdaptation } from "@/features/adaptation/api"
 import { plansPath } from "@/features/billing/paywall"
 import { useApplicationCards, useUpdateCard, type CardChange } from "@/features/applications/api"
 import {
-  STAGES,
-  STAGE_LABEL,
   NOTE_MAX_LENGTH,
   deadlineBadge,
   scoreBadge,
   shouldAskBeforeApplying,
   type BoardCard,
-  type Stage,
 } from "@/features/applications/board"
 import { noteFormSchema, type NoteFormValues } from "@/features/applications/schema"
 import { FollowUpPanel, OutreachPanel } from "@/features/applications/components/FollowUpPanel"
 import { ApplyCheck } from "@/features/applications/components/ApplyCheck"
+import { StageSelect } from "@/features/applications/components/StageSelect"
+import { PageCrumb } from "@/components/layout/app-shell/PageActions"
 
 const DATE = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long" })
 
@@ -38,8 +44,6 @@ const TABS: Array<{ id: Tab; label: string }> = [
   { id: "note", label: "Not" },
 ]
 
-const link = "font-semibold text-brand-blue no-underline hover:underline dark:text-brand-blue-light"
-
 /**
  * Başvuru detayı (DOG-138): bir başvuruya ait her şey tek sayfada, sekmelerle.
  * Kart sadeleşti; not, mesajlar ve mülakat buraya taşındı. Veri panonun
@@ -48,24 +52,31 @@ const link = "font-semibold text-brand-blue no-underline hover:underline dark:te
 export function ApplicationDetail({ analysisId }: { analysisId: string }) {
   const cardsQuery = useApplicationCards()
   const updateCard = useUpdateCard()
-  const [tab, setTab] = useState<Tab>("summary")
   const [askApply, setAskApply] = useState(false)
 
-  if (cardsQuery.isPending) return <LoaderCircle className="size-5 text-muted motion-safe:animate-spin" aria-hidden />
+  if (cardsQuery.isPending) {
+    return (
+      <div aria-busy="true" aria-label="Başvuru yükleniyor" className="space-y-3">
+        <Skeleton className="h-8 w-72" />
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="mt-6 h-48 rounded-xl" />
+      </div>
+    )
+  }
   if (cardsQuery.isError) {
     return apiStatus(cardsQuery.error) === 401 ? (
-      <p className="text-muted">
+      <p className="text-muted-foreground">
         Başvurunu görmek için <Link href={loginPath(`/applications/${analysisId}`)}>giriş yap</Link>.
       </p>
     ) : (
-      <p role="alert" className="flex items-center gap-2 text-brand-red dark:text-[#f87171]">
+      <p role="alert" className="flex items-center gap-2 text-destructive">
         <CircleAlert className="size-5 shrink-0" aria-hidden />
         Yükleyemedik. Sayfayı yenileyebilir misin?
       </p>
     )
   }
   const card = cardsQuery.data.find((c) => c.analysisId === analysisId)
-  if (!card) return <p className="text-muted">Bu başvuruyu panonda bulamadık.</p>
+  if (!card) return <p className="text-muted-foreground">Bu başvuruyu panonda bulamadık.</p>
 
   function update(change: CardChange) {
     if (change.stage && shouldAskBeforeApplying(card!, change.stage)) {
@@ -75,41 +86,52 @@ export function ApplicationDetail({ analysisId }: { analysisId: string }) {
     updateCard.mutate({ analysisId, change })
   }
 
+  const badge = card.score === null ? null : scoreBadge(card.score)
   return (
     <div>
-      <Link href="/applications" className="inline-flex items-center gap-1.5 text-sm text-muted no-underline hover:text-foreground">
-        <ArrowLeft className="size-4" aria-hidden />
-        Başvuru panosu
-      </Link>
-      <h1 className="m-0 mt-4 text-3xl">{card.position}</h1>
-      <p className="m-0 mt-1 text-muted">
-        {[card.company, `analiz ${DATE.format(new Date(card.createdAt))}`].filter(Boolean).join(" · ")}
-      </p>
+      <PageCrumb label={card.position} />
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="m-0 text-2xl font-semibold tracking-tight">{card.position}</h1>
+          <p className="m-0 mt-1 text-sm text-muted-foreground">
+            {[card.company, `analiz ${DATE.format(new Date(card.createdAt))}`].filter(Boolean).join(" · ")}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {badge && card.score !== null && (
+            <span className={cn("rounded-full px-2.5 py-1 text-sm font-semibold", badge.cls)} title="ATS uyum skoru">
+              {card.score} · {badge.text}
+            </span>
+          )}
+          <StageSelect value={card.stage} onChange={(stage) => update({ stage })} size="default" />
+        </div>
+      </header>
 
-      <div role="tablist" aria-label="Başvuru" className="mt-6 inline-flex flex-wrap rounded-button bg-background p-1 text-sm">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
-            className={cn(
-              "rounded-[8px] px-3.5 py-1.5 font-medium transition",
-              tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted hover:text-foreground",
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      <section role="tabpanel" className="mt-4 rounded-card border border-border bg-card p-5 sm:p-6">
-        {tab === "summary" && <SummaryTab card={card} onUpdate={update} />}
-        {tab === "messages" && <MessagesTab card={card} />}
-        {tab === "interview" && <InterviewTab card={card} onUpdate={update} />}
-        {tab === "note" && <NoteTab card={card} onUpdate={update} />}
-      </section>
+      <Tabs defaultValue="summary" className="mt-6 gap-4">
+        <TabsList aria-label="Başvuru">
+          {TABS.map((t) => (
+            <TabsTrigger key={t.id} value={t.id} className="px-3.5">
+              {t.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <Card className="py-0 shadow-xs">
+          <CardContent className="p-5 sm:p-6">
+            <TabsContent value="summary">
+              <SummaryTab card={card} />
+            </TabsContent>
+            <TabsContent value="messages">
+              <MessagesTab card={card} />
+            </TabsContent>
+            <TabsContent value="interview">
+              <InterviewTab card={card} onUpdate={update} />
+            </TabsContent>
+            <TabsContent value="note">
+              <NoteTab card={card} onUpdate={update} />
+            </TabsContent>
+          </CardContent>
+        </Card>
+      </Tabs>
 
       {askApply && (
         <ApplyCheck
@@ -125,11 +147,10 @@ export function ApplicationDetail({ analysisId }: { analysisId: string }) {
   )
 }
 
-function SummaryTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: CardChange) => void }) {
+function SummaryTab({ card }: { card: BoardCard }) {
   const [adapting, setAdapting] = useState(false)
   const [adaptError, setAdaptError] = useState<string | null>(null)
   const router = useRouter()
-  const badge = card.score === null ? null : scoreBadge(card.score)
   const deadline = deadlineBadge(card)
 
   async function adapt() {
@@ -154,30 +175,9 @@ function SummaryTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: Ca
 
   return (
     <div className="space-y-4 text-sm">
-      <div className="flex flex-wrap items-center gap-3">
-        {badge && card.score !== null && (
-          <span className={`rounded-full px-2.5 py-1 text-sm font-bold ${badge.cls}`} title="ATS uyum skoru">
-            {card.score} · {badge.text}
-          </span>
-        )}
-        <label className="flex items-center gap-2 text-muted">
-          Aşama
-          <select
-            value={card.stage}
-            onChange={(e) => onUpdate({ stage: e.target.value as Stage })}
-            className="rounded-button border border-border bg-card px-2 py-1 font-medium text-foreground"
-          >
-            {STAGES.map((s) => (
-              <option key={s} value={s}>
-                {STAGE_LABEL[s]}
-              </option>
-            ))}
-          </select>
-        </label>
-        {deadline && <span className="text-muted">{deadline.text}</span>}
-      </div>
+      {deadline && <p className="m-0 text-muted-foreground">{deadline.text}</p>}
       {card.readiness && (card.readiness.missingMust > 0 || card.readiness.titleMissing) && (
-        <p className="m-0 text-muted">
+        <p className="m-0 text-muted-foreground">
           {[
             card.readiness.missingMust > 0 ? `${card.readiness.missingMust} zorunlu gereksinim CV'nde görünmüyor` : null,
             card.readiness.titleMissing ? "ilandaki unvan CV'nde geçmiyor" : null,
@@ -187,30 +187,44 @@ function SummaryTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: Ca
           .
         </p>
       )}
-      <ul className="m-0 list-none space-y-2 p-0">
-        <li>
-          <Link href={resultPath(card.analysisId)} className={link}>
-            Analiz sonucu
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link
+          href={resultPath(card.analysisId)}
+          className="group flex items-start gap-3 rounded-lg border p-4 no-underline transition-colors hover:border-primary/40 hover:bg-primary/5"
+        >
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+            <Gauge className="size-4" aria-hidden />
+          </span>
+          <span className="min-w-0">
+            <span className="block font-medium text-foreground">Analiz sonucu</span>
+            <span className="block text-muted-foreground">Gereksinimler, eksik kavramlar, ilan metni</span>
+          </span>
+        </Link>
+        {card.adaptation ? (
+          <Link
+            href={`/adapt/${card.adaptation.id}`}
+            className="group flex items-start gap-3 rounded-lg border p-4 no-underline transition-colors hover:border-primary/40 hover:bg-primary/5"
+          >
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+              <FileText className="size-4" aria-hidden />
+            </span>
+            <span className="min-w-0">
+              <span className="block font-medium text-foreground">Uyarlanmış CV</span>
+              <span className="block text-muted-foreground">CV, ön yazı ve form yanıtları</span>
+            </span>
           </Link>
-          <span className="text-muted"> · gereksinimler, eksik kavramlar, ilan metni</span>
-        </li>
-        <li>
-          {card.adaptation ? (
-            <>
-              <Link href={`/adapt/${card.adaptation.id}`} className={link}>
-                Uyarlanmış CV
-              </Link>
-              <span className="text-muted"> · CV, ön yazı ve form yanıtları</span>
-            </>
-          ) : (
-            <button type="button" onClick={() => void adapt()} disabled={adapting} className={cn(link, "disabled:opacity-50")}>
+        ) : (
+          <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed p-4">
+            <span className="text-muted-foreground">Bu ilana özel CV henüz yok.</span>
+            <Button type="button" size="sm" onClick={() => void adapt()} disabled={adapting}>
+              {adapting ? <LoaderCircle className="motion-safe:animate-spin" aria-hidden /> : <Sparkles aria-hidden />}
               {adapting ? "Hazırlanıyor…" : "CV'ni bu ilana uyarla"}
-            </button>
-          )}
-        </li>
-      </ul>
+            </Button>
+          </div>
+        )}
+      </div>
       {adaptError && (
-        <p role="alert" className="m-0 text-brand-red dark:text-[#f87171]">
+        <p role="alert" className="m-0 text-destructive">
           {adaptError}
         </p>
       )}
@@ -221,7 +235,7 @@ function SummaryTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: Ca
 function MessagesTab({ card }: { card: BoardCard }) {
   return (
     <div className="text-sm">
-      <p className="m-0 text-muted">
+      <p className="m-0 text-muted-foreground">
         Taslaklar gönderdiğin CV&apos;den ve ön yazından; biz göndermiyoruz, kopyalayıp kendin gönderirsin.
       </p>
       <FollowUpPanel card={card} />
@@ -233,24 +247,28 @@ function MessagesTab({ card }: { card: BoardCard }) {
 function InterviewTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: CardChange) => void }) {
   return (
     <div className="space-y-3 text-sm">
-      <label className="flex items-center gap-2 text-muted">
-        Mülakat günü
-        <input
+      <div className="flex flex-wrap items-center gap-2">
+        <Label htmlFor={`mulakat-${card.analysisId}`} className="font-normal text-muted-foreground">
+          Mülakat günü
+        </Label>
+        <Input
+          id={`mulakat-${card.analysisId}`}
           type="date"
           value={card.interviewAt ?? ""}
           onChange={(e) => onUpdate({ interviewAt: e.target.value || null })}
-          className="rounded-button border border-border bg-card px-2 py-1 text-foreground"
+          className="w-auto"
         />
-      </label>
+      </div>
       {card.stage === "interview" ? (
-        <p className="m-0">
-          <Link href={`/applications/${card.analysisId}/mulakat`} className={link}>
+        <Button asChild variant="outline">
+          <Link href={`/applications/${card.analysisId}/mulakat`}>
+            <MessagesSquare aria-hidden />
             Mülakat hazırlığı
+            <span className="font-normal text-muted-foreground">· sorular, cevap iskeletleri, pratik</span>
           </Link>
-          <span className="text-muted"> · olası sorular, cevap iskeletleri ve yazılı pratik</span>
-        </p>
+        </Button>
       ) : (
-        <p className="m-0 text-muted">Aşamayı &quot;Mülakat&quot; yapınca hazırlık paketi açılır.</p>
+        <p className="m-0 text-muted-foreground">Aşamayı &quot;Mülakat&quot; yapınca hazırlık paketi açılır.</p>
       )}
     </div>
   )
@@ -270,21 +288,20 @@ function NoteTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: CardC
   })
   return (
     <form onSubmit={save} className="text-sm">
-      <textarea
+      <Textarea
         maxLength={NOTE_MAX_LENGTH}
         {...register("note", { onBlur: () => void save() })}
         rows={6}
         placeholder="Görüştüğün kişi, şirketin ürünleri, soracağın sorular…"
         aria-label="Not"
         aria-invalid={errors.note ? true : undefined}
-        className="w-full rounded-button border border-border bg-background p-2.5 dark:bg-white/5"
       />
       {errors.note && (
         <p role="alert" className="mt-1 text-xs text-brand-amber">
           {errors.note.message}
         </p>
       )}
-      <p className="m-0 mt-1 text-xs text-muted">{isDirty ? "Kutudan çıkınca kaydedilir." : "Yalnızca sen görürsün."}</p>
+      <p className="m-0 mt-1 text-xs text-muted-foreground">{isDirty ? "Kutudan çıkınca kaydedilir." : "Yalnızca sen görürsün."}</p>
     </form>
   )
 }

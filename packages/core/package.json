@@ -32,7 +32,8 @@
     "eval:interview-prep": "dotenv -e ../../.env -- tsx eval/interviewPrep.ts",
     "eval:practice": "dotenv -e ../../.env -- tsx eval/practice.ts",
     "eval:form-answer": "dotenv -e ../../.env -- tsx eval/formAnswer.ts",
-    "eval:linkedin": "dotenv -e ../../.env -- tsx eval/linkedin.ts"
+    "eval:linkedin": "dotenv -e ../../.env -- tsx eval/linkedin.ts",
+    "eval:transferable": "dotenv -e ../../.env -- tsx eval/transferable.ts"
   },
   "devDependencies": {
     "@types/pdfkit": "^0.17.6",

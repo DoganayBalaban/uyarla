@@ -62,7 +62,7 @@ export function RequirementDemo() {
                     {r.text} <span className={s.importance}>{r.importance}</span>
                   </span>
                 </span>
-                <motion.span animate={{ rotate: isOpen ? 180 : 0 }} className="mt-0.5 text-muted">
+                <motion.span animate={{ rotate: isOpen ? 180 : 0 }} className="mt-0.5 text-muted-foreground">
                   <ChevronDown size={16} />
                 </motion.span>
               </button>
@@ -82,7 +82,7 @@ export function RequirementDemo() {
                     >
                       {r.evidence ? (
                         <>
-                          “{r.evidence.quote}” <span className="text-muted">· {r.evidence.section}</span>
+                          “{r.evidence.quote}” <span className="text-muted-foreground">· {r.evidence.section}</span>
                         </>
                       ) : (
                         r.why

@@ -160,7 +160,7 @@ function AppBar() {
   return (
     <div className="flex items-center gap-5 border-b border-border bg-card px-4 py-2.5 sm:px-6" aria-hidden="true">
       <UyarlaLogo className="h-4 w-auto sm:h-5" />
-      <div className="hidden gap-4 text-xs text-muted sm:flex">
+      <div className="hidden gap-4 text-xs text-muted-foreground sm:flex">
         <span>Genel bakış</span>
         <span className="font-semibold text-foreground">Yeni analiz</span>
         <span>Başvuru panosu</span>
@@ -202,14 +202,14 @@ function UploadScene({ p }: { p: number }) {
   const dropped = fly >= 1
   return (
     <div className="relative mx-auto flex h-full max-w-xl flex-col lg:max-w-2xl justify-center">
-      <p className="mb-1 text-xs font-bold uppercase tracking-wide text-muted">Adım 1</p>
+      <p className="mb-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Adım 1</p>
       <h3 className="mb-4 text-lg font-extrabold sm:text-xl lg:text-3xl">CV'ni yükle</h3>
       <div
         className={`relative flex min-h-36 flex-col lg:min-h-60 items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-6 transition-colors ${
           fly > 0.6 ? "border-brand-blue bg-brand-blue-soft" : "border-border bg-card"
         }`}
       >
-        {!dropped && <p className="text-muted">PDF veya DOCX'i buraya bırak</p>}
+        {!dropped && <p className="text-muted-foreground">PDF veya DOCX'i buraya bırak</p>}
         <motion.div
           className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 shadow-md"
           style={{
@@ -240,9 +240,9 @@ function JobScene({ p }: { p: number }) {
   const pressed = p > 0.92
   return (
     <div className="relative mx-auto flex h-full max-w-xl flex-col lg:max-w-2xl justify-center">
-      <p className="mb-1 text-xs font-bold uppercase tracking-wide text-muted">Adım 2</p>
+      <p className="mb-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Adım 2</p>
       <h3 className="mb-3 text-lg font-extrabold sm:text-xl lg:text-3xl">İlanı yapıştır</h3>
-      <div className="mb-3 flex items-center gap-2 text-xs text-muted">
+      <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
         <FileText size={14} /> {HERO_FILE_NAME}
         <Check size={14} className="text-brand-green" />
       </div>
@@ -277,12 +277,12 @@ function AnalyzeScene({ p }: { p: number }) {
             <li key={stage} className="flex items-center gap-3">
               <span
                 className={`flex size-6 items-center justify-center rounded-full ${
-                  done ? "bg-brand-green text-white" : active ? "bg-brand-blue-soft text-brand-blue" : "bg-border text-muted"
+                  done ? "bg-brand-green text-white" : active ? "bg-brand-blue-soft text-brand-blue" : "bg-border text-muted-foreground"
                 }`}
               >
                 {done ? <Check size={14} /> : active ? <Loader2 size={14} className="animate-spin" /> : null}
               </span>
-              <span className={done || active ? "font-semibold" : "text-muted"}>{stage}</span>
+              <span className={done || active ? "font-semibold" : "text-muted-foreground"}>{stage}</span>
             </li>
           )
         })}
@@ -303,13 +303,13 @@ function ScoreScene({ p }: { p: number }) {
       <Card className="flex items-center gap-5">
         <DemoRing score={score} size={88} animated={false} />
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-muted">ATS uyum skoru</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">ATS uyum skoru</p>
           <p className="text-base font-extrabold sm:text-lg">6 gereksinimden 3'ü karşılanıyor</p>
-          <p className="text-xs text-muted">Skor örtüşmeyi ölçer, işe uygunluğunu değil.</p>
+          <p className="text-xs text-muted-foreground">Skor örtüşmeyi ölçer, işe uygunluğunu değil.</p>
         </div>
       </Card>
       <div>
-        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">Eksik anahtar kelimeler</p>
+        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">Eksik anahtar kelimeler</p>
         <div className="flex flex-wrap gap-2">
           {HERO_MISSING.map((k, i) =>
             p > 0.38 + i * 0.07 ? (
@@ -354,16 +354,16 @@ function AdaptScene({ p }: { p: number }) {
     <div className="flex h-full flex-col gap-3 sm:gap-4">
       <Card className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted">Uyarlama</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Uyarlama</p>
           <p className="text-lg font-extrabold sm:text-2xl">CV'n hazır</p>
-          <p className="hidden text-xs text-muted sm:block">
+          <p className="hidden text-xs text-muted-foreground sm:block">
             Her değişikliği aşağıda görebilir, istemediğini eski hâline döndürebilirsin.
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <DemoRing score={DEMO_BASE_SCORE} size={52} animated={false} muted label="Önce" />
           <div className="flex flex-col items-center gap-1">
-            <span className="text-muted">→</span>
+            <span className="text-muted-foreground">→</span>
             <motion.span
               className="rounded-full bg-brand-green/15 px-1.5 text-[11px] font-bold text-brand-green"
               animate={{ opacity: rise > 0 ? 1 : 0 }}
@@ -378,7 +378,7 @@ function AdaptScene({ p }: { p: number }) {
         <Card className="min-h-0 overflow-hidden">
           <div className="mb-1 flex items-center justify-between">
             <span className="font-extrabold">Deneyim maddeleri</span>
-            <span className="text-xs text-muted">
+            <span className="text-xs text-muted-foreground">
               {decided}/{HERO_BULLETS.length} karar verildi
             </span>
           </div>
@@ -392,10 +392,10 @@ function AdaptScene({ p }: { p: number }) {
             {HERO_BULLETS.map((b, i) => (
               <div key={b.id} className={`rounded-xl border border-border p-3 ${i > 0 ? "hidden sm:block" : ""}`}>
                 <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted">{b.label}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">{b.label}</span>
                   <span
                     className={`rounded-lg px-2 py-0.5 text-xs font-semibold transition-colors ${
-                      decisions[i] === "new" ? "bg-brand-blue-soft text-brand-blue" : "bg-background text-muted"
+                      decisions[i] === "new" ? "bg-brand-blue-soft text-brand-blue" : "bg-background text-muted-foreground"
                     }`}
                   >
                     {decisions[i] === "new" ? "✓ Yeni hâli" : "Karar bekliyor"}
@@ -407,7 +407,7 @@ function AdaptScene({ p }: { p: number }) {
                     <motion.ul
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="mt-2 flex flex-col gap-0.5 text-xs text-muted"
+                      className="mt-2 flex flex-col gap-0.5 text-xs text-muted-foreground"
                     >
                       {b.evidence.map((e) => (
                         <li key={e.term} className="flex gap-1.5">
@@ -429,11 +429,11 @@ function AdaptScene({ p }: { p: number }) {
             <p className="mb-1 flex items-center gap-2 font-extrabold">
               <Download size={16} className="text-brand-blue" /> İndir
             </p>
-            <p className="mb-3 text-xs text-muted">Seçtiğin hâllerle CV'ni indirebilirsin.</p>
+            <p className="mb-3 text-xs text-muted-foreground">Seçtiğin hâllerle CV'ni indirebilirsin.</p>
             <div className="relative">
               <motion.span
                 className={`flex items-center justify-center gap-2 rounded-[10px] py-2 font-semibold transition-colors ${
-                  ready ? "bg-brand-blue text-white" : "bg-border text-muted"
+                  ready ? "bg-brand-blue text-white" : "bg-border text-muted-foreground"
                 }`}
                 animate={{ scale: p > 0.97 ? 0.96 : 1 }}
               >
@@ -445,7 +445,7 @@ function AdaptScene({ p }: { p: number }) {
               Word indir
             </span>
           </Card>
-          <p className="flex gap-2 px-1 text-[11px] leading-snug text-muted">
+          <p className="flex gap-2 px-1 text-[11px] leading-snug text-muted-foreground">
             <ShieldCheck size={14} className="mt-px shrink-0 text-brand-green" />
             Hiçbir deneyim, beceri veya sertifika eklenmedi.
           </p>
