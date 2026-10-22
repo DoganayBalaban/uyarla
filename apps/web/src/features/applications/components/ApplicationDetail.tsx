@@ -31,6 +31,7 @@ import { noteFormSchema, type NoteFormValues } from "@/features/applications/sch
 import { FollowUpPanel, OutreachPanel } from "@/features/applications/components/FollowUpPanel"
 import { ApplyCheck } from "@/features/applications/components/ApplyCheck"
 import { StageSelect } from "@/features/applications/components/StageSelect"
+import { PageCrumb } from "@/components/layout/app-shell/PageActions"
 
 const DATE = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long" })
 
@@ -88,6 +89,7 @@ export function ApplicationDetail({ analysisId }: { analysisId: string }) {
   const badge = card.score === null ? null : scoreBadge(card.score)
   return (
     <div>
+      <PageCrumb label={card.position} />
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="m-0 text-2xl font-semibold tracking-tight">{card.position}</h1>
