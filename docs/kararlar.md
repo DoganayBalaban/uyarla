@@ -3174,7 +3174,7 @@ boşluk mülakat.
 - **Eksik zorunlu gereksinimlere dürüst köprü (K-76).** Olumsuzlanan yan cümle
   sayı kontrolünden de çıkıyor: "5 yıl deneyimim yok" geçiyor, "4 yıllık
   deneyimim var" işaretleniyor.
-- **Sayfa ve bağlantılar:** `/applications/[id]/mulakat`; kart "Mülakat"
+- **Sayfa ve bağlantılar:** `/applications/[id]/interview` (K-103 öncesi `/mulakat`); kart "Mülakat"
   aşamasında bağlantı veriyor. Mülakat hatırlatması e-postasının düğmesi
   hazırlık sayfasına gidiyor. Başvuru başına iki deneme.
 
@@ -3809,3 +3809,48 @@ DOG-142'de (DOG-143–156). Tanıtım sayfasına dokunulmuyor.
   `@/lib/cn`'e çevrildi, paket kaldırıldı; `lib/utils.ts` shadcn'in beklediği
   yol.
 - **Vitrin:** `/ui` (yalnızca yerelde).
+
+## K-103 · Sayfa yolları İngilizce
+
+**Bağlam:** Uygulamanın yolları çoğunlukla İngilizceydi (`/analyze`, `/cvs`,
+`/interviews`), beşi Türkçeydi. Kullanıcı 22 Ekim'de hepsinin İngilizce
+olmasını istedi.
+
+**Karar:** `/sample-report`, `/get-started`, `/applications/[id]/interview`,
+`/plans/thanks`, `/email/unsubscribe`. Ekrandaki metinler Türkçe kalıyor.
+Canlıda yayımlanmış üç eski yol (`/e-posta/cik`, `/plans/tesekkurler`,
+`/applications/[id]/mulakat`) `next.config.mjs`'te kalıcı yönlendirmeyle yeni
+adrese gidiyor: gönderilmiş e-postalardaki bağlantılar ve süren ödemelerin
+dönüş adresi kırılmasın. Sorgu parametreleri (`?analiz=`, `?donus=`) ve
+`#ornek-ilanlar` bu kapsamda değil; yol değil, sayfanın durumu.
+
+## K-104 · Analiz ve uyarlamanın bekleme ekranları
+
+**Bağlam:** İki ekran da dikey bir aşama listesiydi. Uyarlamada aşama hiç
+gelmiyordu: worker `rewriting`/`verifying` bildiriyor ama iş kimliği BullMQ'nun
+ürettiği sayıydı, `GET /api/adapt/[id]` onu bulamıyordu; ekran hep ilk
+aşamada duruyordu. Kullanıcı 22 Ekim'de ekranları yaratıcı biçimde yeniden
+tasarlamayı istedi.
+
+**Karar:** Ortak çerçeve (`components/waiting`): süren aşamanın adı, geçen
+süre, sahne, aşama çubuğu ve dönen kısa bilgiler. Sahnede yalnızca gerçek veri:
+- Analiz: CV ve ilan iki kâğıt; bu oturumda gönderildiyse ilanın (ve
+  yapıştırılan CV'nin) kendi satırları, yoksa iskelet. Okunan kâğıtta tarama
+  ışığı, karşılaştırmada kâğıtlar arasında akan bağlar.
+- Uyarlama: CV'nin ilk hâlinden kesit (özet ve ilk maddeler) üzerinde yazım
+  imleci, kontrolde yeşil tarama; önceki skor → "?" ve analizde eksik kalan
+  kavramlar ("dayanağı olmayan eklenmez").
+- Uyarlama işinin kimliği `adapt-<uyarlamaKimliği>` (`adaptJobId`); GET aşamayı
+  ve `preview`'u yalnızca çalışırken döndürüyor.
+- Yüzde, kalan süre ve istatistik yok; sayaç yalnızca geçen süre. Bilgiler
+  ürünün gerçek kuralları (rehber §11). Kayıtlı sonucu açmak (`?analiz=`)
+  bekleme ekranı değil, kısa bir "Sonuç açılıyor…".
+- Yerelde aşama seçerek görmek için `/ui/waiting` (üretimde 404).
+
+LinkedIn raporu ve mülakat hazırlığı da aynı çerçevede (#221): LinkedIn'de
+profil PDF'i ve seçilen ilanlar (panodaki pozisyon ve şirket adıyla),
+karşılaştırmada ilanlar sırayla taranıyor, son aşamada "Başlık · Hakkında"
+yazılıyor. Mülakatta CV kesiti, soru kartları (teknik, davranışsal, boşluk;
+tanımlar hazırlık istemindekiyle aynı) ve ilanın karşılanmayan zorunlu
+şartları (köprüler bunlar için yazılıyor). `GET /api/applications/[id]`
+hazırlık sürerken `prepPreview` döndürüyor. Eski `StageTimeline` silindi.

@@ -120,6 +120,14 @@ describe("runAnalysis · happy path", () => {
     expect(completeAnalysis.mock.calls[0]![0].format).toBeNull()
   })
 
+  it("skips the format check for a pasted CV (DOG-101)", async () => {
+    const completeAnalysis = vi.fn()
+    const getResumeFile = async () => ({ buffer: Buffer.from("ham cv"), filename: "/depo/abc.txt" })
+    await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis, getResumeFile }) }), INPUT)
+    expect(completeAnalysis).toHaveBeenCalledOnce()
+    expect(completeAnalysis.mock.calls[0]![0].format).toBeNull()
+  })
+
   it("measures and saves the duration", async () => {
     const completeAnalysis = vi.fn()
     await runAnalysis(fakeDeps({ store: fakeStore({ completeAnalysis }) }), INPUT)

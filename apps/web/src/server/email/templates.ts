@@ -113,7 +113,7 @@ export function applicationRemindersEmail(bundle: ReminderBundle, unsubscribe: s
   const single = only.length === 1 && followups.length === 0 && thanks.length === 0 ? only[0]! : null
   const prepFor = single && interviews.length === 1 ? interviews[0]!.analysisId : undefined
   const target = prepFor
-    ? `${siteUrl()}/applications/${prepFor}/mulakat`
+    ? `${siteUrl()}/applications/${prepFor}/interview`
     : single?.adaptationId
       ? `${siteUrl()}/adapt/${single.adaptationId}`
       : null

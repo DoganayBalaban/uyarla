@@ -39,3 +39,6 @@ packages/core/eval/inceleme.md
 apps/extension/dist/
 apps/extension/*.zip
 apps/worker/dist/
+
+# Playwright MCP çıktıları: test ekran görüntüleri, indirilen dosyalar
+.playwright-mcp/

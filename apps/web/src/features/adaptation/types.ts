@@ -1,3 +1,4 @@
+import type { WaitingPreview } from "@/features/adaptation/waiting"
 import type { CoverLetterChecks } from "@uyarla/core/cover/checks"
 import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 import type { PlatformId } from "@/features/analysis/platforms"
@@ -100,8 +101,10 @@ export interface DocumentOutline {
 
 export interface AdaptationState {
   status: "running" | "draft" | "ready" | "failed"
-  /** API şimdilik göndermiyor; gelirse çizelge onu izler. */
+  /** Çalışırken worker'ın bildirdiği aşama (`rewriting`, `verifying`); bilinmiyorsa null. */
   stage?: string | null
+  /** Çalışırken bekleme ekranının malzemesi; bitince null. */
+  preview?: WaitingPreview | null
   draft: Draft | null
   scoreBefore: number | null
   scoreAfter: number | null

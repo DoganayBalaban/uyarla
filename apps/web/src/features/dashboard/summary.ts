@@ -84,7 +84,7 @@ function pendingFor(k: BoardCard, today: string): PendingItem | null {
       kind: "interview",
       analysisId: k.analysisId,
       position: k.position,
-      address: `/applications/${k.analysisId}/mulakat`,
+      address: `/applications/${k.analysisId}/interview`,
       date: k.interviewAt,
     }
   }

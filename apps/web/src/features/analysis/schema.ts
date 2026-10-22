@@ -16,6 +16,9 @@ import { z } from "zod"
 export const MAX_RESUME_BYTES = 10 * 1024 * 1024
 export const MIN_JOB_TEXT_LENGTH = 50
 export const RESUME_EXTENSIONS = ["pdf", "docx"] as const
+/** Yapıştırılan CV metni (DOG-101); en kısa gerçek CV bile bunun üstünde. */
+export const MIN_RESUME_TEXT_LENGTH = 200
+export const MAX_RESUME_TEXT_LENGTH = 30_000
 
 /** Doğrulamanın ihtiyaç duyduğu kadarı; tarayıcının ve Node'un File'ı ikisi de uyuyor. */
 export interface ResumeFileLike {
@@ -59,6 +62,20 @@ export const jobTextSchema = z.string().superRefine((value, ctx) => {
   }
 })
 
+/** Satır sonları tek biçime, baş ve son boşluk atılmış CV metni. */
+export function normalizeResumeText(text: string): string {
+  return text.replace(/\r\n?/g, "\n").trim()
+}
+
+export const resumeTextSchema = z.string().superRefine((value, ctx) => {
+  const length = normalizeResumeText(value).length
+  if (length < MIN_RESUME_TEXT_LENGTH) {
+    ctx.addIssue(issue("CV metni çok kısa görünüyor. CV'nin tamamını yapıştırır mısın?", "resume_text_too_short"))
+  } else if (length > MAX_RESUME_TEXT_LENGTH) {
+    ctx.addIssue(issue("CV metni çok uzun. Yalnızca CV'ni yapıştırdığından emin olur musun?", "resume_text_too_long"))
+  }
+})
+
 export const analysisFormSchema = z.object({
   cv: resumeFileSchema,
   jobText: jobTextSchema,
@@ -69,27 +86,28 @@ export const analysisFormSchema = z.object({
 export type AnalysisFormValues = z.input<typeof analysisFormSchema>
 
 /**
- * İstemci analiz formu (DOG-50): kütüphanedeki CV (`resumeId`) ya da yeni
- * dosya (`cv`), tam biri. Sunucu iki yolu ayrı doğruluyor (validateUpload /
+ * İstemci analiz formu (DOG-50): kütüphanedeki CV (`resumeId`), yeni dosya
+ * (`cv`) ya da yapıştırılan metin (`cvText`, DOG-101), tam biri. Sunucu
+ * yolları ayrı doğruluyor (validateUpload / validateResumeText /
  * validateJobText); bu şema formun hangi yolda olduğunu söylüyor.
  */
 export const analyzeFormSchema = z
   .object({
     resumeId: z.string().min(1).optional(),
     cv: resumeFileSchema.optional(),
+    cvText: resumeTextSchema.optional(),
     saveToLibrary: z.boolean(),
     jobText: jobTextSchema,
     postingUrl: z.string().optional(),
   })
   .superRefine((value, ctx) => {
-    const hasLibrary = value.resumeId !== undefined
-    const hasFile = value.cv !== undefined
-    if (hasLibrary === hasFile) {
+    const given = [value.resumeId, value.cv, value.cvText].filter((v) => v !== undefined).length
+    if (given !== 1) {
       ctx.addIssue({
         code: "custom",
         path: ["cv"],
-        message: hasLibrary ? "Bir CV seç ya da yeni dosya yükle; ikisi birden olmaz." : "CV'ni seçer misin? PDF ya da DOCX olabilir.",
-        params: { code: hasLibrary ? "ambiguous_resume" : "missing_file" },
+        message: given > 1 ? "Bir CV seç ya da yeni dosya yükle; ikisi birden olmaz." : "CV'ni seçer misin? PDF ya da DOCX olabilir.",
+        params: { code: given > 1 ? "ambiguous_resume" : "missing_file" },
       })
     }
   })

@@ -34,15 +34,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/cn"
-import { StageTimeline } from "@/features/analysis/components/StageTimeline"
-import { deriveStageStates } from "@/features/analysis/stageStates"
+import { LinkedInWaiting } from "@/features/linkedin/components/LinkedInWaiting"
 
-/** Raporun gerçek adımları (DOG-136); hangisinde olduğunu worker kayda yazıyor. */
-const REPORT_STAGES = [
-  { id: "reading", title: "Profilini okuyoruz", description: "LinkedIn PDF'indeki deneyim, beceri ve Hakkında bölümü ayrıştırılıyor." },
-  { id: "scoring", title: "İlanlarla karşılaştırıyoruz", description: "Seçtiğin her ilanın gereksinimleri profilinde aranıyor." },
-  { id: "writing", title: "Başlık ve Hakkında önerisi yazıyoruz", description: "Öneri, profilinde yazanlara karşı kontrol ediliyor." },
-]
 
 const DATE = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })
 
@@ -77,6 +70,7 @@ export function LinkedInView() {
   })
 
   const analyses = (cards.data ?? []).slice(0, 20)
+  const chosenResume = resumes.find((r) => r.id === chosen)
   const record = report.data ?? null
   // Uçla aynı kural: 10 dakikadan eski "running" takılmış sayılıyor.
   const running = record?.status === "running" && Date.now() - Date.parse(record.createdAt) < 10 * 60_000
@@ -96,7 +90,7 @@ export function LinkedInView() {
 
   return (
     <div className="space-y-6">
-      <ol className="m-0 list-none space-y-4 p-0">
+      <ol className="list-none space-y-4 p-0">
         <Step number={1} title="Profilinin PDF'i" done={!!chosen}>
           <p className="m-0 text-sm text-muted-foreground">
             Profilini PDF olarak{" "}
@@ -210,13 +204,18 @@ export function LinkedInView() {
       </ol>
 
       {running && record?.status === "running" && (
-        <StageTimeline
-          heading="Raporun hazırlanıyor"
-          subtitle="Genelde bir dakika kadar sürüyor."
-          stages={deriveStageStates(REPORT_STAGES, record.stage ?? null)}
+        <LinkedInWaiting
+          stage={record.stage ?? null}
+          startedAt={Date.parse(record.createdAt)}
+          profileLabel={chosenResume ? chosenResume.label || chosenResume.fileName || null : null}
+          postings={record.analysisIds.flatMap((id) => {
+            // Seçim listesi ilk 20 kart; rapor sonradan açılınca seçilen daha geride kalmış olabilir.
+            const card = cards.data?.find((c) => c.analysisId === id)
+            return card ? [{ id, position: card.position, company: card.company }] : []
+          })}
         />
       )}
-      {record?.status === "failed" && <p className="m-0 text-sm text-destructive">Raporu hazırlayamadık. Tekrar dener misin?</p>}
+      {record?.status === "failed" && <p className="text-sm text-destructive">Raporu hazırlayamadık. Tekrar dener misin?</p>}
       {record?.status === "done" && <ReportView report={record.report} />}
     </div>
   )
