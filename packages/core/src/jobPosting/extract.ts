@@ -153,7 +153,8 @@ function jsonLdPosting(html: string): ExtractedPosting | null {
  */
 interface SiteRule {
   domain: string
-  startedAt: RegExp
+  /** İlanın başladığı satır; yoksa metin baştan alınıyor. */
+  startedAt?: RegExp
   ending: RegExp[]
   /** <title>'dan pozisyon adını temizler. */
   titleText?: (raw: string) => string
@@ -166,6 +167,26 @@ interface SiteRule {
 
 const COMMON_ENDINGS = [/^Benzer İlanlar$/i, /^Bu İlanla Birlikte Görüntülenenler$/i]
 
+/**
+ * LinkedIn'in herkese açık ilan sayfası (Ekim 2026): JSON-LD yayımlamıyor.
+ * Açıklama "show-more-less-html__markup" kutusunda; pozisyon ve şirket üst
+ * kartta. Sayfanın geri kalanı giriş çağrıları ve benzer ilan listeleri;
+ * bunlar kutuya gelince analiz başka ilanların unvanlarını gereksinim sanıyordu.
+ */
+function linkedinPosting(html: string): ExtractedPosting | null {
+  const markup = html.match(
+    /<div class="show-more-less-html__markup[^"]*"[^>]*>([\s\S]*?)<\/div>\s*(?:<button class="show-more-less-html__button|<\/section>)/i,
+  )?.[1]
+  if (!markup) return null
+  const description = htmlToText(markup)
+  if (description.length < 100) return null
+  const clean = (raw: string | undefined) => (raw ? decodeEntities(raw).replace(/\s+/g, " ").trim() || null : null)
+  const position = clean(html.match(/class="[^"]*\btopcard__title\b[^"]*"[^>]*>([^<]*)</i)?.[1])
+  const company = clean(html.match(/class="[^"]*\btopcard__org-name-link\b[^"]*"[^>]*>([^<]*)</i)?.[1])
+  const heading = [position, company].filter(Boolean).join(" — ")
+  return { text: heading ? `${heading}\n\n${description}` : description, position, company, source: "sayfa" }
+}
+
 const SITE_RULES: SiteRule[] = [
   {
     domain: "kariyer.net",
@@ -173,6 +194,17 @@ const SITE_RULES: SiteRule[] = [
     ending: [/^İşverenlerin/i, /^Şirket Hakkında$/i, /^Bu Pozisyon İçin Sık Paylaşılan Maaşlar$/i],
     // "Dija & Co Sosyal Medya Uzmanı İş İlanı - 26.09.2026"
     titleText: (raw) => raw.replace(/\s*İş İlanı\s*-.*$/i, "").trim(),
+  },
+  {
+    // Açıklama kutusu bulunamazsa (LinkedIn düzeni değişirse) sayfa metni
+    // kriterler ve benzer ilanlar başlamadan kesiliyor.
+    domain: "linkedin.com",
+    ending: [
+      /^(Kıdem düzeyi|Seniority level)$/i,
+      /^(Benzer iş ilanları|Similar jobs)$/i,
+      /^(Diğer görüntülenenler|People also viewed)$/i,
+      /^(Show more|Show less|Daha fazla göster|Daha az göster)$/i,
+    ],
   },
   {
     // JSON-LD açıklaması ~600 karakterde kelime ortasında kesiliyor (Ekim 2026).
@@ -191,8 +223,9 @@ function findRule(host: string | undefined): SiteRule | undefined {
 /** Metni site kuralının başlangıç ve bitiş işaretleri arasına kırpar. */
 function truncate(text: string, rule: SiteRule | undefined): string {
   let rows = text.split("\n")
-  if (rule) {
-    const head = rows.findIndex((s) => rule.startedAt.test(s.trim()))
+  if (rule?.startedAt) {
+    const startedAt = rule.startedAt
+    const head = rows.findIndex((s) => startedAt.test(s.trim()))
     if (head !== -1) rows = rows.slice(head + 1)
   }
   const endings = [...(rule?.ending ?? []), ...COMMON_ENDINGS]
@@ -210,6 +243,10 @@ export function extractPostingText(html: string, host?: string): ExtractedPostin
   const rule = findRule(host)
   const configured = jsonLdPosting(html)
   if (configured && configured.text.length >= 100 && !rule?.preferPage) return configured
+  if (rule?.domain === "linkedin.com") {
+    const linkedin = linkedinPosting(html)
+    if (linkedin) return linkedin
+  }
 
   // Ana içerik: <main> ya da <article> varsa o, yoksa <body>. Menü ve alt
   // bilgi ayrıca atılıyor.
