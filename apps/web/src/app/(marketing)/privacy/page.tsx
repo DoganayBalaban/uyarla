@@ -65,7 +65,7 @@ export default function PrivacyPage() {
           <li>
             <strong>Anlattığın deneyimler:</strong> uyarlamada eksik bir gereksinim için kendi
             sözlerinle yazdığın metin ve ondan yazılan madde. Maddeyi kabul ettiysen sonraki
-            analizlerinde, CV&apos;nde aynı iş varsa kanıt olarak kullanılır; Hesabım&apos;dan görebilir ve
+            analizlerinde, CV&apos;nde aynı iş varsa kanıt olarak kullanılır; CV&apos;lerim sayfasından görebilir ve
             unutabilirsin.
           </li>
           <li>
