@@ -12,6 +12,9 @@ import type { CoverLetterRecord } from "@uyarla/core/cover/letter"
 import { detectPlatform } from "@/features/analysis/platforms"
 import { readFormAnswers } from "@uyarla/core/cover/formAnswerRecord"
 import { postingTermsFrom } from "@/features/adaptation/postingTerms"
+import { waitingPreview } from "@/features/adaptation/waiting"
+import { adaptJobId } from "@uyarla/worker/adapt-queue"
+import { adaptQueue } from "@/server/adaptQueue"
 
 export const runtime = "nodejs"
 
@@ -29,9 +32,14 @@ export async function GET(
 
     const { adaptation, profile, posting, scoringPosting, draft, scoreBefore, scoringRevision, excluded } = payload
     const letter = (adaptation.coverLetter ?? null) as CoverLetterRecord | null
+    const running = adaptation.status === "running"
 
     return NextResponse.json({
       status: adaptation.status,
+      // Bekleme ekranı (çalışırken): işin bildirdiği aşama ve üzerinde
+      // çalışılan gerçek malzeme. Bitince gönderilmiyor.
+      stage: running ? await runningStage(id) : null,
+      preview: running ? waitingPreview(profile, adaptation.analysis.result, adaptation.createdAt) : null,
       draft,
       // Eski formülle kaydedilmiş analizde "önce" de bugünkü formülle (DOG-103).
       scoreBefore: scoringRevision >= 2 ? scoreBefore : ((await computeScoreBefore(profile, scoringPosting, draft, excluded)) ?? scoreBefore),
@@ -59,5 +67,16 @@ export async function GET(
     if (reply) return reply
     console.error("[api/adapt/[id]]", error)
     return NextResponse.json({ error: "Bir şeyler ters gitti." }, { status: 500 })
+  }
+}
+
+/** Worker'ın kuyruğa bildirdiği aşama; iş yoksa ya da Redis düştüyse null. */
+async function runningStage(id: string): Promise<string | null> {
+  try {
+    const job = await adaptQueue.getJob(adaptJobId(id))
+    const progress = job?.progress as { stage?: unknown } | undefined
+    return typeof progress?.stage === "string" ? progress.stage : null
+  } catch {
+    return null
   }
 }

@@ -40,7 +40,6 @@ import { loginPath } from "@/lib/returnPath"
 import { plansPath } from "@/features/billing/paywall"
 import { billingStatusKey, useBillingStatus } from "@/features/billing/api"
 import { adaptHint } from "@/features/billing/format"
-import { deriveStageStates } from "@/features/analysis/stageStates"
 import {
   startActiveAnalysis,
   updateActiveAnalysis,
@@ -62,11 +61,12 @@ import {
 
 /** Jetonu doğrulayabilecek eklentiler (geliştirme ve mağaza kimlikleri, DOG-71). */
 const EXTENSION_IDS = extensionIdsFromEnv(process.env.NEXT_PUBLIC_EXTENSION_IDS)
-import { StageTimeline } from "@/features/analysis/components/StageTimeline"
+import { AnalysisWaiting, type AnalysisInput } from "@/features/analysis/components/AnalysisWaiting"
+import { previewLines } from "@/components/waiting/text"
 import { ResumeUpload } from "@/features/analysis/components/ResumeUpload"
 import { ResumePicker } from "@/features/analysis/components/ResumePicker"
 import { resumesQueryKey, useLibrary } from "@/features/resumes/api"
-import { isLibraryFull, preselectResumeId } from "@/features/resumes/library"
+import { isLibraryFull, preselectResumeId, resumeTitle } from "@/features/resumes/library"
 import { LIBRARY_MAX } from "@/features/resumes/schema"
 import { useSession } from "@/lib/authClient"
 import { ScoreResult } from "@/features/analysis/components/ScoreResult"
@@ -85,12 +85,6 @@ import { analyzeFormSchema, jobUrlSchema, type AnalyzeFormValues } from "@/featu
 import { startAdaptation } from "@/features/adaptation/api"
 import { apiErrorBody, apiErrorMessage, apiStatus } from "@/lib/api"
 
-/** Marka rehberi §10.2'deki yükleme metinleri; aşama çizelgesinin satırları. */
-const STAGES = [
-  { id: "reading_resume", title: "CV'ni okuyoruz", description: "Deneyim, eğitim ve becerilerin ayrıştırılıyor." },
-  { id: "reading_posting", title: "İlanı okuyoruz", description: "Gereksinimler ve aranan kavramlar çıkarılıyor." },
-  { id: "comparing", title: "İlanla karşılaştırıyoruz", description: "Her gereksinim CV'nde kanıtıyla aranıyor." },
-]
 
 type PostingTab = "text" | "link" | "sample"
 /** CV'nin nasıl verileceği: dosya ya da yapıştırılan metin (DOG-101). */
@@ -118,6 +112,9 @@ export function AnalyzeView() {
   // Aynı ilan daha önce analiz edilmiş (DOG-98); "yine de" için son değerler.
   const [duplicate, setDuplicate] = useState<{ analysisId: string; createdAt: string; values: AnalyzeFormValues } | null>(null)
   const [busy, setBusy] = useState(false)
+  const [opening, setOpening] = useState(false)
+  // Bekleme ekranına taşınan form bilgisi ve başlangıç anı; yenilemede yalnızca an.
+  const [waiting, setWaiting] = useState<{ input: AnalysisInput | null; startedAt: number | null }>({ input: null, startedAt: null })
   const {
     register,
     handleSubmit,
@@ -320,6 +317,7 @@ export function AnalyzeView() {
     // yerden izleniyor, bitmiş ama görülmemiş sonuç gösteriliyor.
     const activeRecord = readActiveAnalysis()
     if (activeRecord?.status === "running") {
+      setWaiting({ input: null, startedAt: activeRecord.startedAt })
       setState({ status: "running", stage: activeRecord.stage })
       setBusy(true)
       setPollJobId(activeRecord.jobId)
@@ -367,7 +365,8 @@ export function AnalyzeView() {
   }, [pollJobId, job.data, jobErrorStatus])
 
   async function loadResult(analysisId: string) {
-    setState({ status: "running" })
+    // Kayıtlı sonucu açmak bekleme ekranı değil: analiz zaten bitmiş.
+    setOpening(true)
     try {
       const parsed = await queryClient.fetchQuery({
         queryKey: analysisQueryKey(analysisId),
@@ -383,6 +382,8 @@ export function AnalyzeView() {
           ? "Sonucu alamadık. Sayfayı yenileyip tekrar dener misin?"
           : "Bu analizi bulamadık. Yeni bir analiz başlatabilirsin.",
       )
+    } finally {
+      setOpening(false)
     }
   }
 
@@ -482,6 +483,7 @@ export function AnalyzeView() {
       // Çizelge hemen görünsün. Kayıt, kullanıcı başka sayfaya geçerse sağ
       // alttaki bildirimin izlemesi için.
       startActiveAnalysis(jobId)
+      setWaiting({ input: waitingInput(values), startedAt: Date.now() })
       setState({ status: "running" })
       setPollJobId(jobId)
     } catch (error) {
@@ -507,6 +509,16 @@ export function AnalyzeView() {
           : await apiErrorMessage(error, "Analiz başlatılamadı."),
       )
       setBusy(false)
+    }
+  }
+
+  /** Gönderilen formdan bekleme ekranının malzemesi; CV dosyası tarayıcıda okunmuyor. */
+  function waitingInput(values: AnalyzeFormValues): AnalysisInput {
+    const library = values.resumeId ? resumes.find((r) => r.id === values.resumeId) : undefined
+    return {
+      resumeLabel: library ? resumeTitle(library) : values.cvText !== undefined ? "Yapıştırılan CV" : ((values.cv as File | undefined)?.name ?? null),
+      resumeLines: values.cvText !== undefined ? previewLines(values.cvText) : null,
+      postingLines: previewLines(values.jobText, 12),
     }
   }
 
@@ -584,15 +596,24 @@ export function AnalyzeView() {
     )
   }
 
+  if (opening) {
+    return (
+      <AppPage width="narrow">
+        <Card className="mx-auto max-w-md items-center py-10 text-center" role="status">
+          <CardContent className="flex flex-col items-center">
+            <LoaderCircle className="size-7 text-primary motion-safe:animate-spin" aria-hidden />
+            <p className="m-0 mt-4 font-medium">Sonuç açılıyor…</p>
+          </CardContent>
+        </Card>
+      </AppPage>
+    )
+  }
+
   if (running) {
     return (
       <AppPage width="narrow">
         {libraryNote && <p className="m-0 mb-4 text-sm text-muted-foreground">{libraryNote}</p>}
-        <StageTimeline
-          heading="Analizin hazırlanıyor"
-          subtitle="Genelde bir dakika kadar sürüyor. Başka sayfaya geçebilirsin; bitince haber veririz."
-          stages={deriveStageStates(STAGES, state?.stage ?? null)}
-        />
+        <AnalysisWaiting stage={state?.stage ?? null} startedAt={waiting.startedAt} input={waiting.input} />
       </AppPage>
     )
   }

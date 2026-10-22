@@ -70,6 +70,15 @@ export interface AdaptJobData {
   adaptationId: string
 }
 
+/**
+ * Uyarlama işinin kuyruktaki kimliği. Web bekleme ekranı için işin
+ * bildirdiği aşamayı (`rewriting`, `verifying`) bu kimlikle okuyor; kayıt
+ * kimliği yetmiyor, BullMQ kendi kimliğini üretiyordu.
+ */
+export function adaptJobId(adaptationId: string): string {
+  return `adapt-${adaptationId}`
+}
+
 /** Geçici hatalarda üstel geri çekilmeyle 3 deneme (spec §13). */
 export const ADAPT_JOB_OPTIONS = {
   attempts: 3,
