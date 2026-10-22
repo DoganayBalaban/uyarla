@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { analysisFormSchema, analyzeFormSchema, jobUrlSchema } from "@/features/analysis/schema"
+import {
+  MAX_RESUME_TEXT_LENGTH,
+  analysisFormSchema,
+  analyzeFormSchema,
+  jobUrlSchema,
+  normalizeResumeText,
+  resumeTextSchema,
+} from "@/features/analysis/schema"
 import { firstIssue } from "@/lib/validation"
 
 const POSTING = "Frontend Geliştirici aranıyor. React ve TypeScript bilgisi gereklidir."
@@ -60,5 +67,34 @@ describe("analyzeFormSchema", () => {
     const parsed = analyzeFormSchema.safeParse({ cv: { name: "cv.txt", size: 10 }, jobText: "kısa", saveToLibrary: false })
     expect(parsed.success).toBe(false)
     if (!parsed.success) expect(firstIssue(parsed.error).code).toBe("unsupported_format")
+  })
+})
+
+describe("pasted CV text (DOG-101)", () => {
+  const cvText = `Deniz Aksoy\nPerformans pazarlama uzmanı\n${"Google Ads ve Meta kampanyalarını yönettim. ".repeat(6)}`
+
+  it("is a third way to give a CV, alone", () => {
+    expect(analyzeFormSchema.safeParse({ cvText, jobText: POSTING, saveToLibrary: false }).success).toBe(true)
+    const both = analyzeFormSchema.safeParse({ cvText, cv: { name: "cv.pdf", size: 10 }, jobText: POSTING, saveToLibrary: false })
+    expect(both.success).toBe(false)
+    if (!both.success) expect(firstIssue(both.error).code).toBe("ambiguous_resume")
+  })
+
+  it("asks for the whole CV when the text is too short or empty", () => {
+    for (const text of ["", "Deniz Aksoy, pazarlama"]) {
+      const parsed = analyzeFormSchema.safeParse({ cvText: text, jobText: POSTING, saveToLibrary: false })
+      expect(parsed.success).toBe(false)
+      if (!parsed.success) expect(firstIssue(parsed.error).code).toBe("resume_text_too_short")
+    }
+  })
+
+  it("rejects text far longer than any CV", () => {
+    const parsed = resumeTextSchema.safeParse("a".repeat(MAX_RESUME_TEXT_LENGTH + 1))
+    expect(parsed.success).toBe(false)
+    if (!parsed.success) expect(firstIssue(parsed.error).code).toBe("resume_text_too_long")
+  })
+
+  it("normalises line endings and outer whitespace", () => {
+    expect(normalizeResumeText("  Ad\r\nSoyad\rİş\n  ")).toBe("Ad\nSoyad\nİş")
   })
 })
