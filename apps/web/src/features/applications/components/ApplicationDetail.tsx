@@ -261,7 +261,7 @@ function InterviewTab({ card, onUpdate }: { card: BoardCard; onUpdate: (change: 
       </div>
       {card.stage === "interview" ? (
         <Button asChild variant="outline">
-          <Link href={`/applications/${card.analysisId}/mulakat`}>
+          <Link href={`/applications/${card.analysisId}/interview`}>
             <MessagesSquare aria-hidden />
             Mülakat hazırlığı
             <span className="font-normal text-muted-foreground">· sorular, cevap iskeletleri, pratik</span>

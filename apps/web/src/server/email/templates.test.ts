@@ -32,7 +32,7 @@ describe("applicationRemindersEmail (DOG-98, DOG-128)", () => {
 
   it("links the interview prep page when it knows the application (DOG-118)", () => {
     const { html } = applicationRemindersEmail({ followups: [], interviews: [{ ...interview, analysisId: "an-1" }], deadlines: [] })
-    expect(html).toContain("/applications/an-1/mulakat")
+    expect(html).toContain("/applications/an-1/interview")
     expect(html).toContain("Mülakat hazırlığını aç")
   })
 
@@ -46,8 +46,8 @@ describe("applicationRemindersEmail (DOG-98, DOG-128)", () => {
   })
 
   it("uses the signed one-click link when there is one", () => {
-    const { html } = applicationRemindersEmail({ followups: [followup], interviews: [], deadlines: [] }, "https://uyarla.com.tr/e-posta/cik?t=abc")
-    expect(html).toContain("/e-posta/cik?t=abc")
+    const { html } = applicationRemindersEmail({ followups: [followup], interviews: [], deadlines: [] }, "https://uyarla.com.tr/email/unsubscribe?t=abc")
+    expect(html).toContain("/email/unsubscribe?t=abc")
     expect(html).toContain("tek tıkla kapatabilirsin")
   })
 })

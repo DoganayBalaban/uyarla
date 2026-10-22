@@ -7,8 +7,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: `${root}/`, changeFrequency: "weekly", priority: 1 },
     { url: `${root}/analyze`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${root}/ornek-rapor`, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${root}/nereden-baslamali`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${root}/sample-report`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${root}/get-started`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${root}/login`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${root}/privacy`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${root}/terms`, changeFrequency: "yearly", priority: 0.2 },

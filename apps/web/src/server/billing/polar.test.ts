@@ -29,14 +29,14 @@ describe("polar provider", () => {
       email: "a@b.c",
       productId: "prod_m",
       plan: "month",
-      successUrl: "https://uyarla.com.tr/plans/tesekkurler",
+      successUrl: "https://uyarla.com.tr/plans/thanks",
     })
     expect(result.url).toBe("https://sandbox.polar.sh/checkout/abc")
     expect(d.createCheckout).toHaveBeenCalledWith({
       products: ["prod_m"],
       external_customer_id: "user_1",
       customer_email: "a@b.c",
-      success_url: "https://uyarla.com.tr/plans/tesekkurler",
+      success_url: "https://uyarla.com.tr/plans/thanks",
       metadata: { plan: "month", user_id: "user_1" },
       locale: "tr",
     })

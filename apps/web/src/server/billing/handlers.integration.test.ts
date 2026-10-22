@@ -43,7 +43,7 @@ describe("handleCheckout", () => {
         productId: "prod_m",
         plan: "month",
         // `odeme`: teşekkür sayfası bundan sonra açılan dönemi bekliyor (DOG-80).
-        successUrl: `https://uyarla.com.tr/plans/tesekkurler?donus=%2Fanalyze%3Fuyarla%3Da1&odeme=${NOW.getTime()}`,
+        successUrl: `https://uyarla.com.tr/plans/thanks?donus=%2Fanalyze%3Fuyarla%3Da1&odeme=${NOW.getTime()}`,
       }),
     )
   })

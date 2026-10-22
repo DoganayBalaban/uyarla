@@ -21,7 +21,7 @@ describe("unsubscribe tokens (DOG-127)", () => {
   it("builds links and one-click headers only when the secret exists", () => {
     expect(unsubscribeLinks("u-1", "applicationReminders", undefined)).toBeNull()
     const links = unsubscribeLinks("u-1", "applicationReminders", SECRET)!
-    expect(links.page).toContain("/e-posta/cik?t=")
+    expect(links.page).toContain("/email/unsubscribe?t=")
     expect(unsubscribeHeaders(links)).toEqual({
       "List-Unsubscribe": `<${links.oneClick}>`,
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",

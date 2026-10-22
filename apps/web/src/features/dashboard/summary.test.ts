@@ -89,7 +89,7 @@ describe("dashboard summary · DOG-145", () => {
       ["ready", "ready"],
       ["adapt", "late"],
     ])
-    expect(o.pending[0]).toMatchObject({ address: "/applications/interview/mulakat", date: "2026-10-22" })
+    expect(o.pending[0]).toMatchObject({ address: "/applications/interview/interview", date: "2026-10-22" })
   })
 
   it("counts metrics from the user's own cards", () => {

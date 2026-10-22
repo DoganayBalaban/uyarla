@@ -7,14 +7,14 @@ describe("app shell navigation (DOG-144)", () => {
     expect(isActive("/applications/abc", "/applications")).toBe(true)
     expect(isActive("/applicationsx", "/applications")).toBe(false)
     // Mülakat hazırlığı Mülakatlar'a ait.
-    expect(isActive("/applications/abc/mulakat", "/interviews")).toBe(true)
-    expect(isActive("/applications/abc/mulakat", "/applications")).toBe(false)
+    expect(isActive("/applications/abc/interview", "/interviews")).toBe(true)
+    expect(isActive("/applications/abc/interview", "/applications")).toBe(false)
   })
 
   it("builds the breadcrumb for top and detail pages", () => {
     expect(breadcrumbs("/dashboard")).toEqual([{ label: "Genel bakış" }])
     expect(breadcrumbs("/applications/abc")).toEqual([{ label: "Başvurular", href: "/applications" }, { label: "Başvuru" }])
-    expect(breadcrumbs("/applications/abc/mulakat")).toEqual([{ label: "Mülakatlar", href: "/interviews" }, { label: "Hazırlık" }])
+    expect(breadcrumbs("/applications/abc/interview")).toEqual([{ label: "Mülakatlar", href: "/interviews" }, { label: "Hazırlık" }])
     expect(breadcrumbs("/adapt/xyz")).toEqual([{ label: "Uyarlama" }])
     expect(breadcrumbs("/bilinmeyen")).toEqual([])
     expect(breadcrumbs("/analyze")).toEqual([{ label: "Yeni analiz" }])
