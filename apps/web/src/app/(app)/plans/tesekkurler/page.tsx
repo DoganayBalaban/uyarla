@@ -1,3 +1,4 @@
+import { AppPage } from "@/components/layout/app-shell/AppPage"
 import { ThanksView } from "@/features/billing/components/ThanksView"
 import { safePlansReturn } from "@/features/billing/paywall"
 import { parseSince } from "@/features/billing/thanks"
@@ -9,5 +10,9 @@ export default async function ThanksPage({ searchParams }: { searchParams: Promi
   // Açık yönlendirmeye karşı: giriş akışıyla aynı kontrol (son gözden geçirme).
   const returnTo = safePlansReturn(donus)
   // Ödeme oturumunun açıldığı an (DOG-80); eski bağlantılarda yok.
-  return <ThanksView returnTo={returnTo} since={parseSince(odeme)} />
+  return (
+    <AppPage width="narrow">
+      <ThanksView returnTo={returnTo} since={parseSince(odeme)} />
+    </AppPage>
+  )
 }

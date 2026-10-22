@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { AppPage } from "@/components/layout/app-shell/AppPage"
 import { PlansView } from "@/features/billing/components/PlansView"
 import { plansFromEnv } from "@/features/billing/plans"
 import { plansPath, safePlansReturn } from "@/features/billing/paywall"
@@ -16,5 +17,9 @@ export default async function PlansPage({ searchParams }: { searchParams: Promis
   // gidiyor, sonra aynı paket ekranına dönüyor (DOG-82).
   const session = await getSession()
   if (!session || session.user.isAnonymous) redirect(loginPath(returnTo ? plansPath(returnTo) : "/plans"))
-  return <PlansView plans={plansFromEnv(process.env)} returnTo={returnTo} />
+  return (
+    <AppPage>
+      <PlansView plans={plansFromEnv(process.env)} returnTo={returnTo} />
+    </AppPage>
+  )
 }
