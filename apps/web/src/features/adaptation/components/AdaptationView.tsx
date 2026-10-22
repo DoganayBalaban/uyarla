@@ -48,26 +48,12 @@ import {
   setLayout,
   useAdaptation,
 } from "@/features/adaptation/api"
-import { deriveStageStates } from "@/features/analysis/stageStates"
 import { CoverLetterSection } from "@/features/adaptation/components/CoverLetterSection"
 import type { AdaptationState } from "@/features/adaptation/types"
-import { StageTimeline } from "@/features/analysis/components/StageTimeline"
+import { AdaptationWaiting } from "@/features/adaptation/components/AdaptationWaiting"
 import { ScoreRing } from "@/features/analysis/components/ScoreRing"
 import { scoreStatus } from "@/lib/scoreStatus"
 
-/** Marka rehberi §10.2 tonunda yükleme metinleri. */
-const STAGES = [
-  {
-    id: "rewriting",
-    title: "CV'ni ilana göre yeniden yazıyoruz",
-    description: "Özetini ve deneyim maddelerini ilanın diline yaklaştırıyoruz.",
-  },
-  {
-    id: "verifying",
-    title: "Hiçbir şeyin uydurulmadığını kontrol ediyoruz",
-    description: "Her yeni cümleyi CV'ndeki gerçek bilgilerle karşılaştırıyoruz.",
-  },
-]
 
 type View = "changes" | "document" | "letter" | "answers"
 
@@ -202,11 +188,7 @@ export function AdaptationView({ id }: { id: string }) {
   if (!state || state.status === "running") {
     return (
       <AppPage width="narrow">
-        <StageTimeline
-          heading="Uyarlaman hazırlanıyor"
-          subtitle="Genelde bir dakikadan kısa sürüyor. Sayfadan ayrılma."
-          stages={deriveStageStates(STAGES, state?.stage ?? null)}
-        />
+        <AdaptationWaiting stage={state?.stage ?? null} scoreBefore={state?.scoreBefore ?? null} preview={state?.preview ?? null} />
       </AppPage>
     )
   }

@@ -1,6 +1,6 @@
 import { PermanentError } from "@uyarla/core/errors"
 import { prisma } from "@uyarla/db"
-import { ADAPT_JOB_OPTIONS } from "@uyarla/worker/adapt-queue"
+import { ADAPT_JOB_OPTIONS, adaptJobId } from "@uyarla/worker/adapt-queue"
 import { NextResponse } from "next/server"
 import { adaptRequestSchema } from "@/features/adaptation/schema"
 import { firstIssue } from "@/lib/validation"
@@ -71,7 +71,10 @@ export async function POST(request: Request) {
     )
 
     // Kuyruğa işlem bittikten sonra: worker kaydı okuyabilsin.
-    if (outcome.created) await adaptQueue.add("adapt", { adaptationId: outcome.id }, ADAPT_JOB_OPTIONS)
+    // Sabit iş kimliği: bekleme ekranı aşamayı bununla okuyor.
+    if (outcome.created) {
+      await adaptQueue.add("adapt", { adaptationId: outcome.id }, { ...ADAPT_JOB_OPTIONS, jobId: adaptJobId(outcome.id) })
+    }
 
     return NextResponse.json({ adaptationId: outcome.id })
   } catch (error) {

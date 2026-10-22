@@ -3823,3 +3823,28 @@ Canlıda yayımlanmış üç eski yol (`/e-posta/cik`, `/plans/tesekkurler`,
 adrese gidiyor: gönderilmiş e-postalardaki bağlantılar ve süren ödemelerin
 dönüş adresi kırılmasın. Sorgu parametreleri (`?analiz=`, `?donus=`) ve
 `#ornek-ilanlar` bu kapsamda değil; yol değil, sayfanın durumu.
+
+## K-104 · Analiz ve uyarlamanın bekleme ekranları
+
+**Bağlam:** İki ekran da dikey bir aşama listesiydi. Uyarlamada aşama hiç
+gelmiyordu: worker `rewriting`/`verifying` bildiriyor ama iş kimliği BullMQ'nun
+ürettiği sayıydı, `GET /api/adapt/[id]` onu bulamıyordu; ekran hep ilk
+aşamada duruyordu. Kullanıcı 22 Ekim'de ekranları yaratıcı biçimde yeniden
+tasarlamayı istedi.
+
+**Karar:** Ortak çerçeve (`components/waiting`): süren aşamanın adı, geçen
+süre, sahne, aşama çubuğu ve dönen kısa bilgiler. Sahnede yalnızca gerçek veri:
+- Analiz: CV ve ilan iki kâğıt; bu oturumda gönderildiyse ilanın (ve
+  yapıştırılan CV'nin) kendi satırları, yoksa iskelet. Okunan kâğıtta tarama
+  ışığı, karşılaştırmada kâğıtlar arasında akan bağlar.
+- Uyarlama: CV'nin ilk hâlinden kesit (özet ve ilk maddeler) üzerinde yazım
+  imleci, kontrolde yeşil tarama; önceki skor → "?" ve analizde eksik kalan
+  kavramlar ("dayanağı olmayan eklenmez").
+- Uyarlama işinin kimliği `adapt-<uyarlamaKimliği>` (`adaptJobId`); GET aşamayı
+  ve `preview`'u yalnızca çalışırken döndürüyor.
+- Yüzde, kalan süre ve istatistik yok; sayaç yalnızca geçen süre. Bilgiler
+  ürünün gerçek kuralları (rehber §11). Kayıtlı sonucu açmak (`?analiz=`)
+  bekleme ekranı değil, kısa bir "Sonuç açılıyor…".
+- Yerelde aşama seçerek görmek için `/ui/waiting` (üretimde 404).
+
+LinkedIn raporu ve mülakat hazırlığı şimdilik eski `StageTimeline`'da.
