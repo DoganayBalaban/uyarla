@@ -10,6 +10,10 @@ import type { Provider } from "@/features/auth/providers"
 import { loginSchema, type LoginFormValues } from "@/features/auth/schema"
 import { LoginVisual } from "@/features/auth/components/LoginVisual"
 import { Logo } from "@/components/layout/Logo"
+import { ArrowRight, Check, LoaderCircle, Mail } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { onboardingPath } from "@/features/onboarding/gate"
 import { SocialLogin, girisHataAdresi } from "@/features/auth/components/SocialLogin"
 
@@ -112,7 +116,7 @@ export function LoginForm({
   }
 
   return (
-    <div className="flex min-h-dvh bg-white dark:bg-brand-night">
+    <div className="flex min-h-dvh bg-background">
       <div className="flex w-full flex-col px-6 py-6 sm:px-10 lg:w-1/2 lg:px-16 xl:px-24">
         <header className="flex items-center justify-between">
           <Logo />
@@ -124,22 +128,10 @@ export function LoginForm({
         <main className="mx-auto flex w-full max-w-[26rem] flex-1 flex-col justify-center py-12">
           {state === "sent" ? (
             <div>
-              <span className="grid size-14 place-items-center rounded-2xl bg-brand-blue/10 text-brand-blue dark:text-brand-blue-light">
-                <svg
-                  viewBox="0 0 24 24"
-                  className="size-7"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <rect width="20" height="16" x="2" y="4" rx="2" />
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                </svg>
+              <span className="grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+                <Mail className="size-7" strokeWidth={1.75} aria-hidden />
               </span>
-              <h1 className="mt-6 font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">
+              <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">
                 Posta kutunu kontrol et
               </h1>
               <p className="mt-4 text-base leading-relaxed text-muted-foreground">
@@ -150,23 +142,15 @@ export function LoginForm({
 
               <div className="mt-8 space-y-3">
                 {mailApp && (
-                  <a
-                    href={mailApp.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(47_75_224/0.8)] transition hover:-translate-y-px hover:bg-brand-blue-hover"
-                  >
-                    {mailApp.action}
-                    <span aria-hidden="true">↗</span>
-                  </a>
+                  <Button asChild size="lg" className="h-12 w-full text-base">
+                    <a href={mailApp.url} target="_blank" rel="noopener noreferrer">
+                      {mailApp.action}
+                      <span aria-hidden="true">↗</span>
+                    </a>
+                  </Button>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => void resend()}
-                  disabled={remaining > 0}
-                  className="w-full rounded-2xl border border-border px-5 py-3.5 font-semibold text-foreground transition-colors hover:bg-background disabled:cursor-not-allowed disabled:text-muted-foreground disabled:hover:bg-transparent dark:hover:bg-white/5"
-                >
+                <Button type="button" variant="outline" size="lg" className="h-12 w-full text-base" onClick={() => void resend()} disabled={remaining > 0}>
                   {remaining > 0 ? (
                     <>
                       Tekrar gönder{" "}
@@ -177,7 +161,7 @@ export function LoginForm({
                   ) : (
                     "Bağlantıyı tekrar gönder"
                   )}
-                </button>
+                </Button>
 
                 <p role="status" className="min-h-5 text-center text-sm">
                   {loginError ? (
@@ -188,20 +172,21 @@ export function LoginForm({
                 </p>
               </div>
 
-              <button
+              <Button
                 type="button"
+                variant="link"
+                className="mt-2 w-full text-muted-foreground"
                 onClick={() => {
                   setLoginError(null)
                   setState("idle")
                 }}
-                className="mt-2 w-full text-center text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
               >
                 Başka bir e-posta kullan
-              </button>
+              </Button>
             </div>
           ) : (
             <div>
-              <h1 className="font-heading text-4xl font-extrabold tracking-tight sm:text-5xl">
+              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
                 Hoş geldin
               </h1>
               <p className="mt-4 text-base leading-relaxed text-muted-foreground">
@@ -210,10 +195,10 @@ export function LoginForm({
               </p>
 
               <form onSubmit={handleSubmit(submit)} noValidate className="mt-10">
-                <label htmlFor="email" className="mb-2 block text-sm font-medium text-foreground">
+                <Label htmlFor="email" className="mb-2">
                   E-posta adresi
-                </label>
-                <input
+                </Label>
+                <Input
                   id="email"
                   type="email"
                   autoComplete="email"
@@ -222,7 +207,7 @@ export function LoginForm({
                   placeholder="aday@ornek.com"
                   aria-invalid={loginError || errors.email ? true : undefined}
                   aria-describedby={loginError || errors.email ? "giris-hata" : undefined}
-                  className="w-full rounded-2xl border border-transparent bg-background px-5 py-4 dark:bg-white/5 text-base text-foreground outline-none ring-brand-blue/25 transition placeholder:text-muted-foreground/80 focus:border-brand-blue focus:bg-white focus:ring-4 dark:focus:bg-white/10"
+                  className="h-12 px-4 text-base"
                 />
 
                 {suggestion && (
@@ -230,7 +215,7 @@ export function LoginForm({
                     <button
                       type="button"
                       onClick={() => setValue("email", suggestion, { shouldValidate: !!errors.email })}
-                      className="font-semibold text-brand-blue underline-offset-4 hover:underline dark:text-brand-blue-light"
+                      className="font-semibold text-primary underline-offset-4 hover:underline"
                     >
                       {suggestion}
                     </button>{" "}
@@ -244,25 +229,19 @@ export function LoginForm({
                   </p>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={state === "sending"}
-                  className="group mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-blue px-5 py-4 font-semibold text-white shadow-[0_10px_24px_-10px_rgb(47_75_224/0.8)] transition hover:-translate-y-px hover:bg-brand-blue-hover disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
-                >
+                <Button type="submit" size="lg" disabled={state === "sending"} className="group mt-6 h-12 w-full text-base">
                   {state === "sending" ? (
                     <>
-                      <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                      <LoaderCircle className="motion-safe:animate-spin" aria-hidden />
                       Gönderiliyor…
                     </>
                   ) : (
                     <>
                       Giriş bağlantısı gönder
-                      <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">
-                        →
-                      </span>
+                      <ArrowRight className="transition-transform group-hover:translate-x-0.5" aria-hidden />
                     </>
                   )}
-                </button>
+                </Button>
               </form>
 
               <div className="my-7 flex items-center gap-4 text-xs text-muted-foreground">
@@ -280,18 +259,7 @@ export function LoginForm({
                   "Yaptığın analizler hesabına taşınır",
                 ].map((m) => (
                   <li key={m} className="flex items-center gap-2.5">
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="size-4 shrink-0 text-brand-green"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M20 6 9 17l-5-5" />
-                    </svg>
+                    <Check className="size-4 shrink-0 text-brand-green" aria-hidden />
                     {m}
                   </li>
                 ))}

@@ -1,7 +1,7 @@
 /**
  * Giriş ekranının sağındaki görsel panel.
  *
- * Arkada ipeksi kurdeleler, önde CV'deki kavramların döndüğü bir yörünge,
+ * Arkada iki tonlu mavi zemin, önde CV'deki kavramların döndüğü bir yörünge,
  * ortada skor halkası ve altta ürünün sözlerini taşıyan bir kart.
  *
  * Tamamen dekoratif; ekran okuyucudan gizli.
@@ -43,19 +43,8 @@ export function LoginVisual() {
       {/* Zemin: mavinin iki tonu, köşede hafif mercan. */}
       <div className="absolute inset-0 -z-20 bg-[radial-gradient(80%_60%_at_80%_10%,rgb(47_75_224/0.55),transparent_60%),radial-gradient(60%_50%_at_0%_100%,rgb(47_75_224/0.45),transparent_65%),radial-gradient(40%_30%_at_100%_100%,rgb(255_107_74/0.22),transparent_70%)]" />
 
-      {/* Kurdeleler. Her biri dikeyde açık kenar → doygun orta → koyu alt
-          geçişiyle ipek hacmi veriyor; uçlar maskeyle eriyor. */}
-      <div className="absolute inset-[-30%] -z-10 [mask-image:linear-gradient(to_right,transparent,#000_20%,#000_80%,transparent)]">
-        <div className="absolute left-[-10%] top-[14%] h-28 w-[130%] -rotate-30 rounded-full bg-brand-blue-light/50 blur-3xl motion-safe:animate-ribbon" />
-        <div className="absolute left-[-10%] top-[30%] h-44 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(199_208_255/0.9),rgb(47_75_224)_30%,rgb(27_42_143)_75%,rgb(15_23_42/0.6))] blur-[2px] motion-safe:animate-ribbon motion-safe:[animation-duration:18s]" />
-        <div className="absolute left-[-10%] top-[44%] h-1.5 w-[130%] -rotate-30 rounded-full bg-white/70 blur-[1px] motion-safe:animate-ribbon motion-safe:[animation-duration:11s]" />
-        <div className="absolute left-[-10%] top-[50%] h-36 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(230_234_255/0.85),rgb(91_115_255)_28%,rgb(47_75_224)_55%,rgb(255_107_74/0.55)_85%,transparent)] blur-[2px] motion-safe:animate-ribbon motion-safe:[animation-duration:22s]" />
-        <div className="absolute left-[-10%] top-[66%] h-24 w-[130%] -rotate-30 rounded-[100%] bg-[linear-gradient(to_bottom,rgb(199_208_255/0.6),rgb(47_75_224/0.8)_40%,rgb(15_23_42/0.4))] blur-[3px] motion-safe:animate-ribbon motion-safe:[animation-duration:16s]" />
-        <div className="absolute left-[-10%] top-[80%] h-32 w-[130%] -rotate-30 rounded-full bg-brand-coral/25 blur-3xl motion-safe:animate-ribbon motion-safe:[animation-duration:20s]" />
-      </div>
-
-      {/* Kurdeleleri koyulaştıran perde: önde duran içerik okunaklı kalsın. */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-brand-night/20 via-brand-night/45 to-brand-night/75" />
+      {/* Sade zemin (DOG-155): kurdele katmanı kalktı; bulanık animasyonlar ağırdı. */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-brand-night/30 to-brand-night/70" />
 
       {/* Yörünge. */}
       <div className="absolute left-1/2 top-[42%] aspect-square w-[92%] max-w-[560px] -translate-x-1/2 -translate-y-1/2">
@@ -124,7 +113,7 @@ export function LoginVisual() {
 
       {/* Alt kart: ürünün sözleri. */}
       <div className="absolute inset-x-6 bottom-6 sm:inset-x-10 sm:bottom-10 motion-safe:animate-float">
-        <div className="max-w-sm rounded-card border border-white/20 bg-white/10 p-5 text-white shadow-2xl backdrop-blur-xl">
+        <div className="max-w-sm rounded-xl border border-white/20 bg-white/10 p-5 text-white shadow-2xl backdrop-blur-xl">
           <p className="font-heading text-sm font-extrabold tracking-tight">Uyarla'nın sözü</p>
           <ul className="mt-3 space-y-2 text-sm leading-relaxed text-white/85">
             {QUOTES.map((quote) => (
