@@ -9,7 +9,11 @@ const NOT_FOUND =
   "Bu sayfada ilan bulamadık. İlan metnini seçip sağ tıkla \"Seçili metni uyarla ile ölç\" de."
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({ id: MENU_ID, title: "Seçili metni uyarla ile ölç", contexts: ["selection"] })
+  // Güncellemede ve yeniden yüklemede önceki sürümün menüsü duruyor; aynı
+  // kimlikle yeniden oluşturmak "duplicate id" hatası veriyordu.
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({ id: MENU_ID, title: "Seçili metni uyarla ile ölç", contexts: ["selection"] })
+  })
 })
 
 /** Jetonlar `chrome.storage.session`'da: tarayıcı kapanınca siliniyor, diske yazılmıyor. */
