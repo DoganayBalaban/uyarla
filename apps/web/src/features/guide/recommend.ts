@@ -99,7 +99,7 @@ const STEPS: Record<GuideStep["id"], GuideStep> = {
     id: "sample_report",
     title: "Örnek raporla ATS'nin neye baktığını gör",
     why: "uyarla sıfırdan CV yazmıyor; var olan CV'ni ilana göre düzenliyor. CV'ni hazırlarken örnek rapor, ilanların neyi aradığını gösterir.",
-    href: "/ornek-rapor",
+    href: "/sample-report",
     cta: "Örnek raporu aç",
     registered: false,
   },

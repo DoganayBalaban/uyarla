@@ -3174,7 +3174,7 @@ boşluk mülakat.
 - **Eksik zorunlu gereksinimlere dürüst köprü (K-76).** Olumsuzlanan yan cümle
   sayı kontrolünden de çıkıyor: "5 yıl deneyimim yok" geçiyor, "4 yıllık
   deneyimim var" işaretleniyor.
-- **Sayfa ve bağlantılar:** `/applications/[id]/mulakat`; kart "Mülakat"
+- **Sayfa ve bağlantılar:** `/applications/[id]/interview` (K-103 öncesi `/mulakat`); kart "Mülakat"
   aşamasında bağlantı veriyor. Mülakat hatırlatması e-postasının düğmesi
   hazırlık sayfasına gidiyor. Başvuru başına iki deneme.
 
@@ -3809,3 +3809,17 @@ DOG-142'de (DOG-143–156). Tanıtım sayfasına dokunulmuyor.
   `@/lib/cn`'e çevrildi, paket kaldırıldı; `lib/utils.ts` shadcn'in beklediği
   yol.
 - **Vitrin:** `/ui` (yalnızca yerelde).
+
+## K-103 · Sayfa yolları İngilizce
+
+**Bağlam:** Uygulamanın yolları çoğunlukla İngilizceydi (`/analyze`, `/cvs`,
+`/interviews`), beşi Türkçeydi. Kullanıcı 22 Ekim'de hepsinin İngilizce
+olmasını istedi.
+
+**Karar:** `/sample-report`, `/get-started`, `/applications/[id]/interview`,
+`/plans/thanks`, `/email/unsubscribe`. Ekrandaki metinler Türkçe kalıyor.
+Canlıda yayımlanmış üç eski yol (`/e-posta/cik`, `/plans/tesekkurler`,
+`/applications/[id]/mulakat`) `next.config.mjs`'te kalıcı yönlendirmeyle yeni
+adrese gidiyor: gönderilmiş e-postalardaki bağlantılar ve süren ödemelerin
+dönüş adresi kırılmasın. Sorgu parametreleri (`?analiz=`, `?donus=`) ve
+`#ornek-ilanlar` bu kapsamda değil; yol değil, sayfanın durumu.

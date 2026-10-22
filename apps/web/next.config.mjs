@@ -64,6 +64,20 @@ export default {
   },
 
   /**
+   * Sayfa yolları İngilizceye geçti. Eski adresler canlıda yayımlandı:
+   * gönderilmiş e-postalardaki "aboneliği bırak" ve mülakat bağlantıları,
+   * süren bir Polar ödemesinin dönüş adresi. Kırılmasınlar diye kalıcı
+   * yönlendirme; sorgu (`?t=`, `?donus=`) olduğu gibi taşınıyor.
+   */
+  async redirects() {
+    return [
+      { source: "/e-posta/cik", destination: "/email/unsubscribe", permanent: true },
+      { source: "/plans/tesekkurler", destination: "/plans/thanks", permanent: true },
+      { source: "/applications/:id/mulakat", destination: "/applications/:id/interview", permanent: true },
+    ]
+  },
+
+  /**
    * Dağıtım çıktısını yerelde inceleyebilmek için kapı.
    *
    * Vercel `output: "standalone"` kullanmıyor — kendi işlevlerini `.nft.json`

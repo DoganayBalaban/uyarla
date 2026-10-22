@@ -64,11 +64,11 @@ export function DashboardView({
             </div>
             {/* Hazır olmayan ilk ziyaret için iki kısa yol (DOG-101). */}
             <p className="m-0 mt-5 text-sm text-muted-foreground">
-              <Link href="/ornek-rapor" className="font-medium text-foreground underline underline-offset-2">
+              <Link href="/sample-report" className="font-medium text-foreground underline underline-offset-2">
                 Örnek raporu gör
               </Link>
               {" · "}
-              <Link href="/nereden-baslamali" className="font-medium text-foreground underline underline-offset-2">
+              <Link href="/get-started" className="font-medium text-foreground underline underline-offset-2">
                 Nereden başlamalıyım?
               </Link>
             </p>

@@ -10,7 +10,7 @@ export const runtime = "nodejs"
  * E-postadan çıkış (DOG-127). İki çağıran var:
  *   - E-posta istemcisinin tek tıkla çıkışı (RFC 8058): gövde
  *     `List-Unsubscribe=One-Click`, yanıt 200 yeterli.
- *   - `/e-posta/cik` sayfasının formu: işlemden sonra sayfaya geri dönüyor.
+ *   - `/email/unsubscribe` sayfasının formu: işlemden sonra sayfaya geri dönüyor.
  * GET yok: bağlantıyı önceden açan tarayıcı bir şeyi kapatmasın.
  */
 export async function POST(request: Request) {
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   if (!target) {
     return oneClick
       ? NextResponse.json({ error: "invalid_token" }, { status: 400 })
-      : NextResponse.redirect(`${siteUrl()}/e-posta/cik?hata=1`, 303)
+      : NextResponse.redirect(`${siteUrl()}/email/unsubscribe?hata=1`, 303)
   }
 
   // Ürün haberleri onaya dayalı: geri alma onay geçmişine yazılıyor (DOG-130).
@@ -32,5 +32,5 @@ export async function POST(request: Request) {
 
   return oneClick
     ? NextResponse.json({ unsubscribed: true })
-    : NextResponse.redirect(`${siteUrl()}/e-posta/cik?t=${encodeURIComponent(token!)}&tamam=1`, 303)
+    : NextResponse.redirect(`${siteUrl()}/email/unsubscribe?t=${encodeURIComponent(token!)}&tamam=1`, 303)
 }

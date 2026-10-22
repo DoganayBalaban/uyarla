@@ -39,7 +39,7 @@ export default function SampleReportPage() {
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Button asChild size="sm" variant="outline">
-              <Link href="/nereden-baslamali">
+              <Link href="/get-started">
                 <Compass aria-hidden />
                 Nereden başlamalıyım?
               </Link>

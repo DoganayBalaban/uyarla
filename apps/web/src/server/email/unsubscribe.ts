@@ -11,7 +11,7 @@ import { siteUrl } from "@/lib/site"
  * bağlantı üretilmiyor ve e-posta eskisi gibi Hesabım'a yönlendiriyor.
  *
  * İki uç var:
- *   - Sayfa (`/e-posta/cik`): e-postanın altındaki bağlantı. GET bir şey
+ *   - Sayfa (`/email/unsubscribe`): e-postanın altındaki bağlantı. GET bir şey
  *     kapatmıyor, onay istiyor; e-posta tarayıcıları bağlantıları önceden
  *     açabiliyor.
  *   - `POST /api/email/unsubscribe`: sayfanın formu ve e-posta istemcisinin
@@ -64,7 +64,7 @@ export function unsubscribeLinks(
 ): { page: string; oneClick: string } | null {
   if (!secret) return null
   const t = encodeURIComponent(signUnsubscribe(userId, category, secret))
-  return { page: `${siteUrl()}/e-posta/cik?t=${t}`, oneClick: `${siteUrl()}/api/email/unsubscribe?t=${t}` }
+  return { page: `${siteUrl()}/email/unsubscribe?t=${t}`, oneClick: `${siteUrl()}/api/email/unsubscribe?t=${t}` }
 }
 
 /** Resend'e verilen başlıklar (RFC 2369 ve 8058). */

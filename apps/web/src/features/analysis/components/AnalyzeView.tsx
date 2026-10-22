@@ -890,14 +890,14 @@ export function AnalyzeView() {
               </ul>
               {/* Yüklemeden önce raporu görmek isteyen için (DOG-101). */}
               <Button asChild variant="outline" size="sm" className="mt-4 w-full">
-                <Link href="/ornek-rapor">
+                <Link href="/sample-report">
                   <Eye aria-hidden /> Örnek raporu gör
                 </Link>
               </Button>
             </CardContent>
           </Card>
           <Link
-            href="/nereden-baslamali"
+            href="/get-started"
             className="flex items-center gap-3 rounded-xl border bg-card p-4 text-sm transition-colors hover:border-primary/50 hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
             <Compass className="size-4 shrink-0 text-primary" aria-hidden />

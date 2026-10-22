@@ -42,7 +42,7 @@ export async function handleCheckout(input: {
     email: user.email,
     productId: offer.productId,
     plan: offer.key,
-    successUrl: `${input.baseUrl}/plans/tesekkurler?${query}`,
+    successUrl: `${input.baseUrl}/plans/thanks?${query}`,
   })
   return { status: 200, json: { url } }
 }

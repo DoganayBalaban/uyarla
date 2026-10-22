@@ -50,12 +50,12 @@ describe("DashboardView · DOG-145", () => {
         targetRole={null}
         summary={{
           ...summary,
-          pending: [{ kind: "interview", analysisId: "a1", position: "Muhasebe Uzmanı", address: "/applications/a1/mulakat", date: "2026-10-22" }],
+          pending: [{ kind: "interview", analysisId: "a1", position: "Muhasebe Uzmanı", address: "/applications/a1/interview", date: "2026-10-22" }],
         }}
       />,
     )
     expect(html).toContain("Mülakatın 22 Ekim Perşembe")
-    expect(html).toContain('href="/applications/a1/mulakat"')
+    expect(html).toContain('href="/applications/a1/interview"')
   })
 
   it("shows the personal outcome signal only when there is one", () => {

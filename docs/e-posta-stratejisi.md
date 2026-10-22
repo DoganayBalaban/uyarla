@@ -56,7 +56,7 @@ KVKK açısından işlem ve hatırlatma e-postaları sözleşmenin ifası kapsam
 
 - **Cron saati 07:00 UTC (10:00 TR).** E-posta işi temizlikten ayrı bir komut olarak çalışmalı (`emails:daily`); temizlik gece kalabilir.
 - **Watch patterns.** Cron servisinin izlediği yollara e-posta kodu eklenecek (`apps/web/src/server/**`, `apps/web/scripts/**`). Bu Railway ayarı ve bir üretim değişikliği.
-- **Tek tıkla çıkış.** İmzalı, giriş istemeyen bir bağlantı (`/e-posta/cik?t=…`, kullanıcı ve kategori HMAC ile imzalı). Yanında `List-Unsubscribe` ve `List-Unsubscribe-Post` başlıkları.
+- **Tek tıkla çıkış.** İmzalı, giriş istemeyen bir bağlantı (`/email/unsubscribe?t=…`, kullanıcı ve kategori HMAC ile imzalı). Yanında `List-Unsubscribe` ve `List-Unsubscribe-Post` başlıkları.
 - **Reply-To:** hatırlatmalarda destek adresi. Yanıt Gmail'e düşsün.
 - **Gizlilik metni.** Gönderilen e-postalar ve kategorileri yazılacak.
 - **DMARC.** `rua` raporu (Cloudflare DMARC Management ücretsiz). Birkaç hafta temiz rapordan sonra `p=quarantine`.

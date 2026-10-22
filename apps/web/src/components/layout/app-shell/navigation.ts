@@ -44,8 +44,8 @@ export const NAV_GROUPS: Array<{ label: string; items: NavItem[] }> = [
 
 /** Öge etkin mi: kendi sayfası ya da alt sayfası. Mülakat hazırlığı Mülakatlar'a ait. */
 export function isActive(path: string, href: string): boolean {
-  if (href === "/interviews" && /^\/applications\/[^/]+\/mulakat/.test(path)) return true
-  if (href === "/applications" && /^\/applications\/[^/]+\/mulakat/.test(path)) return false
+  if (href === "/interviews" && /^\/applications\/[^/]+\/interview/.test(path)) return true
+  if (href === "/applications" && /^\/applications\/[^/]+\/interview/.test(path)) return false
   return path === href || path.startsWith(`${href}/`)
 }
 
@@ -65,20 +65,20 @@ const TOP: Record<string, string> = {
   "/account": "Hesabım",
   "/plans": "Paketler",
   "/admin": "Yönetim",
-  "/ornek-rapor": "Örnek rapor",
-  "/nereden-baslamali": "Nereden başlamalıyım?",
+  "/sample-report": "Örnek rapor",
+  "/get-started": "Nereden başlamalıyım?",
 }
 
 /** Üst çubuktaki konum yolu; son öge bağlantısız. */
 export function breadcrumbs(path: string, search: URLSearchParams | null = null): Crumb[] {
   // Sonucun kalıcı adresi `/analyze?analiz=<id>` (K3).
   if (path === "/analyze" && search?.has("analiz")) return [{ label: "Analiz sonucu" }]
-  if (/^\/applications\/[^/]+\/mulakat/.test(path)) {
+  if (/^\/applications\/[^/]+\/interview/.test(path)) {
     return [{ label: "Mülakatlar", href: "/interviews" }, { label: "Hazırlık" }]
   }
   if (/^\/applications\/[^/]+/.test(path)) return [{ label: "Başvurular", href: "/applications" }, { label: "Başvuru" }]
   if (/^\/adapt\/[^/]+/.test(path)) return [{ label: "Uyarlama" }]
-  if (path.startsWith("/plans/tesekkurler")) return [{ label: "Paketler", href: "/plans" }, { label: "Teşekkürler" }]
+  if (path.startsWith("/plans/thanks")) return [{ label: "Paketler", href: "/plans" }, { label: "Teşekkürler" }]
   const top = TOP[path]
   return top ? [{ label: top }] : []
 }

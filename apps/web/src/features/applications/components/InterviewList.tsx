@@ -174,7 +174,7 @@ function Row({ card, index, muted = false, children }: { card: BoardCard; index:
           <div className="flex flex-wrap items-center gap-3">{children}</div>
           {card.stage === "interview" && (
             <Button asChild size="sm" variant={card.prep === "ready" ? "outline" : "default"} className="ml-auto">
-              <Link href={`/applications/${card.analysisId}/mulakat`}>
+              <Link href={`/applications/${card.analysisId}/interview`}>
                 {card.prep === "ready" ? "Hazırlığa git" : "Hazırlan"}
                 <ArrowRight aria-hidden />
               </Link>
