@@ -16,7 +16,7 @@ function fakePrisma() {
 }
 
 describe("deletionOperations", () => {
-  it("deletes twelve tables in foreign-key order", () => {
+  it("deletes thirteen tables in foreign-key order", () => {
     // Sıra bu dosyanın en kırılgan yeri: Adaptation, Analysis'ten önce
     // silinmezse yabancı anahtar işlemi düşürür ve hesap yarı silinmiş kalır.
     const { callList, client } = fakePrisma()
@@ -34,6 +34,7 @@ describe("deletionOperations", () => {
       "excludedConcept",
       "emailLog",
       "emailConsent",
+      "linkedInAudit",
       "user",
     ])
   })
@@ -57,6 +58,7 @@ describe("deletionOperations", () => {
       excludedConcept: { userId: { in: ids } },
       emailLog: { userId: { in: ids } },
       emailConsent: { userId: { in: ids } },
+      linkedInAudit: { userId: { in: ids } },
       user: { id: { in: ids } },
     }
 

@@ -29,6 +29,7 @@ export const EXPORTED_TABLES = [
   "excludedConcept",
   "emailLog",
   "emailConsent",
+  "linkedInAudit",
 ] as const satisfies readonly (typeof DELETION_ORDER)[number][]
 
 export interface ExportedResume {
@@ -59,10 +60,12 @@ export interface UserDataExport {
   emailLogs: Record<string, unknown>[]
   /** Ürün haberleri onayının geçmişi (DOG-130). */
   emailConsents: Record<string, unknown>[]
+  /** LinkedIn profil denetimleri: okunan profil, teşhis ve yazımlar (DOG-157). */
+  linkedinAudits: Record<string, unknown>[]
 }
 
 export async function collectUserData(db: Db, userId: string, now = new Date()): Promise<UserDataExport> {
-  const [user, accounts, sessions, resumes, jobPostings, analyses, accessPasses, excludedConcepts, emailLogs, emailConsents] = await Promise.all([
+  const [user, accounts, sessions, resumes, jobPostings, analyses, accessPasses, excludedConcepts, emailLogs, emailConsents, linkedinAudits] = await Promise.all([
     db.user.findUniqueOrThrow({
       where: { id: userId },
       select: {
@@ -153,6 +156,11 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
       select: { purpose: true, granted: true, source: true, textVersion: true, createdAt: true },
       orderBy: { createdAt: "asc" },
     }),
+    db.linkedInAudit.findMany({
+      where: { userId },
+      select: { source: true, profile: true, targetRole: true, status: true, report: true, rewrites: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
   ])
 
   return {
@@ -167,6 +175,7 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
     excludedConcepts,
     emailLogs,
     emailConsents,
+    linkedinAudits,
   }
 }
 
@@ -175,7 +184,7 @@ const README = (missing: string[]) =>
     "uyarla · verilerin",
     "",
     "veriler.json  Hesabın, CV'lerin (metin ve ayrıştırılmış sürümler), ilanlar,",
-    "              analizler, uyarlamalar ve ön yazılar.",
+    "              analizler, uyarlamalar, ön yazılar ve LinkedIn denetimleri.",
     "cvler/        Yüklediğin CV dosyalarının kendisi.",
     "",
     "Oturum anahtarları ve giriş jetonları güvenlik nedeniyle bu dosyaya eklenmez.",
