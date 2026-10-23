@@ -36,13 +36,6 @@ export interface InterviewPrepJobData {
   analysisId: string
 }
 
-/** LinkedIn profil raporu (DOG-69); kayıt `Resume.linkedinReport` içinde "running". */
-export const LINKEDIN_REPORT_JOB = "linkedin-report"
-
-export interface LinkedInReportJobData {
-  resumeId: string
-}
-
 /** LinkedIn profil denetimi (DOG-157); kayıt `LinkedInAudit` tablosunda "running". */
 export const LINKEDIN_AUDIT_JOB = "linkedin-audit"
 
