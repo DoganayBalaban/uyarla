@@ -17,12 +17,14 @@ import { CONTRIBUTION_JOB, runContribution } from "./contribution-pipeline.js"
 import {
   FOLLOW_UP_JOB,
   FORM_ANSWER_JOB,
+  LINKEDIN_AUDIT_JOB,
   LINKEDIN_REPORT_JOB,
   INTERVIEW_PREP_JOB,
   PRACTICE_JOB,
   type ContributionJobData,
   type FollowUpJobData,
   type FormAnswerJobData,
+  type LinkedInAuditJobData,
   type LinkedInReportJobData,
   type InterviewPrepJobData,
   type PracticeJobData,
@@ -30,6 +32,7 @@ import {
 import { runFollowUp } from "./follow-up-pipeline.js"
 import { prismaFollowUpStore, prismaFormAnswerStore, prismaInterviewPrepStore } from "./follow-up-store.js"
 import { runFormAnswer } from "./form-answer-pipeline.js"
+import { prismaLinkedInAuditStore, runLinkedInAudit } from "./linkedin-audit-pipeline.js"
 import { prismaLinkedInStore, runLinkedInReport } from "./linkedin-pipeline.js"
 import { runInterviewPrep, runPractice } from "./interview-prep-pipeline.js"
 import { initErrorTracking, reportJobFailure } from "./observability.js"
@@ -119,6 +122,23 @@ const adaptWorker = new Worker<AdaptJobData, void>(
     }
 
     // Takip mesajı ve teşekkür notu taslağı (DOG-117); aynı kuyruk, aynı model.
+    // LinkedIn profil denetimi (DOG-157).
+    if (job.name === LINKEDIN_AUDIT_JOB) {
+      const data = job.data as unknown as LinkedInAuditJobData
+      try {
+        await runLinkedInAudit({ llm, embedding, modelId: llmConfig.model, store: prismaLinkedInAuditStore }, data)
+      } catch (error) {
+        const lastAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1)
+        if (error instanceof PermanentError || lastAttempt) {
+          // Yeniden denemede teşhis ve bitmiş yazımlar duruyor: kayıt "done"a dönüyor.
+          await prismaLinkedInAuditStore.update(data.auditId, { status: data.retry ? "done" : "failed", stage: null }).catch(() => {})
+        }
+        if (error instanceof PermanentError) throw toUnrecoverable(error, "adapt")
+        throw error
+      }
+      return
+    }
+
     // LinkedIn profil raporu (DOG-69): ayrıştırma ve ilan başına skor.
     if (job.name === LINKEDIN_REPORT_JOB) {
       const data = job.data as unknown as LinkedInReportJobData
