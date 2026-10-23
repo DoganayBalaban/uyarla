@@ -2,6 +2,7 @@ import { z } from "zod"
 import { resumeFacts, verifyCoverLetter } from "../cover/letter.js"
 import type { LlmProvider } from "../llm/types.js"
 import { resumeLanguage } from "../normalize/language.js"
+import { containsKeyword, normalizeTokens } from "../normalize/turkish.js"
 import type { JobPostingData } from "../schemas/job.js"
 import { toJsonSchema } from "../schemas/toJsonSchema.js"
 import { descriptionLines, toResumeProfile, type LinkedInProfileData } from "./profileData.js"
@@ -29,7 +30,7 @@ unvanlar ve profilinde KANITI OLAN beceriler verilecek. İki şey yaz.
 
 1. "basliklar": ${HEADLINE_OPTIONS} farklı LinkedIn başlığı. Biçim: "Unvan | beceri, beceri, beceri".
    - Unvan olarak YALNIZCA "UNVANLAR" satırındakilerden birini kullan.
-   - Becerileri YALNIZCA "BECERİLER" satırından ya da profilde geçenlerden seç.
+   - Becerileri YALNIZCA "BECERİLER" satırından seç.
    - Her biri en fazla ${HEADLINE_MAX_CHARS} karakter. Sıfat, slogan, emoji yok.
    - Üçü birbirinden farklı vurgu yapsın (unvan, alan, sonuç).
 2. "hakkinda": LinkedIn "Hakkında" bölümü. 60–200 kelime, 3–5 cümle.
@@ -78,6 +79,34 @@ export function experienceTemplate(language: "tr" | "en"): string {
     : "• [Ne yaptın: üstlendiğin bir iş] ile [ölçülebilir sonuç: sayı, yüzde, süre]\n• [Kullandığın araç ya da yöntem] kullanarak [ne başardın]"
 }
 
+const CONNECTORS = new Set(["ve", "ile", "and", "of", "for", "&"])
+
+/**
+ * Başlığın her parçası (unvan, alan, beceri) izin verilen bir unvan ya da
+ * profilde (hedef dahil) geçen bir ifade olmalı. verifyCoverLetter sayıya ve
+ * ilan terimine bakıyor; ilan yoksa başlıkta uydurulan beceriyi görmüyordu
+ * (son inceleme). Parça birebir geçmiyorsa kelimelerinin hepsi profilde olmalı.
+ * Yorumlama ("ROAS artışı" ← "ROAS'ı 4,1'den 5,3'e çıkardım") da işaretleniyor;
+ * uyarı "doğruysa kullan" diyor, kararı kullanıcı veriyor.
+ */
+export function headlineIssues(headline: string, titles: readonly string[], source: string): Array<{ kind: string; detail: string }> {
+  const known = normalizeTokens(source)
+  // Türkçe ek farkı ("yönet" / "yönett"): kısa olan en az 5 harfse önek yetiyor; "java" "javascript"i karşılamıyor.
+  const seen = (t: string) => known.some((k) => k === t || (Math.min(k.length, t.length) >= 5 && (k.startsWith(t) || t.startsWith(k))))
+  const fold = (t: string) => t.toLocaleLowerCase("tr").trim()
+  const supported = (part: string) =>
+    titles.some((t) => fold(t).includes(fold(part)) || fold(part).includes(fold(t))) ||
+    containsKeyword(source, part) ||
+    normalizeTokens(part)
+      .filter((t) => !CONNECTORS.has(t) && !/^\d+$/.test(t))
+      .every(seen)
+  return headline
+    .split(/[|,·•]/)
+    .map((p) => p.trim())
+    .filter((p) => p && !supported(p))
+    .map((p) => ({ kind: "headline_unsupported", detail: `“${p}” profilinde geçmiyor; doğruysa kullan, değilse çıkar.` }))
+}
+
 /** Doğrulamanın ilan terimi kontrolü için: seçilen ilanlar tek ilanda; ilan yoksa boş. */
 function checkPosting(postings: readonly JobPostingData[], language: "tr" | "en"): JobPostingData {
   const first = postings[0]
@@ -101,6 +130,7 @@ export async function writeLinkedInRewrites(llm: LlmProvider, input: RewriteInpu
   const facts = resumeFacts(resume)
   const source = input.targetRole?.trim() ? `${facts}\nHedef: ${input.targetRole.trim()}` : facts
   const posting = checkPosting(input.postings, language)
+  const titles = headlineTitles(resume, input.targetRole)
   const verify = (texts: string[]) => verifyCoverLetter(texts, source, posting).map((p) => ({ text: p.text, verification: p.verification }))
   let tokens = 0
 
@@ -113,7 +143,7 @@ export async function writeLinkedInRewrites(llm: LlmProvider, input: RewriteInpu
       schema: toJsonSchema(ProfileReplySchema),
       input: [
         `PROFİL\n${facts}`,
-        `UNVANLAR: ${headlineTitles(resume, input.targetRole).join(" · ") || "—"}`,
+        `UNVANLAR: ${titles.join(" · ") || "—"}`,
         `BECERİLER: ${input.strengths.join(", ") || "—"}`,
         input.targetRole?.trim() ? `HEDEF: ${input.targetRole.trim()}` : null,
         languageLine,
@@ -124,7 +154,15 @@ export async function writeLinkedInRewrites(llm: LlmProvider, input: RewriteInpu
     tokens += reply.tokens
     const parsed = ProfileReplySchema.parse(reply.data)
     const options = [...new Set(parsed.basliklar.map(capHeadline).filter(Boolean))].slice(0, HEADLINE_OPTIONS)
-    if (options.length > 0) headline = { status: "done", options: verify(options) }
+    if (options.length > 0) {
+      headline = {
+        status: "done",
+        options: verify(options).map((o) => {
+          const issues = [...o.verification.issues, ...headlineIssues(o.text, titles, source)]
+          return { text: o.text, verification: { status: issues.length ? "flagged" : "ok", issues } }
+        }),
+      }
+    }
     const aboutText = dropSeeking(parsed.hakkinda, input.targetRole)
     if (aboutText) about = { status: "done", suggestion: verify([aboutText])[0]! }
   } catch (error) {

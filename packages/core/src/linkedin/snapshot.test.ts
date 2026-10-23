@@ -62,4 +62,11 @@ describe("profileFromSnapshot", () => {
     const p = profileFromSnapshot(snapshot({ sections: { experience: { items: [["Uzman", "Acme", "2022 - Present", "Kampanya yönettim…", "…daha fazla göster"]], showAllText: null } } }))
     expect(p.experience[0]!.description).toBe("Kampanya yönettim…")
   })
+
+  it("drops a standalone employment type line so the dates are found (grouped roles)", () => {
+    const p = profileFromSnapshot(
+      snapshot({ sections: { experience: { items: [["Kıdemli Uzman", "Moda Sepeti", "Full-time", "Mar 2023 - Present · 2 yrs", "• Kampanya yönettim."]], showAllText: null } } }),
+    )
+    expect(p.experience[0]).toEqual({ title: "Kıdemli Uzman", company: "Moda Sepeti", dateRange: "Mar 2023 - Present · 2 yrs", location: null, description: "• Kampanya yönettim." })
+  })
 })

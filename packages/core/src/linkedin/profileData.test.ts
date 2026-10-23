@@ -39,19 +39,20 @@ describe("toResumeProfile", () => {
   })
 })
 
+const resume = (): ResumeProfile => ({
+  fullName: "Deniz Aksoy",
+  headline: "Pazarlama",
+  summary: null,
+  experience: [{ company: "Acme", title: "Uzman", startDate: "2022", endDate: "halen", bullets: [{ text: "Bir", sourceRef: "Bir" }, { text: "İki", sourceRef: "İki" }] }],
+  education: [{ school: "ODTÜ", degree: "Lisans", field: "İşletme", startDate: "2016", endDate: "2020" }],
+  skills: ["SQL"],
+  languages: [],
+  certifications: ["PMP"],
+})
+
 describe("fromResumeProfile (PDF yolu)", () => {
   it("turns a parsed PDF profile into profile data with bullets as the description", () => {
-    const resume: ResumeProfile = {
-      fullName: "Deniz Aksoy",
-      headline: "Pazarlama",
-      summary: null,
-      experience: [{ company: "Acme", title: "Uzman", startDate: "2022", endDate: "halen", bullets: [{ text: "Bir", sourceRef: "Bir" }, { text: "İki", sourceRef: "İki" }] }],
-      education: [{ school: "ODTÜ", degree: "Lisans", field: "İşletme", startDate: "2016", endDate: "2020" }],
-      skills: ["SQL"],
-      languages: [],
-      certifications: ["PMP"],
-    }
-    expect(fromResumeProfile(resume)).toEqual({
+    expect(fromResumeProfile(resume())).toEqual({
       name: "Deniz Aksoy",
       headline: "Pazarlama",
       about: null,
@@ -60,8 +61,23 @@ describe("fromResumeProfile (PDF yolu)", () => {
       certifications: [{ name: "PMP", issuer: null, date: null }],
       skills: ["SQL"],
       languages: [],
-      truncated: {},
+      truncated: { skills: { shown: 1, total: null } },
     })
+  })
+
+  it("marks the skill list as partial: LinkedIn's PDF lists only the top skills", () => {
+    const r = fromResumeProfile({ ...resume(), skills: ["SQL", "Excel", "Power BI"] })
+    expect(r.truncated).toEqual({ skills: { shown: 3, total: null } })
+  })
+
+  it("drops contact and location parts the PDF reader merged into the headline", () => {
+    const headline = (h: string | null) => fromResumeProfile({ ...resume(), headline: h }).headline
+    expect(headline("Satış Mühendisi · Pendik, İstanbul · mert@ornek.com")).toBe("Satış Mühendisi")
+    expect(headline("Performance Marketing · Google Ads, GA4 · linkedin.com/in/deniz")).toBe("Performance Marketing · Google Ads, GA4")
+    expect(headline("Uzman • İstanbul, Türkiye • +90 555 000 00 00")).toBe("Uzman")
+    expect(headline("Google Ads, GA4 · Ankara")).toBe("Google Ads, GA4")
+    expect(headline("Pazarlama · Meta Ads | Google Ads, GA4")).toBe("Pazarlama · Meta Ads | Google Ads, GA4")
+    expect(headline("mert@ornek.com")).toBeNull()
   })
 })
 

@@ -78,6 +78,8 @@ export function AuditResult({
   const delta = sectionDelta(previous, report)
   const sectionOf = (id: AuditSectionId) => report.sections.find((s) => s.id === id)
   const truncatedExperience = profile.truncated.experience
+  // Sayfa ya da PDF becerilerin yalnızca ilklerini gösteriyor: "öne al" zaten öndekileri söylerdi.
+  const partialSkills = !!profile.truncated.skills
   const experience = sectionOf("experience")
 
   return (
@@ -99,9 +101,14 @@ export function AuditResult({
             <p className="m-0 text-2xl font-semibold tabular-nums">
               {report.summary.total} kontrolden {report.summary.passed}&apos;i geçti
             </p>
-            {delta && delta.passedDelta !== 0 && (
+            {delta && (delta.passedDelta !== 0 || delta.improved.length > 0) && (
               <p className="m-0 text-xs text-muted-foreground">
-                Önceki taramaya göre {delta.passedDelta > 0 ? `+${delta.passedDelta}` : delta.passedDelta} kontrol
+                {[
+                  delta.passedDelta !== 0 && `Önceki taramaya göre ${delta.passedDelta > 0 ? `+${delta.passedDelta}` : delta.passedDelta} kontrol`,
+                  delta.improved.length > 0 && `İyileşen: ${delta.improved.map((id) => SECTION_LABELS[id]).join(", ")}`,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
             )}
           </div>
@@ -165,6 +172,12 @@ export function AuditResult({
                     {rewrites.headline.options.map((o) => (
                       <li key={o.text} className="flex flex-col justify-between gap-2 rounded-lg border p-3">
                         <p className="m-0 text-sm">{o.text}</p>
+                        {o.verification.status === "flagged" && (
+                          <p className="m-0 flex items-start gap-1.5 text-xs text-brand-amber">
+                            <TriangleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                            {o.verification.issues.map((i) => i.detail).join(" ")}
+                          </p>
+                        )}
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs text-muted-foreground tabular-nums">
                             {o.text.length} / {HEADLINE_MAX_CHARS}
@@ -248,7 +261,7 @@ export function AuditResult({
             <SectionCard {...sectionOf("skills")!}>
               {report.skills.add.length > 0 && (
                 <div>
-                  <p className="m-0 text-xs font-semibold text-primary">Ekle (deneyiminde geçiyor)</p>
+                  <p className="m-0 text-xs font-semibold text-primary">Ekle (deneyiminde geçiyor{partialSkills ? "; tam listende yoksa" : ""})</p>
                   <ul className="m-0 mt-2 flex list-none flex-wrap gap-1.5 p-0">
                     {report.skills.add.map((a) => (
                       <li key={a.term} title={a.evidence} className="rounded-full border border-primary/40 bg-primary/5 px-2.5 py-1 text-xs font-medium">
@@ -258,7 +271,7 @@ export function AuditResult({
                   </ul>
                 </div>
               )}
-              {report.skills.pinFirst.length > 0 && (
+              {!partialSkills && report.skills.pinFirst.length > 0 && (
                 <div>
                   <p className="m-0 text-xs font-semibold text-muted-foreground">Öne al</p>
                   <ul className="m-0 mt-2 flex list-none flex-wrap gap-1.5 p-0">

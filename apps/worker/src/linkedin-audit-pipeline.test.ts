@@ -71,4 +71,12 @@ describe("runLinkedInAudit", () => {
     expect(rewrites.about.status).toBe("done")
     expect(updates.some((u) => "report" in u)).toBe(false)
   })
+
+  it("gives the headline writer the profile's own skills when there is no posting (son inceleme)", async () => {
+    const { store } = storeWith({})
+    const writer = { extract: vi.fn(async () => ({ data: { basliklar: [], hakkinda: "", aciklamalar: [] }, tokens: 0 })) }
+    await runLinkedInAudit({ llm: writer as never, embedding: embedding as never, modelId: "m", store }, { auditId: "au1" })
+    const firstInput = (writer.extract.mock.calls[0] as unknown as [{ input: string }])[0].input
+    expect(firstInput).toContain("BECERİLER: Google Ads")
+  })
 })

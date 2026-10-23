@@ -6,7 +6,7 @@ import { ADAPT_JOB_OPTIONS, LINKEDIN_AUDIT_JOB } from "@uyarla/worker/adapt-queu
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { hasLivePass } from "@/features/billing/access"
-import { MAX_AUDIT_BODY_BYTES, MAX_RETRIES, auditRequestSchema, lockRewrites, type AuditResponse, type AuditView } from "@/features/linkedin/audit"
+import { MAX_AUDIT_BODY_BYTES, MAX_RETRIES, auditRequestSchema, lockRewrites, presentedStatus, type AuditResponse, type AuditView } from "@/features/linkedin/audit"
 import { firstIssue } from "@/lib/validation"
 import { adaptQueue } from "@/server/adaptQueue"
 import { isAdmin } from "@/server/admin"
@@ -43,9 +43,10 @@ export async function GET() {
       const rewrites = (latest.rewrites ?? null) as LinkedInRewrites | null
       // Kilitli metin bu noktadan sonra yanıtta hiçbir yerde yok (spec §4.4).
       const gated = rewrites ? lockRewrites(rewrites, unlocked) : null
+      const status = presentedStatus(latest, now)
       audit = {
         id: latest.id,
-        status: latest.status,
+        status,
         stage: latest.stage,
         source: latest.source,
         createdAt: latest.createdAt.toISOString(),
@@ -55,7 +56,7 @@ export async function GET() {
         report: (latest.report ?? null) as LinkedInAuditReport | null,
         rewrites: gated?.rewrites ?? null,
         locked: gated?.locked ?? null,
-        canRetry: latest.status === "done" && !!rewrites && hasFailedRewrites(rewrites) && latest.retries < MAX_RETRIES,
+        canRetry: status === "done" && !!rewrites && hasFailedRewrites(rewrites) && latest.retries < MAX_RETRIES,
       }
     }
 
@@ -100,15 +101,21 @@ export async function POST(request: Request) {
     }
 
     await enforceRateLimit(redisStore, `linkedin-audit:${user.id}`, RATE_LIMITS.registered)
-    await enforceRateLimit(redisStore, `linkedin-audit-gun:${user.id}`, RATE_LIMITS.linkedinAudit)
 
-    const audit = await createAudit(prisma, user.id, {
-      source: input.source,
-      resumeId: input.source === "pdf" ? input.resumeId : null,
-      profile: input.source === "extension" ? input.profile : null,
-      targetRole: input.targetRole,
-      analysisIds: input.analysisIds,
-    })
+    // Günlük hak yalnızca kayıt açılınca düşüyor: süren taramaya çarpan istek (409) hak yemiyor.
+    const audit = await createAudit(
+      prisma,
+      user.id,
+      {
+        source: input.source,
+        resumeId: input.source === "pdf" ? input.resumeId : null,
+        profile: input.source === "extension" ? input.profile : null,
+        targetRole: input.targetRole,
+        analysisIds: input.analysisIds,
+      },
+      new Date(),
+      () => enforceRateLimit(redisStore, `linkedin-audit-gun:${user.id}`, RATE_LIMITS.linkedinAudit),
+    )
     await adaptQueue.add(LINKEDIN_AUDIT_JOB, { auditId: audit.id }, ADAPT_JOB_OPTIONS)
     return NextResponse.json({ auditId: audit.id }, { status: 202 })
   } catch (error) {

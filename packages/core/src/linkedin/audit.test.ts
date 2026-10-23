@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ScoreResult } from "../score/score.js"
-import { auditProfile, compareAudits, sectionStatus, type AuditContext } from "./audit.js"
+import { auditProfile, compareAudits, headlineStrengths, sectionStatus, type AuditContext } from "./audit.js"
 import type { ScoredPosting } from "./report.js"
 import { deniz } from "./testProfile.js"
 
@@ -128,5 +128,60 @@ describe("sectionStatus, summary, compareAudits", () => {
     expect(diff.improved).toContain("headline")
     expect(diff.passedDelta).toBeGreaterThan(0)
     expect(compareAudits(null, after)).toBeNull()
+  })
+})
+
+describe("auditProfile · son inceleme (DOG-157)", () => {
+  it("flags LinkedIn's Turkish default headline ('Şirket şirketinde Unvan')", () => {
+    const r = auditProfile(deniz({ headline: "Moda Sepeti şirketinde Performance Marketing Specialist" }), ctx())
+    expect(check(r, "headline_default")?.status).toBe("warn")
+  })
+
+  it("counts skills from the 'show all' total when the page shows only the top ones", () => {
+    const r = auditProfile(deniz({ skills: ["Google Ads", "GA4"], truncated: { skills: { shown: 2, total: 25 } } }), ctx())
+    expect(check(r, "skills_few")).toMatchObject({ status: "ok", text: "Profilinde 25 beceri var." })
+  })
+
+  it("skips the skill count when the full list is unknown and the read part is short (PDF's top skills)", () => {
+    const r = auditProfile(deniz({ skills: ["Google Ads", "GA4", "SQL"], truncated: { skills: { shown: 3, total: null } } }), ctx())
+    expect(check(r, "skills_few")).toBeUndefined()
+    expect(r.skipped).toContain("skills_few")
+    const many = auditProfile(deniz({ skills: ["A1", "B2", "C3", "D4", "E5", "F6"], truncated: { skills: { shown: 6, total: null } } }), ctx())
+    expect(check(many, "skills_few")).toMatchObject({ status: "ok", text: "Profilinde en az 6 beceri var." })
+  })
+
+  it("says 'add if it is not in your full list' when only part of the skill list was read", () => {
+    const posting = {
+      analysisId: "a1",
+      position: "Dijital Pazarlama Uzmanı",
+      company: null,
+      result: {
+        score: 40,
+        requirements: [{ requirement: { text: "GA4", type: "skill", importance: "must", concepts: [] }, status: "matched", matchedConcepts: ["GA4"], missingConcepts: [] }],
+        missingKeywords: [],
+      } as unknown as ScoreResult,
+    }
+    const r = auditProfile(deniz({ truncated: { skills: { shown: 2, total: 12 } } }), ctx({ scored: [posting] }))
+    expect(check(r, "skills_evidenced_missing")?.text).toContain("tam listende yoksa ekle")
+  })
+
+  it("fixing a role's dates or adding a project to education raises the passed count", () => {
+    const role = deniz().experience[0]!
+    const before = auditProfile(deniz({ experience: [{ ...role, dateRange: null }] }), ctx())
+    const after = auditProfile(deniz(), ctx())
+    expect(after.summary.passed - before.summary.passed).toBe(1)
+    expect(after.summary.total).toBe(before.summary.total)
+
+    const school = deniz().education[0]!
+    const noProject = auditProfile(deniz(), ctx({ goal: "first_job" }))
+    const project = auditProfile(deniz({ education: [{ ...school, description: "Bitirme projesi: e-ticaret kampanya analizi" }] }), ctx({ goal: "first_job" }))
+    expect(project.summary.passed - noProject.summary.passed).toBe(1)
+    expect(project.summary.total).toBe(noProject.summary.total)
+  })
+
+  it("gives the headline writer the profile's own skills even without postings", () => {
+    const r = auditProfile(deniz(), ctx({ targetRole: null }))
+    expect(r.skills.pinFirst).toEqual([])
+    expect(headlineStrengths(r, deniz())).toEqual(["Google Ads", "Looker Studio"])
   })
 })

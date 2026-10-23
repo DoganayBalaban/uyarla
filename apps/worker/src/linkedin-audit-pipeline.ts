@@ -2,6 +2,7 @@ import {
   auditProfile,
   extractResumeProfile,
   fromResumeProfile,
+  headlineStrengths,
   mergeRetried,
   resumeParserKey,
   toResumeProfile,
@@ -56,7 +57,7 @@ export async function runLinkedInAudit(
 
   if (input.retry) {
     if (!audit.profile || !audit.report || !audit.rewrites) return
-    const { rewrites } = await writeLinkedInRewrites(deps.llm, { profile: audit.profile, targetRole: audit.targetRole, strengths: audit.report.skills.pinFirst, postings })
+    const { rewrites } = await writeLinkedInRewrites(deps.llm, { profile: audit.profile, targetRole: audit.targetRole, strengths: headlineStrengths(audit.report, audit.profile), postings })
     await deps.store.update(audit.id, { status: "done", stage: null, rewrites: mergeRetried(audit.rewrites, rewrites) })
     return
   }
@@ -81,7 +82,7 @@ export async function runLinkedInAudit(
   const report = auditProfile(profile, { targetRole: audit.targetRole, goal: context.goal, scored })
 
   await deps.store.update(audit.id, { stage: "writing", report })
-  const { rewrites } = await writeLinkedInRewrites(deps.llm, { profile, targetRole: audit.targetRole, strengths: report.skills.pinFirst, postings })
+  const { rewrites } = await writeLinkedInRewrites(deps.llm, { profile, targetRole: audit.targetRole, strengths: headlineStrengths(report, profile), postings })
   await deps.store.update(audit.id, { status: "done", stage: null, rewrites })
 }
 

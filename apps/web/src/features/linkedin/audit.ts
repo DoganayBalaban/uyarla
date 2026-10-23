@@ -23,8 +23,23 @@ export const auditRequestSchema = z.discriminatedUnion("source", [
 ])
 export type AuditRequest = z.input<typeof auditRequestSchema>
 
-export function isStuck(createdAt: Date, now: Date): boolean {
-  return now.getTime() - createdAt.getTime() >= STUCK_MS
+/** Worker kayda son dokunuşundan (updatedAt) bu yana 10 dakika geçtiyse tarama takılmış. */
+export function isStuck(since: Date, now: Date): boolean {
+  return now.getTime() - since.getTime() >= STUCK_MS
+}
+
+/**
+ * Ekranın gördüğü durum (son inceleme): takılan tarama (worker çöktü, iş
+ * kayboldu, web ile worker dağıtımı arası) bekleme ekranında sonsuza dek
+ * kalmasın. İlk taramada "failed" (başlangıç paneli), yeniden denemede bitmiş
+ * sonuç geri geliyor; yoklama da duruyor.
+ */
+export function presentedStatus(
+  audit: { status: "running" | "done" | "failed"; updatedAt: Date; report: unknown; rewrites: unknown },
+  now: Date,
+): "running" | "done" | "failed" {
+  if (audit.status !== "running" || !isStuck(audit.updatedAt, now)) return audit.status
+  return audit.report && audit.rewrites ? "done" : "failed"
 }
 
 /** Kilitli parçalar yanıttan çıkmış yazımlar (spec §4.4). */

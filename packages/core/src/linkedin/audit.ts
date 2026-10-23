@@ -56,7 +56,7 @@ export interface LinkedInAuditReport {
   sections: AuditSection[]
   summary: { passed: number; total: number }
   skills: SkillAdvice
-  /** Hedef rol ya da ilan olmadığı için yapılmayan kontroller. */
+  /** Hedef rol ya da ilan olmadığı, ya da beceri listesinin tamamı okunamadığı için yapılmayan kontroller. */
   skipped: AuditCheckId[]
   postings: LinkedInReport["postings"]
   commonMissing: LinkedInReport["commonMissing"]
@@ -103,7 +103,12 @@ function headlineChecks(p: LinkedInProfileData, targets: string[], mustTerms: st
   const checks: AuditCheck[] = []
   const role = p.experience[0]
   const defaults = role
-    ? [role.title, ...(role.company ? [`${role.title} at ${role.company}`, `${role.title} · ${role.company}`, `${role.title} - ${role.company}`, `${role.title}, ${role.company}`] : [])].map(fold)
+    ? [
+        role.title,
+        ...(role.company
+          ? [`${role.title} at ${role.company}`, `${role.company} şirketinde ${role.title}`, `${role.title} · ${role.company}`, `${role.title} - ${role.company}`, `${role.title}, ${role.company}`]
+          : []),
+      ].map(fold)
     : []
   checks.push(
     defaults.includes(fold(headline))
@@ -178,7 +183,11 @@ function experienceChecks(p: LinkedInProfileData): AuditCheck[] {
           : warn("exp_no_measurable", `“${e.title}” açıklamasında ölçülebilir sonuç yok. Bildiğin bir sayı ekle: kişi, yüzde, süre, bütçe.`, role),
       )
     }
-    if (!e.dateRange?.trim()) checks.push(warn("exp_dates_missing", `“${e.title}” rolünün tarihleri yok; işe alımcı süreyi tarihten okuyor.`, role))
+    checks.push(
+      e.dateRange?.trim()
+        ? ok("exp_dates_missing", `“${e.title}” rolünün tarihleri var.`, role)
+        : warn("exp_dates_missing", `“${e.title}” rolünün tarihleri yok; işe alımcı süreyi tarihten okuyor.`, role),
+    )
   })
   return checks
 }
@@ -186,8 +195,12 @@ function experienceChecks(p: LinkedInProfileData): AuditCheck[] {
 function educationChecks(p: LinkedInProfileData, goal: string | null): AuditCheck[] {
   if (p.education.length === 0) return [missing("education_missing", "Eğitim bölümün boş. Mezun olduğun ya da okuduğun okulu ekle.")]
   const checks = [ok("education_missing", "Eğitim bölümün dolu.")]
-  if (goal === "first_job" && p.education.every((e) => !e.description?.trim())) {
-    checks.push(warn("education_first_job", "İlk işini arıyorsan eğitimine bir proje ya da ilgili dersler ekle; deneyimin yerine en çok bu okunuyor."))
+  if (goal === "first_job") {
+    checks.push(
+      p.education.some((e) => e.description?.trim())
+        ? ok("education_first_job", "Eğitiminde bir proje ya da ilgili dersler var.")
+        : warn("education_first_job", "İlk işini arıyorsan eğitimine bir proje ya da ilgili dersler ekle; deneyimin yerine en çok bu okunuyor."),
+    )
   }
   return checks
 }
@@ -214,15 +227,30 @@ export function auditProfile(p: LinkedInProfileData, ctx: AuditContext): LinkedI
   const hookTerms = [...targets, ...p.skills.slice(0, 10)]
   const skills = skillAdvice(p, targets, demanded)
 
-  const skillChecks: AuditCheck[] = [
-    p.skills.length < SKILLS_MIN
-      ? warn("skills_few", `Profilinde ${p.skills.length} beceri var; deneyiminde geçenleri ekle.`)
-      : ok("skills_few", `Profilinde ${p.skills.length} beceri var.`),
-  ]
+  // Profil sayfası ve LinkedIn PDF'i becerilerin yalnızca bir kısmını gösteriyor:
+  // sayı "tümünü göster"den; bilinmiyorsa okunan kısım yetiyorsa geçiyor, yetmiyorsa kontrol yok.
+  const partialSkills = p.truncated.skills
+  const skillTotal = partialSkills ? partialSkills.total : p.skills.length
+  const skillChecks: AuditCheck[] = []
+  if (skillTotal !== null) {
+    skillChecks.push(
+      skillTotal < SKILLS_MIN
+        ? warn("skills_few", `Profilinde ${skillTotal} beceri var; deneyiminde geçenleri ekle.`)
+        : ok("skills_few", `Profilinde ${skillTotal} beceri var.`),
+    )
+  } else if (p.skills.length >= SKILLS_MIN) {
+    skillChecks.push(ok("skills_few", `Profilinde en az ${p.skills.length} beceri var.`))
+  }
   if (ctx.scored.length > 0) {
+    const terms = skills.add.map((a) => a.term).join(", ")
     skillChecks.push(
       skills.add.length > 0
-        ? warn("skills_evidenced_missing", `Deneyiminde geçen ama beceri listende olmayanlar: ${skills.add.map((a) => a.term).join(", ")}.`)
+        ? warn(
+            "skills_evidenced_missing",
+            partialSkills
+              ? `Deneyiminde geçen ama okunan beceri listende olmayanlar: ${terms}; tam listende yoksa ekle.`
+              : `Deneyiminde geçen ama beceri listende olmayanlar: ${terms}.`,
+          )
         : ok("skills_evidenced_missing", "İlanlarının istediği ve deneyiminde geçen beceriler listende var."),
     )
   }
@@ -243,6 +271,7 @@ export function auditProfile(p: LinkedInProfileData, ctx: AuditContext): LinkedI
   const all = sections.flatMap((s) => s.checks)
   const skipped: AuditCheckId[] = []
   if (targets.length === 0) skipped.push("headline_target")
+  if (!skillChecks.some((c) => c.id === "skills_few")) skipped.push("skills_few")
   if (hookTerms.length === 0 && p.about?.trim()) skipped.push("about_hook")
 
   return {
@@ -253,6 +282,16 @@ export function auditProfile(p: LinkedInProfileData, ctx: AuditContext): LinkedI
     postings: base.postings,
     commonMissing: base.commonMissing,
   }
+}
+
+/**
+ * Başlık yazımına verilen beceriler: hedefle ilgili olanlar, deneyimde kanıtı
+ * olanlar, sonra profilin ilk becerileri. İlan yoksa ilk ikisi çoğu zaman boş;
+ * satır boş kalırsa model profilden kendisi seçip uyduruyordu (son inceleme).
+ */
+export function headlineStrengths(report: Pick<LinkedInAuditReport, "skills">, profile: LinkedInProfileData): string[] {
+  const all = [...report.skills.pinFirst, ...report.skills.add.map((a) => a.term), ...profile.skills.slice(0, 6)]
+  return all.filter((s, i) => all.findIndex((t) => fold(t) === fold(s)) === i).slice(0, 8)
 }
 
 const RANK: Record<AuditSectionStatus, number> = { missing: 0, improve: 1, strong: 2, info: 2 }

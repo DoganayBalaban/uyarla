@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { HEADLINE_MAX_CHARS } from "./reportRecord.js"
-import { capHeadline, experienceTemplate, hasFailedRewrites, mergeRetried, writeLinkedInRewrites, type LinkedInRewrites } from "./rewrite.js"
+import { LINKEDIN_PROFILE_PROMPT, capHeadline, headlineIssues, experienceTemplate, hasFailedRewrites, mergeRetried, writeLinkedInRewrites, type LinkedInRewrites } from "./rewrite.js"
 import { deniz } from "./testProfile.js"
 
 const profileReply = {
@@ -92,5 +92,37 @@ describe("capHeadline, mergeRetried, experienceTemplate", () => {
   it("templates use placeholders, never invented facts", () => {
     expect(experienceTemplate("tr")).toMatch(/\[.+\]/)
     expect(experienceTemplate("en")).toMatch(/\[.+\]/)
+  })
+})
+
+describe("başlık önerilerinin denetimi (son inceleme, DOG-157)", () => {
+  it("flags a headline part the profile does not mention: a skill or a title", async () => {
+    const reply = {
+      basliklar: ["Performance Marketing Specialist | Google Ads, Kubernetes", "Growth Hacker | Google Ads", "Performance Marketing Specialist | Google Ads, GA4"],
+      hakkinda: profileReply.hakkinda,
+    }
+    const { rewrites } = await writeLinkedInRewrites(llmWith(reply, experienceReply), { profile: deniz(), targetRole: null, strengths: ["Google Ads"], postings: [] })
+    if (rewrites.headline.status !== "done") throw new Error("beklenmedik")
+    const [skill, title, clean] = rewrites.headline.options
+    expect(skill!.verification).toMatchObject({ status: "flagged", issues: [expect.objectContaining({ kind: "headline_unsupported", detail: expect.stringContaining("Kubernetes") })] })
+    expect(title!.verification.issues).toEqual([expect.objectContaining({ detail: expect.stringContaining("Growth Hacker") })])
+    expect(clean!.verification).toEqual({ status: "ok", issues: [] })
+  })
+
+  it("accepts the target role the user wrote as the title", async () => {
+    const reply = { basliklar: ["Dijital Pazarlama Uzmanı | Google Ads, GA4"], hakkinda: profileReply.hakkinda }
+    const { rewrites } = await writeLinkedInRewrites(llmWith(reply, experienceReply), { profile: deniz(), targetRole: "Dijital Pazarlama Uzmanı", strengths: [], postings: [] })
+    expect(rewrites.headline.status === "done" && rewrites.headline.options[0]!.verification.status).toBe("ok")
+  })
+
+  it("accepts a Turkish word form of what the profile says, not a longer different skill", () => {
+    const issues = (headline: string) => headlineIssues(headline, ["Performance Marketing Specialist"], "• Meta kampanyalarını aylık bütçeyle yönettim.\nBeceriler: Java")
+    expect(issues("Performance Marketing Specialist | Kampanya Yönetimi")).toEqual([])
+    expect(issues("Performance Marketing Specialist | JavaScript")).toEqual([expect.objectContaining({ detail: expect.stringContaining("JavaScript") })])
+  })
+
+  it("asks for headline skills only from the BECERİLER line", () => {
+    expect(LINKEDIN_PROFILE_PROMPT).toContain('Becerileri YALNIZCA "BECERİLER" satırından seç')
+    expect(LINKEDIN_PROFILE_PROMPT).not.toContain("profilde geçenlerden")
   })
 })

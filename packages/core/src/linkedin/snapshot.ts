@@ -18,7 +18,10 @@ export interface ProfileSnapshot {
 }
 
 const YEAR = /\b(19|20)\d{2}\b|\b(Present|Halen|Günümüz|Hâlâ|Devam ediyor)\b/i
-const EMPLOYMENT = /\s+·\s+(Full-time|Part-time|Internship|Contract|Freelance|Self-employed|Seasonal|Apprenticeship|Tam zamanlı|Yarı zamanlı|Stajyer|Staj|Sözleşmeli|Serbest|Serbest çalışan|Mevsimlik|Çırak)\s*$/i
+const EMPLOYMENT_TYPES = "Full-time|Part-time|Internship|Contract|Freelance|Self-employed|Seasonal|Apprenticeship|Tam zamanlı|Yarı zamanlı|Stajyer|Staj|Sözleşmeli|Serbest|Serbest çalışan|Mevsimlik|Çırak"
+const EMPLOYMENT = new RegExp(`\\s+·\\s+(${EMPLOYMENT_TYPES})\\s*$`, "i")
+/** Aynı şirketteki rollerde çalışma biçimi kendi satırında ("Full-time"); tarih satırının önüne düşüyor. */
+const EMPLOYMENT_ONLY = new RegExp(`^(${EMPLOYMENT_TYPES})$`, "i")
 const WORK_MODE = /(Remote|Uzaktan|Hybrid|Hibrit|On-site|İş yerinde|Ofiste)\s*$/i
 const SKILLS_LINE = /^(Skills|Yetenekler|Beceriler)\s*:/i
 const SEE_MORE = /^[….]*\s*(daha fazla göster|daha fazla gör|see more|show more)$/i
@@ -28,7 +31,7 @@ const CREDENTIAL = /^(Credential ID|Kimlik bilgisi kimliği|Sertifika kimliği)\
 const clean = (lines: string[]) => lines.map((l) => l.replace(/\s+/g, " ").trim()).filter((l) => l && !SEE_MORE.test(l))
 
 function experienceItem(raw: string[]): LinkedInProfileData["experience"][number] | null {
-  const lines = clean(raw)
+  const lines = clean(raw).filter((l, i) => i === 0 || !EMPLOYMENT_ONLY.test(l))
   const title = lines.shift()
   if (!title) return null
   let company: string | null = null
