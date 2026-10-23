@@ -17,6 +17,11 @@ function isLive(pass: PassLike, now: Date): boolean {
   return pass.status === "active" && pass.startsAt <= now && now < pass.endsAt
 }
 
+/** Şu an geçerli bir paket var mı (LinkedIn yazımlarının kilidi; DOG-157). */
+export function hasLivePass(passes: PassLike[], now: Date): boolean {
+  return passes.some((p) => isLive(p, now))
+}
+
 export type AdaptDecision =
   | { allowed: true; via: "free" | "pass" | "admin" }
   | { allowed: false; reason: "payment_required" | "daily_cap" }

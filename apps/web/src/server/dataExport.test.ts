@@ -18,6 +18,7 @@ const DATA: UserDataExport = {
   excludedConcepts: [],
   emailLogs: [],
   emailConsents: [],
+  linkedinAudits: [],
 }
 
 describe("data export", () => {

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { AnalysisWaiting } from "@/features/analysis/components/AnalysisWaiting"
 import { AdaptationWaiting } from "@/features/adaptation/components/AdaptationWaiting"
 import { InterviewPrepWaiting } from "@/features/applications/components/InterviewPrepWaiting"
-import { LinkedInWaiting } from "@/features/linkedin/components/LinkedInWaiting"
+import { LinkedInAuditWaiting } from "@/features/linkedin/components/LinkedInAuditWaiting"
 
 const text = (html: string) => html.replace(/<[^>]+>/g, " ")
 
@@ -70,26 +70,30 @@ describe("AdaptationWaiting", () => {
   })
 })
 
-describe("LinkedInWaiting", () => {
-  const postings = [
-    { id: "a", position: "Dijital Pazarlama Uzmanı", company: "Örnek Marka" },
-    { id: "b", position: "Performans Uzmanı", company: null },
-  ]
+describe("LinkedInAuditWaiting", () => {
+  const profile = {
+    name: "Deniz Aksoy",
+    headline: "Pazarlama",
+    about: null,
+    experience: [{ title: "Uzman", company: "Acme", dateRange: null, location: null, description: null }],
+    education: [],
+    certifications: [],
+    skills: [],
+    languages: [],
+    truncated: {},
+  }
 
-  it("shows the selected postings by name and uses h2 under the page title", () => {
-    const html = renderToStaticMarkup(<LinkedInWaiting stage="scoring" profileLabel="Profile.pdf" postings={postings} />)
-    expect(html).toContain("İlanlarla karşılaştırıyoruz")
-    expect(html).toContain("Dijital Pazarlama Uzmanı")
-    expect(html).toContain("Örnek Marka")
-    expect(html).toContain("Profile.pdf")
-    expect(html).toMatch(/<h2[^>]*>İlanlarla karşılaştırıyoruz<\/h2>/)
-    expect(html).not.toContain("<h1")
+  it("draws the real headline and roles while checking sections, h2 under the page title", () => {
+    const html = renderToStaticMarkup(<LinkedInAuditWaiting audit={{ stage: "checking", createdAt: "2026-10-22T12:00:00.000Z", profile }} />)
+    expect(html).toContain("Bölümleri kontrol ediyoruz")
+    expect(html).toContain("Deniz Aksoy")
+    expect(html).toContain("Uzman")
+    expect(html).toMatch(/<h2[^>]*>Bölümleri kontrol ediyoruz<\/h2>/)
   })
 
-  it("switches the profile sheet to writing in the last stage", () => {
-    const html = renderToStaticMarkup(<LinkedInWaiting stage="writing" profileLabel={null} postings={[]} />)
-    expect(html).toContain("Başlık ve Hakkında önerisi yazıyoruz")
-    expect(html).toContain("Başlık · Hakkında")
+  it("draws a skeleton while a PDF is still being read", () => {
+    const html = renderToStaticMarkup(<LinkedInAuditWaiting audit={{ stage: "reading", createdAt: "2026-10-22T12:00:00.000Z", profile: null }} />)
+    expect(html).toContain("Profilini okuyoruz")
   })
 })
 

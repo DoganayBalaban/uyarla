@@ -36,11 +36,13 @@ export interface InterviewPrepJobData {
   analysisId: string
 }
 
-/** LinkedIn profil raporu (DOG-69); kayıt `Resume.linkedinReport` içinde "running". */
-export const LINKEDIN_REPORT_JOB = "linkedin-report"
+/** LinkedIn profil denetimi (DOG-157); kayıt `LinkedInAudit` tablosunda "running". */
+export const LINKEDIN_AUDIT_JOB = "linkedin-audit"
 
-export interface LinkedInReportJobData {
-  resumeId: string
+export interface LinkedInAuditJobData {
+  auditId: string
+  /** Düşen yazımları yeniden dene; teşhis yeniden yapılmıyor. */
+  retry?: boolean
 }
 
 /** Başvuru formu yanıtı (DOG-123); yanıt `Analysis.formAnswers` içinde "running". */

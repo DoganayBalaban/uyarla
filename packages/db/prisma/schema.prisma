@@ -43,6 +43,8 @@ model User {
   emailConsents EmailConsent[]
   /// "Tüm ilanlarda hariç tut" listesi (DOG-90).
   excludedConcepts ExcludedConcept[]
+  // LinkedIn profil denetimi (DOG-157); son 5 tarama.
+  linkedinAudits LinkedInAudit[]
 }
 
 model Resume {
@@ -368,4 +370,41 @@ model EmailConsent {
   createdAt   DateTime @default(now())
 
   @@index([userId, createdAt])
+}
+
+/// LinkedIn profil denetimi: profil, teşhis ve yazımlar (DOG-157).
+model LinkedInAudit {
+  id          String              @id @default(cuid())
+  userId      String
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  source      LinkedInAuditSource
+  /// PDF yolunda kütüphanedeki CV.
+  resumeId    String?
+  /// LinkedInProfileData; PDF yolunda okuma bitene kadar boş.
+  profile     Json?
+  targetRole  String?
+  analysisIds String[]
+  status      LinkedInAuditStatus @default(running)
+  /// reading | checking | writing; bitince null.
+  stage       String?
+  report      Json?
+  rewrites    Json?
+  /// Düşen yazımların yeniden denenme sayısı; en çok 3.
+  retries     Int                 @default(0)
+  createdAt   DateTime            @default(now())
+  /// Worker her aşamada yazıyor; takılma süresi buradan ölçülüyor (yeniden denemede de sıfırlanıyor).
+  updatedAt   DateTime            @default(now()) @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+enum LinkedInAuditSource {
+  extension
+  pdf
+}
+
+enum LinkedInAuditStatus {
+  running
+  done
+  failed
 }

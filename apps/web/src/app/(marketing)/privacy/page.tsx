@@ -59,6 +59,12 @@ export default function PrivacyPage() {
             <strong>İlan metni:</strong> karşılaştırma için yapıştırdığın iş ilanı.
           </li>
           <li>
+            <strong>LinkedIn profili:</strong> profil denetimi için başlığın, hakkında metnin,
+            deneyimlerin ve açıklamaları, eğitimin, sertifikaların, becerilerin ve dillerin. Bunları
+            ya tarayıcı eklentisiyle senin isteğinle kendi profil sayfandan ya da yüklediğin LinkedIn
+            PDF&apos;inden alırız; LinkedIn&apos;e kendimiz istek göndermeyiz, profil fotoğrafını almayız.
+          </li>
+          <li>
             <strong>Sonuçlar:</strong> ATS uyum skoru, eksik anahtar kelimeler, uyarlanmış CV, ön
             yazı ve maddelere verdiğin kararlar.
           </li>
@@ -120,9 +126,9 @@ export default function PrivacyPage() {
         <ul>
           <li>
             <strong>OpenAI (ABD), yapay zekâ modeli:</strong> CV'nin ve ilanın metni analiz, skor,
-            uyarlama ve ön yazı için OpenAI API'sine gönderilir. OpenAI, API üzerinden gelen veriyi
-            model eğitiminde kullanmaz. Kötüye kullanımı denetlemek için en fazla 30 gün saklayabilir,
-            sonra siler.
+            uyarlama ve ön yazı için; LinkedIn profil bilgilerin profil denetimi için OpenAI
+            API'sine gönderilir. OpenAI, API üzerinden gelen veriyi model eğitiminde kullanmaz.
+            Kötüye kullanımı denetlemek için en fazla 30 gün saklayabilir, sonra siler.
           </li>
           <li>
             <strong>Vercel (ABD), web uygulaması:</strong> siteyi ve sunucu tarafındaki istekleri
@@ -195,8 +201,9 @@ export default function PrivacyPage() {
       <section>
         <h2>6. Nasıl topluyoruz</h2>
         <p>
-          Verilerini, CV yüklediğinde, ilan yapıştırdığında, e-postanı girdiğinde ya da sosyal
-          girişle bağlandığında elektronik ortamda, otomatik yollarla topluyoruz.
+          Verilerini, CV yüklediğinde, ilan yapıştırdığında, LinkedIn profilini tarayıcı
+          eklentisiyle gönderdiğinde ya da PDF&apos;ini yüklediğinde, e-postanı girdiğinde ya da
+          sosyal girişle bağlandığında elektronik ortamda, otomatik yollarla topluyoruz.
         </p>
       </section>
 
@@ -206,6 +213,10 @@ export default function PrivacyPage() {
           <li>
             Verilerini hesabın açık olduğu sürece saklarız. Hesabını sildiğinde CV dosyan depodan,
             CV metnin, analizlerin ve uyarlamaların veritabanından silinir.
+          </li>
+          <li>
+            LinkedIn profil denetimlerinin son beşini saklarız; yeni bir tarama açtığında daha
+            eskisi silinir. Hesabını sildiğinde hepsi silinir.
           </li>
           <li>
             OpenAI&apos;a gönderilen metinler OpenAI tarafında en fazla 30 gün tutulur ve sonra

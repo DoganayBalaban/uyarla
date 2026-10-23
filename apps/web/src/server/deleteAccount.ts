@@ -50,6 +50,7 @@ export const DELETION_ORDER = [
   "excludedConcept",
   "emailLog",
   "emailConsent",
+  "linkedInAudit",
   "user",
 ] as const
 

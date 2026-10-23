@@ -1,22 +1,24 @@
 import { redirect } from "next/navigation"
+import { prisma } from "@uyarla/db"
 import { AppPage } from "@/components/layout/app-shell/AppPage"
-import { LinkedInView } from "@/features/linkedin/components/LinkedInView"
+import { LinkedInAuditView } from "@/features/linkedin/components/LinkedInAuditView"
 import { loginPath } from "@/lib/returnPath"
 import { getSession } from "@/server/authz"
+import { getProfile } from "@/server/profile"
 
 export const metadata = { title: "LinkedIn profilin · uyarla" }
 
-/** LinkedIn profil raporu (DOG-69). Kütüphane ve analizler kayıtlı kullanıcıda. */
+/** LinkedIn profil denetimi (DOG-157). Kayıtlı kullanıcıya açık. */
 export default async function LinkedInPage() {
   const session = await getSession()
   if (!session || session.user.isAnonymous) redirect(loginPath("/linkedin"))
+  const profile = await getProfile(prisma, session.user.id)
   return (
     <AppPage
       title="LinkedIn profilin"
-      description="Profilini hedeflediğin ilanlarla karşılaştır: eksik kalan beceriler, başlık ve “Hakkında” önerileri. Profiline dokunmuyoruz; önerileri LinkedIn'de sen uygularsın."
-      width="narrow"
+      description="Profilini bölüm bölüm denetle: başlık, hakkında, deneyim, eğitim ve beceriler. Önerileri kopyalayıp LinkedIn'de sen uygularsın; profiline dokunmuyoruz."
     >
-      <LinkedInView />
+      <LinkedInAuditView initialTargetRole={profile?.targetRole ?? null} />
     </AppPage>
   )
 }

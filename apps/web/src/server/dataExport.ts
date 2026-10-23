@@ -1,5 +1,9 @@
 import type { prisma } from "@uyarla/db"
+import type { LinkedInRewrites } from "@uyarla/core/linkedin/rewrite"
 import JSZip from "jszip"
+import { hasLivePass } from "@/features/billing/access"
+import { lockRewrites } from "@/features/linkedin/audit"
+import { isAdmin } from "@/server/admin"
 import type { DELETION_ORDER } from "@/server/deleteAccount"
 
 type Db = typeof prisma
@@ -29,6 +33,7 @@ export const EXPORTED_TABLES = [
   "excludedConcept",
   "emailLog",
   "emailConsent",
+  "linkedInAudit",
 ] as const satisfies readonly (typeof DELETION_ORDER)[number][]
 
 export interface ExportedResume {
@@ -59,10 +64,16 @@ export interface UserDataExport {
   emailLogs: Record<string, unknown>[]
   /** Ürün haberleri onayının geçmişi (DOG-130). */
   emailConsents: Record<string, unknown>[]
+  /**
+   * LinkedIn profil denetimleri: okunan profil, teşhis ve yazımlar (DOG-157).
+   * Paketle açılan yazımlar paket yoksa burada da kilitli (K-106): dışa aktarım
+   * ödeme duvarının yanından geçen bir yol olmasın.
+   */
+  linkedinAudits: Record<string, unknown>[]
 }
 
 export async function collectUserData(db: Db, userId: string, now = new Date()): Promise<UserDataExport> {
-  const [user, accounts, sessions, resumes, jobPostings, analyses, accessPasses, excludedConcepts, emailLogs, emailConsents] = await Promise.all([
+  const [user, accounts, sessions, resumes, jobPostings, analyses, accessPasses, excludedConcepts, emailLogs, emailConsents, linkedinAudits] = await Promise.all([
     db.user.findUniqueOrThrow({
       where: { id: userId },
       select: {
@@ -153,7 +164,14 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
       select: { purpose: true, granted: true, source: true, textVersion: true, createdAt: true },
       orderBy: { createdAt: "asc" },
     }),
+    db.linkedInAudit.findMany({
+      where: { userId },
+      select: { source: true, profile: true, targetRole: true, status: true, report: true, rewrites: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
   ])
+
+  const unlocked = isAdmin(user) || hasLivePass(accessPasses, now)
 
   return {
     exportedAt: now.toISOString(),
@@ -167,6 +185,7 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
     excludedConcepts,
     emailLogs,
     emailConsents,
+    linkedinAudits: linkedinAudits.map((a) => ({ ...a, rewrites: a.rewrites ? lockRewrites(a.rewrites as unknown as LinkedInRewrites, unlocked).rewrites : null })),
   }
 }
 
@@ -175,7 +194,7 @@ const README = (missing: string[]) =>
     "uyarla · verilerin",
     "",
     "veriler.json  Hesabın, CV'lerin (metin ve ayrıştırılmış sürümler), ilanlar,",
-    "              analizler, uyarlamalar ve ön yazılar.",
+    "              analizler, uyarlamalar, ön yazılar ve LinkedIn denetimleri.",
     "cvler/        Yüklediğin CV dosyalarının kendisi.",
     "",
     "Oturum anahtarları ve giriş jetonları güvenlik nedeniyle bu dosyaya eklenmez.",
