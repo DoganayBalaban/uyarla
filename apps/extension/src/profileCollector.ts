@@ -27,7 +27,10 @@ export function collectProfileSnapshot(): ProfileSnapshot {
     for (const li of Array.from(list?.children ?? [])) {
       const nested = li.querySelector("ul")
       const nestedItems = nested ? Array.from(nested.children).filter((c) => c.tagName === "LI" && visible(c).length > 0) : []
-      if (nestedItems.length > 1) {
+      // Aynı şirkette birden çok rol yalnızca her alt maddenin ilk satırlarında tarih varsa;
+      // tek rolün açıklaması ve "Skills:" satırı da iç içe listede (son inceleme).
+      const dated = (c: Element) => visible(c).slice(0, 3).some((l) => /\b(19|20)\d{2}\b|Present|Halen|Günümüz/i.test(l))
+      if (nestedItems.length > 1 && nestedItems.every(dated)) {
         // Aynı şirkette birden çok rol: şirket adı her rolün ikinci satırı.
         const company = visible(li)[0] ?? ""
         for (const role of nestedItems) {

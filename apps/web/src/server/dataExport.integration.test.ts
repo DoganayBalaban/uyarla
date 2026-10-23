@@ -78,4 +78,23 @@ describe("collectUserData", () => {
     expect(json).not.toContain("oturum-test-ozet-")
     expect(json).not.toContain("test-ozet-")
   })
+
+  it("keeps locked LinkedIn rewrites locked without a pass: the export is not a way around the paywall (son inceleme)", async () => {
+    const ayse = await makeUserWithData("ayse")
+    const ok = { status: "ok", issues: [] }
+    const rewrites = {
+      headline: { status: "done", options: [{ text: "Uzman | Google Ads", verification: ok }] },
+      about: { status: "done", suggestion: { text: "GIZLI-HAKKINDA", verification: ok } },
+      experience: [{ index: 0, status: "done", suggestion: { text: "GIZLI-DENEYIM", verification: ok } }],
+    }
+    await prisma.linkedInAudit.create({ data: { userId: ayse.id, source: "pdf", status: "done", analysisIds: [], rewrites } })
+
+    const locked = JSON.stringify(await collectUserData(prisma, ayse.id))
+    expect(locked).toContain("Uzman | Google Ads")
+    expect(locked).not.toContain("GIZLI-HAKKINDA")
+    expect(locked).not.toContain("GIZLI-DENEYIM")
+
+    await prisma.accessPass.create({ data: { userId: ayse.id, plan: "week", providerOrderId: `ord-${Math.random()}`, startsAt: new Date(Date.now() - 864e5), endsAt: new Date(Date.now() + 6 * 864e5) } })
+    expect(JSON.stringify(await collectUserData(prisma, ayse.id))).toContain("GIZLI-HAKKINDA")
+  })
 })

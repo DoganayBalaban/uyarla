@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useApplicationCards } from "@/features/applications/api"
 import { MAX_AUDIT_POSTINGS } from "@/features/linkedin/audit"
-import { EXTENSION_STORE_URL } from "@/features/linkedin/handoff"
+import { EXTENSION_STORE_URL, browserStorage, rememberPostings } from "@/features/linkedin/handoff"
 import { useLibrary } from "@/features/resumes/api"
 import { cn } from "@/lib/cn"
 
@@ -111,7 +111,12 @@ export function AuditStart({
                         <Checkbox
                           checked={checked}
                           disabled={disabled}
-                          onCheckedChange={() => setPicked((p) => (checked ? p.filter((x) => x !== c.analysisId) : [...p, c.analysisId]))}
+                          onCheckedChange={() => {
+                            const next = checked ? picked.filter((x) => x !== c.analysisId) : [...picked, c.analysisId]
+                            setPicked(next)
+                            // Eklenti yolu: profil yeni sekmede gelince seçim de gelsin (yalnızca kullanıcı değiştirince yazılıyor).
+                            rememberPostings(browserStorage(), next, new Date())
+                          }}
                           className="mt-0.5"
                         />
                         <span className="min-w-0">

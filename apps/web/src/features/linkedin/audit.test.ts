@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { LinkedInRewrites } from "@uyarla/core/linkedin/rewrite"
-import { auditRequestSchema, isStuck, lockRewrites } from "@/features/linkedin/audit"
+import { auditRequestSchema, isStuck, lockRewrites, presentedStatus } from "@/features/linkedin/audit"
 
 const ok = { status: "ok" as const, issues: [] }
 const rewrites: LinkedInRewrites = {
@@ -47,5 +47,24 @@ describe("isStuck", () => {
     const now = new Date("2026-10-22T12:00:00Z")
     expect(isStuck(new Date("2026-10-22T11:49:00Z"), now)).toBe(true)
     expect(isStuck(new Date("2026-10-22T11:55:00Z"), now)).toBe(false)
+  })
+})
+
+describe("presentedStatus (son inceleme)", () => {
+  const now = new Date("2026-10-23T12:00:00Z")
+  const ago = (minutes: number) => new Date(now.getTime() - minutes * 60_000)
+
+  it("shows an audit the worker has not touched for ten minutes as failed, so the waiting screen ends", () => {
+    expect(presentedStatus({ status: "running", updatedAt: ago(11), report: null, rewrites: null }, now)).toBe("failed")
+    expect(presentedStatus({ status: "running", updatedAt: ago(2), report: null, rewrites: null }, now)).toBe("running")
+  })
+
+  it("brings back the finished result when a retry gets stuck", () => {
+    expect(presentedStatus({ status: "running", updatedAt: ago(11), report: {}, rewrites: {} }, now)).toBe("done")
+  })
+
+  it("leaves finished audits alone", () => {
+    expect(presentedStatus({ status: "done", updatedAt: ago(60), report: {}, rewrites: {} }, now)).toBe("done")
+    expect(presentedStatus({ status: "failed", updatedAt: ago(60), report: null, rewrites: null }, now)).toBe("failed")
   })
 })

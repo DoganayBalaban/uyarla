@@ -392,6 +392,8 @@ model LinkedInAudit {
   /// Düşen yazımların yeniden denenme sayısı; en çok 3.
   retries     Int                 @default(0)
   createdAt   DateTime            @default(now())
+  /// Worker her aşamada yazıyor; takılma süresi buradan ölçülüyor (yeniden denemede de sıfırlanıyor).
+  updatedAt   DateTime            @default(now()) @updatedAt
 
   @@index([userId, createdAt])
 }

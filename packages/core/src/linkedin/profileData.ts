@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ResumeProfile } from "../schemas/resume.js"
+import { CITIES } from "../score/conditions.js"
 
 /**
  * LinkedIn profil denetiminin tek profil yapısı (spec §3.1). Eklenti bunu
@@ -78,12 +79,35 @@ export function toResumeProfile(p: LinkedInProfileData): ResumeProfile {
   }
 }
 
-/** PDF yolu: CV okuyucusunun profili; maddeler açıklama oluyor, kısaltma yok. */
+const CONTACT = /@|https?:\/\/|www\.|linkedin\.com/i
+const PHONE = /^\+?[\d\s().-]{7,}$/
+const PLACES = new Set(["türkiye", "turkey", ...CITIES.map((c) => c.toLocaleLowerCase("tr"))])
+/** "Pendik, İstanbul", "İstanbul, Türkiye", "Ankara": son parçası il ya da ülke. Virgül tek başına yetmiyor ("Google Ads, GA4"). */
+const isPlace = (part: string) => PLACES.has(part.split(",").pop()!.trim().toLocaleLowerCase("tr"))
+
+/**
+ * CV okuyucusu LinkedIn PDF'inde başlığın altındaki konum ve iletişim
+ * satırlarını başlığa katabiliyor ("Unvan · İstanbul · ad@ornek.com"; skor
+ * tarafında da aynı: score/title.ts). Yalnızca açıkça iletişim ya da yer olan
+ * parçalar atılıyor.
+ */
+function cleanPdfHeadline(headline: string | null): string | null {
+  if (!headline?.trim()) return null
+  const parts = headline.split(/\s*[·•]\s*/).map((p) => p.trim())
+  const kept = parts.filter((p) => p && !CONTACT.test(p) && !PHONE.test(p) && !isPlace(p))
+  if (kept.length === parts.length) return headline.trim()
+  return kept.join(" · ") || null
+}
+
+/**
+ * PDF yolu: CV okuyucusunun profili; maddeler açıklama oluyor. LinkedIn PDF'i
+ * becerilerin yalnızca ilk birkaçını ("Top Skills") yazıyor: liste kısmi, toplamı bilinmiyor.
+ */
 export function fromResumeProfile(r: ResumeProfile): LinkedInProfileData {
   const range = (start: string | null | undefined, end: string | null | undefined) => [start, end].filter(Boolean).join(" - ") || null
   return {
     name: r.fullName,
-    headline: r.headline,
+    headline: cleanPdfHeadline(r.headline),
     about: r.summary,
     experience: r.experience.map((e) => ({
       title: e.title,
@@ -101,6 +125,6 @@ export function fromResumeProfile(r: ResumeProfile): LinkedInProfileData {
     certifications: r.certifications.map((name) => ({ name, issuer: null, date: null })),
     skills: r.skills,
     languages: r.languages,
-    truncated: {},
+    truncated: { skills: { shown: r.skills.length, total: null } },
   }
 }

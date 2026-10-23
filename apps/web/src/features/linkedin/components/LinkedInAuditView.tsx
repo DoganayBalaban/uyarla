@@ -8,7 +8,7 @@ import { auditQueryKey, retryAudit, startAudit, useAudit } from "@/features/link
 import { AuditResult } from "@/features/linkedin/components/AuditResult"
 import { AuditStart } from "@/features/linkedin/components/AuditStart"
 import { LinkedInAuditWaiting } from "@/features/linkedin/components/LinkedInAuditWaiting"
-import { EXTENSION_STORE_URL, detectExtension, readProfileHandoff } from "@/features/linkedin/handoff"
+import { EXTENSION_STORE_URL, browserStorage, detectExtension, readProfileHandoff, takePostings } from "@/features/linkedin/handoff"
 import { saveProfile } from "@/features/onboarding/api"
 import { apiErrorMessage } from "@/lib/api"
 
@@ -55,7 +55,8 @@ export function LinkedInAuditView({ initialTargetRole }: { initialTargetRole: st
       }
       setBusy(true)
       try {
-        await startAudit({ source: "extension", profile: incoming.profile, targetRole, analysisIds: [] })
+        // LinkedIn açılmadan önce seçilen ilanlar (son inceleme); yoksa ilansız.
+        await startAudit({ source: "extension", profile: incoming.profile, targetRole, analysisIds: takePostings(browserStorage(), new Date()) })
         setRestart(false)
         await queryClient.invalidateQueries({ queryKey: auditQueryKey })
       } catch (e) {

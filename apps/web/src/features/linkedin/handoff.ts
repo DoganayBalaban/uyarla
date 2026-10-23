@@ -1,5 +1,6 @@
 import { LinkedInProfileDataSchema, type LinkedInProfileData } from "@uyarla/core/linkedin/profileData"
 import type { SendMessage } from "@/features/analysis/extensionHandoff"
+import { MAX_AUDIT_POSTINGS } from "@/features/linkedin/audit"
 
 /**
  * Eklentinin `/linkedin#profil=…&jeton=…` aktarımı (DOG-157, spec §5.2).
@@ -45,3 +46,44 @@ export async function detectExtension(ids: string[], send: SendMessage | undefin
 
 /** Chrome Web Mağazası sayfası; eklenti yayımlanınca ortamdan geliyor. */
 export const EXTENSION_STORE_URL = process.env.NEXT_PUBLIC_EXTENSION_STORE_URL || null
+
+type PostingStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">
+
+const POSTINGS_KEY = "uyarla:linkedin-ilanlar"
+const POSTINGS_TTL_MS = 60 * 60_000
+
+/** Tarayıcının localStorage'ı; gizli pencerede ya da engelliyse null. */
+export function browserStorage(): PostingStorage | null {
+  try {
+    return typeof window === "undefined" ? null : window.localStorage
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Eklenti yolunda seçilen ilanlar (son inceleme): kullanıcı ilanları seçip
+ * LinkedIn'i açıyor, eklenti profili yeni bir sekmede /linkedin'e getiriyor.
+ * Seçim o sekmeye bir saatliğine buradan taşınıyor; boş seçim siliniyor.
+ */
+export function rememberPostings(storage: PostingStorage | null, ids: string[], now: Date): void {
+  try {
+    if (ids.length === 0) storage?.removeItem(POSTINGS_KEY)
+    else storage?.setItem(POSTINGS_KEY, JSON.stringify({ ids, at: now.getTime() }))
+  } catch {
+    // Depolama kapalıysa eklenti taraması ilansız başlıyor.
+  }
+}
+
+/** Aktarımda bir kez okunuyor ve siliniyor; eski ya da bozuk seçim yok sayılıyor. */
+export function takePostings(storage: PostingStorage | null, now: Date): string[] {
+  try {
+    const raw = storage?.getItem(POSTINGS_KEY)
+    storage?.removeItem(POSTINGS_KEY)
+    const saved = raw ? (JSON.parse(raw) as { ids?: unknown; at?: unknown }) : null
+    if (!saved || typeof saved.at !== "number" || now.getTime() - saved.at > POSTINGS_TTL_MS || !Array.isArray(saved.ids)) return []
+    return saved.ids.filter((id): id is string => typeof id === "string" && id.length > 0).slice(0, MAX_AUDIT_POSTINGS)
+  } catch {
+    return []
+  }
+}

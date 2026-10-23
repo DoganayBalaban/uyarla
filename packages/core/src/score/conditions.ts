@@ -40,7 +40,7 @@ const TOPICS: Topic[] = [
  * İkamet şartında aranan şehirler. Tam liste değil: ilanlarda en sık geçenler.
  * Listede olmayan şehir "kontrol et"e düşüyor, yanlış eşleşmeye değil.
  */
-const CITIES = [
+export const CITIES = [
   "İstanbul", "Istanbul", "Ankara", "İzmir", "Izmir", "Bursa", "Antalya", "Kocaeli", "Gebze", "Konya",
   "Adana", "Gaziantep", "Kayseri", "Eskişehir", "Mersin", "Samsun", "Trabzon", "Denizli", "Sakarya",
   "Tekirdağ", "Manisa", "Diyarbakır", "Erzurum", "Malatya", "Muğla", "Bodrum", "Aydın", "Balıkesir",

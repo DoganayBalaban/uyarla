@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { detectExtension, readProfileHandoff } from "@/features/linkedin/handoff"
+import { detectExtension, readProfileHandoff, rememberPostings, takePostings } from "@/features/linkedin/handoff"
 
 const profile = { name: "Deniz Aksoy", headline: "Uzman · İstanbul", about: null, experience: [], education: [], certifications: [], skills: [], languages: [], truncated: {} }
 const encode = (value: unknown) => {
@@ -37,5 +37,35 @@ describe("detectExtension", () => {
     expect(await detectExtension(["a"], undefined)).toBe(false)
     expect(await detectExtension([], () => {})).toBe(false)
     expect(await detectExtension(["a"], () => {}, 20)).toBe(false)
+  })
+})
+
+describe("rememberPostings, takePostings (son inceleme)", () => {
+  const memory = () => {
+    const m = new Map<string, string>()
+    return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), removeItem: (k: string) => void m.delete(k), m }
+  }
+  const now = new Date("2026-10-23T12:00:00Z")
+  const later = (minutes: number) => new Date(now.getTime() + minutes * 60_000)
+
+  it("carries the postings picked before opening LinkedIn to the extension's handoff, once", () => {
+    const s = memory()
+    rememberPostings(s, ["a1", "a2"], now)
+    expect(takePostings(s, later(5))).toEqual(["a1", "a2"])
+    expect(takePostings(s, later(6))).toEqual([])
+  })
+
+  it("forgets an old choice, an emptied choice and broken data; works without storage", () => {
+    const s = memory()
+    rememberPostings(s, ["a1"], now)
+    expect(takePostings(s, later(61))).toEqual([])
+    rememberPostings(s, ["a1"], now)
+    rememberPostings(s, [], now)
+    expect(takePostings(s, later(1))).toEqual([])
+    for (const v of s.m.keys()) s.m.set(v, "bozuk")
+    s.m.set("uyarla:linkedin-ilanlar", "{bozuk")
+    expect(takePostings(s, later(1))).toEqual([])
+    expect(() => rememberPostings(null, ["a1"], now)).not.toThrow()
+    expect(takePostings(null, now)).toEqual([])
   })
 })

@@ -3870,3 +3870,18 @@ hazırlık sürerken `prepPreview` döndürüyor. Eski `StageTimeline` silindi.
 - Eski rapor kaldırıldı: `GET` ve `POST /api/resumes/[id]` (yalnızca raporu
   taşıyordu), worker `linkedin-report` işi, `LinkedInView`.
   `Resume.linkedinReport` sütunu yazılmıyor; ayrı bir göçte silinecek.
+
+## K-106 · Veri dışa aktarımında kilitli LinkedIn yazımları kilitli kalıyor
+
+**Bağlam:** Son incelemede "Verilerimi indir" (DOG-63) LinkedIn denetiminin
+hakkında ve deneyim yazımlarını paket olmadan da veriyordu; ödeme duvarının
+yanından geçen bir yol.
+
+**Karar:**
+- Dışa aktarımda yazımlar `GET /api/linkedin/audits` ile aynı kuraldan geçiyor
+  (`lockRewrites`). Paketi olmayan kullanıcı kilitli parçaları
+  `{ status: "locked" }` olarak görüyor; paket alınca dışa aktarımda da açık.
+- Kişinin kendi verisi eksiksiz: okunan profil, teşhis, başlık önerileri.
+  Kilitli metin profilden üretilmiş bir hizmet çıktısı; paket alınınca
+  kişinin. KVKK md. 11 başvurusunda bunun yetmediği söylenirse karar burada
+  değişir.

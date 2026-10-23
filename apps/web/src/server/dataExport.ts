@@ -1,5 +1,9 @@
 import type { prisma } from "@uyarla/db"
+import type { LinkedInRewrites } from "@uyarla/core/linkedin/rewrite"
 import JSZip from "jszip"
+import { hasLivePass } from "@/features/billing/access"
+import { lockRewrites } from "@/features/linkedin/audit"
+import { isAdmin } from "@/server/admin"
 import type { DELETION_ORDER } from "@/server/deleteAccount"
 
 type Db = typeof prisma
@@ -60,7 +64,11 @@ export interface UserDataExport {
   emailLogs: Record<string, unknown>[]
   /** Ürün haberleri onayının geçmişi (DOG-130). */
   emailConsents: Record<string, unknown>[]
-  /** LinkedIn profil denetimleri: okunan profil, teşhis ve yazımlar (DOG-157). */
+  /**
+   * LinkedIn profil denetimleri: okunan profil, teşhis ve yazımlar (DOG-157).
+   * Paketle açılan yazımlar paket yoksa burada da kilitli (K-106): dışa aktarım
+   * ödeme duvarının yanından geçen bir yol olmasın.
+   */
   linkedinAudits: Record<string, unknown>[]
 }
 
@@ -163,6 +171,8 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
     }),
   ])
 
+  const unlocked = isAdmin(user) || hasLivePass(accessPasses, now)
+
   return {
     exportedAt: now.toISOString(),
     user,
@@ -175,7 +185,7 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
     excludedConcepts,
     emailLogs,
     emailConsents,
-    linkedinAudits,
+    linkedinAudits: linkedinAudits.map((a) => ({ ...a, rewrites: a.rewrites ? lockRewrites(a.rewrites as unknown as LinkedInRewrites, unlocked).rewrites : null })),
   }
 }
 

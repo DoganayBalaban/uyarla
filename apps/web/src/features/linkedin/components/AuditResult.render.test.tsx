@@ -70,4 +70,25 @@ describe("AuditResult", () => {
     expect(html).toContain("Kontrol et")
     expect(html).not.toContain("paketle açılır")
   })
+
+  it("shows the check note on a flagged headline option (son inceleme)", () => {
+    const flagged = { status: "flagged" as const, issues: [{ kind: "headline_unsupported", detail: "“Kubernetes” profilinde geçmiyor; doğruysa kullan, değilse çıkar." }] }
+    const html = render(audit({ rewrites: { ...audit().rewrites!, headline: { status: "done", options: [{ text: "Uzman | Kubernetes", verification: flagged }] } } }))
+    expect(html).toContain("profilinde geçmiyor; doğruysa kullan")
+  })
+
+  it("names the sections that improved since the previous scan", () => {
+    const previous = { createdAt: "2026-10-20T12:00:00.000Z", summary: { passed: 0, total: 9 }, sections: [{ id: "experience" as const, status: "missing" as const }] }
+    const html = renderToStaticMarkup(<AuditResult audit={audit()} previous={previous} unlocked={false} onRescan={() => {}} onRetry={() => {}} />)
+    expect(html).toContain("İyileşen: Deneyim")
+  })
+
+  it("does not ask to pin skills that are already the top ones when only part of the list was read", () => {
+    const base = audit()
+    const withPins = (p: typeof profile) => audit({ profile: p, report: { ...base.report!, skills: { add: [{ term: "GA4", evidence: "GA4 panoları" }], pinFirst: ["Google Ads"] } } })
+    expect(render(withPins(profile))).toContain("Öne al")
+    const partial = render(withPins({ ...profile, truncated: { ...profile.truncated, skills: { shown: 2, total: 12 } } } as typeof profile))
+    expect(partial).not.toContain("Öne al")
+    expect(partial).toContain("tam listende yoksa")
+  })
 })
