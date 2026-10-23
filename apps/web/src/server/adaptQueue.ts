@@ -6,6 +6,7 @@ import {
   type FormAnswerJobData,
   type LinkedInReportJobData,
   type InterviewPrepJobData,
+  type LinkedInAuditJobData,
   type PracticeJobData,
 } from "@uyarla/worker/adapt-queue"
 import { Queue } from "bullmq"
@@ -16,9 +17,17 @@ import { redis } from "@/server/redis"
  * (DOG-94); takip mesajı { analysisId, followUpId } (DOG-117); mülakat
  * hazırlığı { analysisId } (DOG-118); yazılı pratik { analysisId, practiceId }
  * (DOG-97); form yanıtı { analysisId, answerId } (DOG-123); LinkedIn raporu { resumeId }
- * (DOG-69).
+ * (DOG-69); LinkedIn denetimi { auditId, retry? } (DOG-157).
  */
-type AdaptQueueData = AdaptJobData | ContributionJobData | FollowUpJobData | InterviewPrepJobData | PracticeJobData | FormAnswerJobData | LinkedInReportJobData
+type AdaptQueueData =
+  | AdaptJobData
+  | ContributionJobData
+  | FollowUpJobData
+  | InterviewPrepJobData
+  | PracticeJobData
+  | FormAnswerJobData
+  | LinkedInReportJobData
+  | LinkedInAuditJobData
 
 const globalForQueue = globalThis as unknown as { adaptQueue?: Queue<AdaptQueueData, void> }
 

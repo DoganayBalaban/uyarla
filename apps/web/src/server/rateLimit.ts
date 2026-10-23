@@ -26,6 +26,8 @@ export const RATE_LIMITS = {
   // Yazarken canlı skor (DOG-92): LLM yok, yeni metin için bir gömme çağrısı.
   // Yazmaya ara verince bir istek; saatte birkaç uzun düzenleme yeter.
   scorePreview: { limit: 150, windowSeconds: 3600 },
+  // LinkedIn profil denetimi (DOG-157): günde 5 tarama, yapay zekâ maliyetinin üst sınırı.
+  linkedinAudit: { limit: 5, windowSeconds: 86400 },
 } satisfies Record<string, RateLimitRule>
 
 /**
