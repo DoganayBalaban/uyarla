@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { DAILY_CAP, accessSnapshot, activePassEnd, canAdapt, extendPass, type PassLike } from "@/features/billing/access"
+import { DAILY_CAP, accessSnapshot, activePassEnd, canAdapt, extendPass, hasLivePass, type PassLike } from "@/features/billing/access"
 
 const NOW = new Date("2026-11-10T12:00:00Z")
 const day = 864e5
@@ -95,5 +95,14 @@ describe("canAdapt · admin", () => {
     expect(
       canAdapt({ adaptationsUsed: 50, adaptationsLast24h: DAILY_CAP + 5, passes: [], now: new Date(), unlimited: true }),
     ).toEqual({ allowed: true, via: "admin" })
+  })
+})
+
+describe("hasLivePass", () => {
+  const now = new Date("2026-10-22T12:00:00Z")
+  it("only a pass active right now counts", () => {
+    expect(hasLivePass([{ status: "active", startsAt: new Date("2026-10-20"), endsAt: new Date("2026-10-27") }], now)).toBe(true)
+    expect(hasLivePass([{ status: "active", startsAt: new Date("2026-10-25"), endsAt: new Date("2026-11-01") }], now)).toBe(false)
+    expect(hasLivePass([{ status: "refunded", startsAt: new Date("2026-10-20"), endsAt: new Date("2026-10-27") }], now)).toBe(false)
   })
 })
