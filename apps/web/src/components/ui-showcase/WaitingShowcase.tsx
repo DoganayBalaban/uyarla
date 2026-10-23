@@ -7,7 +7,7 @@ import { ANALYSIS_STEPS, AnalysisWaiting } from "@/features/analysis/components/
 import { SAMPLE_REPORT_POSTING } from "@/features/analysis/sampleReport"
 import { previewLines } from "@/components/waiting/text"
 import { InterviewPrepWaiting, PREP_STEPS } from "@/features/applications/components/InterviewPrepWaiting"
-import { LinkedInWaiting, REPORT_STEPS } from "@/features/linkedin/components/LinkedInWaiting"
+import { AUDIT_STEPS, LinkedInAuditWaiting } from "@/features/linkedin/components/LinkedInAuditWaiting"
 
 /** Kurgusal örnek (eval cv-d-pazarlama); gerçek kişi değil. */
 const RESUME = `Deniz Aksoy
@@ -29,7 +29,7 @@ type Screen = "analysis" | "adaptation" | "linkedin" | "interview"
 const STEPS: Record<Screen, Array<{ id: string; short: string }>> = {
   analysis: ANALYSIS_STEPS,
   adaptation: ADAPTATION_STEPS,
-  linkedin: REPORT_STEPS,
+  linkedin: AUDIT_STEPS,
   interview: PREP_STEPS,
 }
 
@@ -71,17 +71,24 @@ export function WaitingShowcase() {
       </div>
 
       {screen === "linkedin" && (
-        <LinkedInWaiting
-          stage={stage}
-          profileLabel={withInput ? "Profile.pdf" : null}
-          postings={
-            withInput
-              ? [
-                  { id: "a", position: "Dijital Pazarlama Uzmanı", company: "Örnek Marka" },
-                  { id: "b", position: "Performans Pazarlama Uzmanı", company: null },
-                ]
-              : []
-          }
+        <LinkedInAuditWaiting
+          audit={{
+            stage,
+            createdAt: new Date().toISOString(),
+            profile: withInput
+              ? {
+                  name: "Deniz Aksoy",
+                  headline: "Performance Marketing Specialist",
+                  about: null,
+                  experience: [{ title: "Performance Marketing Specialist", company: "Moda Sepeti", dateRange: null, location: null, description: null }],
+                  education: [],
+                  certifications: [],
+                  skills: [],
+                  languages: [],
+                  truncated: {},
+                }
+              : null,
+          }}
         />
       )}
       {screen === "interview" && (

@@ -3854,3 +3854,19 @@ yazılıyor. Mülakatta CV kesiti, soru kartları (teknik, davranışsal, boşlu
 tanımlar hazırlık istemindekiyle aynı) ve ilanın karşılanmayan zorunlu
 şartları (köprüler bunlar için yazılıyor). `GET /api/applications/[id]`
 hazırlık sürerken `prepPreview` döndürüyor. Eski `StageTimeline` silindi.
+
+## K-105 · LinkedIn raporu yerine profil denetimi
+
+**Bağlam:** DOG-69'daki rapor yalnızca seçilen ilanlara göre başlık ve hakkında
+önerisi veriyordu. Kullanıcı 22 Ekim'de profili bölüm bölüm denetleyen bir
+özellik istedi (DOG-157, spec 2026-10-22).
+
+**Karar:**
+- `/linkedin` artık profil denetimi. Ücretsiz olanlar: bölüm durumları,
+  nedenli kontroller, başlık alternatifleri ve beceri önerileri. Hakkında ve
+  deneyim yazımları pakette; kilitli metin sunucudan çıkmıyor.
+- Profil eklentiyle (kendi profil sayfası) ya da PDF'le geliyor. Sunucu
+  LinkedIn'e istek atmıyor (DOG-67). Fotoğraf yok.
+- Eski rapor kaldırıldı: `GET` ve `POST /api/resumes/[id]` (yalnızca raporu
+  taşıyordu), worker `linkedin-report` işi, `LinkedInView`.
+  `Resume.linkedinReport` sütunu yazılmıyor; ayrı bir göçte silinecek.
