@@ -15,13 +15,12 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useApplicationCards } from "@/features/applications/api"
 import { MAX_AUDIT_POSTINGS } from "@/features/linkedin/audit"
+import { EXTENSION_STORE_URL } from "@/features/linkedin/handoff"
 import { useLibrary } from "@/features/resumes/api"
 import { cn } from "@/lib/cn"
 
 /** Kullanıcının kendi profili; LinkedIn `/in/me/`'yi sahibinin profiline yönlendiriyor. */
 const OWN_PROFILE_URL = "https://www.linkedin.com/in/me/"
-/** Chrome Web Mağazası sayfası; eklenti yayımlanınca ortamdan geliyor. */
-const EXTENSION_STORE_URL = process.env.NEXT_PUBLIC_EXTENSION_STORE_URL || null
 
 const roleSchema = z.object({ role: z.string().trim().min(2, "Hedef rolünü yaz.").max(120, "En fazla 120 karakter.") })
 

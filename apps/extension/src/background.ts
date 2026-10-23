@@ -1,5 +1,9 @@
+import { LinkedInProfileDataSchema } from "@uyarla/core/linkedin/profileData"
+import { profileFromSnapshot, type ProfileSnapshot } from "@uyarla/core/linkedin/snapshot"
 import { issueToken, redeemToken, type TokenStore } from "./handoffToken.js"
 import { pickPosting, pickSelection, uyarlaUrl } from "./posting.js"
+import { encodeProfile, isProfileUrl, profileHandoffUrl } from "./profile.js"
+import { collectProfileSnapshot } from "./profileCollector.js"
 
 /** Build sırasında esbuild `define` ile veriliyor (scripts/build.mjs). */
 declare const UYARLA_URL: string
@@ -37,6 +41,11 @@ async function openUyarla(text: string, sourceUrl: string | null): Promise<void>
  * kopyalanan adres analiz başlatmıyor.
  */
 chrome.runtime.onMessageExternal.addListener((message: unknown, _sender, sendResponse) => {
+  // Sayfanın "eklenti kurulu mu" yoklaması (DOG-157).
+  if ((message as { type?: string } | null)?.type === "uyarla-ping") {
+    sendResponse({ ok: true, version: chrome.runtime.getManifest().version })
+    return false
+  }
   const token = (message as { type?: string; token?: unknown } | null)?.type === "uyarla-jeton"
     ? (message as { token?: unknown }).token
     : undefined
@@ -66,9 +75,39 @@ async function notFound(tabId: number | undefined): Promise<void> {
   })
 }
 
+const PROFILE_UNREADABLE = "Profilini okuyamadık; sayfayı yenileyip tekrar dene ya da PDF yükle."
+
+function notify(message: string): void {
+  chrome.notifications.create({ type: "basic", iconUrl: "icons/128.png", title: "uyarla", message })
+}
+
+/**
+ * Kendi profil sayfası (DOG-157): görünen satırlar → profil → uyarla'nın
+ * /linkedin sayfası. Başkasının profili okunmuyor ve gönderilmiyor.
+ */
+async function sendProfile(tabId: number): Promise<void> {
+  const [result] = await chrome.scripting.executeScript({ target: { tabId }, func: collectProfileSnapshot })
+  const snapshot = result?.result as ProfileSnapshot | undefined
+  if (!snapshot) return notify(PROFILE_UNREADABLE)
+  if (!snapshot.own) return notify("Yalnızca kendi profilini gönderebilirsin.")
+  const parsed = LinkedInProfileDataSchema.safeParse(profileFromSnapshot(snapshot))
+  if (!parsed.success || (!parsed.data.headline && parsed.data.experience.length === 0)) return notify(PROFILE_UNREADABLE)
+  const { store, token } = issueToken(await readTokens(), Date.now())
+  await chrome.storage.session.set({ [TOKENS_KEY]: store })
+  await chrome.tabs.create({ url: profileHandoffUrl(UYARLA_URL, encodeProfile(parsed.data), token) })
+}
+
 /** Simge: açık sekmenin HTML'i (activeTab ile, yalnızca bu tıklamada). */
 chrome.action.onClicked.addListener(async (tab) => {
   if (tab.id === undefined) return notFound(undefined)
+  if (tab.url && isProfileUrl(tab.url)) {
+    try {
+      await sendProfile(tab.id)
+    } catch {
+      notify(PROFILE_UNREADABLE)
+    }
+    return
+  }
   try {
     const [result] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
