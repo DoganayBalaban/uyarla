@@ -3869,7 +3869,7 @@ hazırlık sürerken `prepPreview` döndürüyor. Eski `StageTimeline` silindi.
   LinkedIn'e istek atmıyor (DOG-67). Fotoğraf yok.
 - Eski rapor kaldırıldı: `GET` ve `POST /api/resumes/[id]` (yalnızca raporu
   taşıyordu), worker `linkedin-report` işi, `LinkedInView`.
-  `Resume.linkedinReport` sütunu yazılmıyor; ayrı bir göçte silinecek.
+  `Resume.linkedinReport` sütunu 27 Ekim'de silindi (göç `linkedin_rapor_sutunu_kaldir`; üretimde dolu kayıt yoktu).
 
 ## K-106 · Veri dışa aktarımında kilitli LinkedIn yazımları kilitli kalıyor
 
