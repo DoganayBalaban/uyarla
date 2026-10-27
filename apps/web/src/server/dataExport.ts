@@ -30,6 +30,7 @@ export const EXPORTED_TABLES = [
   "analysis",
   "adaptation",
   "accessPass",
+  "subscription",
   "excludedConcept",
   "emailLog",
   "emailConsent",
@@ -64,6 +65,8 @@ export interface UserDataExport {
   emailLogs: Record<string, unknown>[]
   /** Ürün haberleri onayının geçmişi (DOG-130). */
   emailConsents: Record<string, unknown>[]
+  /** Abonelik geçmişi (DOG-158): paket, durum, dönem sonu. Polar kimliği iade/fatura için. */
+  subscriptions: Record<string, unknown>[]
   /**
    * LinkedIn profil denetimleri: okunan profil, teşhis ve yazımlar (DOG-157).
    * Paketle açılan yazımlar paket yoksa burada da kilitli (K-106): dışa aktarım
@@ -73,7 +76,7 @@ export interface UserDataExport {
 }
 
 export async function collectUserData(db: Db, userId: string, now = new Date()): Promise<UserDataExport> {
-  const [user, accounts, sessions, resumes, jobPostings, analyses, accessPasses, excludedConcepts, emailLogs, emailConsents, linkedinAudits] = await Promise.all([
+  const [user, accounts, sessions, resumes, jobPostings, analyses, accessPasses, excludedConcepts, emailLogs, emailConsents, linkedinAudits, subscriptions] = await Promise.all([
     db.user.findUniqueOrThrow({
       where: { id: userId },
       select: {
@@ -169,6 +172,20 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
       select: { source: true, profile: true, targetRole: true, status: true, report: true, rewrites: true, createdAt: true },
       orderBy: { createdAt: "asc" },
     }),
+    db.subscription.findMany({
+      where: { userId },
+      select: {
+        plan: true,
+        status: true,
+        currentPeriodEnd: true,
+        cancelAtPeriodEnd: true,
+        trialEnd: true,
+        endedAt: true,
+        providerSubscriptionId: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
+    }),
   ])
 
   const unlocked = isAdmin(user) || hasLivePass(accessPasses, now)
@@ -185,6 +202,7 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
     excludedConcepts,
     emailLogs,
     emailConsents,
+    subscriptions,
     linkedinAudits: linkedinAudits.map((a) => ({ ...a, rewrites: a.rewrites ? lockRewrites(a.rewrites as unknown as LinkedInRewrites, unlocked).rewrites : null })),
   }
 }
