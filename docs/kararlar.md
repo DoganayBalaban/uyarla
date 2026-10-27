@@ -3885,3 +3885,13 @@ yanından geçen bir yol.
   Kilitli metin profilden üretilmiş bir hizmet çıktısı; paket alınınca
   kişinin. KVKK md. 11 başvurusunda bunun yetmediği söylenirse karar burada
   değişir.
+
+## K-107 · Tek seferlik paketten aboneliğe
+
+**Bağlam:** DOG-34'te (16 Ekim) erişim tek seferlik dönemlerle satılıyordu: 1 hafta, 1 ay, 3 ay, otomatik yenileme yok. Kullanıcı 28 Ekim'de Jobscan tarzı aboneliğe geçmek istedi (DOG-158). Üretimde o güne kadar hiç satın alım yoktu.
+
+**Karar:**
+- Ücretsiz · 1 Ay (299 ₺/ay) · 3 Ay (599 ₺ / 3 ay). Otomatik yenileme var, iptal her an Polar portalından.
+- 1 Ay ve 3 Ay'da 7 günlük deneme: kart alınıyor, denemede her şey açık, hesap başına bir kez.
+- Ücretsiz katman takvim ayına bağlı: ayda 5 analiz ve 1 uyarlama. Mülakat hazırlığı, pratik, form yanıtları ve LinkedIn yazımı abonelikte.
+- Polar, merchant of record ve TL kararı aynen geçerli. Ayrıntı: `docs/superpowers/specs/2026-10-28-abonelik-design.md`.
