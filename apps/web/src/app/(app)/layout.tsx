@@ -9,6 +9,7 @@ import { OnboardingRedirect } from "@/features/onboarding/components/OnboardingR
 import { ONBOARDING_DEFERRED_COOKIE, shouldRedirectToOnboarding } from "@/features/onboarding/gate"
 import { getSession } from "@/server/authz"
 import { getProfile } from "@/server/profile"
+import { TrialBanner } from "@/features/billing/components/TrialBanner"
 
 /**
  * Uygulama ekranlarının ortak kabı: kenar çubuğu, üst çubuk ve içerik
@@ -47,6 +48,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <AppSidebar />
       <SidebarInset>
         <PageActionsProvider>
+          {/* Denemedeyse ne zaman ne çekileceği her sayfada (DOG-158). */}
+          <TrialBanner />
           <SiteHeader />
           {children}
         </PageActionsProvider>
