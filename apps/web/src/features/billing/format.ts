@@ -1,7 +1,7 @@
 import type { BillingStatus } from "@/features/billing/api"
 import type { PlanKey } from "@/features/billing/plans"
 
-export const PLAN_LABEL: Record<PlanKey, string> = { week: "1 hafta", month: "1 ay", quarter: "3 ay" }
+export const PLAN_LABEL: Record<PlanKey, string> = { month: "1 Ay", quarter: "3 Ay" }
 
 const DAY = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" })
 

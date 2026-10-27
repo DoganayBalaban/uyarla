@@ -18,7 +18,7 @@ async function makeUser() {
   toClean.push(u.id)
   return u
 }
-const PLANS = [{ key: "month" as const, days: 30, productId: "prod_m", priceTry: 299 }]
+const PLANS = [{ key: "month" as const, months: 1, productId: "prod_m", priceTry: 299 }]
 const provider = (event: BillingEvent | null | Error) => ({
   createCheckout: vi.fn().mockResolvedValue({ url: "https://sandbox.polar.sh/c/1" }),
   createPortalSession: vi.fn().mockResolvedValue({ url: "https://sandbox.polar.sh/portal/1" }),
@@ -129,7 +129,7 @@ describe("handleWebhook (DOG-158)", () => {
 describe("handleStatus (DOG-158)", () => {
   it("free quota for a new user, subscription details for a subscriber", async () => {
     const u = await makeUser()
-    const plans = [{ key: "month" as const, days: 30, productId: "prod_m", priceTry: 299 }]
+    const plans = [{ key: "month" as const, months: 1, productId: "prod_m", priceTry: 299 }]
     expect(await handleStatus({ db: prisma, userId: u.id, now: NOW, plans })).toMatchObject({
       access: false,
       unlimited: false,
