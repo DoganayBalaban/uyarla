@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useBillingStatus } from "@/features/billing/api"
-import { formatPassEnd } from "@/features/billing/format"
 import { GIVE_UP_AFTER_MS, SLOW_AFTER_MS, paymentArrived, pollInterval } from "@/features/billing/thanks"
 import { LEGAL } from "@/features/legal/company"
 import { CircleCheck, Clock, LoaderCircle } from "lucide-react"
@@ -39,16 +38,19 @@ export function ThanksView({ returnTo, since }: { returnTo: string | null; since
     if (arrived && returnTo) router.replace(returnTo)
   }, [arrived, returnTo, router])
 
-  if (arrived && status.data?.passEndsAt) {
+  if (arrived && status.data?.subscription) {
+    const trial = status.data.subscription.status === "trialing"
     return (
       <Card className="mx-auto max-w-md items-center py-10 text-center">
         <CardContent className="flex flex-col items-center">
           <span className="grid size-12 place-items-center rounded-full bg-brand-green/10 text-brand-green dark:text-[#4ade80]">
             <CircleCheck className="size-6" aria-hidden />
           </span>
-          <h1 className="m-0 mt-4 text-xl font-semibold">Erişimin açıldı</h1>
+          <h1 className="m-0 mt-4 text-xl font-semibold">{trial ? "Denemen başladı" : "Aboneliğin başladı"}</h1>
           <p className="m-0 mt-2 text-sm text-muted-foreground">
-            {formatPassEnd(status.data.passEndsAt)} tarihine kadar istediğin kadar uyarlayabilirsin.
+            {trial
+              ? "7 gün boyunca her şey açık. Deneme bitmeden iptal edersen ücret çekilmez."
+              : "Analiz, uyarlama ve hazırlık araçları açık."}
           </p>
           {!returnTo && (
             <Button asChild className="mt-6">

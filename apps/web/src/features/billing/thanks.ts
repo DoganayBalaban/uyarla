@@ -8,16 +8,15 @@ import type { BillingStatus } from "@/features/billing/api"
 const CLOCK_SLACK_MS = 5_000
 
 /**
- * Teşekkür sayfasının beklediği ödeme geldi mi (DOG-80). `since`: ödeme
- * oturumunun açıldığı an (dönüş adresindeki `odeme`). Önceden aktif bir dönem
- * varsa bitiş tarihi zaten dolu; yalnızca bu andan sonra açılan dönem sayılıyor.
- * `since` yoksa (eski bağlantı) eski davranış: herhangi bir aktif dönem.
+ * Teşekkür sayfasının beklediği abonelik geldi mi (DOG-80, DOG-158). `since`:
+ * ödeme oturumunun açıldığı an (dönüş adresindeki `odeme`); yalnızca bu andan
+ * sonra açılan abonelik sayılıyor. `since` yoksa (eski bağlantı) erişim
+ * veren herhangi bir abonelik.
  */
 export function paymentArrived(status: BillingStatus, since: number | null): boolean {
-  if (!status.passEndsAt) return false
+  if (!status.access || !status.subscription) return false
   if (since === null) return true
-  if (!status.lastPassAt) return false
-  return Date.parse(status.lastPassAt) >= since - CLOCK_SLACK_MS
+  return Date.parse(status.subscription.createdAt) >= since - CLOCK_SLACK_MS
 }
 
 /** Bundan sonra "birkaç dakika" uyarısı ve seyrek yoklama. */

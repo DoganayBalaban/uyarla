@@ -8,6 +8,8 @@ import { auth } from "@/server/auth"
 import { authErrorResponse, ensureRegistered, ensureSession, getSession } from "@/server/authz"
 import { analyzeQueue } from "@/server/queue"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
+import { isAdmin } from "@/server/admin"
+import { PaymentRequiredError, requireEntitlement, withEntitlement } from "@/server/billing/entitlement"
 import { findPreviousAnalysis } from "@/server/duplicatePosting"
 import { createResume, findLibraryResume } from "@/server/resumeLibrary"
 import { storeUploadedResume } from "@/server/storeUpload"
@@ -85,6 +87,11 @@ export async function POST(request: Request) {
       user.isAnonymous ? RATE_LIMITS.anonUser : RATE_LIMITS.registered,
     )
 
+    // Aylık ücretsiz kota (DOG-158): dosya depoya yazılmadan önce. Kesin
+    // kontrol aşağıda, ilan kullanıcı kilidi altında açılırken.
+    const unlimited = isAdmin(session?.user)
+    await requireEntitlement(prisma, { userId: user.id, feature: "analysis", now: new Date(), unlimited })
+
     let resumeId: string
     let savedToLibrary: boolean | undefined
     if (libraryResumeId) {
@@ -119,10 +126,12 @@ export async function POST(request: Request) {
       if (wantsSave) savedToLibrary = created.savedToLibrary
     }
 
-    const posting = await prisma.jobPosting.create({
-      // İlan adresi (DOG-95): platforma özel ipucu için, sorgusuz.
-      data: { userId: user.id, rawText: jobText, requirements: [], language: "tr", sourceUrl: sanitizeSourceUrl(form.get("postingUrl")) },
-    })
+    const posting = await withEntitlement(prisma, { userId: user.id, feature: "analysis", now: new Date(), unlimited }, (tx) =>
+      tx.jobPosting.create({
+        // İlan adresi (DOG-95): platforma özel ipucu için, sorgusuz.
+        data: { userId: user.id, rawText: jobText, requirements: [], language: "tr", sourceUrl: sanitizeSourceUrl(form.get("postingUrl")) },
+      }),
+    )
 
     const job = await analyzeQueue.add(
       "analyze",
@@ -134,6 +143,9 @@ export async function POST(request: Request) {
   } catch (error) {
     const authResponse = authErrorResponse(error)
     if (authResponse) return authResponse
+    if (error instanceof PaymentRequiredError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 402 })
+    }
     if (error instanceof PermanentError) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: 400 })
     }

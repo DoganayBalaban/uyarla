@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { PLAN_LABEL, perDay } from "@/features/billing/format"
+import { PLAN_LABEL } from "@/features/billing/format"
 import type { PlanOffer } from "@/features/billing/plans"
 import { cn } from "@/lib/cn"
 
@@ -40,7 +40,6 @@ export function PlanCardBody({
       </p>
       <p className="mt-1 text-sm text-muted-foreground">
         {plan.days} gün erişim
-        {perDay(plan.priceTry, plan.days) && <> · {perDay(plan.priceTry, plan.days)}</>}
       </p>
       {cheapest && <p className="mt-3 text-xs font-semibold text-brand-green">Günlük en uygun</p>}
       {footer && <div className="mt-auto pt-4">{footer}</div>}

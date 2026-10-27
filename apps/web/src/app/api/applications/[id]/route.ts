@@ -22,6 +22,8 @@ import { addFormAnswer, FORM_ANSWER_ERROR_MESSAGE } from "@/server/formAnswers"
 import { adaptQueue } from "@/server/adaptQueue"
 import { FOLLOW_UP_ERROR_MESSAGE, addFollowUp } from "@/server/followUps"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
+import { isAdmin } from "@/server/admin"
+import { PaymentRequiredError, requireEntitlement } from "@/server/billing/entitlement"
 
 export const runtime = "nodejs"
 
@@ -84,16 +86,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const session = ensureRegistered(await getSession())
     const body = await request.json().catch(() => ({}))
-    if (interviewPrepRequestSchema.safeParse(body).success) return startInterviewPrep(id, session)
+    // `return await`: başlatıcıların hatası (402, hız sınırı) aşağıdaki catch'e düşsün.
+    if (interviewPrepRequestSchema.safeParse(body).success) return await startInterviewPrep(id, session)
     if ((body as { type?: unknown })?.type === "practice") {
       const practice = practiceRequestSchema.safeParse(body)
       if (!practice.success) return NextResponse.json({ error: firstIssue(practice.error).message }, { status: 400 })
-      return startPractice(id, session, practice.data)
+      return await startPractice(id, session, practice.data)
     }
     if ((body as { type?: unknown })?.type === "form-answer") {
       const form = formAnswerRequestSchema.safeParse(body)
       if (!form.success) return NextResponse.json({ error: firstIssue(form.error).message }, { status: 400 })
-      return startFormAnswer(id, session, form.data)
+      return await startFormAnswer(id, session, form.data)
     }
     const parsed = followUpRequestSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: firstIssue(parsed.error).message }, { status: 400 })
@@ -124,6 +127,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   } catch (error) {
     const reply = authErrorResponse(error)
     if (reply) return reply
+    if (error instanceof PaymentRequiredError) return NextResponse.json({ error: error.message, code: error.code }, { status: 402 })
     console.error("[api/applications/[id]] POST", error)
     return NextResponse.json({ error: "Bir şeyler ters gitti." }, { status: 500 })
   }
@@ -137,6 +141,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 async function startInterviewPrep(id: string, session: Awaited<ReturnType<typeof getSession>> & object) {
   const existing = await prisma.analysis.findUnique({ where: { id }, select: { userId: true, status: true } })
   ensureOwner(existing?.userId ?? null, session)
+  // Abonelikte (DOG-158); ücretsizde 402 subscription_required.
+  await requireEntitlement(prisma, { userId: session.user.id, feature: "interview_prep", now: new Date(), unlimited: isAdmin(session.user) })
   if (existing!.status !== "done") return NextResponse.json({ error: "Bu analiz henüz tamamlanmadı." }, { status: 409 })
   await enforceRateLimit(redisStore, `mulakat:${session.user.id}`, RATE_LIMITS.registered)
 
@@ -168,6 +174,8 @@ async function startInterviewPrep(id: string, session: Awaited<ReturnType<typeof
 async function startPractice(id: string, session: Awaited<ReturnType<typeof getSession>> & object, body: PracticeRequest) {
   const existing = await prisma.analysis.findUnique({ where: { id }, select: { userId: true } })
   ensureOwner(existing?.userId ?? null, session)
+  // Abonelikte (DOG-158); ücretsizde 402 subscription_required.
+  await requireEntitlement(prisma, { userId: session.user.id, feature: "practice", now: new Date(), unlimited: isAdmin(session.user) })
   await enforceRateLimit(redisStore, `pratik:${session.user.id}`, RATE_LIMITS.registered)
 
   const practiceId = randomUUID()
@@ -192,6 +200,8 @@ async function startPractice(id: string, session: Awaited<ReturnType<typeof getS
 async function startFormAnswer(id: string, session: Awaited<ReturnType<typeof getSession>> & object, body: FormAnswerRequest) {
   const existing = await prisma.analysis.findUnique({ where: { id }, select: { userId: true, status: true } })
   ensureOwner(existing?.userId ?? null, session)
+  // Abonelikte (DOG-158); ücretsizde 402 subscription_required.
+  await requireEntitlement(prisma, { userId: session.user.id, feature: "form_answer", now: new Date(), unlimited: isAdmin(session.user) })
   if (existing!.status !== "done") return NextResponse.json({ error: "Bu analiz henüz tamamlanmadı." }, { status: 409 })
   await enforceRateLimit(redisStore, `form:${session.user.id}`, RATE_LIMITS.registered)
 

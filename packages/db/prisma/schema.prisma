@@ -45,6 +45,8 @@ model User {
   excludedConcepts ExcludedConcept[]
   // LinkedIn profil denetimi (DOG-157); son 5 tarama.
   linkedinAudits LinkedInAudit[]
+  // Abonelik (DOG-158, K-107); Polar bildirimleriyle güncelleniyor.
+  subscriptions Subscription[]
 }
 
 model Resume {
@@ -404,4 +406,27 @@ enum LinkedInAuditStatus {
   running
   done
   failed
+}
+
+/// Polar aboneliğinin son hâli (DOG-158). Bildirimlerle ekle-ya da-güncelle;
+/// eski bildirim (`providerUpdatedAt` daha geride) yeniyi ezmiyor.
+model Subscription {
+  id                     String    @id @default(cuid())
+  userId                 String
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerSubscriptionId String    @unique
+  /// month | quarter
+  plan                   String
+  /// Polar'daki durum: trialing, active, past_due, canceled, unpaid, incomplete…
+  status                 String
+  currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean   @default(false)
+  trialEnd               DateTime?
+  /// İptal/iade sonrası erişimin bittiği an (Polar `ended_at`).
+  endedAt                DateTime?
+  providerUpdatedAt      DateTime
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @default(now()) @updatedAt
+
+  @@index([userId])
 }

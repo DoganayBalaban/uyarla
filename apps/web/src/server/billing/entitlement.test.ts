@@ -8,4 +8,9 @@ describe("PaymentRequiredError", () => {
     expect(message).toContain("24 saat")
     expect(message.toLocaleLowerCase("tr")).not.toContain("yarın")
   })
+
+  it("tells a free user what ran out (DOG-158)", () => {
+    expect(new PaymentRequiredError("adaptation_quota").message).toContain("ücretsiz uyarlamanı")
+    expect(new PaymentRequiredError("analysis_quota").message).toContain("5 ücretsiz analizini")
+  })
 })

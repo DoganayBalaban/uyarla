@@ -105,25 +105,27 @@ describe("handleWebhook", () => {
   })
 })
 
-describe("handleStatus", () => {
-  it("reports the pass end and whether the free adaptation was used", async () => {
+describe("handleStatus (DOG-158)", () => {
+  it("free quota for a new user, subscription details for a subscriber", async () => {
     const u = await makeUser()
-    expect(await handleStatus({ db: prisma, userId: u.id, now: NOW })).toEqual({
-      passEndsAt: null,
-      lastPassAt: null,
-      freeUsed: false,
-      freeLeft: 1,
-      // Yöneticilere sınırsız hak (#121); test o PR'da güncellenmemişti.
+    const plans = [{ key: "month" as const, days: 30, productId: "prod_m", priceTry: 299 }]
+    expect(await handleStatus({ db: prisma, userId: u.id, now: NOW, plans })).toMatchObject({
+      access: false,
       unlimited: false,
+      trialEligible: true,
+      subscription: null,
+      quota: { analyses: { used: 0, limit: 5 }, adaptations: { used: 0, limit: 1 }, resetsAt: "2026-11-30T21:00:00.000Z" },
       usedLast24h: 0,
       dailyCap: 30,
     })
-    await prisma.accessPass.create({
-      data: { userId: u.id, plan: "week", providerOrderId: `s-${u.id}`, startsAt: NOW, endsAt: new Date(NOW.getTime() + 7 * 864e5) },
+    await prisma.subscription.create({
+      data: { userId: u.id, providerSubscriptionId: `sub_${u.id}`, plan: "month", status: "trialing", trialEnd: new Date("2026-11-15T00:00:00Z"), providerUpdatedAt: NOW },
     })
-    const status = await handleStatus({ db: prisma, userId: u.id, now: NOW })
-    expect(status.passEndsAt).toBe(new Date(NOW.getTime() + 7 * 864e5).toISOString())
-    // Teşekkür sayfası yeni ödemeyi bununla tanıyor (DOG-80).
-    expect(status.lastPassAt).not.toBeNull()
+    expect(await handleStatus({ db: prisma, userId: u.id, now: NOW, plans })).toMatchObject({
+      access: true,
+      trialEligible: false,
+      quota: null,
+      subscription: { plan: "month", status: "trialing", trialEnd: "2026-11-15T00:00:00.000Z", priceTry: 299 },
+    })
   })
 })
