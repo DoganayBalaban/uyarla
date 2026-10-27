@@ -7,6 +7,11 @@ export async function createCheckout(plan: PlanKey, returnTo: string | null): Pr
   return (await api.post<{ url: string }>("/billing/checkout", { plan, returnTo })).data
 }
 
+/** "Aboneliği yönet": Polar müşteri portalının adresi (DOG-158). */
+export async function openPortal(): Promise<{ url: string }> {
+  return (await api.post<{ url: string }>("/billing/portal")).data
+}
+
 /** `GET /api/billing/status` (DOG-158): abonelik ve ücretsiz kota. */
 export interface BillingStatus {
   /** Abonelik ya da yönetici: ücretli özellikler açık. */

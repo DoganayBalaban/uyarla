@@ -1,7 +1,5 @@
 import type { Prisma, prisma } from "@uyarla/db"
-import { decide, extendPass, hasAccess, monthStart, type DenyCode, type Feature, type SubscriptionLike, type Usage } from "@/features/billing/access"
-import { isPlanKey } from "@/features/billing/plans"
-import type { BillingEvent } from "@/server/billing/provider"
+import { decide, hasAccess, monthStart, type DenyCode, type Feature, type SubscriptionLike, type Usage } from "@/features/billing/access"
 
 type Db = typeof prisma
 /** İşlem içinde de dışında da çalışan sorgular için; `prisma` buna uyuyor. */
@@ -99,72 +97,4 @@ export async function withEntitlement<T>(
 /** LinkedIn yazımlarının kilidi ve dışa aktarım (K-106) için. */
 export async function userHasAccess(db: Client, userId: string, now: Date): Promise<boolean> {
   return hasAccess(await db.subscription.findMany({ where: { userId }, select: SUBSCRIPTION_SELECT }), now)
-}
-
-/**
- * Sağlayıcı olayını uygular. Sipariş kimliği tekil: aynı bildirim ikinci kez
- * gelirse "duplicate" (Polar 2xx almazsa yeniden deniyor). Bilinmeyen paket ya
- * da silinmiş kullanıcı "ignored": dönem açılmıyor ama istek başarılı sayılıyor,
- * yoksa sağlayıcı sonsuza dek dener. İade yalnızca kendi siparişini kapatıyor.
- */
-export async function applyBillingEvent(
-  db: Db,
-  event: BillingEvent,
-  now: Date,
-): Promise<"granted" | "duplicate" | "revoked" | "ignored"> {
-  if (event.type === "refunded") {
-    const found = await db.accessPass.findUnique({ where: { providerOrderId: event.orderId }, select: { userId: true } })
-    if (!found) return "ignored"
-    return db.$transaction(async (tx) => {
-      await lockUser(tx, found.userId)
-      return refund(tx, event.orderId, now)
-    })
-  }
-
-  if (!isPlanKey(event.plan)) return "ignored"
-  const plan = event.plan
-  return db.$transaction(async (tx) => {
-    // Kullanıcı yoksa kilitlenecek satır da yok; sorgu boş dönüyor.
-    await lockUser(tx, event.userId)
-    if (await tx.accessPass.findUnique({ where: { providerOrderId: event.orderId } })) return "duplicate" as const
-    const user = await tx.user.findUnique({ where: { id: event.userId }, select: { id: true } })
-    if (!user) return "ignored" as const
-
-    // Kilit altında okunuyor: eşzamanlı ikinci sipariş bunun dönemini görüp
-    // ardına ekleniyor.
-    const passes = await tx.accessPass.findMany({ where: { userId: user.id }, select: { status: true, startsAt: true, endsAt: true } })
-    const range = extendPass(passes, plan, now)
-    await tx.accessPass.create({
-      data: { userId: user.id, plan, providerOrderId: event.orderId, ...range },
-    })
-    return "granted" as const
-  }).catch((error: unknown) => {
-    // Tekil kısıt yine son güvence: kilit kullanıcı satırında, sipariş
-    // kimliği başka bir kullanıcıyla gelirse ikincisini bu durduruyor.
-    if ((error as { code?: string }).code === "P2002") return "duplicate" as const
-    throw error
-  })
-}
-
-/** İade: yalnızca kendi siparişini kapatıyor; kilit altında çağrılıyor. */
-async function refund(tx: Client, orderId: string, now: Date): Promise<"revoked" | "ignored"> {
-  const refunded = await tx.accessPass.findUnique({ where: { providerOrderId: orderId } })
-  if (!refunded || refunded.status !== "active") return "ignored"
-  // Sonraki dönemler iade edilenin bitişine göre üst üste eklenmişti; iade
-  // edilen aralık boşalınca onlar da öne kaydırılıyor (süreleri korunuyor).
-  // Kaydırılmasa kullanıcı ödediği dönemi eski başlangıç tarihine kadar
-  // kullanamıyordu (son gözden geçirme).
-  const later = await tx.accessPass.findMany({
-    where: { userId: refunded.userId, status: "active", startsAt: { gte: refunded.endsAt } },
-    orderBy: { startsAt: "asc" },
-  })
-  let cursor = new Date(Math.max(now.getTime(), refunded.startsAt.getTime()))
-  await tx.accessPass.update({ where: { id: refunded.id }, data: { status: "refunded" } })
-  for (const pass of later) {
-    const duration = pass.endsAt.getTime() - pass.startsAt.getTime()
-    const startsAt = cursor
-    cursor = new Date(startsAt.getTime() + duration)
-    await tx.accessPass.update({ where: { id: pass.id }, data: { startsAt, endsAt: cursor } })
-  }
-  return "revoked"
 }

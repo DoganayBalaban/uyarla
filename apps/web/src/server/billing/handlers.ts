@@ -4,22 +4,20 @@ import { DAILY_CAP, FREE_QUOTA, currentSubscription, hasAccess, nextMonthStart, 
 import type { BillingStatus } from "@/features/billing/api"
 import { isPlanKey, type PlanOffer } from "@/features/billing/plans"
 import { plansPath } from "@/features/billing/paywall"
-import { applyBillingEvent, loadUsage } from "@/server/billing/entitlement"
+import { loadUsage, userHasAccess } from "@/server/billing/entitlement"
+import { applySubscriptionEvent } from "@/server/billing/subscriptions"
 import { WebhookSignatureError, type BillingProvider } from "@/server/billing/provider"
-import { mailClientFromEnv, sendLogged } from "@/server/email/send"
-import { accessOpenedEmail } from "@/server/email/templates"
-import type { MailClient } from "@/server/mail"
 
 type Db = typeof prisma
 type Reply = { status: number; json: unknown }
 
 /**
- * Ödeme oturumu: paket listede olmalı; teşekkür sayfası `donus`u taşıyor.
+ * Abonelik ödeme sayfası (DOG-158). Paket listede olmalı; teşekkür sayfası
+ * `donus`u taşıyor. Aktif abone ikinci abonelik açmasın: paket değişikliği ve
+ * iptal Polar portalında, ona gidiyor.
  *
  * `odeme`: oturumun açıldığı an (DOG-80). Teşekkür sayfası yalnızca bundan
- * sonra açılan dönemi yeni ödeme sayıyor; kullanıcının önceden aktif bir
- * dönemi varsa eski bitiş tarihini "erişimin açıldı" diye göstermiyor.
- * Sunucu saati: durum ucunun döndüğü dönem zamanıyla aynı saat.
+ * sonra açılan aboneliği yeni ödeme sayıyor.
  */
 export async function handleCheckout(input: {
   db: Db
@@ -33,11 +31,16 @@ export async function handleCheckout(input: {
   const body = (input.body ?? {}) as { plan?: unknown; returnTo?: unknown }
   const offer = isPlanKey(body.plan) ? input.plans.find((p) => p.key === body.plan) : undefined
   if (!offer) return { status: 400, json: { error: "Bu paket şu an sunulmuyor.", code: "unknown_plan" } }
+  const now = input.now ?? new Date()
+  if (await userHasAccess(input.db, input.userId, now)) {
+    const { url } = await input.provider.createPortalSession({ userId: input.userId, returnUrl: `${input.baseUrl}/account` })
+    return { status: 200, json: { url } }
+  }
   const user = await input.db.user.findUniqueOrThrow({ where: { id: input.userId }, select: { email: true } })
   const query = new URLSearchParams(
     typeof body.returnTo === "string" ? plansPath(body.returnTo).replace(/^\/plans\??/, "") : "",
   )
-  query.set("odeme", String((input.now ?? new Date()).getTime()))
+  query.set("odeme", String(now.getTime()))
   const { url } = await input.provider.createCheckout({
     userId: input.userId,
     email: user.email,
@@ -48,9 +51,18 @@ export async function handleCheckout(input: {
   return { status: 200, json: { url } }
 }
 
+/** "Aboneliği yönet": iptal, kart ve faturalar Polar müşteri portalında. */
+export async function handlePortal(input: { db: Db; provider: BillingProvider; userId: string; baseUrl: string }): Promise<Reply> {
+  const has = await input.db.subscription.count({ where: { userId: input.userId } })
+  if (!has) return { status: 404, json: { error: "Aboneliğin yok.", code: "no_subscription" } }
+  const { url } = await input.provider.createPortalSession({ userId: input.userId, returnUrl: `${input.baseUrl}/account` })
+  return { status: 200, json: { url } }
+}
+
 /**
- * Sağlayıcı bildirimi. İmza geçersizse 403. Uygulanamayan olay (bilinmeyen
- * paket, silinmiş kullanıcı) da 200: sağlayıcı yeniden denemesin; loglanıyor.
+ * Sağlayıcı bildirimi. İmza geçersizse 403. Uygulanamayan olay (silinmiş
+ * kullanıcı) da 200: sağlayıcı yeniden denemesin; abonelik Polar'da iptal
+ * ediliyor ki silinmiş hesaptan ücret çekilmesin, ve loglanıyor.
  */
 export async function handleWebhook(input: {
   db: Db
@@ -59,11 +71,7 @@ export async function handleWebhook(input: {
   headers: Record<string, string>
   now: Date
   log?: (message: string, extra: unknown) => void
-  /** "Erişimin açıldı" e-postası için (DOG-129); verilmezse ortamdan. */
-  mail?: MailClient | null
 }): Promise<Reply> {
-  // Varsayılan: Sentry uyarısı. Para alındı ama dönem açılmadıysa (silinmiş
-  // hesap, bilinmeyen paket) birinin elle iade etmesi gerekiyor (spec §4).
   const log =
     input.log ??
     ((message: string, extra: unknown) => {
@@ -78,43 +86,13 @@ export async function handleWebhook(input: {
     throw error
   }
   if (!event) return { status: 200, json: { received: true } }
-  const outcome = await applyBillingEvent(input.db, event, input.now)
-  if (outcome === "ignored") log("[billing] uygulanamayan ödeme olayı", event)
-  if (outcome === "granted" && event.type === "paid") {
-    // İşlem e-postası (DOG-129). Hata bildirimi düşürmüyor: dönem açıldı,
-    // e-posta gitmese de kullanıcı erişimini ekranda görüyor.
-    await notifyAccessOpened(input.db, event.orderId, input.now, input.mail === undefined ? mailClientFromEnv() : input.mail).catch(
-      (error: unknown) => log("[billing] erişim e-postası gönderilemedi", { orderId: event.orderId, error: String(error) }),
-    )
+  const outcome = await applySubscriptionEvent(input.db, event)
+  if (outcome === "ignored") {
+    log("[billing] kullanıcısı olmayan abonelik iptal ediliyor", event)
+    const id = event.subscriptionId
+    await input.provider.revokeSubscription(id).catch((error: unknown) => log("[billing] abonelik iptal edilemedi", { id, error: String(error) }))
   }
   return { status: 200, json: { received: true, outcome } }
-}
-
-async function notifyAccessOpened(db: Db, orderId: string, now: Date, mail: MailClient | null): Promise<void> {
-  const pass = await db.accessPass.findUnique({
-    where: { providerOrderId: orderId },
-    select: { id: true, userId: true, user: { select: { email: true, isAnonymous: true } } },
-  })
-  if (!pass || pass.user.isAnonymous) return
-  // Üst üste alınan dönemde erişimin bittiği gün en son dönemin bitişi.
-  const last = await db.accessPass.findFirst({
-    where: { userId: pass.userId, status: "active" },
-    orderBy: { endsAt: "desc" },
-    select: { endsAt: true },
-  })
-  if (!last) return
-  await sendLogged(
-    db,
-    mail,
-    {
-      userId: pass.userId,
-      to: pass.user.email,
-      category: "transactional",
-      ...accessOpenedEmail(last.endsAt),
-      log: [{ kind: "access_opened", refId: pass.id }],
-    },
-    now,
-  )
 }
 
 /** Abonelik ve bu ayki kota (DOG-158); paket ekranı, sayaçlar ve teşekkür sayfası. */

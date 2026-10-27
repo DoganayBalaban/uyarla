@@ -4,7 +4,7 @@ import { plansFromEnv } from "@/features/billing/plans"
 import { siteUrl } from "@/lib/site"
 import { isAdmin } from "@/server/admin"
 import { authErrorResponse, ensureRegistered, getSession } from "@/server/authz"
-import { handleCheckout, handleStatus, handleWebhook } from "@/server/billing/handlers"
+import { handleCheckout, handlePortal, handleStatus, handleWebhook } from "@/server/billing/handlers"
 import * as Sentry from "@sentry/nextjs"
 import { BillingNotConfiguredError, polarProviderFromEnv } from "@/server/billing/polar"
 
@@ -15,6 +15,7 @@ export const runtime = "nodejs"
  * kenarındayız; ayrı dosyalar ayrı fonksiyon demek.
  *   POST /api/billing/checkout   ödeme oturumu
  *   POST /api/billing/webhook    Polar bildirimi (oturum yok, imza var)
+ *   POST /api/billing/portal     Polar müşteri portalı (iptal, kart, faturalar)
  *   GET  /api/billing/status     dönem ve ücretsiz hak
  */
 export async function POST(request: Request, { params }: { params: Promise<{ action: string }> }) {
@@ -38,6 +39,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
         baseUrl: siteUrl(),
         now: new Date(),
       })
+      return NextResponse.json(reply.json, { status: reply.status })
+    }
+    if (action === "portal") {
+      const session = ensureRegistered(await getSession())
+      const reply = await handlePortal({ db: prisma, provider: polarProviderFromEnv(), userId: session.user.id, baseUrl: siteUrl() })
       return NextResponse.json(reply.json, { status: reply.status })
     }
     return NextResponse.json({ error: "not_found" }, { status: 404 })
