@@ -1,9 +1,10 @@
 import * as Sentry from "@sentry/nextjs"
 import type { prisma } from "@uyarla/db"
-import { accessSnapshot } from "@/features/billing/access"
+import { DAILY_CAP, FREE_QUOTA, currentSubscription, hasAccess, nextMonthStart, trialEligible } from "@/features/billing/access"
+import type { BillingStatus } from "@/features/billing/api"
 import { isPlanKey, type PlanOffer } from "@/features/billing/plans"
 import { plansPath } from "@/features/billing/paywall"
-import { applyBillingEvent, loadAccess } from "@/server/billing/entitlement"
+import { applyBillingEvent, loadUsage } from "@/server/billing/entitlement"
 import { WebhookSignatureError, type BillingProvider } from "@/server/billing/provider"
 import { mailClientFromEnv, sendLogged } from "@/server/email/send"
 import { accessOpenedEmail } from "@/server/email/templates"
@@ -116,32 +117,35 @@ async function notifyAccessOpened(db: Db, orderId: string, now: Date, mail: Mail
   )
 }
 
-export async function handleStatus(input: { db: Db; userId: string; now: Date; unlimited?: boolean }): Promise<{
-  passEndsAt: string | null
-  /** En son açılan aktif dönemin oluşturulma zamanı; teşekkür sayfası için (DOG-80). */
-  lastPassAt: string | null
-  freeUsed: boolean
-  freeLeft: number
-  usedLast24h: number
-  dailyCap: number
-  unlimited: boolean
-}> {
-  const [access, last] = await Promise.all([
-    loadAccess(input.db, input.userId, input.now),
-    input.db.accessPass.findFirst({
-      where: { userId: input.userId, status: "active" },
-      orderBy: { createdAt: "desc" },
-      select: { createdAt: true },
-    }),
-  ])
-  const snap = accessSnapshot({ ...access, now: input.now })
+/** Abonelik ve bu ayki kota (DOG-158); paket ekranı, sayaçlar ve teşekkür sayfası. */
+export async function handleStatus(input: { db: Db; userId: string; now: Date; unlimited?: boolean; plans: PlanOffer[] }): Promise<BillingStatus> {
+  const { subs, usage } = await loadUsage(input.db, input.userId, input.now)
+  const unlimited = input.unlimited ?? false
+  const access = unlimited || hasAccess(subs, input.now)
+  const sub = currentSubscription(subs, input.now)
   return {
-    passEndsAt: snap.passEndsAt?.toISOString() ?? null,
-    lastPassAt: last?.createdAt.toISOString() ?? null,
-    freeUsed: snap.freeLeft === 0,
-    freeLeft: snap.freeLeft,
-    usedLast24h: snap.usedLast24h,
-    dailyCap: snap.dailyCap,
-    unlimited: input.unlimited ?? false,
+    access,
+    unlimited,
+    trialEligible: trialEligible(subs),
+    subscription: sub
+      ? {
+          plan: sub.plan,
+          status: sub.status,
+          currentPeriodEnd: sub.currentPeriodEnd?.toISOString() ?? null,
+          cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
+          trialEnd: sub.trialEnd?.toISOString() ?? null,
+          createdAt: sub.createdAt.toISOString(),
+          priceTry: input.plans.find((p) => p.key === sub.plan)?.priceTry ?? null,
+        }
+      : null,
+    quota: access
+      ? null
+      : {
+          analyses: { used: usage.analysesThisMonth, limit: FREE_QUOTA.analyses },
+          adaptations: { used: usage.adaptationsThisMonth, limit: FREE_QUOTA.adaptations },
+          resetsAt: nextMonthStart(input.now).toISOString(),
+        },
+    usedLast24h: usage.adaptationsLast24h,
+    dailyCap: DAILY_CAP,
   }
 }

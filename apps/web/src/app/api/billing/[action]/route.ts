@@ -69,7 +69,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ act
   try {
     const session = ensureRegistered(await getSession())
     return NextResponse.json(
-      await handleStatus({ db: prisma, userId: session.user.id, now: new Date(), unlimited: isAdmin(session.user) }),
+      await handleStatus({ db: prisma, userId: session.user.id, now: new Date(), unlimited: isAdmin(session.user), plans: plansFromEnv(process.env) }),
     )
   } catch (error) {
     const authResponse = authErrorResponse(error)

@@ -1,28 +1,30 @@
 import { describe, expect, it } from "vitest"
 import { GIVE_UP_AFTER_MS, parseSince, paymentArrived, pollInterval } from "@/features/billing/thanks"
 
-const status = (passEndsAt: string | null, lastPassAt: string | null) => ({
-  passEndsAt,
-  lastPassAt,
-  freeUsed: true,
-  freeLeft: 0,
+import type { BillingStatus } from "@/features/billing/api"
+
+const since = Date.parse("2026-10-28T10:00:00Z")
+const arrived = (createdAt: string, access = true): BillingStatus => ({
+  access,
+  unlimited: false,
+  trialEligible: false,
+  quota: null,
   usedLast24h: 0,
   dailyCap: 30,
+  subscription: { plan: "month", status: "trialing", currentPeriodEnd: null, cancelAtPeriodEnd: false, trialEnd: "2026-11-04T00:00:00.000Z", createdAt, priceTry: 299 },
 })
-const since = Date.parse("2026-10-19T12:00:00Z")
 
-describe("paymentArrived", () => {
-  it("does not take an older active pass for the new payment", () => {
-    expect(paymentArrived(status("2026-10-25T00:00:00Z", "2026-10-18T09:00:00Z"), since)).toBe(false)
+describe("paymentArrived (DOG-158)", () => {
+  it("waits for a subscription opened after the checkout started", () => {
+    expect(paymentArrived(arrived("2026-10-28T10:00:03Z"), since)).toBe(true)
+    // Bildirim oturum zamanından birkaç saniye önce yazılmış olabilir (saat farkı).
+    expect(paymentArrived(arrived("2026-10-28T09:59:58Z"), since)).toBe(true)
+    expect(paymentArrived(arrived("2026-09-01T00:00:00Z"), since)).toBe(false)
+    expect(paymentArrived(arrived("2026-10-28T10:00:03Z", false), since)).toBe(false)
   })
-
-  it("sees a pass opened after the checkout, also when the webhook came first", () => {
-    expect(paymentArrived(status("2026-11-01T00:00:00Z", "2026-10-19T12:00:20Z"), since)).toBe(true)
-  })
-
-  it("waits while there is no pass and falls back to any pass for old links", () => {
-    expect(paymentArrived(status(null, null), since)).toBe(false)
-    expect(paymentArrived(status("2026-10-25T00:00:00Z", "2026-10-18T09:00:00Z"), null)).toBe(true)
+  it("old links without a timestamp take any open subscription", () => {
+    expect(paymentArrived(arrived("2026-09-01T00:00:00Z"), null)).toBe(true)
+    expect(paymentArrived({ ...arrived("2026-09-01T00:00:00Z"), subscription: null }, null)).toBe(false)
   })
 })
 

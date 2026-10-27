@@ -2,7 +2,7 @@
 
 import { Check, LoaderCircle, Lock } from "lucide-react"
 import { useRef, useState } from "react"
-import { createCheckout, useBillingStatus } from "@/features/billing/api"
+import { createCheckout } from "@/features/billing/api"
 import { AccessStatus } from "@/features/billing/components/AccessStatus"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { cn } from "@/lib/cn"
-import { PLAN_LABEL, payLabel, perDay, stackNote } from "@/features/billing/format"
+import { PLAN_LABEL } from "@/features/billing/format"
 import { PASS_FEATURES, cheapestPerDay, recommendedPlan, type PlanKey, type PlanOffer } from "@/features/billing/plans"
 import { apiErrorMessage } from "@/lib/api"
 
@@ -28,8 +28,6 @@ export function PlansView({ plans, returnTo }: { plans: PlanOffer[]; returnTo: s
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const consentRef = useRef<HTMLButtonElement>(null)
-  const status = useBillingStatus()
-  const note = status.data ? stackNote(status.data) : null
   const recommended = recommendedPlan(plans)
   const cheapest = cheapestPerDay(plans)
   const plan = plans.find((p) => p.key === selected) ?? null
@@ -85,7 +83,6 @@ export function PlansView({ plans, returnTo }: { plans: PlanOffer[]; returnTo: s
         {plans.map((p) => {
           const isRecommended = recommended?.key === p.key
           const isCheapest = cheapest?.key === p.key && cheapest.key !== recommended?.key
-          const day = perDay(p.priceTry, p.days)
           return (
             <Label
               key={p.key}
@@ -106,7 +103,6 @@ export function PlansView({ plans, returnTo }: { plans: PlanOffer[]; returnTo: s
               </span>
               <span className="mt-1 text-sm text-muted-foreground">
                 {p.days} gün erişim
-                {day && <> · {day}</>}
               </span>
               {isCheapest && <span className="mt-3 text-xs font-semibold text-brand-green">Günlük en uygun</span>}
             </Label>
@@ -129,7 +125,6 @@ export function PlansView({ plans, returnTo }: { plans: PlanOffer[]; returnTo: s
           </div>
 
           <div className="flex flex-col gap-3">
-            {note && <p className="m-0 rounded-lg bg-primary/5 px-3 py-2 text-sm">{note}</p>}
             <Label className="flex items-start gap-2.5 text-sm font-normal leading-snug">
               <Checkbox
                 ref={consentRef}
@@ -150,7 +145,7 @@ export function PlansView({ plans, returnTo }: { plans: PlanOffer[]; returnTo: s
             </Label>
             <Button type="button" size="lg" className="w-full" disabled={busy || !plan} onClick={() => void pay()}>
               {busy && <LoaderCircle className="motion-safe:animate-spin" aria-hidden />}
-              {busy ? "Ödeme sayfası açılıyor…" : plan ? payLabel(plan) : "Paket seç"}
+              {busy ? "Ödeme sayfası açılıyor…" : plan ? `${PLAN_LABEL[plan.key]}${plan.priceTry !== null ? ` · ${plan.priceTry} TL` : ""}` : "Paket seç"}
             </Button>
             {error && (
               <p role="alert" className="m-0 text-sm text-destructive">
