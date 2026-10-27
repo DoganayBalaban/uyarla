@@ -86,16 +86,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const session = ensureRegistered(await getSession())
     const body = await request.json().catch(() => ({}))
-    if (interviewPrepRequestSchema.safeParse(body).success) return startInterviewPrep(id, session)
+    // `return await`: başlatıcıların hatası (402, hız sınırı) aşağıdaki catch'e düşsün.
+    if (interviewPrepRequestSchema.safeParse(body).success) return await startInterviewPrep(id, session)
     if ((body as { type?: unknown })?.type === "practice") {
       const practice = practiceRequestSchema.safeParse(body)
       if (!practice.success) return NextResponse.json({ error: firstIssue(practice.error).message }, { status: 400 })
-      return startPractice(id, session, practice.data)
+      return await startPractice(id, session, practice.data)
     }
     if ((body as { type?: unknown })?.type === "form-answer") {
       const form = formAnswerRequestSchema.safeParse(body)
       if (!form.success) return NextResponse.json({ error: firstIssue(form.error).message }, { status: 400 })
-      return startFormAnswer(id, session, form.data)
+      return await startFormAnswer(id, session, form.data)
     }
     const parsed = followUpRequestSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: firstIssue(parsed.error).message }, { status: 400 })
