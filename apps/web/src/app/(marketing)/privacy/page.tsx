@@ -97,7 +97,7 @@ export default function PrivacyPage() {
             sözleşmenin ifası (md. 5/2-c).
           </li>
           <li>
-            Başvuru hatırlatmaları (takip, mülakat, son başvuru günü) ve erişim dönemi bilgisi göndermek
+            Başvuru hatırlatmaları (takip, mülakat, son başvuru günü) göndermek
             — sözleşmenin ifası (md. 5/2-c); Hesabım&apos;dan ya da e-postadaki bağlantıyla kapatabilirsin.
           </li>
           <li>
@@ -151,7 +151,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Resend (ABD), e-posta gönderimi:</strong> giriş bağlantısını, ödeme ve hesap
-            e-postalarını ve, kapatmadıysan, başvuru hatırlatmalarını, erişim dönemi bilgisini ve onay
+            e-postalarını ve, kapatmadıysan, başvuru hatırlatmalarını ve onay
             verdiysen ürün haberlerini noreply@uyarla.com.tr adresinden gönderir. E-posta adresini ve
             e-postada geçen pozisyon ile şirket adlarını görür. Kapatılabilen e-postaları Hesabım&apos;dan
             ya da e-postadaki bağlantıyla tek tıkla kapatabilirsin; verdiğin yanıt {LEGAL.support}{" "}
@@ -169,8 +169,9 @@ export default function PrivacyPage() {
             kayda eklenmez.
           </li>
           <li>
-            <strong>Polar (ABD), ödeme:</strong> paket satın alırken ödemeyi alır ve faturanı gönderir. Kart
-            bilgin uyarla&apos;ya hiç gelmez; Polar&apos;a yalnızca e-posta adresin ve hesap kimliğin iletilir.
+            <strong>Polar (ABD), ödeme ve abonelik:</strong> abone olurken ödemeyi alır, deneme hatırlatmasını ve
+            faturanı gönderir. Kart bilgin uyarla&apos;ya hiç gelmez; Polar&apos;a yalnızca e-posta adresin ve hesap
+            kimliğin iletilir. Aboneliğinin durumu (paket, deneme ve dönem sonu) bizde de tutulur.
           </li>
           <li>
             <strong>Tarayıcı eklentisi:</strong> yalnızca sen tıkladığında açık sayfadaki ilan metnini
@@ -227,8 +228,8 @@ export default function PrivacyPage() {
             silinir ya da anonim hâle getirilir.
           </li>
           <li>
-            Paket satın aldıysan: hesabını sildiğinde uyarla&apos;daki erişim dönemi kayıtların da
-            silinir. Ödemeyi alan ve faturayı kesen Polar ise satıcı sıfatıyla ödeme ve fatura
+            Abone olduysan: hesabını sildiğinde açık aboneliğin Polar&apos;da iptal edilir ve
+            uyarla&apos;daki abonelik kayıtların da silinir. Ödemeyi alan ve faturayı kesen Polar ise satıcı sıfatıyla ödeme ve fatura
             kaydını kendi yasal saklama yükümlülüğü süresince tutar; bu kayıt bizim silmemizle
             silinmez. Ayrıntısı{" "}
             <a href="https://polar.sh/legal/privacy-policy" target="_blank" rel="noreferrer">

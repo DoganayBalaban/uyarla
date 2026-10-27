@@ -6,10 +6,11 @@ import { LANDING_FAQ } from "@/features/landing/faq"
 const src = (p: string) => readFileSync(join(__dirname, "..", "..", p), "utf8")
 
 describe("landing pricing (DOG-84)", () => {
-  it("answers whether adaptation is paid, without hiding the free one", () => {
+  it("answers whether adaptation is paid, without hiding the free one (DOG-158: abonelik)", () => {
     const answer = LANDING_FAQ.find((q) => q.s === "Uyarlama ücretli mi?")?.c ?? ""
-    expect(answer).toContain("İlk uyarlaman ücretsiz")
-    expect(answer).toContain("otomatik yenileme yok")
+    expect(answer).toContain("ayda 1 uyarlama")
+    expect(answer).toContain("7 gün ücretsiz")
+    expect(answer).toContain("istediğin an iptal")
   })
 
   it("has a pricing section that menus link to", () => {

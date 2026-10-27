@@ -16,8 +16,9 @@ describe("legal pages (DOG-34)", () => {
     expect(page("privacy")).toContain("Polar")
   })
 
-  it("terms describe one-time passes without auto-renewal", () => {
-    expect(page("terms")).toContain("otomatik yenileme")
+  it("terms describe the subscription's renewal and cancelling (DOG-158)", () => {
+    expect(page("terms")).toContain("otomatik yenilenir")
+    expect(page("terms")).toContain("ücretsiz iptal")
   })
 
   it("separates KVKK requests from general support addresses", () => {

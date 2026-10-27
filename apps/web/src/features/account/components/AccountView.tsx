@@ -160,8 +160,8 @@ export function AccountView() {
               <TabsContent value="abonelik" forceMount className="space-y-4 data-[state=inactive]:hidden">
                 <Card className="shadow-xs">
                   <CardHeader>
-                    <CardTitle className="text-base">Erişim dönemi</CardTitle>
-                    <CardDescription>Kalan hakların ve paketinin bitiş tarihi. Dönem otomatik yenilenmiyor.</CardDescription>
+                    <CardTitle className="text-base">Abonelik</CardTitle>
+                    <CardDescription>Paketin, deneme ya da sonraki ödeme tarihi; ücretsizde bu ayki hakların. İptal ve kart değişikliği &quot;Aboneliği yönet&quot;te.</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <AccessStatus className="border-0 bg-transparent p-0" />
