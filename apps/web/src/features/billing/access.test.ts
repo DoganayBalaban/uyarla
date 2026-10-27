@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { DAILY_CAP, FREE_QUOTA, accessSnapshot, activePassEnd, canAdapt, currentSubscription, decide, extendPass, grantsAccess, hasAccess, hasLivePass, monthStart, nextMonthStart, trialEligible, type PassLike, type SubscriptionLike, type Usage } from "@/features/billing/access"
+import { DAILY_CAP, FREE_QUOTA, accessSnapshot, activePassEnd, canAdapt, currentSubscription, decide, grantsAccess, hasAccess, hasLivePass, monthStart, nextMonthStart, trialEligible, type PassLike, type SubscriptionLike, type Usage } from "@/features/billing/access"
 
 const NOW = new Date("2026-11-10T12:00:00Z")
 const day = 864e5
@@ -51,21 +51,6 @@ describe("activePassEnd", () => {
   it("is the latest end among active passes", () => {
     expect(activePassEnd([pass(-1, 3), pass(3, 33)], NOW)).toEqual(new Date(NOW.getTime() + 33 * day))
     expect(activePassEnd([pass(-10, -1)], NOW)).toBeNull()
-  })
-})
-
-describe("extendPass", () => {
-  it("starts now when there is no active pass", () => {
-    expect(extendPass([], "week", NOW)).toEqual({ startsAt: NOW, endsAt: new Date(NOW.getTime() + 7 * day) })
-  })
-
-  it("stacks on top of the latest active end", () => {
-    const end = new Date(NOW.getTime() + 4 * day)
-    expect(extendPass([pass(-3, 4)], "month", NOW)).toEqual({ startsAt: end, endsAt: new Date(end.getTime() + 30 * day) })
-  })
-
-  it("does not stack on an expired or refunded pass", () => {
-    expect(extendPass([pass(-10, -1), pass(-1, 9, "refunded")], "quarter", NOW).startsAt).toEqual(NOW)
   })
 })
 

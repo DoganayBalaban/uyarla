@@ -4,7 +4,7 @@ import type { BillingStatus } from "@/features/billing/api"
 
 describe("billing format", () => {
   it("names the plans in Turkish", () => {
-    expect(PLAN_LABEL).toEqual({ week: "1 hafta", month: "1 ay", quarter: "3 ay" })
+    expect(PLAN_LABEL).toEqual({ month: "1 Ay", quarter: "3 Ay" })
   })
 
   it("formats a day in Istanbul as a Turkish date", () => {

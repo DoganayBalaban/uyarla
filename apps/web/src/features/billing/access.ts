@@ -1,4 +1,3 @@
-import { PLAN_DAYS, type PlanKey } from "@/features/billing/plans"
 
 /** Ücretsiz plan: ömür boyu bir uyarlama (spec §2). */
 export const FREE_ADAPTATIONS = 1
@@ -102,7 +101,6 @@ export function decide(feature: Feature, input: { subs: SubscriptionLike[]; usag
   return { allowed: false, code: "subscription_required" }
 }
 
-const DAY_MS = 864e5
 
 export interface PassLike {
   status: "active" | "refunded"
@@ -152,12 +150,6 @@ export function canAdapt(input: {
 export function activePassEnd(passes: PassLike[], now: Date): Date | null {
   const ends = passes.filter((p) => p.status === "active" && now < p.endsAt).map((p) => p.endsAt.getTime())
   return ends.length ? new Date(Math.max(...ends)) : null
-}
-
-/** Yeni paketin aralığı: aktif dönem varsa en geç bitişin üstüne eklenir. */
-export function extendPass(passes: PassLike[], plan: PlanKey, now: Date): { startsAt: Date; endsAt: Date } {
-  const startsAt = activePassEnd(passes, now) ?? now
-  return { startsAt, endsAt: new Date(startsAt.getTime() + PLAN_DAYS[plan] * DAY_MS) }
 }
 
 /** Kullanıcıya gösterilen hak durumu (DOG-81); sunucu `GET /api/billing/status` ile döndürüyor. */
