@@ -6,7 +6,7 @@ import { adaptRequestSchema } from "@/features/adaptation/schema"
 import { firstIssue } from "@/lib/validation"
 import { adaptQueue } from "@/server/adaptQueue"
 import { isAdmin } from "@/server/admin"
-import { PaymentRequiredError, withAdaptationAccess } from "@/server/billing/entitlement"
+import { PaymentRequiredError, withEntitlement } from "@/server/billing/entitlement"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 import {
   authErrorResponse,
@@ -49,16 +49,17 @@ export async function POST(request: Request) {
     const existing = await prisma.adaptation.findUnique({ where: { analysisId } })
     if (existing) return NextResponse.json({ adaptationId: existing.id })
 
-    // Ödeme duvarı (DOG-34): ilk uyarlama ücretsiz, sonrası dönem ister.
+    // Ödeme duvarı (DOG-158): ayda bir ücretsiz uyarlama, abonelikte sınırsız
+    // (24 saatte 30).
     // Mevcut uyarlamayı yeniden açmak yukarıda döndü; hak harcamıyor.
     // Yöneticiler sınırsız (ADMIN_EMAILS, server/admin.ts).
     //
     // Kontrol ve kayıt aynı işlemde, kullanıcı kilidi altında (DOG-77): iki
     // sekmeden gelen eşzamanlı istek iki ücretsiz uyarlama açamıyor. Aynı
     // analiz için ikinci istek kilidi bekleyip ilkinin kaydını alıyor.
-    const outcome = await withAdaptationAccess(
+    const outcome = await withEntitlement(
       prisma,
-      { userId: session.user.id, now: new Date(), unlimited: isAdmin(session.user) },
+      { userId: session.user.id, feature: "adaptation", now: new Date(), unlimited: isAdmin(session.user) },
       async (tx) => {
         const raced = await tx.adaptation.findUnique({ where: { analysisId }, select: { id: true } })
         if (raced) return { id: raced.id, created: false }

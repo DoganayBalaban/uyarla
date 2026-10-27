@@ -1,7 +1,7 @@
 import type { prisma } from "@uyarla/db"
 import type { LinkedInRewrites } from "@uyarla/core/linkedin/rewrite"
 import JSZip from "jszip"
-import { hasLivePass } from "@/features/billing/access"
+import { hasAccess } from "@/features/billing/access"
 import { lockRewrites } from "@/features/linkedin/audit"
 import { isAdmin } from "@/server/admin"
 import type { DELETION_ORDER } from "@/server/deleteAccount"
@@ -188,7 +188,7 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
     }),
   ])
 
-  const unlocked = isAdmin(user) || hasLivePass(accessPasses, now)
+  const unlocked = isAdmin(user) || hasAccess(subscriptions, now)
 
   return {
     exportedAt: now.toISOString(),

@@ -5,13 +5,13 @@ import { hasFailedRewrites, type LinkedInRewrites } from "@uyarla/core/linkedin/
 import { ADAPT_JOB_OPTIONS, LINKEDIN_AUDIT_JOB } from "@uyarla/worker/adapt-queue"
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { hasLivePass } from "@/features/billing/access"
 import { MAX_AUDIT_BODY_BYTES, MAX_RETRIES, auditRequestSchema, lockRewrites, presentedStatus, type AuditResponse, type AuditView } from "@/features/linkedin/audit"
 import { firstIssue } from "@/lib/validation"
 import { adaptQueue } from "@/server/adaptQueue"
 import { isAdmin } from "@/server/admin"
 import { authErrorResponse, ensureRegistered, getSession } from "@/server/authz"
 import { AuditBusyError, createAudit } from "@/server/linkedinAudit"
+import { userHasAccess } from "@/server/billing/entitlement"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 
 export const runtime = "nodejs"
@@ -30,11 +30,8 @@ export async function GET() {
   try {
     const { user } = ensureRegistered(await getSession())
     const now = new Date()
-    const [rows, passes] = await Promise.all([
-      prisma.linkedInAudit.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 2 }),
-      prisma.accessPass.findMany({ where: { userId: user.id }, select: { status: true, startsAt: true, endsAt: true } }),
-    ])
-    const unlocked = isAdmin(user) || hasLivePass(passes, now)
+    const rows = await prisma.linkedInAudit.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 2 })
+    const unlocked = isAdmin(user) || (await userHasAccess(prisma, user.id, now))
     const [latest, before] = rows
     const prevReport = (before?.report ?? null) as LinkedInAuditReport | null
 

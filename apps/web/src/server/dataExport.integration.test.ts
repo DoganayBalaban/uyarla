@@ -94,7 +94,9 @@ describe("collectUserData", () => {
     expect(locked).not.toContain("GIZLI-HAKKINDA")
     expect(locked).not.toContain("GIZLI-DENEYIM")
 
-    await prisma.accessPass.create({ data: { userId: ayse.id, plan: "week", providerOrderId: `ord-${Math.random()}`, startsAt: new Date(Date.now() - 864e5), endsAt: new Date(Date.now() + 6 * 864e5) } })
+    await prisma.subscription.create({
+      data: { userId: ayse.id, providerSubscriptionId: `sub_${Math.random()}`, plan: "month", status: "active", currentPeriodEnd: new Date(Date.now() + 20 * 864e5), providerUpdatedAt: new Date() },
+    })
     expect(JSON.stringify(await collectUserData(prisma, ayse.id))).toContain("GIZLI-HAKKINDA")
   })
 })
