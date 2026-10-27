@@ -28,7 +28,7 @@ Tek seferlik erişim dönemlerinden (1 hafta, 1 ay, 3 ay) Jobscan tarzı aboneli
 | İptal | Polar müşteri portalından; erişim ödenen dönemin sonuna kadar | İptal ekranını kendimiz yazmıyoruz; 6502 md. 51'deki "dilediği zaman fesih" karşılanıyor. |
 | Ödeme alınamadı | `past_due`: erişim dönem sonuna kadar sürüyor, Polar kartı yeniden deniyor | Kartı bir günlüğüne reddedilen kullanıcı işinin ortasında kesilmesin. |
 | Hatırlatma ve makbuz e-postaları | Polar gönderiyor | Deneme bitişinden 3 gün önce hatırlatma Polar'da yerleşik. Tek seferlik dönemin "bitmesine 2 gün kaldı" e-postası (DOG-129) kalkıyor. |
-| Tanıtım sayfası | Değişmiyor | Kullanıcının kararı: "landinge dokunmuyoruz". |
+| Tanıtım sayfası | Abonelikle çelişen metinler ve fiyat kartları düzeltiliyor | Kullanıcı 28 Ekim'de "landinge dokunmuyoruz" kuralını kaldırdı. |
 
 **Kapsam dışı:** yıllık paket, kupon/indirim, ekip/kurum planı, paket yükseltme ve düşürme ekranı (Polar portalı yeterli), kendi deneme hatırlatma e-postamız.
 
@@ -172,6 +172,7 @@ interface BillingProvider {
 - **Hesabım:** Paket, durum (deneme, aktif, iptal edildi, ödeme alınamadı), sonraki ödeme tarihi ve tutarı, "Aboneliği yönet". Ödeme alınamadıysa "Kartını güncelle". Ücretsizde bu ayki kota ve "Paketleri gör".
 - **`/plans/thanks`:** Abonelik görünene kadar yoklama (bugünkü gibi, 60 sn). Metin "Denemen başladı; 7 gün boyunca her şey açık" ya da "Aboneliğin başladı".
 - Ekran metni Türkçe; yüzde ve kalan süre yalnızca gerçek veriden (deneme bitişi Polar'dan).
+- **Tanıtım sayfası:** fiyat bölümü abonelik kartlarıyla (aylık fiyat, 3 Ay "En popüler · %33 tasarruf", 7 gün ücretsiz deneme), SSS ve "tek seferlik / otomatik yenileme yok" geçen her metin güncelleniyor.
 
 ## 6. Yasal metinler
 
