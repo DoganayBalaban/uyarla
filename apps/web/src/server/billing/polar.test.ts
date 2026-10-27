@@ -7,24 +7,37 @@ class FakeUnknownTypeError extends Error {}
 
 const deps = (overrides: Partial<PolarDeps> = {}): PolarDeps => ({
   createCheckout: vi.fn().mockResolvedValue({ url: "https://sandbox.polar.sh/checkout/abc" }),
+  createCustomerSession: vi.fn().mockResolvedValue({ customer_portal_url: "https://sandbox.polar.sh/portal/x" }),
+  revokeSubscription: vi.fn().mockResolvedValue({}),
   validateEvent: vi.fn(),
   isVerificationError: (e) => e instanceof FakeVerificationError,
   isUnknownTypeError: (e) => e instanceof FakeUnknownTypeError,
   ...overrides,
 })
+const products = { month: "prod_m", quarter: "prod_q" }
+const provider = (d: PolarDeps, config: Partial<Parameters<typeof createPolarProvider>[0]> = {}) =>
+  createPolarProvider({ webhookSecret: "whsec_x", products, ...config }, d)
 
-const order = (overrides: Record<string, unknown> = {}) => ({
-  id: "ord_1",
-  status: "paid",
-  metadata: { plan: "month", user_id: "user_1" },
-  customer: { external_id: "user_1", email: "a@b.c" },
-  ...overrides,
+const subscription = (over: Record<string, unknown> = {}) => ({
+  id: "sub_1",
+  status: "trialing",
+  product_id: "prod_q",
+  current_period_end: "2026-11-04T10:00:00Z",
+  cancel_at_period_end: false,
+  trial_end: "2026-11-04T10:00:00Z",
+  ended_at: null,
+  created_at: "2026-10-28T10:00:00Z",
+  modified_at: "2026-10-28T10:00:05Z",
+  metadata: { plan: "quarter", user_id: "user_1" },
+  customer: { external_id: "user_1" },
+  ...over,
 })
+const event = (type: string, data: unknown) => deps({ validateEvent: vi.fn().mockResolvedValue({ type, data }) })
 
 describe("polar provider", () => {
   it("opens a Turkish checkout carrying the user and the plan", async () => {
     const d = deps()
-    const result = await createPolarProvider({ webhookSecret: "whsec_x" }, d).createCheckout({
+    const result = await provider(d).createCheckout({
       userId: "user_1",
       email: "a@b.c",
       productId: "prod_m",
@@ -42,58 +55,64 @@ describe("polar provider", () => {
     })
   })
 
-  it("turns order.paid into a paid event", async () => {
-    const d = deps({ validateEvent: vi.fn().mockResolvedValue({ type: "order.paid", data: order() }) })
-    expect(await createPolarProvider({ webhookSecret: "s" }, d).parseWebhook("{}", {})).toEqual({
-      type: "paid",
-      orderId: "ord_1",
+  it("reads a subscription event: user, plan from the product, dates (DOG-158)", async () => {
+    expect(await provider(event("subscription.created", subscription())).parseWebhook("{}", {})).toEqual({
+      type: "subscription",
+      subscriptionId: "sub_1",
       userId: "user_1",
-      plan: "month",
+      plan: "quarter",
+      status: "trialing",
+      currentPeriodEnd: new Date("2026-11-04T10:00:00Z"),
+      cancelAtPeriodEnd: false,
+      trialEnd: new Date("2026-11-04T10:00:00Z"),
+      endedAt: null,
+      modifiedAt: new Date("2026-10-28T10:00:05Z"),
     })
   })
 
-  it("turns a full order.refunded into a refund", async () => {
-    const d = deps({ validateEvent: vi.fn().mockResolvedValue({ type: "order.refunded", data: order({ status: "refunded" }) }) })
-    expect(await createPolarProvider({ webhookSecret: "s" }, d).parseWebhook("{}", {})).toEqual({ type: "refunded", orderId: "ord_1" })
+  it("reads every status-changing subscription event, a revoke included", async () => {
+    for (const type of ["subscription.updated", "subscription.active", "subscription.canceled", "subscription.uncanceled", "subscription.past_due"]) {
+      expect(await provider(event(type, subscription())).parseWebhook("{}", {})).toMatchObject({ subscriptionId: "sub_1" })
+    }
+    const revoked = subscription({ status: "canceled", ended_at: "2026-10-29T10:00:00Z" })
+    expect(await provider(event("subscription.revoked", revoked)).parseWebhook("{}", {})).toMatchObject({ status: "canceled", endedAt: new Date("2026-10-29T10:00:00Z") })
   })
 
-  it("keeps the pass on a partial refund", async () => {
-    const d = deps({
-      validateEvent: vi.fn().mockResolvedValue({ type: "order.refunded", data: order({ status: "partially_refunded" }) }),
-    })
-    expect(await createPolarProvider({ webhookSecret: "s" }, d).parseWebhook("{}", {})).toBeNull()
+  it("falls back to created_at and the customer's external id", async () => {
+    const e = await provider(event("subscription.updated", subscription({ product_id: "prod_m", metadata: {}, modified_at: null }))).parseWebhook("{}", {})
+    expect(e).toMatchObject({ userId: "user_1", plan: "month", modifiedAt: new Date("2026-10-28T10:00:00Z") })
+  })
+
+  it("takes the user from metadata before the customer record", async () => {
+    const e = await provider(event("subscription.updated", subscription({ customer: { external_id: "someone_else" } }))).parseWebhook("{}", {})
+    expect(e).toMatchObject({ userId: "user_1" })
+  })
+
+  it("ignores an unknown product, an order, a subscription without our user", async () => {
+    expect(await provider(event("subscription.updated", subscription({ product_id: "prod_x" }))).parseWebhook("{}", {})).toBeNull()
+    expect(await provider(event("order.paid", { id: "ord_1" })).parseWebhook("{}", {})).toBeNull()
+    expect(await provider(event("checkout.created", {})).parseWebhook("{}", {})).toBeNull()
+    const noUser = subscription({ metadata: {}, customer: { external_id: null } })
+    expect(await provider(event("subscription.updated", noUser)).parseWebhook("{}", {})).toBeNull()
   })
 
   it("ignores event types the SDK does not know instead of failing", async () => {
     const d = deps({ validateEvent: vi.fn().mockRejectedValue(new FakeUnknownTypeError("member.created")) })
-    expect(await createPolarProvider({ webhookSecret: "s" }, d).parseWebhook("{}", {})).toBeNull()
-  })
-
-  it("takes the user from metadata before the customer record", async () => {
-    const d = deps({
-      validateEvent: vi.fn().mockResolvedValue({
-        type: "order.paid",
-        data: order({ customer: { external_id: "someone_else" } }),
-      }),
-    })
-    expect(await createPolarProvider({ webhookSecret: "s" }, d).parseWebhook("{}", {})).toMatchObject({ userId: "user_1" })
-  })
-
-  it("ignores events we do not use and orders without our user", async () => {
-    const other = deps({ validateEvent: vi.fn().mockResolvedValue({ type: "checkout.created", data: {} }) })
-    expect(await createPolarProvider({ webhookSecret: "s" }, other).parseWebhook("{}", {})).toBeNull()
-    const noUser = deps({
-      validateEvent: vi.fn().mockResolvedValue({
-        type: "order.paid",
-        data: order({ metadata: { plan: "month" }, customer: { external_id: null } }),
-      }),
-    })
-    expect(await createPolarProvider({ webhookSecret: "s" }, noUser).parseWebhook("{}", {})).toBeNull()
+    expect(await provider(d).parseWebhook("{}", {})).toBeNull()
   })
 
   it("reports a bad signature as WebhookSignatureError", async () => {
     const d = deps({ validateEvent: vi.fn().mockRejectedValue(new FakeVerificationError("bad")) })
-    await expect(createPolarProvider({ webhookSecret: "s" }, d).parseWebhook("{}", {})).rejects.toBeInstanceOf(WebhookSignatureError)
+    await expect(provider(d).parseWebhook("{}", {})).rejects.toBeInstanceOf(WebhookSignatureError)
+  })
+
+  it("opens the customer portal for the user and revokes a subscription", async () => {
+    const d = deps()
+    const p = provider(d)
+    expect(await p.createPortalSession({ userId: "user_1", returnUrl: "https://uyarla.com.tr/account" })).toEqual({ url: "https://sandbox.polar.sh/portal/x" })
+    expect(d.createCustomerSession).toHaveBeenCalledWith({ external_customer_id: "user_1", return_url: "https://uyarla.com.tr/account" })
+    await p.revokeSubscription("sub_1")
+    expect(d.revokeSubscription).toHaveBeenCalledWith("sub_1")
   })
 })
 
