@@ -22,16 +22,20 @@ const EMPLOYMENT_TYPES = "Full-time|Part-time|Internship|Contract|Freelance|Self
 const EMPLOYMENT = new RegExp(`\\s+·\\s+(${EMPLOYMENT_TYPES})\\s*$`, "i")
 /** Aynı şirketteki rollerde çalışma biçimi kendi satırında ("Full-time"); tarih satırının önüne düşüyor. */
 const EMPLOYMENT_ONLY = new RegExp(`^(${EMPLOYMENT_TYPES})$`, "i")
+/** Süren rolde LinkedIn'in (Ekim 2026) tek başına "Devam ediyor" rozeti; tarih satırında zaten yazıyor. */
+const ONGOING_ONLY = /^(Devam ediyor|Present|Halen|Günümüz)$/i
 const WORK_MODE = /(Remote|Uzaktan|Hybrid|Hibrit|On-site|İş yerinde|Ofiste)\s*$/i
 const SKILLS_LINE = /^(Skills|Yetenekler|Beceriler)\s*:/i
 const SEE_MORE = /^[….]*\s*(daha fazla göster|daha fazla gör|see more|show more)$/i
 const ISSUED = /^(Issued|Veriliş tarihi|Verilme tarihi|Alındı)\s*:?\s*/i
-const CREDENTIAL = /^(Credential ID|Kimlik bilgisi kimliği|Sertifika kimliği)\b/i
+/** Türkçe sayfada tarih önde: "Oca 2024 tarihinde verildi". */
+const ISSUED_TR = /^(.+?)\s+tarihinde verildi\b/i
+const CREDENTIAL = /^(Credential ID|Kimlik bilgisi kimliği|Sertifika kimliği|Yeterlilik Kimliği)\b/i
 
 const clean = (lines: string[]) => lines.map((l) => l.replace(/\s+/g, " ").trim()).filter((l) => l && !SEE_MORE.test(l))
 
 function experienceItem(raw: string[]): LinkedInProfileData["experience"][number] | null {
-  const lines = clean(raw).filter((l, i) => i === 0 || !EMPLOYMENT_ONLY.test(l))
+  const lines = clean(raw).filter((l, i) => i === 0 || !(EMPLOYMENT_ONLY.test(l) || ONGOING_ONLY.test(l)))
   const title = lines.shift()
   if (!title) return null
   let company: string | null = null
@@ -58,14 +62,17 @@ function certificationItem(raw: string[]): LinkedInProfileData["certifications"]
   const lines = clean(raw).filter((l) => !CREDENTIAL.test(l))
   const name = lines.shift()
   if (!name) return null
-  const issuer = lines[0] && !ISSUED.test(lines[0]) ? lines.shift()! : null
-  const dateLine = lines.find((l) => ISSUED.test(l))
-  return { name, issuer, date: dateLine ? dateLine.replace(ISSUED, "").split("·")[0]!.trim() || null : null }
+  const issued = (l: string) => ISSUED.test(l) || ISSUED_TR.test(l)
+  const issuer = lines[0] && !issued(lines[0]) ? lines.shift()! : null
+  const dateLine = lines.find(issued)
+  const date = dateLine ? (dateLine.match(ISSUED_TR)?.[1] ?? dateLine.replace(ISSUED, "")).split("·")[0]!.trim() || null : null
+  return { name, issuer, date }
 }
 
 function truncation(section: { items: string[][]; showAllText: string | null } | undefined) {
-  const total = section?.showAllText?.match(/\d+/)?.[0]
-  return section && total ? { shown: section.items.length, total: Number(total) } : undefined
+  const total = Number(section?.showAllText?.match(/\d+/)?.[0])
+  // "Yetenekler (2)" iki beceri gösterirken kısaltma yok.
+  return section && total > section.items.length ? { shown: section.items.length, total } : undefined
 }
 
 export function profileFromSnapshot(s: ProfileSnapshot): LinkedInProfileData {

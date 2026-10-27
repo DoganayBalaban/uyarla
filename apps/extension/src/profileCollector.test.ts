@@ -1,85 +1,98 @@
 /** @vitest-environment jsdom */
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
-import type { ProfileSnapshot } from "@uyarla/core/linkedin/snapshot"
+import { profileFromSnapshot, type ProfileSnapshot } from "@uyarla/core/linkedin/snapshot"
 import { collectProfileSnapshot } from "./profileCollector.js"
 
 /**
- * Sayfa betiğini Chrome'un yaptığı gibi çalıştırıyor: kaynağı kopyalanıp
- * sayfada yeniden kuruluyor. Fonksiyona bir içe aktarma ya da dış değişken
- * sızarsa burada patlıyor (son inceleme). Sayfa LinkedIn'in yapısına göre
- * kurgusal; gerçek sayfayla deneme mağazaya yüklemeden önce ayrıca yapılıyor.
+ * Gerçek LinkedIn profil sayfasının (Ekim 2026, "sdui" kartları) main
+ * kısmından anonim örnek: yapı aynen, kişisel metin uydurma profil (DOG-157).
+ * Sayfa betiği Chrome'un yaptığı gibi kaynağından kuruluyor; fonksiyona bir
+ * içe aktarma ya da dış değişken sızarsa burada patlıyor.
  */
+// jsdom ortamında import.meta.url dosya adresi değil; yol paket kökünden.
+const OWN_PAGE = readFileSync(resolve(process.cwd(), "src/fixtures/linkedin-own-profile.html"), "utf8")
 const runInPage = () => new Function(`return (${collectProfileSnapshot.toString()})()`)() as ProfileSnapshot
 
-const v = (text: string) => `<span aria-hidden="true">${text}</span><span class="visually-hidden">${text}</span>`
-const lines = (...texts: string[]) => texts.map((t) => `<div>${v(t)}</div>`).join("")
-const section = (id: string, body: string, showAll = "") =>
-  `<section><div id="${id}"></div><div>${v(id === "about" ? "Hakkında" : id)}</div>${body}${showAll ? `<a href="/in/deniz/details/${id}/">${showAll}</a>` : ""}</section>`
 
-const page = (own: boolean) => `
-  <main>
-    <h1>Deniz Aksoy</h1>
-    <div class="text-body-medium">Performance Marketing Specialist | Google Ads, GA4</div>
-    ${own ? "<button>Add profile section</button>" : "<button>Connect</button>"}
-    ${section("about", lines("E-ticaret markalarında Meta ve Google kampanyaları yönetiyorum."))}
-    ${section(
-      "experience",
-      `<ul>
-        <li>
-          ${lines("Performance Marketing Specialist", "Moda Sepeti · Full-time", "Mar 2023 - Present · 2 yrs 8 mos", "İstanbul, Türkiye · Hybrid")}
-          <ul>
-            <li>${lines("• Meta kampanyalarını aylık 1,2 milyon TL bütçeyle yönettim.")}</li>
-            <li>${lines("Skills: Google Ads · GA4")}</li>
-          </ul>
-        </li>
-        <li>
-          ${lines("Parlak Dijital Ajans", "2 yrs 6 mos")}
-          <ul>
-            <li>${lines("Digital Marketing Executive", "Full-time", "Eyl 2022 - Şub 2023 · 6 mos", "• Ajans müşterilerinin raporlarını hazırladım.")}</li>
-            <li>${lines("Digital Marketing Intern", "Internship", "Eyl 2021 - Ağu 2022 · 1 yr")}</li>
-          </ul>
-        </li>
-      </ul>`,
-      "Show all 4 experiences",
-    )}
-    ${section("skills", `<ul><li>${lines("Google Ads")}</li><li>${lines("Looker Studio")}</li></ul>`, "Show all 25 skills")}
-  </main>`
+/** Başkasının profilinde düzenleme bağlantıları yok; rol satırları şirket bağlantısında. */
+function asSomeoneElse() {
+  for (const a of Array.from(document.querySelectorAll('a[href*="/edit"]'))) a.setAttribute("href", "/company/1/")
+}
 
-describe("collectProfileSnapshot (sayfada, kaynağından kurulmuş)", () => {
+describe("collectProfileSnapshot (gerçek sayfa yapısı, anonim)", () => {
   beforeEach(() => {
-    document.body.innerHTML = page(true)
+    document.body.innerHTML = OWN_PAGE
   })
 
-  it("runs self-contained and reads the visible lines once, not the screen reader copy", () => {
+  it("recognizes the user's own profile by its edit links, whatever the button text", () => {
+    expect(runInPage().own).toBe(true)
+    asSomeoneElse()
+    expect(runInPage().own).toBe(false)
+  })
+
+  it("reads the name, the headline and the whole about text", () => {
     const s = runInPage()
-    expect(s.own).toBe(true)
     expect(s.name).toBe("Deniz Aksoy")
-    expect(s.headline).toBe("Performance Marketing Specialist | Google Ads, GA4")
-    expect(s.about).toBe("E-ticaret markalarında Meta ve Google kampanyaları yönetiyorum.")
-    expect(s.sections.skills).toEqual({ items: [["Google Ads"], ["Looker Studio"]], showAllText: "Show all 25 skills" })
-  })
-
-  it("keeps a single role with a description and a skills line as one role", () => {
-    const [first] = runInPage().sections.experience!.items
-    expect(first).toEqual([
-      "Performance Marketing Specialist",
-      "Moda Sepeti · Full-time",
-      "Mar 2023 - Present · 2 yrs 8 mos",
-      "İstanbul, Türkiye · Hybrid",
-      "• Meta kampanyalarını aylık 1,2 milyon TL bütçeyle yönettim.",
-      "Skills: Google Ads · GA4",
+    expect(s.headline).toBe("Performance Marketing Specialist | Google Ads • GA4 • Looker Studio")
+    expect(s.about?.split("\n")).toEqual([
+      "Performans pazarlamasında e-ticaret markalarıyla çalışıyorum.",
+      "Meta ve Google kampanyalarını bütçe, hedef kitle ve kreatif tarafıyla yönetiyorum.",
+      "Moda Sepeti'nde aylık 1,2 milyon TL bütçeyi yönetiyorum.",
+      "Daha önce Parlak Dijital Ajans'ta perakende müşterilerinin kampanyalarını yürüttüm.",
+      "Marmara Üniversitesi İşletme bölümünden mezunum.",
+      "Veriyle karar vermeyi ve ölçülebilir büyümeyi seviyorum.",
     ])
   })
 
-  it("splits several roles at one company, each with the company name", () => {
+  it("reads each role's lines in order with the full description, without the 'see more' button", () => {
     const items = runInPage().sections.experience!.items
-    expect(items).toHaveLength(3)
-    expect(items[1]!.slice(0, 2)).toEqual(["Digital Marketing Executive", "Parlak Dijital Ajans"])
-    expect(items[2]!.slice(0, 2)).toEqual(["Digital Marketing Intern", "Parlak Dijital Ajans"])
+    expect(items).toHaveLength(4)
+    expect(items[0]).toEqual([
+      "Performance Marketing Specialist",
+      "Moda Sepeti · Tam zamanlı",
+      "Mar 2023 - Devam ediyor · 2 yıl 8 ay",
+      "İstanbul, Türkiye · Uzaktan",
+      "Devam ediyor",
+      "via Parlak İK",
+      "Meta kampanyalarını aylık 1,2 milyon TL bütçeyle yönettim.",
+    ])
+    expect(items.flat().join(" ")).not.toMatch(/daha fazla|…/)
   })
 
-  it("says someone else's profile is not the user's own", () => {
-    document.body.innerHTML = page(false)
-    expect(runInPage().own).toBe(false)
+  it("takes the totals of shortened sections from their headings", () => {
+    const s = runInPage()
+    expect(s.sections.skills).toMatchObject({ items: [expect.arrayContaining(["Google Ads"]), expect.arrayContaining(["Looker Studio"])] })
+    expect(s.sections.skills!.showAllText).toMatch(/25/)
+    expect(s.sections.certifications!.showAllText).toMatch(/5/)
   })
+
+  it("turns the page into profile data end to end", () => {
+    const p = profileFromSnapshot(runInPage())
+    expect(p.experience).toHaveLength(4)
+    expect(p.experience[0]).toEqual({
+      title: "Performance Marketing Specialist",
+      company: "Moda Sepeti",
+      dateRange: "Mar 2023 - Devam ediyor · 2 yıl 8 ay",
+      location: "İstanbul, Türkiye · Uzaktan",
+      description: "via Parlak İK\nMeta kampanyalarını aylık 1,2 milyon TL bütçeyle yönettim.",
+    })
+    expect(p.experience[1]).toEqual({
+      title: "Digital Marketing Executive",
+      company: "Parlak Dijital Ajans",
+      dateRange: "Eyl 2021 - Şub 2023 · 1 yıl 6 ay",
+      location: null,
+      description: "Perakende müşterilerinin arama kampanyalarını yönettim.",
+    })
+    expect(p.education).toEqual([{ school: "Marmara Üniversitesi", degree: "Lisans, İşletme", dateRange: "Eyl 2017 – Haz 2021", description: "Not: 3.10" }])
+    expect(p.certifications).toEqual([
+      { name: "Google Ads Search Certification", issuer: "Google", date: "Oca 2024" },
+      { name: "Google Analytics Sertifikası", issuer: "Skillshop", date: "Oca 2024" },
+    ])
+    expect(p.skills).toEqual(["Google Ads", "Looker Studio"])
+    expect(p.languages).toEqual([])
+    expect(p.truncated).toEqual({ certifications: { shown: 2, total: 5 }, skills: { shown: 2, total: 25 } })
+  })
+
 })

@@ -69,4 +69,23 @@ describe("profileFromSnapshot", () => {
     )
     expect(p.experience[0]).toEqual({ title: "Kıdemli Uzman", company: "Moda Sepeti", dateRange: "Mar 2023 - Present · 2 yrs", location: null, description: "• Kampanya yönettim." })
   })
+
+  it("drops LinkedIn's standalone 'ongoing' badge line from the description (Ekim 2026 sayfası)", () => {
+    const p = profileFromSnapshot(
+      snapshot({ sections: { experience: { items: [["Uzman", "Acme · Tam zamanlı", "Mar 2023 - Devam ediyor · 2 yıl", "İstanbul, Türkiye · Uzaktan", "Devam ediyor", "• Kampanya yönettim."]], showAllText: null } } }),
+    )
+    expect(p.experience[0]!.description).toBe("• Kampanya yönettim.")
+  })
+
+  it("reads Turkish certificate dates and drops the credential line (Ekim 2026 sayfası)", () => {
+    const p = profileFromSnapshot(
+      snapshot({ sections: { certifications: { items: [["Google Ads Search Certification", "Google", "Oca 2024 tarihinde verildi", "Yeterlilik Kimliği ABC-123", "Google Ads ve +2 yetenek"]], showAllText: null } } }),
+    )
+    expect(p.certifications[0]).toEqual({ name: "Google Ads Search Certification", issuer: "Google", date: "Oca 2024" })
+  })
+
+  it("records a section as shortened only when its total is more than what was read", () => {
+    const p = profileFromSnapshot(snapshot({ sections: { skills: { items: [["Google Ads"], ["GA4"]], showAllText: "Yetenekler (2)" } } }))
+    expect(p.truncated.skills).toBeUndefined()
+  })
 })
