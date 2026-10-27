@@ -46,7 +46,6 @@ export const DELETION_ORDER = [
   "jobPosting",
   "session",
   "account",
-  "accessPass",
   "subscription",
   "excludedConcept",
   "emailLog",

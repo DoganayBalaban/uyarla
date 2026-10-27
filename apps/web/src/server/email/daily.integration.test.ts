@@ -140,39 +140,6 @@ describe("runDailyEmails · sıklık sınırı (DOG-126)", () => {
   })
 })
 
-describe("runDailyEmails · erişim dönemi (DOG-129)", () => {
-  async function pass(userId: string, startsAt: Date, endsAt: Date) {
-    return prisma.accessPass.create({ data: { userId, plan: "week", providerOrderId: `o-${Math.random()}`, startsAt, endsAt } })
-  }
-
-  it("tells a user who used the pass that it ends in two days, once", async () => {
-    process.env.EMAIL_LINK_SECRET = "test-anahtar"
-    const user = await makeUser("donem")
-    await pass(user.id, new Date(NOW.getTime() - 5 * DAY), new Date(NOW.getTime() + 36 * 36e5))
-    await makeAnalysis(user.id, { adapted: true })
-    const client = fakeClient()
-    expect(await runDailyEmails(prisma, { now: NOW, dryRun: false, client })).toMatchObject({ sent: 1, byKind: { access_ending: 1 } })
-    expect(client.emails.send.mock.calls[0]![0].subject).toContain("tarihinde bitiyor")
-    // Kapatılabilen kategori: tek tıkla çıkış başlıkları var.
-    expect(client.emails.send.mock.calls[0]![0].headers).toHaveProperty("List-Unsubscribe-Post")
-    delete process.env.EMAIL_LINK_SECRET
-    expect((await runDailyEmails(prisma, { now: new Date(NOW.getTime() + 3 * 36e5), dryRun: true })).byKind).toEqual({})
-  })
-
-  it("stays silent for an unused pass, a stacked pass and an opted-out user", async () => {
-    const unused = await makeUser("kullanmayan")
-    await pass(unused.id, new Date(NOW.getTime() - 5 * DAY), new Date(NOW.getTime() + DAY))
-    const stacked = await makeUser("ust-uste")
-    const first = await pass(stacked.id, new Date(NOW.getTime() - 5 * DAY), new Date(NOW.getTime() + DAY))
-    await pass(stacked.id, first.endsAt, new Date(first.endsAt.getTime() + 7 * DAY))
-    await makeAnalysis(stacked.id, { adapted: true })
-    const off = await makeUser("kapatan", { accessUpdates: false })
-    await pass(off.id, new Date(NOW.getTime() - 5 * DAY), new Date(NOW.getTime() + DAY))
-    await makeAnalysis(off.id, { adapted: true })
-    expect((await runDailyEmails(prisma, { now: NOW, dryRun: true })).byKind).toEqual({})
-  })
-})
-
 describe("runDailyEmails · ürün haberleri (DOG-130)", () => {
   const created = new Date(NOW.getTime() - 3 * DAY)
 

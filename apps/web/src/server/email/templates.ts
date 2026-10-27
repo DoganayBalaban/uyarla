@@ -174,58 +174,6 @@ export function applicationRemindersEmail(bundle: ReminderBundle, unsubscribe: s
   }
 }
 
-// ——— Erişim dönemi (DOG-129) ———
-
-/** "Dönemin bitmesine 2 gün kaldı": bilgilendirme; otomatik yenileme yok, satış dili yok. */
-export function accessEndingEmail(endsAt: Date, unsubscribe: string | null = null): EmailContent {
-  const date = DATE.format(endsAt)
-  const subject = `Erişim dönemin ${date} tarihinde bitiyor`
-  const html = emailShell({
-    title: subject,
-    preheader: "Dönem otomatik yenilenmiyor; bitince ücretsiz plana dönersin.",
-    content: [
-      h1(subject),
-      p(
-        "Dönem otomatik yenilenmiyor; bitince ücretsiz plana dönersin. Analizlerin, uyarlamaların ve başvuru panon yerinde kalır. Bekleyen bir ilan varsa bitmeden uyarlayabilirsin.",
-      ),
-      emailButton(`${siteUrl()}/analyze`, "Uyarlamaya devam et"),
-    ].join("\n"),
-    footer: footer("Bu bilgiyi erişim dönemin için bir kez gönderiyoruz.", unsubscribe, "erişim dönemi bilgilerini"),
-  })
-  return {
-    subject,
-    html,
-    text: [
-      subject,
-      "",
-      "Dönem otomatik yenilenmiyor; bitince ücretsiz plana dönersin. Analizlerin, uyarlamaların ve başvuru panon yerinde kalır.",
-      `${siteUrl()}/analyze`,
-      "",
-      footerText(unsubscribe),
-    ].join("\n"),
-  }
-}
-
-/** Ödeme bildirimi işlenince (işlem e-postası). Makbuz Polar'dan ayrıca geliyor. */
-export function accessOpenedEmail(endsAt: Date): EmailContent {
-  const date = DATE.format(endsAt)
-  const subject = "Erişimin açıldı"
-  return {
-    subject,
-    html: emailShell({
-      title: subject,
-      preheader: `${date} tarihine kadar istediğin kadar uyarlayabilirsin.`,
-      content: [
-        h1(subject),
-        p(`<strong>${escapeHtml(date)}</strong> tarihine kadar istediğin kadar CV uyarlayabilir ve ön yazı oluşturabilirsin. Dönem otomatik yenilenmiyor.`),
-        emailButton(`${siteUrl()}/analyze`, "Uyarlamaya başla"),
-      ].join("\n"),
-      footer: `Ödeme makbuzun Polar'dan ayrıca gelir. Bir sorun varsa bu e-postayı yanıtla.<br>${SIGN}`,
-    }),
-    text: [subject, "", `${date} tarihine kadar istediğin kadar CV uyarlayabilirsin. Dönem otomatik yenilenmiyor.`, `${siteUrl()}/analyze`].join("\n"),
-  }
-}
-
 /** Hesap silindikten sonra (işlem e-postası); adres yalnızca bu gönderim için bellekte. */
 export function accountDeletedEmail(): EmailContent {
   const subject = "Hesabın ve verilerin silindi"

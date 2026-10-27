@@ -29,7 +29,6 @@ export const EXPORTED_TABLES = [
   "jobPosting",
   "analysis",
   "adaptation",
-  "accessPass",
   "subscription",
   "excludedConcept",
   "emailLog",
@@ -53,19 +52,17 @@ export interface UserDataExport {
   resumes: ExportedResume[]
   jobPostings: Record<string, unknown>[]
   analyses: Record<string, unknown>[]
-  /**
-   * Erişim dönemleri (DOG-34). Polar sipariş numarası da var (DOG-78): iade ya
-   * da fatura talebinde kullanıcının elindeki tek referans. Erişim anahtarı
-   * değil; Polar'ın gönderdiği makbuzda da yazıyor.
-   */
-  accessPasses: Record<string, unknown>[]
   /** "Tüm ilanlarda hariç tut" listesi (DOG-90). */
   excludedConcepts: Record<string, unknown>[]
   /** Gönderilen e-postalar: tür ve zaman, içerik yok (DOG-128). */
   emailLogs: Record<string, unknown>[]
   /** Ürün haberleri onayının geçmişi (DOG-130). */
   emailConsents: Record<string, unknown>[]
-  /** Abonelik geçmişi (DOG-158): paket, durum, dönem sonu. Polar kimliği iade/fatura için. */
+  /**
+   * Abonelik geçmişi (DOG-158): paket, durum, dönem sonu. Polar abonelik
+   * kimliği iade ya da fatura talebinde kullanıcının elindeki referans (DOG-78);
+   * erişim anahtarı değil.
+   */
   subscriptions: Record<string, unknown>[]
   /**
    * LinkedIn profil denetimleri: okunan profil, teşhis ve yazımlar (DOG-157).
@@ -76,7 +73,7 @@ export interface UserDataExport {
 }
 
 export async function collectUserData(db: Db, userId: string, now = new Date()): Promise<UserDataExport> {
-  const [user, accounts, sessions, resumes, jobPostings, analyses, accessPasses, excludedConcepts, emailLogs, emailConsents, linkedinAudits, subscriptions] = await Promise.all([
+  const [user, accounts, sessions, resumes, jobPostings, analyses, excludedConcepts, emailLogs, emailConsents, linkedinAudits, subscriptions] = await Promise.all([
     db.user.findUniqueOrThrow({
       where: { id: userId },
       select: {
@@ -147,11 +144,6 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
         adaptation: { select: { draft: true, coverLetter: true, status: true, createdAt: true } },
       },
     }),
-    db.accessPass.findMany({
-      where: { userId },
-      select: { plan: true, startsAt: true, endsAt: true, status: true, providerOrderId: true, createdAt: true },
-      orderBy: { createdAt: "asc" },
-    }),
     db.excludedConcept.findMany({
       where: { userId },
       select: { term: true, createdAt: true },
@@ -198,7 +190,6 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
     resumes,
     jobPostings,
     analyses,
-    accessPasses,
     excludedConcepts,
     emailLogs,
     emailConsents,

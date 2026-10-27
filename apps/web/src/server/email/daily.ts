@@ -4,7 +4,6 @@ import { reminderWhere } from "@/server/applicationReminders"
 import type { MailClient } from "@/server/mail"
 import { linksFor, sendLogged, type OutgoingEmail } from "@/server/email/send"
 import {
-  accessEndingEmail,
   activationFreeUnusedEmail,
   activationNoAnalysisEmail,
   applicationRemindersEmail,
@@ -33,8 +32,6 @@ export const WEEKLY_CAP = 3
 const DAILY_GAP_HOURS = 20
 const HOUR = 36e5
 const DAY = 24 * HOUR
-/** "Dönemin bitmesine 2 gün kaldı" penceresi. */
-const ACCESS_ENDING_HOURS = 48
 /** Aktivasyon: kayıttan en az 2, en çok 14 gün sonra. */
 const ACTIVATION_MIN_DAYS = 2
 const ACTIVATION_MAX_DAYS = 14
@@ -60,7 +57,6 @@ interface Candidate {
   userId: string
   email: string
   reminders: Required<ReminderBundle> & { refs: Array<{ kind: string; refId: string }>; followupIds: string[] }
-  accessEnding: { passId: string; endsAt: Date } | null
   activation: "activation_no_analysis" | "activation_free_unused" | null
 }
 
@@ -77,7 +73,7 @@ export async function runDailyEmails(
 
   const posting = { select: { position: true, company: true, rawText: true, deadline: true } } as const
   const yesterday = addDays(today, -1)
-  const [followups, interviews, deadlines, passes, newUsers, thanks] = await Promise.all([
+  const [followups, interviews, deadlines, newUsers, thanks] = await Promise.all([
     db.analysis.findMany({
       where: reminderWhere(now),
       select: { id: true, stageChangedAt: true, user: { select: { id: true, email: true } }, jobPosting: posting },
@@ -108,14 +104,6 @@ export async function runDailyEmails(
         adaptation: { select: { id: true } },
       },
     }),
-    db.accessPass.findMany({
-      where: {
-        status: "active",
-        endsAt: { gt: now, lte: new Date(now.getTime() + ACCESS_ENDING_HOURS * HOUR) },
-        user: { ...registered, accessUpdates: true },
-      },
-      select: { id: true, userId: true, startsAt: true, endsAt: true, user: { select: { email: true } } },
-    }),
     productEmails
       ? db.user.findMany({
           where: {
@@ -142,7 +130,7 @@ export async function runDailyEmails(
   const candidate = (userId: string, email: string) => {
     let c = candidates.get(userId)
     if (!c) {
-      c = { userId, email, reminders: { followups: [], interviews: [], deadlines: [], thanks: [], refs: [], followupIds: [] }, accessEnding: null, activation: null }
+      c = { userId, email, reminders: { followups: [], interviews: [], deadlines: [], thanks: [], refs: [], followupIds: [] }, activation: null }
       candidates.set(userId, c)
     }
     return c
@@ -157,7 +145,6 @@ export async function runDailyEmails(
             { kind: "interview_reminder", refId: { in: interviews.map((a) => a.id) } },
             { kind: "deadline_reminder", refId: { in: deadlines.map((a) => a.id) } },
             { kind: "thanks_reminder", refId: { in: thanks.map((a) => a.id) } },
-            { kind: "access_ending", refId: { in: passes.map((p) => p.id) } },
             { kind: { in: ["activation_no_analysis", "activation_free_unused"] }, userId: { in: newUsers.map((u) => u.id) } },
           ],
         },
@@ -207,20 +194,6 @@ export async function runDailyEmails(
     c.reminders.thanks.push({ position: positionName(a.jobPosting.position, a.jobPosting.rawText), company: a.jobPosting.company?.trim() || null })
     c.reminders.refs.push({ kind: "thanks_reminder", refId: a.id })
   }
-  for (const pass of passes) {
-    if (already(pass.userId, "access_ending", pass.id)) continue
-    // Ardına eklenmiş bir dönem varsa erişim aslında bitmiyor.
-    const next = await db.accessPass.count({
-      where: { userId: pass.userId, status: "active", id: { not: pass.id }, startsAt: { gte: new Date(pass.endsAt.getTime() - 60e3) } },
-    })
-    if (next > 0) continue
-    // Dönemi hiç kullanmamış kullanıcıya bitişi hatırlatmak satışa döner.
-    const used = await db.adaptation.count({
-      where: { analysis: { userId: pass.userId }, status: { not: "failed" }, createdAt: { gte: pass.startsAt } },
-    })
-    if (used === 0) continue
-    candidate(pass.userId, pass.user.email).accessEnding = { passId: pass.id, endsAt: pass.endsAt }
-  }
   for (const u of newUsers) {
     const adapted = u.analyses.some((a) => a.adaptation)
     const analyzed = u.analyses.some((a) => a.status === "done")
@@ -258,25 +231,17 @@ export async function runDailyEmails(
             ...applicationRemindersEmail(r, linksFor(c.userId, "applicationReminders")?.page ?? null),
             log: r.refs,
           }
-        : c.accessEnding
+        : c.activation
           ? {
               userId: c.userId,
               to: c.email,
-              category: "accessUpdates",
-              ...accessEndingEmail(c.accessEnding.endsAt, linksFor(c.userId, "accessUpdates")?.page ?? null),
-              log: [{ kind: "access_ending", refId: c.accessEnding.passId }],
+              category: "productNews",
+              ...(c.activation === "activation_no_analysis" ? activationNoAnalysisEmail : activationFreeUnusedEmail)(
+                linksFor(c.userId, "productNews")?.page ?? null,
+              ),
+              log: [{ kind: c.activation }],
             }
-          : c.activation
-            ? {
-                userId: c.userId,
-                to: c.email,
-                category: "productNews",
-                ...(c.activation === "activation_no_analysis" ? activationNoAnalysisEmail : activationFreeUnusedEmail)(
-                  linksFor(c.userId, "productNews")?.page ?? null,
-                ),
-                log: [{ kind: c.activation }],
-              }
-            : null
+          : null
     if (!email) continue
     // Ertelenen bir mülakat hatırlatması yarın işe yaramaz; mülakat sınırdan muaf.
     const urgent = r.interviews.length > 0
@@ -284,8 +249,8 @@ export async function runDailyEmails(
       result.deferred++
       continue
     }
-    // Aynı gün kalan öteki türler (erişim, aktivasyon) ertesi güne.
-    if (email.category === "applicationReminders" && (c.accessEnding || c.activation)) result.deferred++
+    // Aynı gün kalan aktivasyon e-postası ertesi güne.
+    if (email.category === "applicationReminders" && c.activation) result.deferred++
     for (const l of email.log) result.byKind[l.kind] = (result.byKind[l.kind] ?? 0) + 1
     if (options.dryRun) continue
 

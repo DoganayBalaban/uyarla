@@ -18,18 +18,13 @@ export function NotificationsSection() {
   const busy = profile.isPending || save.isPending
   const data = profile.data
 
+  // "Erişim dönemi bilgileri" kalktı (DOG-158): deneme hatırlatmasını ve makbuzları Polar gönderiyor.
   const rows: Array<{ key: "applicationReminders" | "accessUpdates" | "productNews"; checked: boolean; title: string; text: string }> = [
     {
       key: "applicationReminders",
       checked: data?.applicationReminders ?? true,
       title: "Başvuru hatırlatmaları",
       text: "Mülakatından bir gün önce, uyarladığın bir ilanın son başvuru günü yaklaşınca ve \"Başvuruldu\"ya aldığın bir başvurudan bir hafta ses çıkmazsa. Her biri bir kez.",
-    },
-    {
-      key: "accessUpdates",
-      checked: data?.accessUpdates ?? true,
-      title: "Erişim dönemi bilgileri",
-      text: "Paket aldıysan, dönemin bitmesine iki gün kala bir kez. Dönem otomatik yenilenmiyor.",
     },
     {
       key: "productNews",
