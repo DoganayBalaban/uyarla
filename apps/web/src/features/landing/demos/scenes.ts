@@ -7,6 +7,7 @@
 
 import { searchLinks, type SearchSite } from "@uyarla/core/jobSuggest/links"
 import { SITE_NOTE } from "@/features/jobs/siteNotes"
+import { DEMO_BASE_SCORE, DEMO_BULLETS, DEMO_REQUIREMENTS, demoScore } from "@/features/landing/demos/demoScript"
 
 export const SCENE_COMPANY = "Kuzey Yazılım"
 export const SCENE_ROLE = "Frontend Geliştirici"
@@ -65,4 +66,51 @@ export const APPLY_SCENE = {
   answerEvidence: ["Müşteri paneli projesinde React kullandım", "Kod incelemelerine katıldım"],
   letter: `Müşteri paneli projesinde React kullandım ve kod incelemelerine katıldım. ${SCENE_COMPANY}'daki arayüz geliştirme işine bu deneyimle başlamak isterim.`,
   letterEvidence: "Kod incelemelerine katıldım",
+}
+
+export const BOARD_PHASES = [
+  { id: "card", ms: 1200 },
+  { id: "drag", ms: 1500 },
+  { id: "gate", ms: 2500 },
+  { id: "adapted", ms: 1800 },
+  { id: "interview", ms: 1500 },
+  { id: "note", ms: 3000 },
+  { id: "hold", ms: 1500 },
+] as const
+export type BoardPhase = (typeof BOARD_PHASES)[number]["id"]
+
+/** Kapının açıldığı an: vitrin ve test için. */
+export const BOARD_GATE_MS = 1200 + 1500 + 1250
+
+/** Takip et sahnesi: kapı sayısı ve skorlar mevcut demo senaryosundan; alıcının adı uydurulmuyor. */
+export const BOARD_SCENE = {
+  position: `${SCENE_ROLE} · ${SCENE_COMPANY}`,
+  missingMust: DEMO_REQUIREMENTS.filter((r) => r.importance === "Zorunlu" && !r.evidence).length,
+  before: DEMO_BASE_SCORE,
+  after: demoScore(Object.fromEntries(DEMO_BULLETS.filter((b) => !b.flag).map((b) => [b.id, "new" as const]))),
+  note: "Merhaba [ad], bugünkü görüşme için teşekkür ederim. Kod incelemesi pratiklerinizi dinlemek ilgimi artırdı.",
+}
+
+export const INTERVIEW_PHASES = [
+  { id: "question", ms: 1500 },
+  { id: "evidence", ms: 1200 },
+  { id: "answer", ms: 3500 },
+  { id: "feedback", ms: 2500 },
+  { id: "flag", ms: 2000 },
+  { id: "hold", ms: 1500 },
+] as const
+export type InterviewPhase = (typeof INTERVIEW_PHASES)[number]["id"]
+
+/** Hazırlan sahnesi: soru CV'deki kanıtla; cevaptaki "12 geliştirici" CV'de yok, işaretleniyor. */
+export const INTERVIEW_SCENE = {
+  question: "Bir kod incelemesinde görüş ayrılığını nasıl çözdün?",
+  evidence: "Kod incelemelerine katıldım",
+  answer: "12 geliştiricilik ekipte bir bileşenin yapısında anlaşamadık. İki seçeneği örnekle yazıp incelemede karşılaştırdık ve birini seçtik.",
+  star: [
+    { label: "Durum", ok: true },
+    { label: "Görev", ok: true },
+    { label: "Eylem", ok: true },
+    { label: "Sonuç", ok: false },
+  ],
+  notOnPaper: "12 geliştirici",
 }

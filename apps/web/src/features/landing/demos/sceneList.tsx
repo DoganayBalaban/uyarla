@@ -3,11 +3,15 @@ import { HERO_PHASES } from "@/features/landing/demos/demoScript"
 import { HeroFilm } from "@/features/landing/demos/HeroDemo"
 import { JobSearchFilm } from "@/features/landing/demos/JobSearchDemo"
 import { ApplyFilm } from "@/features/landing/demos/ApplyDemo"
-import { APPLY_PHASES, JOB_PHASES } from "@/features/landing/demos/scenes"
+import { BoardFilm } from "@/features/landing/demos/BoardDemo"
+import { InterviewFilm } from "@/features/landing/demos/InterviewDemo"
+import { APPLY_PHASES, BOARD_PHASES, INTERVIEW_PHASES, JOB_PHASES } from "@/features/landing/demos/scenes"
 
 /** Vitrinde (`/ui/landing`) kare kare bakılan sahneler. */
 export const SCENE_LIST: { id: string; name: string; phases: readonly Phase[]; Film: (p: { ms: number }) => React.ReactNode }[] = [
   { id: "hero", name: "Hero", phases: HERO_PHASES, Film: HeroFilm },
   { id: "bul", name: "Bul", phases: JOB_PHASES, Film: JobSearchFilm },
   { id: "basvur", name: "Başvur", phases: APPLY_PHASES, Film: ApplyFilm },
+  { id: "takip", name: "Takip et", phases: BOARD_PHASES, Film: BoardFilm },
+  { id: "hazirlan", name: "Hazırlan", phases: INTERVIEW_PHASES, Film: InterviewFilm },
 ]
