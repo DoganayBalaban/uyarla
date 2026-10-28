@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { DEMO_BULLETS } from "@/features/landing/demos/demoScript"
-import { APPLY_SCENE, ELIF_CV, JOB_SCENE, inCv } from "@/features/landing/demos/scenes"
+import { DEMO_BULLETS, DEMO_REQUIREMENTS } from "@/features/landing/demos/demoScript"
+import { APPLY_SCENE, BOARD_SCENE, ELIF_CV, JOB_SCENE, inCv } from "@/features/landing/demos/scenes"
 
 /** Sahnelerin örnek verisi uydurma kuralına uyuyor mu (spec §6). */
 describe("Elif's sample CV", () => {
@@ -32,5 +32,15 @@ describe("apply scene", () => {
     expect(APPLY_SCENE.answer.length).toBeLessThanOrEqual(APPLY_SCENE.limit)
     expect(APPLY_SCENE.limit).toBe(140)
     for (const q of [...APPLY_SCENE.answerEvidence, APPLY_SCENE.letterEvidence]) expect(inCv(q), q).toBe(true)
+  })
+})
+
+describe("board scene", () => {
+  it("takes the gate count and scores from the existing demo story", () => {
+    const missingMust = DEMO_REQUIREMENTS.filter((r) => r.importance === "Zorunlu" && !r.evidence).length
+    expect(BOARD_SCENE.missingMust).toBe(missingMust)
+    expect(BOARD_SCENE.before).toBe(28)
+    expect(BOARD_SCENE.after).toBe(41)
+    expect(BOARD_SCENE.note).toContain("[ad]")
   })
 })
