@@ -14,6 +14,8 @@ import { JobSitesStrip } from "@/features/landing/components/JobSitesStrip"
 import type { PlanOffer } from "@/features/billing/plans"
 import { JOURNEY, accessChips, type StepId } from "@/features/landing/journey"
 import { JourneyRail } from "@/features/landing/components/JourneyRail"
+import { JobSearchDemo } from "@/features/landing/demos/JobSearchDemo"
+import { ApplyDemo } from "@/features/landing/demos/ApplyDemo"
 import s from "@/features/landing/landing.module.css"
 
 /**
@@ -105,7 +107,10 @@ const PERSONAS = [
 
 
 /** Her adımın sahnesi; sahnesi gelmemiş adım yalnızca metinle (PR 2–4 dolduruyor). */
-const STEP_VISUAL: Partial<Record<StepId, React.ReactNode>> = {}
+const STEP_VISUAL: Partial<Record<StepId, React.ReactNode>> = {
+  bul: <JobSearchDemo />,
+  basvur: <ApplyDemo />,
+}
 
 function AccessChips({ step }: { step: (typeof JOURNEY)[number] }) {
   return (

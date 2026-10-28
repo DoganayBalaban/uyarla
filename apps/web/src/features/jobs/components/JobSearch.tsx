@@ -13,15 +13,8 @@ import { Label } from "@/components/ui/label"
 import { useSaveProfile } from "@/features/account/api"
 import type { SkillGap } from "@/features/dashboard/skillGaps"
 import { addTerm } from "@/features/jobs/suggestions"
+import { SITE_NOTE } from "@/features/jobs/siteNotes"
 import { jobUrlSchema } from "@/features/analysis/schema"
-
-/** Her sitenin ne aradığı; bağlantı kurallarıyla aynı (jobSuggest/links). */
-const SITE_NOTE: Record<SearchSite, (city: string | null) => string> = {
-  kariyernet: () => "Şehri sitede seçersin",
-  linkedin: (city) => (city ? `${city}, Türkiye` : "Tüm Türkiye"),
-  jooble: (city) => city ?? "Tüm Türkiye",
-  careerjet: (city) => city ?? "Tüm Türkiye",
-}
 
 /** Uzaktan ve hibrit, sitelerde arama terimi olarak en geniş sonucu veriyor. */
 const WORK_MODES = ["uzaktan", "hibrit"]
