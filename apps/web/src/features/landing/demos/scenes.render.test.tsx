@@ -1,12 +1,13 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { loopMs } from "@/features/landing/demos/demoScript"
-import { APPLY_PHASES, APPLY_SCENE, BOARD_GATE_MS, BOARD_PHASES, BOARD_SCENE, INTERVIEW_PHASES, INTERVIEW_SCENE, JOB_PHASES, LINKEDIN_PHASES, LINKEDIN_SCENE } from "@/features/landing/demos/scenes"
+import { APPLY_PHASES, APPLY_SCENE, BOARD_GATE_MS, BOARD_PHASES, BOARD_SCENE, INTERVIEW_PHASES, INTERVIEW_SCENE, JOB_PHASES, LINKEDIN_PHASES, LINKEDIN_SCENE, CHECK_PHASES } from "@/features/landing/demos/scenes"
 import { JobSearchDemo, JobSearchFilm } from "@/features/landing/demos/JobSearchDemo"
 import { ApplyFilm } from "@/features/landing/demos/ApplyDemo"
 import { BoardFilm } from "@/features/landing/demos/BoardDemo"
 import { InterviewFilm } from "@/features/landing/demos/InterviewDemo"
 import { LinkedInFilm } from "@/features/landing/demos/LinkedInDemo"
+import { CheckFilm } from "@/features/landing/demos/CheckFilm"
 
 /** Her sahne son karesinde (hareket azaltma) anlamlı metni gösteriyor. */
 describe("scenes (DOG-160)", () => {
@@ -64,5 +65,15 @@ describe("scenes (DOG-160)", () => {
 
   it("lets the visitor pause a scene (WCAG 2.2.2)", () => {
     expect(renderToStaticMarkup(<JobSearchDemo />)).toContain('aria-label="Sahneyi duraklat"')
+  })
+
+  it("check film flags the overstated bullet, then unlocks the download once decided (DOG-162)", () => {
+    const first = renderToStaticMarkup(<CheckFilm ms={500} />)
+    expect(first).toContain("Kontrol et")
+    expect(first).toContain("liderlik")
+    expect(first).toContain("İşaretli maddeye karar verene kadar indirme kapalı.")
+    const last = renderToStaticMarkup(<CheckFilm ms={loopMs(CHECK_PHASES) - 1} />)
+    expect(last).toContain("Eski hâli kalacak")
+    expect(last).toContain("Karar verildi, indirme açık.")
   })
 })
