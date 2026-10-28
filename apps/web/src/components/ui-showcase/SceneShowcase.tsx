@@ -18,6 +18,7 @@ export function SceneShowcase() {
       <ToggleGroup
         type="single"
         variant="outline"
+        className="flex-wrap"
         value={id}
         onValueChange={(v) => {
           if (!v) return

@@ -1366,6 +1366,10 @@
   font-size: 0.75rem;
   color: var(--blue-text);
 }
+/* Sahnenin yüksekliği aşamaya göre değişiyor; ortalanınca her aşamada zıplıyordu. */
+.journeyFeature {
+  align-items: start;
+}
 .journeySection {
   /* Üst çubuk ve şerit: bağlantıyla gelinen başlık onların altında kalmasın. */
   scroll-margin-top: 7.5rem;

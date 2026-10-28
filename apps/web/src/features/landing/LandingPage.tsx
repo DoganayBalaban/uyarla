@@ -18,6 +18,7 @@ import { JobSearchDemo } from "@/features/landing/demos/JobSearchDemo"
 import { ApplyDemo } from "@/features/landing/demos/ApplyDemo"
 import { BoardDemo } from "@/features/landing/demos/BoardDemo"
 import { InterviewDemo } from "@/features/landing/demos/InterviewDemo"
+import { LinkedInDemo } from "@/features/landing/demos/LinkedInDemo"
 import s from "@/features/landing/landing.module.css"
 
 /**
@@ -114,6 +115,7 @@ const STEP_VISUAL: Partial<Record<StepId, React.ReactNode>> = {
   basvur: <ApplyDemo />,
   takip: <BoardDemo />,
   hazirlan: <InterviewDemo />,
+  gorunur: <LinkedInDemo />,
 }
 
 function AccessChips({ step }: { step: (typeof JOURNEY)[number] }) {
@@ -150,15 +152,15 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
         {/* ——— Hero ——— */}
         <section className={s.hero}>
           <div className={`${s.container} ${s.heroText}`}>
-            <Link href="/login" className={s.heroBadge}>
+            <Link href="#hazirlan" className={s.heroBadge}>
               <span className={s.heroBadgeTag}>Yeni</span>
-              CV kütüphanesi<span className={s.heroBadgeMore}>: CV&apos;ni bir kez yükle, her ilanda seç</span>
+              Mülakat hazırlığı ve LinkedIn denetimi<span className={s.heroBadgeMore}>: başvurunun her adımında</span>
               <ArrowRight size={14} aria-hidden />
             </Link>
             <h1 className={s.heroTitle}>Her ilana, doğru CV.</h1>
             <p className={s.heroLead}>
-              İlanı yapıştır, CV'nin ne kadar uyduğunu gör ve tek tıkla ilana özel hâle getir.
-              Deneyimini uydurmadan.
+              İlanı yapıştır, CV'nin ne kadar uyduğunu gör ve ilana özel hâle getir; sonra başvur, takip et,
+              mülakata hazırlan. Deneyimini uydurmadan.
             </p>
             <div className={s.heroActions}>
               <Link href="/analyze" className={`${s.buttonPrimary} ${s.buttonLarge}`}>
@@ -202,72 +204,75 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
           </div>
         </section>
 
-        {/* ——— Başvuru yolculuğu (DOG-160) ——— */}
-        <JourneyRail steps={JOURNEY} />
-        {JOURNEY.map((step, i) => (
-          <section key={step.id} id={step.id} className={`${s.section} ${s.journeySection} ${i % 2 === 1 ? s.sectionTinted : ""}`}>
-            <div className={s.container}>
-              {step.id === "uyarla" ? (
-                <>
-                  <div className={s.sectionHeader}>
-                    <span className={s.sectionLabel}>
-                      {step.number} · {step.name}
-                    </span>
-                    <h2 className={s.h2}>{step.title}</h2>
-                    <p className={s.sectionLead}>{step.text}</p>
-                    <AccessChips step={step} />
-                  </div>
-                  {FEATURES.map((o, j) => (
-                    <div key={o.label} className={`${s.feature} ${j % 2 === 1 ? s.featureReversed : ""}`}>
-                      <div className={s.featureText}>
-                        <span className={s.sectionLabel}>{o.label}</span>
-                        <h3 className={s.h2}>{o.title}</h3>
-                        <p className={s.sectionLead}>{o.text}</p>
-                        <Ticks items={o.bullets} />
+        {/* ——— Başvuru yolculuğu (DOG-160) ———
+            Şerit ve bölümler tek kapta: şeridin yapışkanlığı yolculuk bitince bitiyor. */}
+        <div>
+          <JourneyRail steps={JOURNEY} />
+          {JOURNEY.map((step, i) => (
+            <section key={step.id} id={step.id} className={`${s.section} ${s.journeySection} ${i % 2 === 1 ? s.sectionTinted : ""}`}>
+              <div className={s.container}>
+                {step.id === "uyarla" ? (
+                  <>
+                    <div className={s.sectionHeader}>
+                      <span className={s.sectionLabel}>
+                        {step.number} · {step.name}
+                      </span>
+                      <h2 className={s.h2}>{step.title}</h2>
+                      <p className={s.sectionLead}>{step.text}</p>
+                      <AccessChips step={step} />
+                    </div>
+                    {FEATURES.map((o, j) => (
+                      <div key={o.label} className={`${s.feature} ${j % 2 === 1 ? s.featureReversed : ""}`}>
+                        <div className={s.featureText}>
+                          <span className={s.sectionLabel}>{o.label}</span>
+                          <h3 className={s.h2}>{o.title}</h3>
+                          <p className={s.sectionLead}>{o.text}</p>
+                          <Ticks items={o.bullets} />
+                        </div>
+                        <div className={s.featureVisual}>{o.visual}</div>
                       </div>
-                      <div className={s.featureVisual}>{o.visual}</div>
+                    ))}
+                    <div className={`${s.feature} ${s.featureReversed}`}>
+                      <div className={s.featureText}>
+                        <span className={s.sectionLabel}>Çıktı</span>
+                        <h3 className={s.h2}>Başvurmaya hazır, ATS'nin okuyabildiği CV.</h3>
+                        <p className={s.sectionLead}>
+                          Uyarlanmış CV'ni sade, tek sütunlu bir şablonla PDF veya DOCX olarak indir. Süs yok,
+                          tablo yok; hem insan hem yazılım rahat okur.
+                        </p>
+                        <FileChips />
+                      </div>
+                      <div className={s.featureVisual}>
+                        <Photo
+                          id="photo-output"
+                          file="output.png"
+                          ratio="5 / 4"
+                          description="Masada basılı CV ya da ekranda açık PDF; elde kahve, sade kompozisyon"
+                          alt="Kafe masasında basılı bir CV, açık dizüstü ve bir fincan Türk kahvesi"
+                          sizes="(max-width: 900px) 92vw, 560px"
+                          className={s.outputPhoto}
+                        />
+                      </div>
                     </div>
-                  ))}
-                  <div className={`${s.feature} ${s.featureReversed}`}>
+                  </>
+                ) : (
+                  <div className={`${s.feature} ${s.journeyFeature} ${i % 2 === 1 ? s.featureReversed : ""}`}>
                     <div className={s.featureText}>
-                      <span className={s.sectionLabel}>Çıktı</span>
-                      <h3 className={s.h2}>Başvurmaya hazır, ATS'nin okuyabildiği CV.</h3>
-                      <p className={s.sectionLead}>
-                        Uyarlanmış CV'ni sade, tek sütunlu bir şablonla PDF veya DOCX olarak indir. Süs yok,
-                        tablo yok; hem insan hem yazılım rahat okur.
-                      </p>
-                      <FileChips />
+                      <span className={s.sectionLabel}>
+                        {step.number} · {step.name}
+                      </span>
+                      <h2 className={s.h2}>{step.title}</h2>
+                      <p className={s.sectionLead}>{step.text}</p>
+                      <Ticks items={step.bullets} />
+                      <AccessChips step={step} />
                     </div>
-                    <div className={s.featureVisual}>
-                      <Photo
-                        id="photo-output"
-                        file="output.png"
-                        ratio="5 / 4"
-                        description="Masada basılı CV ya da ekranda açık PDF; elde kahve, sade kompozisyon"
-                        alt="Kafe masasında basılı bir CV, açık dizüstü ve bir fincan Türk kahvesi"
-                        sizes="(max-width: 900px) 92vw, 560px"
-                        className={s.outputPhoto}
-                      />
-                    </div>
+                    {STEP_VISUAL[step.id] && <div className={s.featureVisual}>{STEP_VISUAL[step.id]}</div>}
                   </div>
-                </>
-              ) : (
-                <div className={`${s.feature} ${i % 2 === 1 ? s.featureReversed : ""}`}>
-                  <div className={s.featureText}>
-                    <span className={s.sectionLabel}>
-                      {step.number} · {step.name}
-                    </span>
-                    <h2 className={s.h2}>{step.title}</h2>
-                    <p className={s.sectionLead}>{step.text}</p>
-                    <Ticks items={step.bullets} />
-                    <AccessChips step={step} />
-                  </div>
-                  {STEP_VISUAL[step.id] && <div className={s.featureVisual}>{STEP_VISUAL[step.id]}</div>}
-                </div>
-              )}
-            </div>
-          </section>
-        ))}
+                )}
+              </div>
+            </section>
+          ))}
+        </div>
 
         {/* ——— Dürüstlük ——— */}
         <section id="durustluk" className={s.honesty}>
@@ -303,6 +308,11 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
                     icon: "check" as const,
                     b: "Son söz senin",
                     m: "Metinler yapay zekâyla yeniden yazılır; hiçbiri onayın olmadan CV'ne girmez.",
+                  },
+                  {
+                    icon: "mail" as const,
+                    b: "Gönderimi sen yaparsın",
+                    m: "Ön yazı, form yanıtı ve mesajları biz göndermeyiz; kopyalayıp sen gönderirsin.",
                   },
                 ].map((i) => (
                   <div key={i.b} className={s.principle}>

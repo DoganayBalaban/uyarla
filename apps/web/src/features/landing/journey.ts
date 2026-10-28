@@ -25,8 +25,8 @@ export const JOURNEY: JourneyStep[] = [
     number: "01",
     name: "Bul",
     title: "Doğru ilanı bul.",
-    text: "Profilindeki rol ve şehirle hazır arama kurar; Kariyer.net, LinkedIn, Jooble ve Careerjet'i doğru sorguyla açar.",
-    bullets: ["Rolün ve becerilerin sorguya eklenir", "Her sitenin kendi kuralına göre bağlantı", "İlanları biz toplamayız; site kendi sayfasında açılır"],
+    text: "Hedef rolünle hazır arama kurar; şehri ve becerilerini tek tıkla eklersin. Kariyer.net, LinkedIn, Jooble ve Careerjet'i doğru sorguyla açar.",
+    bullets: ["Becerilerin öneri olarak gelir, istediğini eklersin", "Her sitenin kendi kuralına göre bağlantı", "İlanları biz toplamayız; site kendi sayfasında açılır"],
     rows: [{ label: "İş arama bağlantıları", short: "İş arama" }],
   },
   {
@@ -47,7 +47,7 @@ export const JOURNEY: JourneyStep[] = [
     name: "Başvur",
     title: "Ön yazı ve form yanıtları hazır.",
     text: "“Kendini tanıt”, “140 karakterde neden sen” gibi form sorularını gönderdiğin CV'den yanıtlar. Karakter sınırını kod denetler.",
-    bullets: ["Sınır aşılmaz", "Her cümle CV'ne dayanır", "Biz göndermeyiz; kopyalayıp sen yapıştırırsın"],
+    bullets: ["Sınırı aşan cevap kısaltılır", "Her cümle CV'ne dayanır", "Biz göndermeyiz; kopyalayıp sen yapıştırırsın"],
     rows: [
       { label: "CV uyarlama (ön yazı ve PDF/DOCX dahil)", short: "Ön yazı" },
       { label: "Başvuru formu yanıtları", short: "Form yanıtları" },
@@ -58,8 +58,8 @@ export const JOURNEY: JourneyStep[] = [
     number: "04",
     name: "Takip et",
     title: "Başvurularını tek panoda takip et.",
-    text: "Her analiz bir kart. Skor düşükken başvurmadan önce uyarır; başvurduktan sonra takip mesajı, mülakattan sonra teşekkür notu taslağı hazırlar.",
-    bullets: ["Kaydedildi, Başvuruldu, Mülakat, Teklif", "Düşük skorda “önce uyarla” hatırlatması", "Alıcının adı uydurulmaz, [ad] olarak kalır"],
+    text: "Her analiz bir kart. Zorunlu bir gereksinim CV'nde görünmüyorsa başvurmadan önce uyarır; başvurduktan sonra takip mesajı, mülakattan sonra teşekkür notu taslağı hazırlar.",
+    bullets: ["Kaydedildi, Başvuruldu, Mülakat, Teklif", "Eksik zorunlu gereksinimde “önce uyarla” hatırlatması", "Alıcının adı uydurulmaz, [ad] olarak kalır"],
     rows: [{ label: "Başvuru panosu, takip mesajı ve teşekkür notu", short: "Pano ve mesajlar" }],
   },
   {
@@ -79,8 +79,8 @@ export const JOURNEY: JourneyStep[] = [
     number: "06",
     name: "Görünür ol",
     title: "LinkedIn profilin de hazır.",
-    text: "Profilini hedef rolüne göre denetler; başlık, hakkında ve deneyim için CV'ne dayanan öneriler yazar.",
-    bullets: ["Bölüm bölüm: Başlık, Hakkında, Deneyim, Beceriler", "Her öneri CV'ndeki bir satıra dayanır", "Eklentiyle profilini aktar (yakında)"],
+    text: "Profilini hedef rolüne göre denetler; başlık, hakkında ve deneyim için profilindeki bilgilere dayanan öneriler yazar.",
+    bullets: ["Bölüm bölüm: Başlık, Hakkında, Deneyim, Beceriler", "Her öneri profilindeki bir satıra dayanır", "Eklentiyle profilini aktar (yakında)"],
     rows: [
       { label: "LinkedIn teşhisi ve başlık önerileri", short: "Teşhis ve başlık" },
       { label: "LinkedIn hakkında ve deneyim yazımı", short: "Hakkında ve deneyim" },

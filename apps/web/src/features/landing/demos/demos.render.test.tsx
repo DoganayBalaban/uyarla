@@ -46,10 +46,12 @@ describe("HeroFilm", () => {
 })
 
 describe("feature demos", () => {
-  it("requirement list shows evidence for the opened row", () => {
+  it("requirement list opens the unmet row with its reason", () => {
     const html = renderToStaticMarkup(<RequirementDemo />)
-    expect(html).toContain("5 gereksinimden 3&#x27;ü karşılanıyor")
+    // Örnek CV'yle tutarlı (son inceleme): Jest CV'de var, eksik zorunlu WCAG.
+    expect(html).toContain("5 gereksinimden 4&#x27;ü karşılanıyor")
     expect(html).toContain("aria-expanded=\"true\"")
+    expect(html).toContain("bulunamadı")
   })
 
   it("adapt demo starts undecided at the base score", () => {
