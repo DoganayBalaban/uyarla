@@ -393,7 +393,9 @@ model Subscription {
   userId                 String
   user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   providerSubscriptionId String    @unique
-  /// month | quarter
+  /// Polar müşteri kimliği; portal bununla açılıyor (dış kimlik başka kayda gidebilir).
+  providerCustomerId     String?
+  /// month | quarter | unknown (ayarlarda olmayan ürün)
   plan                   String
   /// Polar'daki durum: trialing, active, past_due, canceled, unpaid, incomplete…
   status                 String

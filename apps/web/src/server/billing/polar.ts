@@ -20,8 +20,11 @@ export interface PolarDeps {
     success_url: string
     metadata: Record<string, string>
     locale: string
+    allow_trial: boolean
   }): Promise<{ url: string }>
-  createCustomerSession(body: { external_customer_id: string; return_url: string }): Promise<{ customer_portal_url: string }>
+  createCustomerSession(
+    body: { external_customer_id: string; return_url: string } | { customer_id: string; return_url: string },
+  ): Promise<{ customer_portal_url: string }>
   revokeSubscription(id: string): Promise<unknown>
   validateEvent(body: string, headers: Record<string, string>, secret: string): Promise<{ type: string; data: unknown }>
   isVerificationError(error: unknown): boolean
@@ -51,6 +54,7 @@ interface SubscriptionData {
   created_at?: unknown
   modified_at?: unknown
   metadata?: Record<string, unknown> | null
+  customer_id?: unknown
   customer?: { external_id?: unknown } | null
 }
 
@@ -63,7 +67,7 @@ export function createPolarProvider(
   const planOf = (productId: unknown) =>
     (Object.entries(config.products).find(([, id]) => id && id === productId)?.[0] as "month" | "quarter" | undefined) ?? null
   return {
-    async createCheckout({ userId, email, productId, plan, successUrl }) {
+    async createCheckout({ userId, email, productId, plan, successUrl, allowTrial }) {
       const checkout = await deps.createCheckout({
         products: [productId],
         external_customer_id: userId,
@@ -71,12 +75,18 @@ export function createPolarProvider(
         success_url: successUrl,
         metadata: { plan, user_id: userId },
         locale: "tr",
+        // Polar'ın kendi deneme kuralı değil, ekranda gösterdiğimiz hak geçerli.
+        allow_trial: allowTrial,
       })
       return { url: checkout.url }
     },
 
-    async createPortalSession({ userId, returnUrl }) {
-      const session = await deps.createCustomerSession({ external_customer_id: userId, return_url: returnUrl })
+    async createPortalSession({ userId, customerId, returnUrl }) {
+      // Aynı e-postayla önce açılmış Polar müşterisi başka dış kimlik taşıyabilir;
+      // bildirimden kaydettiğimiz müşteri kimliği her zaman doğru kayda gider.
+      const session = await deps.createCustomerSession(
+        customerId ? { customer_id: customerId, return_url: returnUrl } : { external_customer_id: userId, return_url: returnUrl },
+      )
       return { url: session.customer_portal_url }
     },
 
@@ -96,20 +106,22 @@ export function createPolarProvider(
       if (!SUBSCRIPTION_EVENTS.has(event.type)) return null
       const s = event.data as SubscriptionData
       const userId = s.metadata?.user_id || s.customer?.external_id
-      const plan = planOf(s.product_id)
       const modifiedAt = date(s.modified_at) ?? date(s.created_at)
-      if (typeof s.id !== "string" || typeof userId !== "string" || !userId || !plan || typeof s.status !== "string" || !modifiedAt) return null
+      if (typeof s.id !== "string" || typeof s.status !== "string" || !modifiedAt) return null
+      // Sessizce düşmesin (son inceleme): para alınmış ama erişim açılmamış olabilir.
+      if (typeof userId !== "string" || !userId) return { type: "unmatched", subscriptionId: s.id, reason: "user" }
       return {
         type: "subscription",
         subscriptionId: s.id,
         userId,
-        plan,
+        plan: planOf(s.product_id) ?? "unknown",
         status: s.status,
         currentPeriodEnd: date(s.current_period_end),
         cancelAtPeriodEnd: s.cancel_at_period_end === true,
         trialEnd: date(s.trial_end),
         endedAt: date(s.ended_at),
         modifiedAt,
+        customerId: typeof s.customer_id === "string" && s.customer_id ? s.customer_id : null,
       }
     },
   }

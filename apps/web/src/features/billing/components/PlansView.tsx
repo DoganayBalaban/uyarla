@@ -60,6 +60,8 @@ export function PlansTable({
   onChoose: (c: Choice) => void
 }) {
   const saving = savingsPercent(plans)
+  // Hakkı yoksa deneme vaat edilmiyor; durum yüklenmeden ilk ziyaretçi varsayılıyor.
+  const trial = status?.trialEligible !== false
   const columns: Column[] = [{ key: "free", plan: null }, ...plans.map((p) => ({ key: p.key, plan: p }))]
   const name = (c: Column) => (c.plan ? PLAN_LABEL[c.plan.key] : "Ücretsiz")
   const badge = (c: Column) => (isPopular(c.key) && saving !== null ? <Badge>En popüler · %{saving} tasarruf</Badge> : null)
@@ -91,7 +93,7 @@ export function PlansTable({
                   <p className="m-0 mt-2 font-semibold">{name(c)}</p>
                   <p className="m-0 mt-1 text-2xl font-semibold tabular-nums">{price(c.plan)}</p>
                   <p className="m-0 text-xs font-normal text-muted-foreground">{billed(c.plan)}</p>
-                  {c.plan && <p className="m-0 mt-1 text-xs font-medium text-brand-green">7 gün ücretsiz deneme</p>}
+                  {c.plan && trial && <p className="m-0 mt-1 text-xs font-medium text-brand-green">7 gün ücretsiz deneme</p>}
                 </th>
               ))}
             </tr>
@@ -134,7 +136,7 @@ export function PlansTable({
                   <p className="m-0 text-2xl font-semibold tabular-nums">{price(c.plan)}</p>
                   <p className="m-0 text-xs text-muted-foreground">
                     {billed(c.plan)}
-                    {c.plan ? " · 7 gün ücretsiz deneme" : ""}
+                    {c.plan && trial ? " · 7 gün ücretsiz deneme" : ""}
                   </p>
                 </div>
                 <ul className="m-0 list-none space-y-1.5 p-0">

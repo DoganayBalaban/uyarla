@@ -25,6 +25,7 @@ const event = (userId: string, over: Partial<SubscriptionEvent> = {}): Subscript
   trialEnd: new Date("2026-11-04T10:00:00Z"),
   endedAt: null,
   modifiedAt: new Date("2026-10-28T10:00:00Z"),
+  customerId: null,
   ...over,
 })
 
@@ -44,6 +45,13 @@ describe("applySubscriptionEvent (DOG-158)", () => {
     await applySubscriptionEvent(prisma, event(u.id, { status: "canceled", endedAt: new Date("2026-11-01T00:00:00Z"), modifiedAt: new Date("2026-11-01T00:00:00Z") }))
     expect(await applySubscriptionEvent(prisma, event(u.id, { status: "active", modifiedAt: new Date("2026-10-30T00:00:00Z") }))).toBe("stale")
     expect((await prisma.subscription.findFirstOrThrow({ where: { userId: u.id } })).status).toBe("canceled")
+  })
+
+  it("keeps the stored Polar customer when a later event lacks it", async () => {
+    const u = await makeUser("musteri")
+    await applySubscriptionEvent(prisma, event(u.id, { customerId: "cus_1" }))
+    await applySubscriptionEvent(prisma, event(u.id, { status: "active", modifiedAt: new Date("2026-10-29T10:00:00Z") }))
+    expect(await prisma.subscription.findFirstOrThrow({ where: { userId: u.id }, select: { status: true, providerCustomerId: true } })).toEqual({ status: "active", providerCustomerId: "cus_1" })
   })
 
   it("ignores an event for a deleted user", async () => {
