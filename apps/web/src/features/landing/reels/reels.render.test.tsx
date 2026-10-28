@@ -11,7 +11,9 @@ describe("ReelFrame (DOG-162)", () => {
     expect(start).not.toContain("Skorunu ücretsiz gör")
     const end = renderToStaticMarkup(<ReelFrame reel={reel} ms={reelLength(reel) - 1} />)
     expect(end).toContain("Skorunu ücretsiz gör")
-    expect(end).toContain("uyarla.com.tr/t")
+    // Ziyaretçi doğrudan ana adrese gidiyor; ayrı TikTok yolu kalktı (DOG-162).
+    expect(end).toContain("uyarla.com.tr")
+    expect(end).not.toContain("uyarla.com.tr/t")
   })
 
   it("draws every video's first and last frame", () => {
