@@ -152,17 +152,17 @@ export const DEMO_REQUIREMENTS: {
   {
     text: "Birim testi (Jest, Testing Library)",
     importance: "Zorunlu",
-    why: "CV'nde “test”, “Jest” ya da bir karşılığı geçmiyor. Yaptıysan bir maddede anlatman yeter.",
+    evidence: { quote: "Bileşenler için Jest ile birim testleri yazdım", section: "Deneyim" },
   },
   {
     text: "Web erişilebilirliği (WCAG)",
-    importance: "Tercihen",
+    importance: "Zorunlu",
     why: "“Erişilebilirlik”, “a11y” veya “WCAG” bulunamadı.",
   },
   {
     text: "Ekiple kod incelemesi",
     importance: "Tercihen",
-    evidence: { quote: "Haftalık kod incelemelerine katıldım", section: "Deneyim" },
+    evidence: { quote: "Kod incelemelerine katıldım", section: "Deneyim" },
   },
 ]
 

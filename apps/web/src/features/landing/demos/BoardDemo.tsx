@@ -37,8 +37,8 @@ export function BoardFilm({ ms }: { ms: number }) {
           <p className="font-semibold">Önce uyarlamak ister misin?</p>
           <p className="mt-1 text-muted-foreground">{BOARD_SCENE.missingMust} zorunlu gereksinim CV&apos;nde görünmüyor.</p>
           <div className="mt-2 flex justify-end gap-2 text-xs">
-            <span className="rounded border px-2 py-1">Yine de başvur</span>
-            <span className="rounded bg-primary px-2 py-1 text-primary-foreground">Uyarla</span>
+            <span className="rounded border px-2 py-1">Yine de başvurdum</span>
+            <span className="rounded bg-primary px-2 py-1 text-primary-foreground">Önce uyarla</span>
           </div>
         </div>
       )}

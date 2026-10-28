@@ -15,7 +15,8 @@ export function JobSearchFilm({ ms }: { ms: number }) {
     <div className="space-y-4">
       <div>
         <p className={s.mockLabel}>İş ara</p>
-        <p className={s.mockTitle}>{JOB_SCENE.profile.join(" · ")}</p>
+        <p className={s.mockTitle}>Hedef rolün: {JOB_SCENE.role}</p>
+        <p className={s.mockSmall}>Eklediğin: {JOB_SCENE.added.join(" · ")}</p>
       </div>
       <div className="flex min-h-10 items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm">
         <Search size={14} className="shrink-0 text-muted-foreground" />

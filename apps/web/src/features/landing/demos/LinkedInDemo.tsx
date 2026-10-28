@@ -6,7 +6,9 @@ import { Scene } from "@/features/landing/demos/useScenePlayer"
 import { SECTION_LABELS, STATUS_LABELS } from "@/features/linkedin/sections"
 import s from "@/features/landing/landing.module.css"
 
-const NEW_HEADLINE = LINKEDIN_SCENE.parts.map((p) => p.text).join(" · ")
+/** Ürünün başlık biçimi: "Unvan | beceri, beceri" (core/linkedin/suggest). */
+const [ROLE_PART, ...SKILL_PARTS] = LINKEDIN_SCENE.parts
+const NEW_HEADLINE = `${ROLE_PART!.text} | ${SKILL_PARTS.map((p) => p.text).join(", ")}`
 
 /** Görünür ol sahnesinin `ms` anındaki karesi. Saf. */
 export function LinkedInFilm({ ms }: { ms: number }) {
@@ -36,7 +38,7 @@ export function LinkedInFilm({ ms }: { ms: number }) {
           {LINKEDIN_SCENE.parts.map((p) => (
             <li key={p.text} className="flex flex-wrap items-baseline gap-1.5">
               <span className="font-medium">{p.text}</span>
-              <span className="rounded bg-brand-green/10 px-1.5 py-0.5">{p.source.kind === "cv" ? `CV: “${p.source.quote}”` : "Hedef rolün"}</span>
+              <span className="rounded bg-brand-green/10 px-1.5 py-0.5">{p.source.kind === "profile" ? `Profilinde: “${p.source.quote}”` : "Hedef rolün"}</span>
             </li>
           ))}
         </ul>
@@ -51,7 +53,7 @@ export function LinkedInFilm({ ms }: { ms: number }) {
 export function LinkedInDemo() {
   return (
     <Scene
-      label="LinkedIn denetimi: “Yazılım Geliştirici” başlığı geliştirilebilir bulunuyor ve hedef rol ile CV'deki becerilerden “Frontend Geliştirici · React, TypeScript · Kod incelemesi” olarak yeniden yazılıyor."
+      label="LinkedIn denetimi: “Yazılım Geliştirici” başlığında hedef unvan geçmiyor; başlık hedef rol ve profildeki becerilerden “Frontend Geliştirici | React, TypeScript, Kod incelemesi” olarak yeniden yazılıyor."
       phases={LINKEDIN_PHASES}
     >
       {(ms) => <LinkedInFilm ms={ms} />}

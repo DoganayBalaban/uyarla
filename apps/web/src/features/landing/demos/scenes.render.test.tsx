@@ -50,4 +50,19 @@ describe("scenes (DOG-160)", () => {
     expect(html).toContain("Hedef rolün")
     expect(html).toContain("Yakında")
   })
+
+  it("uses the product's own wording and sources (son inceleme)", () => {
+    const linkedin = renderToStaticMarkup(<LinkedInFilm ms={loopMs(LINKEDIN_PHASES) - 1} />)
+    expect(linkedin).toContain("Frontend Geliştirici | React, TypeScript, Kod incelemesi")
+    expect(linkedin).toContain("Başlığında hedef unvanın")
+    expect(linkedin).toContain("Profilinde:")
+    expect(linkedin).not.toContain("CV: ")
+    const gate = renderToStaticMarkup(<BoardFilm ms={BOARD_GATE_MS} />)
+    expect(gate).toContain("Yine de başvurdum")
+    expect(gate).toContain("Önce uyarla")
+  })
+
+  it("lets the visitor pause a scene (WCAG 2.2.2)", () => {
+    expect(renderToStaticMarkup(<JobSearchDemo />)).toContain('aria-label="Sahneyi duraklat"')
+  })
 })

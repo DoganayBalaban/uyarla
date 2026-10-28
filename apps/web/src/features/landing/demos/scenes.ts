@@ -41,9 +41,13 @@ export type JobPhase = (typeof JOB_PHASES)[number]["id"]
 
 const JOB_KEYWORDS = "frontend geliştirici react hibrit"
 
-/** Bul sahnesi: profil, sorgu, dört sitenin kendi arama sayfası. Sonuç sayısı yok; ilanı biz getirmiyoruz. */
-export const JOB_SCENE: { profile: string[]; keywords: string; links: { site: SearchSite; label: string; note: string }[] } = {
-  profile: [SCENE_ROLE, SCENE_CITY, "hibrit"],
+/**
+ * Bul sahnesi: hedef rol profilden, şehir ve çalışma şekli kullanıcının eklediği;
+ * dört sitenin kendi arama sayfası. Sonuç sayısı yok; ilanı biz getirmiyoruz.
+ */
+export const JOB_SCENE: { role: string; added: string[]; keywords: string; links: { site: SearchSite; label: string; note: string }[] } = {
+  role: SCENE_ROLE,
+  added: [SCENE_CITY, "hibrit"],
   keywords: JOB_KEYWORDS,
   links: searchLinks({ keywords: JOB_KEYWORDS, city: SCENE_CITY }).map((l) => ({ site: l.site, label: l.label, note: SITE_NOTE[l.site](SCENE_CITY) })),
 }
@@ -62,7 +66,7 @@ export type ApplyPhase = (typeof APPLY_PHASES)[number]["id"]
 export const APPLY_SCENE = {
   question: "140 karakterde neden sen?",
   limit: 140,
-  answer: "React ile müşteri paneli geliştirdim. Kod incelemelerine katıldım, yeni gelen geliştiricilere yardımcı oldum.",
+  answer: "Müşteri paneli projesinde React kullandım. Kod incelemelerine katıldım, yeni gelen geliştiricilere yardımcı oldum.",
   answerEvidence: ["Müşteri paneli projesinde React kullandım", "Kod incelemelerine katıldım"],
   letter: `Müşteri paneli projesinde React kullandım ve kod incelemelerine katıldım. ${SCENE_COMPANY}'daki arayüz geliştirme işine bu deneyimle başlamak isterim.`,
   letterEvidence: "Kod incelemelerine katıldım",
@@ -124,17 +128,18 @@ export const LINKEDIN_PHASES = [
 ] as const
 export type LinkedInPhase = (typeof LINKEDIN_PHASES)[number]["id"]
 
-/** Görünür ol sahnesi: yeni başlığın her parçası ya hedef rol ya CV'deki bir satır. */
+/** Görünür ol sahnesi: yeni başlığın her parçası ya hedef rol ya profildeki bir satır (Elif'in profili CV'siyle aynı). */
 export const LINKEDIN_SCENE: {
   before: string
   reason: string
-  parts: { text: string; source: { kind: "target" } | { kind: "cv"; quote: string } }[]
+  parts: { text: string; source: { kind: "target" } | { kind: "profile"; quote: string } }[]
 } = {
   before: "Yazılım Geliştirici",
-  reason: "Hedef rolünü ve öne çıkan becerini söylemiyor.",
+  /** Ürünün denetim metni (core/linkedin/audit headline_target). */
+  reason: `Başlığında hedef unvanın (“${SCENE_ROLE}”) geçmiyor; işe alımcılar unvanla arıyor.`,
   parts: [
     { text: SCENE_ROLE, source: { kind: "target" } },
-    { text: "React, TypeScript", source: { kind: "cv", quote: "React, TypeScript" } },
-    { text: "Kod incelemesi", source: { kind: "cv", quote: "Kod incelemelerine katıldım" } },
+    { text: "React, TypeScript", source: { kind: "profile", quote: "React, TypeScript" } },
+    { text: "Kod incelemesi", source: { kind: "profile", quote: "Kod incelemelerine katıldım" } },
   ],
 }

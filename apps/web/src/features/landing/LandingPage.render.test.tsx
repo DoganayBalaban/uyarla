@@ -31,4 +31,8 @@ describe("LandingPage journey (DOG-160)", () => {
     expect(html).toContain("LinkedIn profilimi nasıl denetliyorsunuz?")
     expect(html).toContain("Gönderimi sen yaparsın")
   })
+
+  it("does not overclaim interview evidence in the FAQ (son inceleme)", () => {
+    expect(html).not.toContain("Her sorunun yanında")
+  })
 })

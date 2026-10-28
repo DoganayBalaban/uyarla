@@ -17,7 +17,8 @@ export function RequirementDemo() {
   const inView = useInView(ref, { once: true, amount: 0.4 })
   const reduced = useReducedMotionAfterMount()
   const shown = inView || reduced
-  const [open, setOpen] = useState<string | null>(DEMO_REQUIREMENTS[2]?.text ?? null)
+  // Açık gelen satır: karşılanmayan gereksinim, "neden eksik" görünsün.
+  const [open, setOpen] = useState<string | null>(DEMO_REQUIREMENTS.find((r) => !r.evidence)?.text ?? null)
   const matched = DEMO_REQUIREMENTS.filter((r) => r.evidence).length
 
   return (
