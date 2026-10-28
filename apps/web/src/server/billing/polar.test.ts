@@ -29,6 +29,7 @@ const subscription = (over: Record<string, unknown> = {}) => ({
   created_at: "2026-10-28T10:00:00Z",
   modified_at: "2026-10-28T10:00:05Z",
   metadata: { plan: "quarter", user_id: "user_1" },
+  customer_id: "cus_1",
   customer: { external_id: "user_1" },
   ...over,
 })
@@ -43,6 +44,7 @@ describe("polar provider", () => {
       productId: "prod_m",
       plan: "month",
       successUrl: "https://uyarla.com.tr/plans/thanks",
+      allowTrial: false,
     })
     expect(result.url).toBe("https://sandbox.polar.sh/checkout/abc")
     expect(d.createCheckout).toHaveBeenCalledWith({
@@ -52,6 +54,8 @@ describe("polar provider", () => {
       success_url: "https://uyarla.com.tr/plans/thanks",
       metadata: { plan: "month", user_id: "user_1" },
       locale: "tr",
+      // Deneme hakkını Polar değil biz söylüyoruz (son inceleme): ekrandaki etiketle aynı.
+      allow_trial: false,
     })
   })
 
@@ -67,6 +71,7 @@ describe("polar provider", () => {
       trialEnd: new Date("2026-11-04T10:00:00Z"),
       endedAt: null,
       modifiedAt: new Date("2026-10-28T10:00:05Z"),
+      customerId: "cus_1",
     })
   })
 
@@ -88,12 +93,13 @@ describe("polar provider", () => {
     expect(e).toMatchObject({ userId: "user_1" })
   })
 
-  it("ignores an unknown product, an order, a subscription without our user", async () => {
-    expect(await provider(event("subscription.updated", subscription({ product_id: "prod_x" }))).parseWebhook("{}", {})).toBeNull()
+  it("keeps an unknown product's status as plan 'unknown' and reports a subscription without our user (son inceleme)", async () => {
+    // Fiyat değişince eski üründeki abonenin iptali/iadesi düşmesin; erişim kuralı plana bakmıyor.
+    expect(await provider(event("subscription.updated", subscription({ product_id: "prod_x" }))).parseWebhook("{}", {})).toMatchObject({ type: "subscription", plan: "unknown", status: "trialing" })
+    const noUser = subscription({ metadata: {}, customer: { external_id: null } })
+    expect(await provider(event("subscription.updated", noUser)).parseWebhook("{}", {})).toEqual({ type: "unmatched", subscriptionId: "sub_1", reason: "user" })
     expect(await provider(event("order.paid", { id: "ord_1" })).parseWebhook("{}", {})).toBeNull()
     expect(await provider(event("checkout.created", {})).parseWebhook("{}", {})).toBeNull()
-    const noUser = subscription({ metadata: {}, customer: { external_id: null } })
-    expect(await provider(event("subscription.updated", noUser)).parseWebhook("{}", {})).toBeNull()
   })
 
   it("ignores event types the SDK does not know instead of failing", async () => {
@@ -109,8 +115,11 @@ describe("polar provider", () => {
   it("opens the customer portal for the user and revokes a subscription", async () => {
     const d = deps()
     const p = provider(d)
-    expect(await p.createPortalSession({ userId: "user_1", returnUrl: "https://uyarla.com.tr/account" })).toEqual({ url: "https://sandbox.polar.sh/portal/x" })
+    expect(await p.createPortalSession({ userId: "user_1", customerId: null, returnUrl: "https://uyarla.com.tr/account" })).toEqual({ url: "https://sandbox.polar.sh/portal/x" })
     expect(d.createCustomerSession).toHaveBeenCalledWith({ external_customer_id: "user_1", return_url: "https://uyarla.com.tr/account" })
+    // Polar müşteri kaydı başka kimlik taşıyabilir (aynı e-postayla eski hesap): biliniyorsa müşteri kimliğiyle.
+    await p.createPortalSession({ userId: "user_1", customerId: "cus_1", returnUrl: "https://uyarla.com.tr/account" })
+    expect(d.createCustomerSession).toHaveBeenLastCalledWith({ customer_id: "cus_1", return_url: "https://uyarla.com.tr/account" })
     await p.revokeSubscription("sub_1")
     expect(d.revokeSubscription).toHaveBeenCalledWith("sub_1")
   })

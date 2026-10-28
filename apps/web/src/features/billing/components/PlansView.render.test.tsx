@@ -34,6 +34,8 @@ describe("PlansTable (DOG-158)", () => {
     expect(text(render(free))).toContain("7 gün ücretsiz başla")
     expect(text(render({ ...free, trialEligible: false }))).not.toContain("7 gün ücretsiz başla")
     expect(text(render({ ...free, trialEligible: false }))).toContain("Abone ol")
+    // Deneme hakkı olmayana sütun başlığında da deneme vaat edilmesin (son inceleme).
+    expect(text(render({ ...free, trialEligible: false }))).not.toContain("7 gün ücretsiz deneme")
   })
 
   it("marks the subscriber's own plan and offers to manage it", () => {

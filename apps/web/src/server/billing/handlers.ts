@@ -4,12 +4,22 @@ import { DAILY_CAP, FREE_QUOTA, currentSubscription, hasAccess, nextMonthStart, 
 import type { BillingStatus } from "@/features/billing/api"
 import { isPlanKey, type PlanOffer } from "@/features/billing/plans"
 import { plansPath } from "@/features/billing/paywall"
-import { loadUsage, userHasAccess } from "@/server/billing/entitlement"
+import { SUBSCRIPTION_SELECT, loadUsage } from "@/server/billing/entitlement"
 import { applySubscriptionEvent } from "@/server/billing/subscriptions"
 import { WebhookSignatureError, type BillingProvider } from "@/server/billing/provider"
 
 type Db = typeof prisma
 type Reply = { status: number; json: unknown }
+
+const loadSubscriptions = (db: Db, userId: string) =>
+  db.subscription.findMany({
+    where: { userId },
+    select: { ...SUBSCRIPTION_SELECT, providerCustomerId: true },
+    orderBy: { createdAt: "desc" },
+  })
+
+/** Portal için en yeni aboneliğin Polar müşteri kimliği (yoksa dış kimlikle açılıyor). */
+const customerIdOf = (subs: { providerCustomerId: string | null }[]) => subs.find((s) => s.providerCustomerId)?.providerCustomerId ?? null
 
 /**
  * Abonelik ödeme sayfası (DOG-158). Paket listede olmalı; teşekkür sayfası
@@ -32,8 +42,9 @@ export async function handleCheckout(input: {
   const offer = isPlanKey(body.plan) ? input.plans.find((p) => p.key === body.plan) : undefined
   if (!offer) return { status: 400, json: { error: "Bu paket şu an sunulmuyor.", code: "unknown_plan" } }
   const now = input.now ?? new Date()
-  if (await userHasAccess(input.db, input.userId, now)) {
-    const { url } = await input.provider.createPortalSession({ userId: input.userId, returnUrl: `${input.baseUrl}/account` })
+  const subs = await loadSubscriptions(input.db, input.userId)
+  if (hasAccess(subs, now)) {
+    const { url } = await input.provider.createPortalSession({ userId: input.userId, customerId: customerIdOf(subs), returnUrl: `${input.baseUrl}/account` })
     return { status: 200, json: { url } }
   }
   const user = await input.db.user.findUniqueOrThrow({ where: { id: input.userId }, select: { email: true } })
@@ -47,15 +58,16 @@ export async function handleCheckout(input: {
     productId: offer.productId,
     plan: offer.key,
     successUrl: `${input.baseUrl}/plans/thanks?${query}`,
+    allowTrial: trialEligible(subs),
   })
   return { status: 200, json: { url } }
 }
 
 /** "Aboneliği yönet": iptal, kart ve faturalar Polar müşteri portalında. */
 export async function handlePortal(input: { db: Db; provider: BillingProvider; userId: string; baseUrl: string }): Promise<Reply> {
-  const has = await input.db.subscription.count({ where: { userId: input.userId } })
-  if (!has) return { status: 404, json: { error: "Aboneliğin yok.", code: "no_subscription" } }
-  const { url } = await input.provider.createPortalSession({ userId: input.userId, returnUrl: `${input.baseUrl}/account` })
+  const subs = await loadSubscriptions(input.db, input.userId)
+  if (subs.length === 0) return { status: 404, json: { error: "Aboneliğin yok.", code: "no_subscription" } }
+  const { url } = await input.provider.createPortalSession({ userId: input.userId, customerId: customerIdOf(subs), returnUrl: `${input.baseUrl}/account` })
   return { status: 200, json: { url } }
 }
 
@@ -86,6 +98,11 @@ export async function handleWebhook(input: {
     throw error
   }
   if (!event) return { status: 200, json: { received: true } }
+  if (event.type === "unmatched") {
+    log("[billing] kullanıcıya eşleşmeyen abonelik bildirimi; Polar panelinden kontrol et", event)
+    return { status: 200, json: { received: true, outcome: "unmatched" } }
+  }
+  if (event.plan === "unknown") log("[billing] tanınmayan ürün; POLAR_PRODUCT_* ayarlarını kontrol et", event)
   const outcome = await applySubscriptionEvent(input.db, event)
   if (outcome === "ignored") {
     log("[billing] kullanıcısı olmayan abonelik iptal ediliyor", event)

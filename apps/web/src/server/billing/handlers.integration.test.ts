@@ -5,7 +5,7 @@ vi.mock("@sentry/nextjs", () => ({ captureMessage: vi.fn() }))
 import { prisma } from "@uyarla/db"
 import { deletionOperations } from "@/server/deleteAccount"
 import { handleCheckout, handlePortal, handleStatus, handleWebhook } from "@/server/billing/handlers"
-import { WebhookSignatureError, type BillingEvent, type BillingProvider } from "@/server/billing/provider"
+import { WebhookSignatureError, type BillingEvent, type BillingProvider, type SubscriptionEvent } from "@/server/billing/provider"
 
 const toClean: string[] = []
 const NOW = new Date("2026-11-10T12:00:00Z")
@@ -25,7 +25,7 @@ const provider = (event: BillingEvent | null | Error) => ({
   revokeSubscription: vi.fn().mockResolvedValue(undefined),
   parseWebhook: event instanceof Error ? vi.fn().mockRejectedValue(event) : vi.fn().mockResolvedValue(event),
 }) satisfies BillingProvider
-const subEvent = (userId: string, over: Partial<BillingEvent> = {}): BillingEvent => ({
+const subEvent = (userId: string, over: Partial<SubscriptionEvent> = {}): SubscriptionEvent => ({
   type: "subscription",
   subscriptionId: `sub_${userId}`,
   userId,
@@ -36,11 +36,12 @@ const subEvent = (userId: string, over: Partial<BillingEvent> = {}): BillingEven
   trialEnd: new Date("2026-11-17T12:00:00Z"),
   endedAt: null,
   modifiedAt: NOW,
+  customerId: "cus_polar",
   ...over,
 })
 const activeSub = (userId: string) =>
   prisma.subscription.create({
-    data: { userId, providerSubscriptionId: `sub_aktif_${userId}`, plan: "month", status: "active", currentPeriodEnd: new Date(NOW.getTime() + 20 * 864e5), providerUpdatedAt: NOW },
+    data: { userId, providerSubscriptionId: `sub_aktif_${userId}`, providerCustomerId: "cus_polar", plan: "month", status: "active", currentPeriodEnd: new Date(NOW.getTime() + 20 * 864e5), providerUpdatedAt: NOW },
   })
 
 describe("handleCheckout", () => {
@@ -80,7 +81,21 @@ describe("handleCheckout", () => {
     const res = await handleCheckout({ db: prisma, provider: p, plans: PLANS, userId: u.id, body: { plan: "month" }, baseUrl: "https://uyarla.com.tr", now: NOW })
     expect(res).toEqual({ status: 200, json: { url: "https://sandbox.polar.sh/portal/1" } })
     expect(p.createCheckout).not.toHaveBeenCalled()
-    expect(p.createPortalSession).toHaveBeenCalledWith({ userId: u.id, returnUrl: "https://uyarla.com.tr/account" })
+    expect(p.createPortalSession).toHaveBeenCalledWith({ userId: u.id, customerId: "cus_polar", returnUrl: "https://uyarla.com.tr/account" })
+  })
+
+  it("offers the trial at Polar only to someone who never subscribed (son inceleme)", async () => {
+    const fresh = await makeUser()
+    const p1 = provider(null)
+    await handleCheckout({ db: prisma, provider: p1, plans: PLANS, userId: fresh.id, body: { plan: "month" }, baseUrl: "x", now: NOW })
+    expect(p1.createCheckout).toHaveBeenCalledWith(expect.objectContaining({ allowTrial: true }))
+    const former = await makeUser()
+    await prisma.subscription.create({
+      data: { userId: former.id, providerSubscriptionId: `sub_eski_${former.id}`, plan: "month", status: "canceled", endedAt: new Date("2026-10-01T00:00:00Z"), providerUpdatedAt: NOW },
+    })
+    const p2 = provider(null)
+    await handleCheckout({ db: prisma, provider: p2, plans: PLANS, userId: former.id, body: { plan: "month" }, baseUrl: "x", now: NOW })
+    expect(p2.createCheckout).toHaveBeenCalledWith(expect.objectContaining({ allowTrial: false }))
   })
 })
 
@@ -108,6 +123,18 @@ describe("handleWebhook (DOG-158)", () => {
     expect((await handleWebhook({ db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW })).status).toBe(200)
     expect((await handleWebhook({ db: prisma, provider: p, rawBody: "{}", headers: {}, now: NOW })).status).toBe(200)
     expect(await prisma.subscription.count({ where: { userId: u.id } })).toBe(1)
+  })
+
+  it("stores an unknown product's subscription and warns; warns about an event without our user (son inceleme)", async () => {
+    const u = await makeUser()
+    const log = vi.fn()
+    await handleWebhook({ db: prisma, provider: provider(subEvent(u.id, { plan: "unknown" })), rawBody: "{}", headers: {}, now: NOW, log })
+    expect(await prisma.subscription.findFirst({ where: { userId: u.id }, select: { plan: true, status: true, providerCustomerId: true } })).toEqual({ plan: "unknown", status: "trialing", providerCustomerId: "cus_polar" })
+    expect(log).toHaveBeenCalledWith(expect.stringContaining("tanınmayan ürün"), expect.anything())
+    const log2 = vi.fn()
+    const res = await handleWebhook({ db: prisma, provider: provider({ type: "unmatched", subscriptionId: "sub_x", reason: "user" }), rawBody: "{}", headers: {}, now: NOW, log: log2 })
+    expect(res.status).toBe(200)
+    expect(log2).toHaveBeenCalledWith(expect.stringContaining("eşleşmeyen"), expect.anything())
   })
 
   it("a subscription event for a deleted user is revoked at Polar and logged", async () => {

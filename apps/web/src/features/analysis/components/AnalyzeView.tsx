@@ -39,7 +39,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { loginPath } from "@/lib/returnPath"
 import { plansPath } from "@/features/billing/paywall"
 import { billingStatusKey, useBillingStatus } from "@/features/billing/api"
-import { adaptHint, analysisNote } from "@/features/billing/format"
+import { adaptHint, analysisNote, analysisQuotaReached, formatDay } from "@/features/billing/format"
+import { LockedFeatureCard } from "@/features/billing/components/LockedFeature"
 import {
   startActiveAnalysis,
   updateActiveAnalysis,
@@ -182,6 +183,8 @@ export function AnalyzeView() {
   const adaptNote = registered && billing.data ? adaptHint(billing.data) : null
   // Aylık ücretsiz analiz (DOG-158); abonede ve yöneticide yok.
   const quotaNote = registered && billing.data ? analysisNote(billing.data) : null
+  // Hak bittiyse form doldurulup gönderilince paket ekranına atılmasın: düğmenin yerinde kart.
+  const quotaReached = registered && !!billing.data && analysisQuotaReached(billing.data)
   const resumes = library.data ?? []
   const libraryFull = isLibraryFull(resumes)
   const selectedResumeId = watch("resumeId") ?? null
@@ -874,20 +877,33 @@ export function AnalyzeView() {
               </p>
             )}
 
-            <Button type="submit" size="lg" disabled={busy} className="group mt-6 h-12 w-full text-base">
-              {busy ? (
-                <>
-                  <LoaderCircle className="motion-safe:animate-spin" aria-hidden />
-                  Gönderiliyor…
-                </>
-              ) : (
-                <>
-                  Skorumu gör
-                  <ArrowRight className="transition-transform group-hover:translate-x-0.5" aria-hidden />
-                </>
-              )}
-            </Button>
-            {quotaNote && <p className="m-0 mt-3 text-center text-xs text-muted-foreground">{quotaNote}</p>}
+            {quotaReached && billing.data?.quota ? (
+              <div className="mt-6">
+                <LockedFeatureCard
+                  title="Bu ayki ücretsiz analizlerin bitti"
+                  description={`${formatDay(billing.data.quota.resetsAt)} tarihinde yenilenir. Abonelikte analizler sınırsız.`}
+                  returnTo="/analyze"
+                  trial={billing.data.trialEligible}
+                />
+              </div>
+            ) : (
+              <>
+                <Button type="submit" size="lg" disabled={busy} className="group mt-6 h-12 w-full text-base">
+                  {busy ? (
+                    <>
+                      <LoaderCircle className="motion-safe:animate-spin" aria-hidden />
+                      Gönderiliyor…
+                    </>
+                  ) : (
+                    <>
+                      Skorumu gör
+                      <ArrowRight className="transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    </>
+                  )}
+                </Button>
+                {quotaNote && <p className="m-0 mt-3 text-center text-xs text-muted-foreground">{quotaNote}</p>}
+              </>
+            )}
             {!registered && (
               <p className="m-0 mt-3 text-center text-xs text-muted-foreground">
                 Skor için kayıt gerekmez. CV&apos;ni ilana uyarlamak için ücretsiz hesap açman yeterli.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { PLAN_LABEL, accessSummary, adaptHint, analysisNote, formatDay, timeLeft } from "@/features/billing/format"
+import { PLAN_LABEL, accessSummary, adaptHint, analysisNote, analysisQuotaReached, formatDay, timeLeft } from "@/features/billing/format"
 import type { BillingStatus } from "@/features/billing/api"
 
 describe("billing format", () => {
@@ -89,5 +89,15 @@ describe("adaptHint, analysisNote (DOG-158)", () => {
     expect(adaptHint({ ...subscribed(), usedLast24h: 30 })).toBe("Son 24 saatteki 30 uyarlama sınırına ulaştın.")
     expect(analysisNote(subscribed())).toBeNull()
     expect(adaptHint({ ...free({ adaptations: { used: 1, limit: 1 } }), unlimited: true })).toBeNull()
+  })
+})
+
+describe("analysisQuotaReached (son inceleme)", () => {
+  it("is true only for a free user who used this month's analyses", () => {
+    // Formu doldurup gönderince paket ekranına atılmasın: kart düğmenin yerinde.
+    expect(analysisQuotaReached(free({ analyses: { used: 5, limit: 5 } }))).toBe(true)
+    expect(analysisQuotaReached(free())).toBe(false)
+    expect(analysisQuotaReached(subscribed())).toBe(false)
+    expect(analysisQuotaReached({ ...free({ analyses: { used: 5, limit: 5 } }), unlimited: true })).toBe(false)
   })
 })

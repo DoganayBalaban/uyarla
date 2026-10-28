@@ -22,6 +22,8 @@ export async function applySubscriptionEvent(db: Db, event: SubscriptionEvent): 
     trialEnd: event.trialEnd,
     endedAt: event.endedAt,
     providerUpdatedAt: event.modifiedAt,
+    // Eski bildirimde yoksa kayıtlıyı silmesin.
+    ...(event.customerId ? { providerCustomerId: event.customerId } : {}),
   }
   return db.$transaction(async (tx) => {
     // Aynı aboneliğin eşzamanlı iki bildirimi sıraya giriyor.
