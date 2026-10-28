@@ -114,3 +114,27 @@ export const INTERVIEW_SCENE = {
   ],
   notOnPaper: "12 geliştirici",
 }
+
+export const LINKEDIN_PHASES = [
+  { id: "profile", ms: 1500 },
+  { id: "audit", ms: 2200 },
+  { id: "rewrite", ms: 3500 },
+  { id: "evidence", ms: 2000 },
+  { id: "hold", ms: 2500 },
+] as const
+export type LinkedInPhase = (typeof LINKEDIN_PHASES)[number]["id"]
+
+/** Görünür ol sahnesi: yeni başlığın her parçası ya hedef rol ya CV'deki bir satır. */
+export const LINKEDIN_SCENE: {
+  before: string
+  reason: string
+  parts: { text: string; source: { kind: "target" } | { kind: "cv"; quote: string } }[]
+} = {
+  before: "Yazılım Geliştirici",
+  reason: "Hedef rolünü ve öne çıkan becerini söylemiyor.",
+  parts: [
+    { text: SCENE_ROLE, source: { kind: "target" } },
+    { text: "React, TypeScript", source: { kind: "cv", quote: "React, TypeScript" } },
+    { text: "Kod incelemesi", source: { kind: "cv", quote: "Kod incelemelerine katıldım" } },
+  ],
+}

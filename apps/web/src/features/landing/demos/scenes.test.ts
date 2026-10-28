@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { DEMO_BULLETS, DEMO_REQUIREMENTS } from "@/features/landing/demos/demoScript"
-import { APPLY_SCENE, BOARD_SCENE, ELIF_CV, INTERVIEW_SCENE, JOB_SCENE, inCv } from "@/features/landing/demos/scenes"
+import { APPLY_SCENE, BOARD_SCENE, ELIF_CV, INTERVIEW_SCENE, JOB_SCENE, LINKEDIN_SCENE, SCENE_ROLE, inCv } from "@/features/landing/demos/scenes"
 
 /** Sahnelerin örnek verisi uydurma kuralına uyuyor mu (spec §6). */
 describe("Elif's sample CV", () => {
@@ -51,5 +51,14 @@ describe("interview scene", () => {
     expect(INTERVIEW_SCENE.answer).toContain(INTERVIEW_SCENE.notOnPaper)
     expect(inCv(INTERVIEW_SCENE.notOnPaper)).toBe(false)
     expect(INTERVIEW_SCENE.star.map((x) => x.label)).toEqual(["Durum", "Görev", "Eylem", "Sonuç"])
+  })
+})
+
+describe("linkedin scene", () => {
+  it("builds the new headline only from the target role and the CV", () => {
+    for (const p of LINKEDIN_SCENE.parts) {
+      if (p.source.kind === "cv") expect(inCv(p.source.quote), p.source.quote).toBe(true)
+      else expect(p.text).toBe(SCENE_ROLE)
+    }
   })
 })

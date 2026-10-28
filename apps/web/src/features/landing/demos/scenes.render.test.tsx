@@ -1,11 +1,12 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { loopMs } from "@/features/landing/demos/demoScript"
-import { APPLY_PHASES, APPLY_SCENE, BOARD_GATE_MS, BOARD_PHASES, BOARD_SCENE, INTERVIEW_PHASES, INTERVIEW_SCENE, JOB_PHASES } from "@/features/landing/demos/scenes"
+import { APPLY_PHASES, APPLY_SCENE, BOARD_GATE_MS, BOARD_PHASES, BOARD_SCENE, INTERVIEW_PHASES, INTERVIEW_SCENE, JOB_PHASES, LINKEDIN_PHASES, LINKEDIN_SCENE } from "@/features/landing/demos/scenes"
 import { JobSearchDemo, JobSearchFilm } from "@/features/landing/demos/JobSearchDemo"
 import { ApplyFilm } from "@/features/landing/demos/ApplyDemo"
 import { BoardFilm } from "@/features/landing/demos/BoardDemo"
 import { InterviewFilm } from "@/features/landing/demos/InterviewDemo"
+import { LinkedInFilm } from "@/features/landing/demos/LinkedInDemo"
 
 /** Her sahne son karesinde (hareket azaltma) anlamlı metni gösteriyor. */
 describe("scenes (DOG-160)", () => {
@@ -39,5 +40,14 @@ describe("scenes (DOG-160)", () => {
     expect(html).toContain("Kâğıtta yok")
     expect(html).toContain(INTERVIEW_SCENE.notOnPaper)
     expect(html).toContain("Sonuç")
+  })
+
+  it("linkedin ends with the rewritten headline, its sources and the coming-soon extension", () => {
+    const html = renderToStaticMarkup(<LinkedInFilm ms={loopMs(LINKEDIN_PHASES) - 1} />)
+    expect(html).toContain("Başlık")
+    expect(html).toContain("Geliştirilebilir")
+    for (const p of LINKEDIN_SCENE.parts) expect(html).toContain(p.text)
+    expect(html).toContain("Hedef rolün")
+    expect(html).toContain("Yakında")
   })
 })
