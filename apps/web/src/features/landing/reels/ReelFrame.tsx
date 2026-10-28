@@ -9,7 +9,11 @@ import s from "@/features/landing/landing.module.css"
 export const REEL_WIDTH = 540
 export const REEL_HEIGHT = 960
 
-export function reelLength(reel: Reel): number {
+/** Seslendirmeden gelen süreler: kapanış kartına kadar (`body`) ve kart (`end`), ms. */
+export type ReelTiming = { body: number; end: number }
+
+export function reelLength(reel: Reel, timing?: ReelTiming): number {
+  if (timing) return timing.body + timing.end
   const scene = SCENE_LIST.find((x) => x.id === reel.scene)!
   return reelSegment(scene.phases, reel.from, reel.to).length + END_MS
 }
@@ -19,9 +23,9 @@ export function reelLength(reel: Reel): number {
  * TikTok'un üst (~%7) ve alt (~%20) arayüzü bu alanların üstüne biniyor;
  * logo ve açılış cümlesi üstte, sahne ortada, alt bant boş.
  */
-export function ReelFrame({ reel, ms }: { reel: Reel; ms: number }) {
+export function ReelFrame({ reel, ms, timing }: { reel: Reel; ms: number; timing?: ReelTiming }) {
   const scene = SCENE_LIST.find((x) => x.id === reel.scene)!
-  const frame = reelFrame(reelSegment(scene.phases, reel.from, reel.to), ms)
+  const frame = reelFrame(reelSegment(scene.phases, reel.from, reel.to), ms, timing?.body)
   return (
     <div className={s.page} style={{ width: REEL_WIDTH, height: REEL_HEIGHT, overflow: "hidden", position: "relative" }}>
       <div className="flex h-full flex-col bg-gradient-to-b from-brand-blue/10 via-background to-background px-6 pt-[72px]">

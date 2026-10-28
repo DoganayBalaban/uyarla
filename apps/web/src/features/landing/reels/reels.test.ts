@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { REELS, END_MS, reelFrame, reelSegment } from "@/features/landing/reels/reels"
+import { REELS, END_MS, VOICE_CTA, reelFrame, reelSegment } from "@/features/landing/reels/reels"
 import { SCENE_LIST } from "@/features/landing/demos/sceneList"
 
 describe("reels (DOG-162)", () => {
@@ -34,5 +34,22 @@ describe("reels (DOG-162)", () => {
     expect(reelFrame(seg, 5000)).toEqual({ part: "end", sceneMs: 5999 })
     expect(reelFrame(seg, 5000 + END_MS + 10)).toEqual({ part: "end", sceneMs: 5999 })
     expect(reelSegment(phases)).toEqual({ start: 0, length: 6000 })
+  })
+
+  it("speaks the on-screen hook first and ends every video on the same call (DOG-162)", () => {
+    for (const r of REELS) {
+      expect(r.voice[0], `video ${r.n}`).toBe(r.hook)
+      expect(r.voice.join(" "), `video ${r.n}`).not.toMatch(/\/t\b|com\.tr/)
+    }
+    expect(VOICE_CTA).toBe("Skorunu ücretsiz gör: uyarla nokta com nokta te re.")
+  })
+
+  it("stretches the scene to the narration before the end card", () => {
+    const seg = { start: 1000, length: 6000 }
+    // Anlatım 12 sn: sahne yarı hızda oynar, son karesi anlatımın sonunda.
+    expect(reelFrame(seg, 0, 12000)).toEqual({ part: "scene", sceneMs: 1000 })
+    expect(reelFrame(seg, 6000, 12000)).toEqual({ part: "scene", sceneMs: 4000 })
+    expect(reelFrame(seg, 11999, 12000).sceneMs).toBe(6999)
+    expect(reelFrame(seg, 12000, 12000)).toEqual({ part: "end", sceneMs: 6999 })
   })
 })
