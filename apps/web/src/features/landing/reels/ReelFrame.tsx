@@ -35,7 +35,7 @@ export function ReelFrame({ reel, ms }: { reel: Reel; ms: number }) {
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-brand-blue px-10 text-center text-white">
           <UyarlaLogo className="h-9 w-auto" />
           <p className="m-0 text-[40px] leading-[1.1] font-extrabold tracking-tight">Skorunu ücretsiz gör</p>
-          <p className="m-0 text-2xl font-semibold opacity-90">uyarla.com.tr/t</p>
+          <p className="m-0 text-2xl font-semibold opacity-90">uyarla.com.tr</p>
           <p className="m-0 text-base opacity-80">Kayıt gerekmez · Deneyimini uydurmadan</p>
         </div>
       )}
