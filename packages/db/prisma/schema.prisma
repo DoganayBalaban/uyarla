@@ -38,7 +38,6 @@ model User {
   // Onayın geçmişi EmailConsent'te.
   productNews          Boolean @default(false)
 
-  accessPasses AccessPass[]
   emailLogs    EmailLog[]
   emailConsents EmailConsent[]
   /// "Tüm ilanlarda hariç tut" listesi (DOG-90).
@@ -293,27 +292,6 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@index([identifier])
-}
-
-enum AccessPassStatus {
-  active
-  refunded
-}
-
-/// Ücretli erişim dönemi (DOG-34). Tek seferlik paket; otomatik yenileme yok.
-/// Polar sipariş kimliği tekil: aynı ödeme bildirimi iki kez dönem açmaz.
-model AccessPass {
-  id              String           @id @default(cuid())
-  userId          String
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan            String
-  startsAt        DateTime
-  endsAt          DateTime
-  providerOrderId String           @unique
-  status          AccessPassStatus @default(active)
-  createdAt       DateTime         @default(now())
-
-  @@index([userId, endsAt])
 }
 
 /// Kullanıcının bütün ilanlarda hariç tuttuğu kavramlar (DOG-90). Bir

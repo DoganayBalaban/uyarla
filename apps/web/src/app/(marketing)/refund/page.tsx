@@ -12,21 +12,24 @@ export default function RefundPage() {
   return (
     <LegalPage
       title="İade ve cayma"
-      summary="Paket satın aldığında neyi aldığını, cayma hakkının nasıl işlediğini ve iade isteyebileceğin durumları anlatıyoruz."
+      summary="Abone olduğunda neyi aldığını, denemenin ve iptalin nasıl işlediğini, cayma hakkını ve iade isteyebileceğin durumları anlatıyoruz."
     >
       <section>
         <h2>1. Ne satın alıyorsun</h2>
         <p>
-          1 hafta, 1 ay ya da 3 aylık bir erişim dönemi. Dönem boyunca istediğin kadar CV uyarlayabilir ve ön
-          yazı oluşturabilirsin. Ödeme tek seferliktir; otomatik yenileme yoktur, dönem bitince ücret alınmaz.
+          Aylık (1 Ay) ya da üç aylık (3 Ay) bir abonelik. Abonelik boyunca analiz ve uyarlama sınırsızdır (24
+          saatte en çok 30 uyarlama); mülakat hazırlığı, yazılı pratik, form yanıtları ve LinkedIn yazımları
+          açıktır. Abonelik dönem sonunda otomatik yenilenir; istediğin an Hesabım&apos;dan iptal edebilirsin,
+          erişimin dönem sonuna kadar sürer. İlk 7 gün ücretsiz denemedir: deneme bitmeden iptal edersen hiç
+          ücret alınmaz.
         </p>
       </section>
 
       <section>
         <h2>2. Cayma hakkı</h2>
         <p>
-          Ödeme öncesinde, erişimin hemen başlamasını ve bu nedenle cayma hakkını kaybedeceğini açıkça kabul
-          edersin. Dijital içerikte, tüketicinin onayıyla ifaya başlandıktan sonra cayma hakkı kullanılamaz
+          Ödeme öncesinde, erişimin hemen (denemede deneme sonunda ücretli olarak) başlamasını ve bu nedenle
+          cayma hakkını kaybedeceğini açıkça kabul edersin. Dijital içerikte, tüketicinin onayıyla ifaya başlandıktan sonra cayma hakkı kullanılamaz
           (Mesafeli Sözleşmeler Yönetmeliği md. 15).
         </p>
       </section>
@@ -36,7 +39,7 @@ export default function RefundPage() {
         <p>
           Teknik bir sorun nedeniyle hizmeti kullanamadıysan, satın alma tarihinden itibaren 14 gün içinde{" "}
           {LEGAL.support} adresine yaz. Durumu değerlendirip ödemeni Polar üzerinden iade ederiz. İade
-          edilen dönemin erişimi hemen kapanır.
+          edilen aboneliğin erişimi hemen kapanır.
         </p>
       </section>
 
