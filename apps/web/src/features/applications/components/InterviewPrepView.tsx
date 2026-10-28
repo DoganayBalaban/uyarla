@@ -306,6 +306,10 @@ export function PrepSections({
             Bir soruyu seç, mülakatta söyleyeceğin gibi yaz. Geri bildirim STAR yapısına, uzunluğa ve CV&apos;nde olmayan
             iddialara bakar.
           </p>
+          {/* Ücretsizde sekmenin başında tek kilit kartı (DOG-158); sorular görünüyor, cevap kutusu yok. */}
+          {practice.locked && (
+            <LockedFeature compact title="Yazılı pratik" description="Cevabına geri bildirim abonelikte." returnTo={practice.returnTo ?? "/plans"} />
+          )}
           {prep.questions.map((q, i) => (
             <Card key={i} className="gap-2 py-4 shadow-xs">
               <CardHeader className="px-5">
@@ -314,13 +318,11 @@ export function PrepSections({
                   {q.question}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-5 text-sm">
-                practice.locked ? (
-                  <LockedFeature compact title="Yazılı pratik" description="Cevabına geri bildirim abonelikte." returnTo={practice.returnTo ?? "/plans"} />
-                ) : (
+              {!practice.locked && (
+                <CardContent className="px-5 text-sm">
                   <PracticeBox analysisId={practice.analysisId} questionIndex={i} entries={practice.entries.filter((p) => p.questionIndex === i)} />
-                )
-              </CardContent>
+                </CardContent>
+              )}
             </Card>
           ))}
         </TabsContent>
