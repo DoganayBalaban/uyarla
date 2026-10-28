@@ -17,6 +17,7 @@ import { JourneyRail } from "@/features/landing/components/JourneyRail"
 import { JobSearchDemo } from "@/features/landing/demos/JobSearchDemo"
 import { ApplyDemo } from "@/features/landing/demos/ApplyDemo"
 import { BoardDemo } from "@/features/landing/demos/BoardDemo"
+import { InterviewDemo } from "@/features/landing/demos/InterviewDemo"
 import s from "@/features/landing/landing.module.css"
 
 /**
@@ -112,6 +113,7 @@ const STEP_VISUAL: Partial<Record<StepId, React.ReactNode>> = {
   bul: <JobSearchDemo />,
   basvur: <ApplyDemo />,
   takip: <BoardDemo />,
+  hazirlan: <InterviewDemo />,
 }
 
 function AccessChips({ step }: { step: (typeof JOURNEY)[number] }) {

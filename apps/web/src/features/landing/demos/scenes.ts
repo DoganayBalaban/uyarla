@@ -90,3 +90,27 @@ export const BOARD_SCENE = {
   after: demoScore(Object.fromEntries(DEMO_BULLETS.filter((b) => !b.flag).map((b) => [b.id, "new" as const]))),
   note: "Merhaba [ad], bugünkü görüşme için teşekkür ederim. Kod incelemesi pratiklerinizi dinlemek ilgimi artırdı.",
 }
+
+export const INTERVIEW_PHASES = [
+  { id: "question", ms: 1500 },
+  { id: "evidence", ms: 1200 },
+  { id: "answer", ms: 3500 },
+  { id: "feedback", ms: 2500 },
+  { id: "flag", ms: 2000 },
+  { id: "hold", ms: 1500 },
+] as const
+export type InterviewPhase = (typeof INTERVIEW_PHASES)[number]["id"]
+
+/** Hazırlan sahnesi: soru CV'deki kanıtla; cevaptaki "12 geliştirici" CV'de yok, işaretleniyor. */
+export const INTERVIEW_SCENE = {
+  question: "Bir kod incelemesinde görüş ayrılığını nasıl çözdün?",
+  evidence: "Kod incelemelerine katıldım",
+  answer: "12 geliştiricilik ekipte bir bileşenin yapısında anlaşamadık. İki seçeneği örnekle yazıp incelemede karşılaştırdık ve birini seçtik.",
+  star: [
+    { label: "Durum", ok: true },
+    { label: "Görev", ok: true },
+    { label: "Eylem", ok: true },
+    { label: "Sonuç", ok: false },
+  ],
+  notOnPaper: "12 geliştirici",
+}

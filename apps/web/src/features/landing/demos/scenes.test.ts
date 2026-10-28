@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { DEMO_BULLETS, DEMO_REQUIREMENTS } from "@/features/landing/demos/demoScript"
-import { APPLY_SCENE, BOARD_SCENE, ELIF_CV, JOB_SCENE, inCv } from "@/features/landing/demos/scenes"
+import { APPLY_SCENE, BOARD_SCENE, ELIF_CV, INTERVIEW_SCENE, JOB_SCENE, inCv } from "@/features/landing/demos/scenes"
 
 /** Sahnelerin örnek verisi uydurma kuralına uyuyor mu (spec §6). */
 describe("Elif's sample CV", () => {
@@ -42,5 +42,14 @@ describe("board scene", () => {
     expect(BOARD_SCENE.before).toBe(28)
     expect(BOARD_SCENE.after).toBe(41)
     expect(BOARD_SCENE.note).toContain("[ad]")
+  })
+})
+
+describe("interview scene", () => {
+  it("grounds the question in the CV and flags a claim that is not on paper", () => {
+    expect(inCv(INTERVIEW_SCENE.evidence)).toBe(true)
+    expect(INTERVIEW_SCENE.answer).toContain(INTERVIEW_SCENE.notOnPaper)
+    expect(inCv(INTERVIEW_SCENE.notOnPaper)).toBe(false)
+    expect(INTERVIEW_SCENE.star.map((x) => x.label)).toEqual(["Durum", "Görev", "Eylem", "Sonuç"])
   })
 })
