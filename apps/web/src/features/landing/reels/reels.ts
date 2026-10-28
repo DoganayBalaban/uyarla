@@ -10,6 +10,8 @@ export type Reel = {
   n: number
   /** İlk 2 saniyede okunan cümle; videonun başından sonuna üstte durur. */
   hook: string
+  /** Açılış cümlesinin okunuşu, ekrandakinden farklıysa (TTS rakamları yanlış okuyor: sayılar yazıyla). */
+  hookSpoken?: string
   /** SCENE_LIST kimliği. */
   scene: string
   /** Sahnenin oynatılacak aralığı (aşama adları, ikisi de dahil); yoksa baştan sona. */
@@ -30,10 +32,10 @@ export const END_MS = 2500
 export const REELS: Reel[] = [
   { n: 1, hook: "Elli ilana başvurup tek dönüş almadıysan, sorun deneyimin olmayabilir.", scene: "hero", from: "job", to: "score", voice: ["Elli ilana başvurup tek dönüş almadıysan, sorun deneyimin olmayabilir.", "Birçok şirket CV'leri önce bir yazılımla süzer.", "uyarla, ilanın aradığı her şeyi CV'nde arar ve eksik kalanı açıkça gösterir."] },
   { n: 2, hook: "Yapay zekâ CV'ne hiç yapmadığın bir şeyi yazabilir.", scene: "kontrol", voice: ["Yapay zekâ CV'ne hiç yapmadığın bir şeyi yazabilir.", "uyarla, yeniden yazılan her maddeyi kontrol eder.", "Orijinalinde olmayan bir iddia varsa işaretler ve kararı sana bırakır.", "Karar vermeden CV'ni indiremezsin."] },
-  { n: 3, hook: "Bu CV bu ilana 28 puan uyuyor. Aynı deneyimle 41.", scene: "hero", voice: ["Bu CV bu ilana 28 puan uyuyor. Aynı deneyimle 41.", "uyarla, maddelerini ilanın diliyle yeniden yazar; eskisi üstü çizili, yenisi yeşil görünür.", "Olmayan bir şeyi eklemez."] },
+  { n: 3, hook: "Bu CV bu ilana 28 puan uyuyor. Aynı deneyimle 41.", scene: "hero", hookSpoken: "Bu CV bu ilana yirmi sekiz puan uyuyor. Aynı deneyimle kırk bir.", voice: ["Bu CV bu ilana yirmi sekiz puan uyuyor. Aynı deneyimle kırk bir.", "uyarla, maddelerini ilanın diliyle yeniden yazar; eskisi üstü çizili, yenisi yeşil görünür.", "Olmayan bir şeyi eklemez."] },
   { n: 4, hook: "LinkedIn başlığında unvanın yoksa işe alımcı seni bulamaz.", scene: "gorunur", voice: ["LinkedIn başlığında unvanın yoksa işe alımcı seni bulamaz.", "uyarla profilini hedef rolüne göre denetler.", "Başlığını unvanın ve öne çıkan becerilerinle yeniden yazar; her parçanın kaynağını gösterir."] },
-  { n: 5, hook: "Mülakatta CV'nde olmayan bir sayı söylersen?", scene: "hazirlan", voice: ["Mülakatta CV'nde olmayan bir sayı söylersen?", "uyarla'nın yazılı pratiğinde cevabını yazarsın.", "CV'nde geçmeyen bir iddia varsa, kâğıtta yok diye işaretlenir.", "Ya CV'ne ekle, ya cevaptan çıkar."] },
-  { n: 6, hook: "“140 karakterde neden sen?” sorusunda takılıyorsan.", scene: "basvur", voice: ["“140 karakterde neden sen?” sorusunda takılıyorsan.", "uyarla cevabı gönderdiğin CV'deki cümlelerden yazar; karakter sınırını kod denetler.", "Kopyalarsın, forma sen yapıştırırsın."] },
+  { n: 5, hook: "Mülakatta CV'nde olmayan bir sayı söylersen?", scene: "hazirlan", voice: ["Mülakatta CV'nde olmayan bir sayı söylersen?", "uyarla'nın yazılı pratiğinde cevabını yazarsın.", "Bir iddia CV'nde geçmiyorsa, kâğıtta yok diye işaretlenir.", "Ya CV'ne ekle, ya cevaptan çıkar."] },
+  { n: 6, hook: "“140 karakterde neden sen?” sorusunda takılıyorsan.", scene: "basvur", hookSpoken: "Yüz kırk karakterde neden sen, sorusunda takılıyorsan.", voice: ["Yüz kırk karakterde neden sen, sorusunda takılıyorsan.", "uyarla cevabı gönderdiğin CV'deki cümlelerden yazar; karakter sınırını kod denetler.", "Kopyalarsın, forma sen yapıştırırsın."] },
   { n: 7, hook: "LinkedIn'de yalnız “İstanbul” yazarsan yurt dışı ilanları çıkabilir.", scene: "bul", voice: ["LinkedIn'de yalnız “İstanbul” yazarsan yurt dışı ilanları çıkabilir.", "Doğrusu: İstanbul, Türkiye.", "uyarla, hedef rolünle dört sitenin aramasını doğru sorguyla açar."] },
   { n: 8, hook: "Mülakattan sonra teşekkür notunu atlıyor musun?", scene: "takip", from: "adapted", voice: ["Mülakattan sonra teşekkür notunu atlıyor musun?", "uyarla, başvuru kartın mülakata geçince taslağı hazırlar.", "Alıcının adını uydurmaz; o kısmı sana bırakır."] },
   { n: 10, hook: "Maddelerini ilanın diliyle yazınca skor nasıl değişir?", scene: "hero", from: "score", to: "hold", voice: ["Maddelerini ilanın diliyle yazınca skor nasıl değişir?", "uyarla, ilanın terimini deneyimine dayanarak ekler ve kaynağını gösterir.", "Bu örnekte skor yirmi sekizden kırk bire çıkıyor."] },

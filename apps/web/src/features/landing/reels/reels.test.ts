@@ -38,9 +38,12 @@ describe("reels (DOG-162)", () => {
 
   it("speaks the on-screen hook first and ends every video on the same call (DOG-162)", () => {
     for (const r of REELS) {
-      expect(r.voice[0], `video ${r.n}`).toBe(r.hook)
+      // Okunuşu farklı olan açılış cümlesi (sayı yazıyla) hookSpoken'da.
+      expect(r.voice[0], `video ${r.n}`).toBe(r.hookSpoken ?? r.hook)
       expect(r.voice.join(" "), `video ${r.n}`).not.toMatch(/\/t\b|com\.tr/)
     }
+    // TTS rakamı ve cümle başındaki "CV'nde"yi yanlış okuyordu (Kizagan, 29 Ekim).
+    for (const r of REELS) for (const s of r.voice) expect(s, `video ${r.n}`).not.toMatch(/\d|^CV/)
     expect(VOICE_CTA).toBe("Skorunu ücretsiz gör: uyarla nokta com nokta te re.")
   })
 
