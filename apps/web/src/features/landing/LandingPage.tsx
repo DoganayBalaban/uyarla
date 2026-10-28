@@ -205,8 +205,10 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
         </section>
 
         {/* ——— Başvuru yolculuğu (DOG-160) ———
-            Şerit ve bölümler tek kapta: şeridin yapışkanlığı yolculuk bitince bitiyor. */}
-        <div>
+            Şerit ve bölümler tek kapta: şeridin yapışkanlığı yolculuk bitince bitiyor.
+            Menünün hedefi (#yolculuk) bu kap; yapışkan şerit hep tepede durduğu için
+            menü vurgusu onu ölçünce karışıyordu (DOG-161). */}
+        <div id="yolculuk" className={s.journey}>
           <JourneyRail steps={JOURNEY} />
           {JOURNEY.map((step, i) => (
             <section key={step.id} id={step.id} className={`${s.section} ${s.journeySection} ${i % 2 === 1 ? s.sectionTinted : ""}`}>
@@ -429,6 +431,7 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
               <p className={s.footerHeading}>Ürün</p>
               <a href="#yolculuk">Nasıl çalışır</a>
               <a href="#bul">Özellikler</a>
+              <a href="#gorunur">LinkedIn denetimi</a>
               <a href="#fiyat">Fiyat</a>
               <Link href="/analyze">Ücretsiz skor</Link>
             </div>

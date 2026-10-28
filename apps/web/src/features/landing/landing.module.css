@@ -1366,6 +1366,10 @@
   font-size: 0.75rem;
   color: var(--blue-text);
 }
+/* Menüden #yolculuk'a gelince kap üst çubuğun altında başlasın. */
+.journey {
+  scroll-margin-top: 65px;
+}
 /* Sahnenin yüksekliği aşamaya göre değişiyor; ortalanınca her aşamada zıplıyordu. */
 .journeyFeature {
   align-items: start;

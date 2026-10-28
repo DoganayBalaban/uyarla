@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { LandingPage } from "@/features/landing/LandingPage"
+import { MARKETING_LINKS } from "@/components/layout/marketingLinks"
 
 describe("LandingPage journey (DOG-160)", () => {
   const html = renderToStaticMarkup(<LandingPage />)
@@ -34,5 +35,15 @@ describe("LandingPage journey (DOG-160)", () => {
 
   it("does not overclaim interview evidence in the FAQ (son inceleme)", () => {
     expect(html).not.toContain("Her sorunun yanında")
+  })
+
+  it("gives every navbar link a target that is not the sticky rail (DOG-161)", () => {
+    // Üst menü hedefin sayfadaki yerini ölçüyor; yapışkan öğe hep tepede durduğu için vurgu karışıyordu.
+    const withPlans = renderToStaticMarkup(<LandingPage plans={[{ key: "month", months: 1, productId: "p", priceTry: 299 }]} />)
+    for (const { href } of MARKETING_LINKS) expect(withPlans, href).toContain(`id="${href.slice(2)}"`)
+    expect(html).not.toMatch(/<nav[^>]*id="yolculuk"/)
+    expect(MARKETING_LINKS).toContainEqual({ href: "/#gorunur", label: "LinkedIn" })
+    expect(MARKETING_LINKS.map((l) => l.label)).not.toContain("Özellikler")
+    expect(html).toContain("LinkedIn denetimi")
   })
 })

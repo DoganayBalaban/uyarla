@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { StepId } from "@/features/landing/journey"
 import s from "@/features/landing/landing.module.css"
 
@@ -10,6 +10,7 @@ import s from "@/features/landing/landing.module.css"
  */
 export function JourneyRail({ steps }: { steps: { id: StepId; number: string; name: string }[] }) {
   const [active, setActive] = useState<StepId | null>(null)
+  const list = useRef<HTMLOListElement>(null)
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -28,12 +29,12 @@ export function JourneyRail({ steps }: { steps: { id: StepId; number: string; na
   // Dar ekranda etkin adım şeridin görünen yerine kaysın.
   useEffect(() => {
     if (!active) return
-    document.querySelector(`#yolculuk a[href="#${active}"]`)?.scrollIntoView({ block: "nearest", inline: "nearest" })
+    list.current?.querySelector(`a[href="#${active}"]`)?.scrollIntoView({ block: "nearest", inline: "nearest" })
   }, [active])
 
   return (
-    <nav id="yolculuk" aria-label="Başvuru yolculuğu" className={s.journeyRail}>
-      <ol className={s.journeyRailList}>
+    <nav aria-label="Başvuru yolculuğu" className={s.journeyRail}>
+      <ol ref={list} className={s.journeyRailList}>
         {steps.map((step) => (
           <li key={step.id}>
             <a

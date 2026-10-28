@@ -16,6 +16,7 @@ import { motion } from "motion/react"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { activeSection } from "@/components/layout/activeSection"
+import { MARKETING_LINKS } from "@/components/layout/marketingLinks"
 import { signOut, useSession } from "@/lib/authClient"
 import { cn } from "@/lib/cn"
 import { displayName } from "@/features/account/displayName"
@@ -41,13 +42,6 @@ import { CONTAINER } from "@/components/layout/PageShell"
  * Giriş ekranı kendi bölünmüş düzenini çiziyor; orada çubuk yok.
  */
 
-const MARKETING_LINKS = [
-  { href: "/#yolculuk", label: "Nasıl çalışır" },
-  { href: "/#bul", label: "Özellikler" },
-  { href: "/#durustluk", label: "Dürüstlük" },
-  { href: "/#fiyat", label: "Fiyat" },
-  { href: "/#sss", label: "SSS" },
-]
 
 const APP_LINKS = [
   { href: "/dashboard", label: "Genel bakış", Icon: LayoutDashboard },
