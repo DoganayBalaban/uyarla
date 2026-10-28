@@ -13,6 +13,18 @@ export const LANDING_FAQ: { s: string; c: string }[] = [
     c: "Her ay 5 analiz ve 1 uyarlama ücretsiz; ayda 1 uyarlama ön yazısı ve PDF/DOCX'iyle birlikte. Daha fazlası için aylık ya da 3 aylık abonelik seçersin; ikisi de 7 gün ücretsiz denemeyle başlar. Abonelik otomatik yenilenir, istediğin an iptal edebilirsin; fiyatlara KDV dahil.",
   },
   {
+    s: "Mülakat hazırlığında sorular nereden geliyor?",
+    c: "İlandan ve başvurduğun CV'den. Kanıtı CV'nde olan sorunun yanında o satır durur. Yazılı pratikte cevabını STAR yapısına göre değerlendiririz; CV'nde olmayan bir sayı ya da iddia kullanırsan “kâğıtta yok” diye işaretleriz. Abonelikte.",
+  },
+  {
+    s: "LinkedIn profilimi nasıl denetliyorsunuz?",
+    c: "LinkedIn'den profilini PDF olarak indirip yüklersin; hedef rolüne göre başlık, hakkında, deneyim ve beceriler bölümlerini tek tek değerlendiririz. Teşhis ve başlık önerileri ücretsiz; hakkında ve deneyim yazımı abonelikte. Eklentiyle tek tıkla aktarım yakında.",
+  },
+  {
+    s: "Başvuru formlarını siz mi dolduruyorsunuz?",
+    c: "Hayır. Form sorularına, ön yazına ve takip mesajlarına CV'ne dayanan taslaklar hazırlarız; karakter sınırını kod denetler. Hiçbirini biz göndermeyiz, kopyalayıp sen yapıştırırsın.",
+  },
+  {
     s: "Deneyimimi abartıyor ya da uyduruyor mu?",
     c: "Hayır. Olmayan deneyim, beceri veya sertifika eklemez. Yeniden yazılan her madde kontrol edilir; anlamı kayan ya da yeni olgu içeren madde işaretlenir ve senin onayın olmadan kullanılmaz.",
   },

@@ -28,6 +28,30 @@
   text-decoration: none;
 }
 
+/* Tanıtım sayfası tek tema, açık (DOG-160). Uygulamada koyu temayı seçen
+   ziyaretçide sayfa beyaz zemin üstünde açık renk yazıya dönüyordu; kapsam
+   içinde açık değerler geri yükleniyor (globals.css :root ile aynı). */
+:global(.dark) .page {
+  color-scheme: light;
+  --background: #fafaf9;
+  --foreground: #111114;
+  --card: #ffffff;
+  --card-foreground: #111114;
+  --popover: #ffffff;
+  --popover-foreground: #111114;
+  --primary: #2f4be0;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #6b6b73;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --border: #e7e5e4;
+  --input: #e7e5e4;
+  --ring: #93a4ff;
+}
+
 .page :focus-visible {
   outline: 2px solid var(--brand-blue);
   outline-offset: 3px;
@@ -1291,4 +1315,84 @@
 .outputPhoto {
   border-radius: 24px;
   box-shadow: var(--shadow-card);
+}
+
+/* ——— Başvuru yolculuğu (DOG-160) ——— */
+.journeyRail {
+  /* Sitenin üst çubuğunun (Navbar, h-16 + kenarlık) hemen altında. */
+  position: sticky;
+  top: 65px;
+  z-index: 20;
+  border-block: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(8px);
+}
+.journeyRailList {
+  display: flex;
+  gap: 0.25rem;
+  max-width: var(--container-width);
+  margin: 0 auto;
+  padding: 0.5rem var(--gutter);
+  overflow-x: auto;
+  scrollbar-width: none;
+  list-style: none;
+}
+.journeyRailList::-webkit-scrollbar {
+  display: none;
+}
+.journeyRailStep {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+.journeyRailStep:hover {
+  color: var(--foreground);
+}
+.journeyRailStepActive {
+  background: var(--blue-soft);
+  color: var(--foreground);
+  font-weight: 600;
+}
+.journeyRailNumber {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--blue-text);
+}
+/* Sahnenin yüksekliği aşamaya göre değişiyor; ortalanınca her aşamada zıplıyordu. */
+.journeyFeature {
+  align-items: start;
+}
+.journeySection {
+  /* Üst çubuk ve şerit: bağlantıyla gelinen başlık onların altında kalmasın. */
+  scroll-margin-top: 7.5rem;
+}
+.accessChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+.sectionHeader .accessChips {
+  justify-content: center;
+}
+.accessChip {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--brand-green) 35%, transparent);
+  background: color-mix(in srgb, var(--brand-green) 10%, transparent);
+  padding: 0.2rem 0.65rem;
+  font-size: 0.8125rem;
+}
+.accessChipPaid {
+  border-color: color-mix(in srgb, var(--brand-blue) 35%, transparent);
+  background: var(--blue-soft);
 }

@@ -42,8 +42,8 @@ import { CONTAINER } from "@/components/layout/PageShell"
  */
 
 const MARKETING_LINKS = [
-  { href: "/#nasil", label: "Nasıl çalışır" },
-  { href: "/#ozellikler", label: "Özellikler" },
+  { href: "/#yolculuk", label: "Nasıl çalışır" },
+  { href: "/#bul", label: "Özellikler" },
   { href: "/#durustluk", label: "Dürüstlük" },
   { href: "/#fiyat", label: "Fiyat" },
   { href: "/#sss", label: "SSS" },

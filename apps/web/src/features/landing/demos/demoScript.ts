@@ -7,10 +7,35 @@
  * artırmıyor. Sayılar ürünün güncel eşikleriyle (scoreStatus) tutarlı.
  */
 
+/** Bir sahnenin bir aşaması: adı ve süresi. */
+export type Phase<Id extends string = string> = { id: Id; ms: number }
+
+/** Aşamaların toplam süresi; bir döngü. */
+export function loopMs(phases: readonly Phase[]): number {
+  return phases.reduce((t, p) => t + p.ms, 0)
+}
+
+/** Döngünün `ms` anında hangi aşamada ve aşamanın yüzde kaçında olunduğu. */
+export function phaseAt<Id extends string>(phases: readonly Phase<Id>[], ms: number): { phase: Id; progress: number } {
+  const loop = loopMs(phases)
+  let t = ((ms % loop) + loop) % loop
+  for (const p of phases) {
+    if (t < p.ms) return { phase: p.id, progress: t / p.ms }
+    t -= p.ms
+  }
+  return { phase: phases[0]!.id, progress: 0 }
+}
+
+/** `current` aşaması `target`'a gelmiş ya da geçmiş mi. */
+export function phaseReached<Id extends string>(phases: readonly Phase<Id>[], current: Id, target: Id): boolean {
+  const index = (id: Id) => phases.findIndex((p) => p.id === id)
+  return index(current) >= index(target)
+}
+
 export type HeroPhaseId = "upload" | "job" | "analyze" | "score" | "adapt" | "hold"
 
 /** Hero filminin sahneleri; toplamı bir döngü. */
-export const HERO_PHASES: { id: HeroPhaseId; ms: number }[] = [
+export const HERO_PHASES: Phase<HeroPhaseId>[] = [
   { id: "upload", ms: 1800 },
   { id: "job", ms: 2600 },
   { id: "analyze", ms: 2000 },
@@ -19,16 +44,11 @@ export const HERO_PHASES: { id: HeroPhaseId; ms: number }[] = [
   { id: "hold", ms: 2200 },
 ]
 
-export const HERO_LOOP_MS = HERO_PHASES.reduce((t, p) => t + p.ms, 0)
+export const HERO_LOOP_MS = loopMs(HERO_PHASES)
 
 /** Döngünün `ms` anında hangi sahnede ve sahnenin yüzde kaçında olunduğu. */
 export function heroPhaseAt(ms: number): { phase: HeroPhaseId; progress: number } {
-  let t = ((ms % HERO_LOOP_MS) + HERO_LOOP_MS) % HERO_LOOP_MS
-  for (const p of HERO_PHASES) {
-    if (t < p.ms) return { phase: p.id, progress: t / p.ms }
-    t -= p.ms
-  }
-  return { phase: "upload", progress: 0 }
+  return phaseAt(HERO_PHASES, ms)
 }
 
 /** Daktilo efekti: metnin `progress` oranı kadarı. */
@@ -132,17 +152,17 @@ export const DEMO_REQUIREMENTS: {
   {
     text: "Birim testi (Jest, Testing Library)",
     importance: "Zorunlu",
-    why: "CV'nde “test”, “Jest” ya da bir karşılığı geçmiyor. Yaptıysan bir maddede anlatman yeter.",
+    evidence: { quote: "Bileşenler için Jest ile birim testleri yazdım", section: "Deneyim" },
   },
   {
     text: "Web erişilebilirliği (WCAG)",
-    importance: "Tercihen",
+    importance: "Zorunlu",
     why: "“Erişilebilirlik”, “a11y” veya “WCAG” bulunamadı.",
   },
   {
     text: "Ekiple kod incelemesi",
     importance: "Tercihen",
-    evidence: { quote: "Haftalık kod incelemelerine katıldım", section: "Deneyim" },
+    evidence: { quote: "Kod incelemelerine katıldım", section: "Deneyim" },
   },
 ]
 
