@@ -143,3 +143,13 @@ export const LINKEDIN_SCENE: {
     { text: "Kod incelemesi", source: { kind: "profile", quote: "Kod incelemelerine katıldım" } },
   ],
 }
+
+export const CHECK_PHASES = [
+  { id: "show", ms: 1500 },
+  { id: "flag", ms: 2000 },
+  { id: "locked", ms: 1500 },
+  { id: "decide", ms: 1800 },
+  { id: "open", ms: 2000 },
+  { id: "hold", ms: 1500 },
+] as const
+export type CheckPhase = (typeof CHECK_PHASES)[number]["id"]

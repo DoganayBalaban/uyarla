@@ -6,7 +6,8 @@ import { ApplyFilm } from "@/features/landing/demos/ApplyDemo"
 import { BoardFilm } from "@/features/landing/demos/BoardDemo"
 import { InterviewFilm } from "@/features/landing/demos/InterviewDemo"
 import { LinkedInFilm } from "@/features/landing/demos/LinkedInDemo"
-import { APPLY_PHASES, BOARD_PHASES, INTERVIEW_PHASES, JOB_PHASES, LINKEDIN_PHASES } from "@/features/landing/demos/scenes"
+import { CheckFilm } from "@/features/landing/demos/CheckFilm"
+import { APPLY_PHASES, BOARD_PHASES, CHECK_PHASES, INTERVIEW_PHASES, JOB_PHASES, LINKEDIN_PHASES } from "@/features/landing/demos/scenes"
 
 /** Vitrinde (`/ui/landing`) kare kare bakılan sahneler. */
 export const SCENE_LIST: { id: string; name: string; phases: readonly Phase[]; Film: (p: { ms: number }) => React.ReactNode }[] = [
@@ -16,4 +17,5 @@ export const SCENE_LIST: { id: string; name: string; phases: readonly Phase[]; F
   { id: "takip", name: "Takip et", phases: BOARD_PHASES, Film: BoardFilm },
   { id: "hazirlan", name: "Hazırlan", phases: INTERVIEW_PHASES, Film: InterviewFilm },
   { id: "gorunur", name: "Görünür ol", phases: LINKEDIN_PHASES, Film: LinkedInFilm },
+  { id: "kontrol", name: "Uydurma kontrolü", phases: CHECK_PHASES, Film: CheckFilm },
 ]
