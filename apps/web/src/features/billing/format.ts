@@ -94,6 +94,12 @@ export function adaptHint(status: BillingStatus): string | null {
 }
 
 /** Analiz formunun altında, yalnız ücretsiz kullanıcıda. */
+/** Ücretsiz kullanıcının bu ayki analizleri bitti mi: gönder düğmesi yerine kilit kartı. */
+export function analysisQuotaReached(status: BillingStatus): boolean {
+  if (status.unlimited || status.access || !status.quota) return false
+  return status.quota.analyses.used >= status.quota.analyses.limit
+}
+
 export function analysisNote(status: BillingStatus): string | null {
   if (status.unlimited || status.access || !status.quota) return null
   return `Bu ay ${status.quota.analyses.used}/${status.quota.analyses.limit} analiz · ${formatDay(status.quota.resetsAt)} tarihinde yenilenir`
