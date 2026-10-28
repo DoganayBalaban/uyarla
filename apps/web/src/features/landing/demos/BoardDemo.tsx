@@ -1,6 +1,6 @@
 "use client"
 
-import { STAGE_LABEL, STAGES } from "@/features/applications/board"
+import { STAGE_LABEL, STAGES } from "@/features/applications/stages"
 import { phaseAt, phaseReached, typedSlice } from "@/features/landing/demos/demoScript"
 import { BOARD_PHASES, BOARD_SCENE, type BoardPhase } from "@/features/landing/demos/scenes"
 import { Scene } from "@/features/landing/demos/useScenePlayer"
