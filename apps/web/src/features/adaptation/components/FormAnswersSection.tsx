@@ -11,7 +11,9 @@ import {
   type FormAnswerLimit,
   type FormAnswerRecord,
 } from "@uyarla/core/cover/formAnswerRecord"
-import { api, apiErrorMessage } from "@/lib/api"
+import { api, apiErrorMessage, apiStatus } from "@/lib/api"
+import { billingStatusKey, useBillingStatus } from "@/features/billing/api"
+import { LockedFeature, isLocked } from "@/features/billing/components/LockedFeature"
 import { cn } from "@/lib/cn"
 import { adaptationQueryKey } from "@/features/adaptation/api"
 
@@ -39,6 +41,8 @@ export function FormAnswersSection({
   const [busy, setBusy] = useState(false)
   const running = answers.some((a) => a.status === "running")
   const left = MAX_FORM_ANSWERS - answers.filter((a) => a.status !== "failed").length
+  // Abonelikte (DOG-158): ücretsizde form yerine kilitli kart.
+  const locked = isLocked(useBillingStatus().data)
 
   async function submit() {
     setError(null)
@@ -49,6 +53,10 @@ export function FormAnswersSection({
       setQuestion("")
       await queryClient.invalidateQueries({ queryKey: adaptationQueryKey(adaptationId) })
     } catch (e) {
+      if (apiStatus(e) === 402) {
+        await queryClient.invalidateQueries({ queryKey: billingStatusKey })
+        return
+      }
       setError(await apiErrorMessage(e, "Yanıtı başlatamadık. Birazdan tekrar dener misin?"))
     } finally {
       setBusy(false)
@@ -74,7 +82,15 @@ export function FormAnswersSection({
         </ol>
       )}
 
-      {left > 0 ? (
+      {locked ? (
+        <div className="mt-4">
+          <LockedFeature
+            title="Başvuru formu yanıtları"
+            description="Formdaki soruları CV'ne dayanarak, sınırına uyarak yazarız; abonelikte."
+            returnTo={`/adapt/${adaptationId}`}
+          />
+        </div>
+      ) : left > 0 ? (
         <div className="mt-4 space-y-2">
           <label htmlFor="form-question" className="block text-sm font-medium">
             Soru

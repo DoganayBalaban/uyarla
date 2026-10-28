@@ -1,18 +1,14 @@
 /**
- * Erişim dönemi paketleri (DOG-34). Tek seferlik; otomatik yenileme yok.
- * Ürün kimlikleri ve gösterim fiyatları yapılandırmada: fiyatlar K2'den sonra
- * Polar panelinde belirleniyor, ödeme sayfasındaki tutar Polar'dan geliyor.
+ * Abonelik paketleri (DOG-158, K-107). Otomatik yenileme; 7 günlük deneme
+ * Polar ürününde tanımlı. Ürün kimlikleri ve gösterim fiyatları
+ * yapılandırmada; çekilen tutar Polar'dan.
  */
-export type PlanKey = "week" | "month" | "quarter"
+export type PlanKey = "month" | "quarter"
 
-export const PLAN_DAYS: Record<PlanKey, number> = { week: 7, month: 30, quarter: 90 }
+export const PLAN_MONTHS: Record<PlanKey, number> = { month: 1, quarter: 3 }
 
-const ORDER: PlanKey[] = ["week", "month", "quarter"]
-const PRODUCT_ENV: Record<PlanKey, string> = {
-  week: "POLAR_PRODUCT_WEEK",
-  month: "POLAR_PRODUCT_MONTH",
-  quarter: "POLAR_PRODUCT_QUARTER",
-}
+const ORDER: PlanKey[] = ["month", "quarter"]
+const PRODUCT_ENV: Record<PlanKey, string> = { month: "POLAR_PRODUCT_MONTH", quarter: "POLAR_PRODUCT_QUARTER" }
 
 export function isPlanKey(value: unknown): value is PlanKey {
   return typeof value === "string" && (ORDER as string[]).includes(value)
@@ -20,13 +16,13 @@ export function isPlanKey(value: unknown): value is PlanKey {
 
 export interface PlanOffer {
   key: PlanKey
-  days: number
+  months: number
   productId: string
-  /** Paket ekranında gösterilen TL fiyat; ödeme sayfasındaki tutar Polar'dan. */
+  /** Fatura dönemi başına TL; ödeme sayfasındaki tutar Polar'dan. */
   priceTry: number | null
 }
 
-/** Ürün kimliği tanımlı paketler; `PLAN_PRICES_TRY` "week:149, month:349". */
+/** Ürün kimliği tanımlı paketler; `PLAN_PRICES_TRY` "month:299, quarter:599". */
 export function plansFromEnv(env: Record<string, string | undefined>): PlanOffer[] {
   const prices = new Map(
     (env.PLAN_PRICES_TRY ?? "")
@@ -37,27 +33,40 @@ export function plansFromEnv(env: Record<string, string | undefined>): PlanOffer
   )
   return ORDER.flatMap((key) => {
     const productId = env[PRODUCT_ENV[key]]?.trim()
-    return productId ? [{ key, days: PLAN_DAYS[key], productId, priceTry: prices.get(key) ?? null }] : []
+    return productId ? [{ key, months: PLAN_MONTHS[key], productId, priceTry: prices.get(key) ?? null }] : []
   })
 }
 
-/** Paket ekranında baştan seçili ve ana sayfada vurgulanan paket. */
-export function recommendedPlan(plans: PlanOffer[]): PlanOffer | null {
-  return plans.find((p) => p.key === "month") ?? plans[0] ?? null
+/** Aylık karşılığı, tam liraya yuvarlanmış (599/3 → 200). */
+export function monthlyPrice(plan: PlanOffer): number | null {
+  return plan.priceTry === null ? null : Math.round(plan.priceTry / plan.months)
 }
 
-/** Günlük fiyatı en düşük paket; fiyatı bilinmeyenler sayılmıyor. */
-export function cheapestPerDay(plans: PlanOffer[]): PlanOffer | null {
-  return plans.reduce<PlanOffer | null>((best, p) => {
-    if (p.priceTry === null) return best
-    return !best || p.priceTry / p.days < best.priceTry! / best.days ? p : best
-  }, null)
+/** 3 Ay'ın 1 Ay'a göre tasarrufu, yüzde; ikisinin de fiyatı yoksa null. */
+export function savingsPercent(plans: PlanOffer[]): number | null {
+  const month = plans.find((p) => p.key === "month")
+  const quarter = plans.find((p) => p.key === "quarter")
+  if (!month?.priceTry || !quarter?.priceTry) return null
+  return Math.round((1 - quarter.priceTry / quarter.months / month.priceTry) * 100)
 }
 
-/** Her pakette aynı: süre boyunca neler açık. */
-export const PASS_FEATURES = [
-  "Sınırsız CV uyarlama (son 24 saatte en fazla 30)",
-  "Her ilana özel ön yazı",
-  "PDF ya da DOCX olarak indirme",
-  "Uydurma kontrolü; her değişiklik senin onayınla",
+/** Karşılaştırma tablosunun satırları (spec §3); 1 Ay ve 3 Ay aynı. */
+export const FEATURE_ROWS = [
+  { label: "İlan analizi ve uyum skoru", free: "Ayda 5", paid: "Sınırsız" },
+  { label: "CV uyarlama (ön yazı ve PDF/DOCX dahil)", free: "Ayda 1", paid: "Sınırsız (24 saatte 30)" },
+  { label: "Mülakat hazırlık paketi", free: false, paid: true },
+  { label: "Yazılı mülakat pratiği", free: false, paid: true },
+  { label: "Başvuru formu yanıtları", free: false, paid: true },
+  { label: "LinkedIn hakkında ve deneyim yazımı", free: false, paid: true },
+  { label: "LinkedIn teşhisi ve başlık önerileri", free: true, paid: true },
+  { label: "Başvuru panosu, takip mesajı ve teşekkür notu", free: true, paid: true },
+  { label: "CV kütüphanesi, hatırlatmalar, Chrome eklentisi", free: true, paid: true },
+] as const satisfies ReadonlyArray<{ label: string; free: string | boolean; paid: string | boolean }>
+
+/** Tanıtım sayfasının kısa listesi. */
+export const SUBSCRIPTION_FEATURES = [
+  "Sınırsız analiz ve CV uyarlama",
+  "Her ilana özel ön yazı, PDF ya da DOCX",
+  "Mülakat hazırlık paketi ve yazılı pratik",
+  "LinkedIn hakkında ve deneyim yazımı",
 ] as const

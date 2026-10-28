@@ -38,7 +38,7 @@ export function CopyButton({ text, label = "Kopyala" }: { text: string; label?: 
   )
 }
 
-/** Kilitli yazım (DOG-157): gerçek metin sunucudan gelmiyor; bulanık iskelet ve paket bağlantısı. */
+/** Kilitli yazım (DOG-157, DOG-158): gerçek metin sunucudan gelmiyor; bulanık iskelet ve abonelik bağlantısı. */
 export function LockedRewrite() {
   return (
     <div className="relative overflow-hidden rounded-lg border border-dashed bg-muted/30 p-4">
@@ -49,10 +49,10 @@ export function LockedRewrite() {
       </div>
       <div className="absolute inset-0 flex flex-wrap items-center justify-center gap-3 bg-background/60 p-3 text-center">
         <span className="flex items-center gap-1.5 text-sm font-medium">
-          <Lock className="size-4 text-primary" aria-hidden /> Önerin hazır; paketle açılır.
+          <Lock className="size-4 text-primary" aria-hidden /> Önerin hazır; abonelikle açılır.
         </span>
         <Button asChild size="sm">
-          <Link href={plansPath("/linkedin")}>Paketleri gör</Link>
+          <Link href={plansPath("/linkedin")}>7 gün ücretsiz dene</Link>
         </Button>
       </div>
     </div>

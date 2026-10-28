@@ -14,7 +14,7 @@ const DATA: UserDataExport = {
   ],
   jobPostings: [],
   analyses: [],
-  accessPasses: [],
+  subscriptions: [],
   excludedConcepts: [],
   emailLogs: [],
   emailConsents: [],

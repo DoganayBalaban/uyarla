@@ -39,7 +39,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { loginPath } from "@/lib/returnPath"
 import { plansPath } from "@/features/billing/paywall"
 import { billingStatusKey, useBillingStatus } from "@/features/billing/api"
-import { adaptHint } from "@/features/billing/format"
+import { adaptHint, analysisNote, analysisQuotaReached, formatDay } from "@/features/billing/format"
+import { LockedFeatureCard } from "@/features/billing/components/LockedFeature"
 import {
   startActiveAnalysis,
   updateActiveAnalysis,
@@ -180,6 +181,10 @@ export function AnalyzeView() {
   // Uyarlamadan önce neyin harcanacağı (DOG-81); anonimde uyarlama zaten girişe gidiyor.
   const billing = useBillingStatus({ enabled: registered })
   const adaptNote = registered && billing.data ? adaptHint(billing.data) : null
+  // Aylık ücretsiz analiz (DOG-158); abonede ve yöneticide yok.
+  const quotaNote = registered && billing.data ? analysisNote(billing.data) : null
+  // Hak bittiyse form doldurulup gönderilince paket ekranına atılmasın: düğmenin yerinde kart.
+  const quotaReached = registered && !!billing.data && analysisQuotaReached(billing.data)
   const resumes = library.data ?? []
   const libraryFull = isLibraryFull(resumes)
   const selectedResumeId = watch("resumeId") ?? null
@@ -436,8 +441,8 @@ export function AnalyzeView() {
       router.push(loginPath(`/analyze?uyarla=${encodeURIComponent(analysisId)}`))
       return
     }
-    // Ücretsiz hak bitti (DOG-34): paket ekranına, ödemeden sonra uyarlamaya dönüş.
-    if (parsed.code === "payment_required") {
+    // Bu ayki ücretsiz uyarlama bitti (DOG-158): paket ekranına, abonelikten sonra uyarlamaya dönüş.
+    if (parsed.code === "adaptation_quota") {
       router.push(plansPath(`/analyze?uyarla=${encodeURIComponent(analysisId)}`))
       return
     }
@@ -483,6 +488,8 @@ export function AnalyzeView() {
       // Çizelge hemen görünsün. Kayıt, kullanıcı başka sayfaya geçerse sağ
       // alttaki bildirimin izlemesi için.
       startActiveAnalysis(jobId)
+      // Bu ayki analiz sayacı güncellensin (DOG-158).
+      if (registered) void queryClient.invalidateQueries({ queryKey: billingStatusKey })
       setWaiting({ input: waitingInput(values), startedAt: Date.now() })
       setState({ status: "running" })
       setPollJobId(jobId)
@@ -491,6 +498,11 @@ export function AnalyzeView() {
       if (parsed.code === "duplicate_posting" && parsed.analysisId && parsed.createdAt) {
         setDuplicate({ analysisId: parsed.analysisId, createdAt: parsed.createdAt, values })
         setBusy(false)
+        return
+      }
+      // Bu ayki 5 ücretsiz analiz bitti (DOG-158): paket ekranına, sonra analize dönüş.
+      if (parsed.code === "analysis_quota") {
+        router.push(plansPath("/analyze"))
         return
       }
       // Seçili CV başka sekmede kaldırılmış olabilir (K-35: 404).
@@ -865,19 +877,33 @@ export function AnalyzeView() {
               </p>
             )}
 
-            <Button type="submit" size="lg" disabled={busy} className="group mt-6 h-12 w-full text-base">
-              {busy ? (
-                <>
-                  <LoaderCircle className="motion-safe:animate-spin" aria-hidden />
-                  Gönderiliyor…
-                </>
-              ) : (
-                <>
-                  Skorumu gör
-                  <ArrowRight className="transition-transform group-hover:translate-x-0.5" aria-hidden />
-                </>
-              )}
-            </Button>
+            {quotaReached && billing.data?.quota ? (
+              <div className="mt-6">
+                <LockedFeatureCard
+                  title="Bu ayki ücretsiz analizlerin bitti"
+                  description={`${formatDay(billing.data.quota.resetsAt)} tarihinde yenilenir. Abonelikte analizler sınırsız.`}
+                  returnTo="/analyze"
+                  trial={billing.data.trialEligible}
+                />
+              </div>
+            ) : (
+              <>
+                <Button type="submit" size="lg" disabled={busy} className="group mt-6 h-12 w-full text-base">
+                  {busy ? (
+                    <>
+                      <LoaderCircle className="motion-safe:animate-spin" aria-hidden />
+                      Gönderiliyor…
+                    </>
+                  ) : (
+                    <>
+                      Skorumu gör
+                      <ArrowRight className="transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    </>
+                  )}
+                </Button>
+                {quotaNote && <p className="m-0 mt-3 text-center text-xs text-muted-foreground">{quotaNote}</p>}
+              </>
+            )}
             {!registered && (
               <p className="m-0 mt-3 text-center text-xs text-muted-foreground">
                 Skor için kayıt gerekmez. CV&apos;ni ilana uyarlamak için ücretsiz hesap açman yeterli.

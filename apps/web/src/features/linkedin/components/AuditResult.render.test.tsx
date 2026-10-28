@@ -50,7 +50,7 @@ describe("AuditResult", () => {
   it("free headline options are copyable; locked rewrites show only a skeleton and the plans link", () => {
     const html = render(audit())
     expect(html).toContain("Uzman | Google Ads, Meta")
-    expect(html).toContain("Önerin hazır; paketle açılır")
+    expect(html).toContain("Önerin hazır; abonelikle açılır")
     expect(html).toContain('href="/plans?donus=%2Flinkedin"')
   })
 

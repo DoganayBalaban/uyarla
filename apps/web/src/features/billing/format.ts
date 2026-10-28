@@ -1,18 +1,13 @@
 import type { BillingStatus } from "@/features/billing/api"
-import type { PlanKey, PlanOffer } from "@/features/billing/plans"
+import type { PlanKey } from "@/features/billing/plans"
 
-export const PLAN_LABEL: Record<PlanKey, string> = { week: "1 hafta", month: "1 ay", quarter: "3 ay" }
+export const PLAN_LABEL: Record<PlanKey, string> = { month: "1 Ay", quarter: "3 Ay" }
 
-export function formatPassEnd(iso: string): string {
-  return new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" }).format(
-    new Date(iso),
-  )
-}
+const DAY = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" })
 
-/** Paketleri karşılaştırmak için günlük fiyat; fiyat yoksa null. */
-export function perDay(priceTry: number | null, days: number): string | null {
-  if (priceTry === null) return null
-  return `${(priceTry / days).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} TL/gün`
+/** İstanbul gününe göre Türkçe tarih: "1 Aralık 2026". */
+export function formatDay(iso: string): string {
+  return DAY.format(new Date(iso))
 }
 
 const HOUR_MS = 36e5
@@ -34,65 +29,78 @@ export interface AccessSummary {
   cta: string
 }
 
+const PLAN_NAME: Record<string, string> = { month: "1 Ay", quarter: "3 Ay" }
+const money = (n: number | null) => (n === null ? null : `${n} ₺`)
+
 /**
- * Kalan haklar (DOG-81): Hesabım, paket ekranı ve üst menü aynı metni
+ * Hak durumu (DOG-81, DOG-158): Hesabım, paket ekranı ve menü aynı metni
  * kullanıyor. Günlük sınır kayan 24 saat; "yarın" denmiyor.
  */
 export function accessSummary(status: BillingStatus, now: Date): AccessSummary {
-  if (status.unlimited) {
-    return { title: "Yönetici hesabı: uyarlama sınırsız", detail: null, badge: "Sınırsız", cta: "Paketleri gör" }
-  }
-  if (status.passEndsAt) {
-    const left = timeLeft(status.passEndsAt, now)
-    const dailyLeft = Math.max(0, status.dailyCap - status.usedLast24h)
-    const daily =
-      dailyLeft === 0
-        ? `Son 24 saatteki ${status.dailyCap} uyarlama sınırına ulaştın; en eski uyarlaman 24 saati doldurunca yeniden açılır.`
-        : `Son 24 saatte ${dailyLeft} uyarlama hakkın kaldı (sınır ${status.dailyCap}).`
+  if (status.unlimited) return { title: "Yönetici hesabı: her şey sınırsız", detail: null, badge: "Sınırsız", cta: "Paketleri gör" }
+  const sub = status.subscription
+  if (status.access && sub) {
+    const manage = "Aboneliği yönet"
+    if (sub.status === "trialing" && sub.trialEnd) {
+      const left = timeLeft(sub.trialEnd, now)
+      return {
+        title: `Denemedesin · ${left}`,
+        detail: sub.cancelAtPeriodEnd
+          ? `Deneme ${formatDay(sub.trialEnd)} tarihinde bitiyor; ücret çekilmeyecek.`
+          : `${formatDay(sub.trialEnd)} tarihinde ${money(sub.priceTry) ?? "paket ücreti"} çekilecek.`,
+        badge: `Deneme · ${left.replace(" kaldı", "")}`,
+        cta: manage,
+      }
+    }
+    if (sub.status === "past_due") {
+      return {
+        title: "Ödemen alınamadı",
+        detail: sub.currentPeriodEnd ? `Kartını güncelle; erişimin ${formatDay(sub.currentPeriodEnd)} tarihine kadar açık.` : "Kartını güncelle.",
+        badge: "Ödeme bekliyor",
+        cta: manage,
+      }
+    }
     return {
-      title: `Erişimin ${formatPassEnd(status.passEndsAt)} tarihine kadar açık`,
-      detail: `${left} · ${daily}`,
-      badge: left,
-      cta: "Süreyi uzat",
+      title: `${PLAN_NAME[sub.plan] ?? "Paket"} aboneliğin açık`,
+      detail: !sub.currentPeriodEnd
+        ? null
+        : sub.cancelAtPeriodEnd
+          ? `İptal ettin; erişimin ${formatDay(sub.currentPeriodEnd)} tarihine kadar açık.`
+          : `Sonraki ödeme ${formatDay(sub.currentPeriodEnd)}${sub.priceTry !== null ? ` · ${money(sub.priceTry)}` : ""}`,
+      badge: "Abone",
+      cta: manage,
     }
   }
-  if (status.freeLeft > 0) {
-    return {
-      title: `${status.freeLeft} ücretsiz uyarlama hakkın var`,
-      detail: "Skor her zaman ücretsiz. Daha fazla uyarlama için bir paket seçebilirsin.",
-      badge: `${status.freeLeft} ücretsiz hak`,
-      cta: "Paketleri gör",
-    }
-  }
+  const q = status.quota
+  if (!q) return { title: "Ücretsiz paket", detail: null, badge: "Ücretsiz", cta: "Paketleri gör" }
+  const analyses = Math.max(0, q.analyses.limit - q.analyses.used)
+  const adaptations = Math.max(0, q.adaptations.limit - q.adaptations.used)
   return {
-    title: "Ücretsiz uyarlama hakkını kullandın",
-    detail: "Skor her zaman ücretsiz. Uyarlamaya devam etmek için bir erişim dönemi seç.",
-    badge: "Paket al",
-    cta: "Paket al",
+    title: `Bu ay ${analyses} analiz ve ${adaptations} uyarlama hakkın kaldı`,
+    detail: `${formatDay(q.resetsAt)} tarihinde yenilenir.`,
+    badge: "Ücretsiz",
+    cta: "Paketleri gör",
   }
 }
 
 /** Uyarla düğmesinin altında: basmadan önce neyin harcanacağı görünsün. */
 export function adaptHint(status: BillingStatus): string | null {
   if (status.unlimited) return null
-  if (status.passEndsAt) {
-    return status.usedLast24h >= status.dailyCap
-      ? `Son 24 saatteki ${status.dailyCap} uyarlama sınırına ulaştın.`
-      : null
-  }
-  return status.freeLeft > 0
-    ? "Bu uyarlama ücretsiz hakkını kullanır."
-    : "Ücretsiz hakkını kullandın; uyarlamak için bir paket gerekiyor."
+  if (status.access) return status.usedLast24h >= status.dailyCap ? `Son 24 saatteki ${status.dailyCap} uyarlama sınırına ulaştın.` : null
+  if (!status.quota) return null
+  return status.quota.adaptations.used < status.quota.adaptations.limit
+    ? "Bu uyarlama bu ayki ücretsiz hakkını kullanır."
+    : "Bu ayki ücretsiz uyarlamanı kullandın; devam etmek için abonelik gerekiyor."
 }
 
-/** Paket ekranındaki tek ödeme düğmesi. */
-export function payLabel(plan: PlanOffer): string {
-  return plan.priceTry !== null ? `${PLAN_LABEL[plan.key]} · ${plan.priceTry} TL öde` : `${PLAN_LABEL[plan.key]} öde`
+/** Analiz formunun altında, yalnız ücretsiz kullanıcıda. */
+/** Ücretsiz kullanıcının bu ayki analizleri bitti mi: gönder düğmesi yerine kilit kartı. */
+export function analysisQuotaReached(status: BillingStatus): boolean {
+  if (status.unlimited || status.access || !status.quota) return false
+  return status.quota.analyses.used >= status.quota.analyses.limit
 }
 
-/** Dönem açıkken alınan paket bitişin üstüne ekleniyor; ödemeden önce söylensin. */
-export function stackNote(status: BillingStatus): string | null {
-  return status.passEndsAt
-    ? `Yeni paket, mevcut erişimin bittiğinde (${formatPassEnd(status.passEndsAt)}) başlar; süreler üst üste eklenir.`
-    : null
+export function analysisNote(status: BillingStatus): string | null {
+  if (status.unlimited || status.access || !status.quota) return null
+  return `Bu ay ${status.quota.analyses.used}/${status.quota.analyses.limit} analiz · ${formatDay(status.quota.resetsAt)} tarihinde yenilenir`
 }

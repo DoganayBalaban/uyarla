@@ -38,13 +38,14 @@ model User {
   // Onayın geçmişi EmailConsent'te.
   productNews          Boolean @default(false)
 
-  accessPasses AccessPass[]
   emailLogs    EmailLog[]
   emailConsents EmailConsent[]
   /// "Tüm ilanlarda hariç tut" listesi (DOG-90).
   excludedConcepts ExcludedConcept[]
   // LinkedIn profil denetimi (DOG-157); son 5 tarama.
   linkedinAudits LinkedInAudit[]
+  // Abonelik (DOG-158, K-107); Polar bildirimleriyle güncelleniyor.
+  subscriptions Subscription[]
 }
 
 model Resume {
@@ -293,27 +294,6 @@ model Verification {
   @@index([identifier])
 }
 
-enum AccessPassStatus {
-  active
-  refunded
-}
-
-/// Ücretli erişim dönemi (DOG-34). Tek seferlik paket; otomatik yenileme yok.
-/// Polar sipariş kimliği tekil: aynı ödeme bildirimi iki kez dönem açmaz.
-model AccessPass {
-  id              String           @id @default(cuid())
-  userId          String
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan            String
-  startsAt        DateTime
-  endsAt          DateTime
-  providerOrderId String           @unique
-  status          AccessPassStatus @default(active)
-  createdAt       DateTime         @default(now())
-
-  @@index([userId, endsAt])
-}
-
 /// Kullanıcının bütün ilanlarda hariç tuttuğu kavramlar (DOG-90). Bir
 /// gereksinimin bütün kavramları listedeyse sonraki analizlerde otomatik
 /// işaretli geliyor; eski analizlere dokunulmuyor.
@@ -404,4 +384,29 @@ enum LinkedInAuditStatus {
   running
   done
   failed
+}
+
+/// Polar aboneliğinin son hâli (DOG-158). Bildirimlerle ekle-ya da-güncelle;
+/// eski bildirim (`providerUpdatedAt` daha geride) yeniyi ezmiyor.
+model Subscription {
+  id                     String    @id @default(cuid())
+  userId                 String
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerSubscriptionId String    @unique
+  /// Polar müşteri kimliği; portal bununla açılıyor (dış kimlik başka kayda gidebilir).
+  providerCustomerId     String?
+  /// month | quarter | unknown (ayarlarda olmayan ürün)
+  plan                   String
+  /// Polar'daki durum: trialing, active, past_due, canceled, unpaid, incomplete…
+  status                 String
+  currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean   @default(false)
+  trialEnd               DateTime?
+  /// İptal/iade sonrası erişimin bittiği an (Polar `ended_at`).
+  endedAt                DateTime?
+  providerUpdatedAt      DateTime
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @default(now()) @updatedAt
+
+  @@index([userId])
 }

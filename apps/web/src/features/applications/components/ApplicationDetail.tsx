@@ -161,8 +161,8 @@ function SummaryTab({ card }: { card: BoardCard }) {
       router.push(`/adapt/${adaptationId}`)
     } catch (error) {
       const body = await apiErrorBody(error)
-      // Ücretsiz hak bitti (DOG-34): paket ekranına, dönüşte uyarlama başlıyor.
-      if (body.code === "payment_required") {
+      // Bu ayki ücretsiz uyarlama bitti (DOG-158): paket ekranına, dönüşte uyarlama başlıyor.
+      if (body.code === "adaptation_quota") {
         router.push(plansPath(`/analyze?uyarla=${encodeURIComponent(card.analysisId)}`))
         return
       }

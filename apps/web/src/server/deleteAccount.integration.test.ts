@@ -90,13 +90,14 @@ async function makeJob(userId: string, label: string) {
     },
   })
 
-  const accessPass = await prisma.accessPass.create({
+  const subscription = await prisma.subscription.create({
     data: {
       userId,
       plan: "month",
-      providerOrderId: `test-${Math.random()}`,
-      startsAt: new Date(),
-      endsAt: new Date(Date.now() + 864e5),
+      providerSubscriptionId: `test-${Math.random()}`,
+      status: "active",
+      currentPeriodEnd: new Date(Date.now() + 864e5),
+      providerUpdatedAt: new Date(),
     },
   })
 
@@ -104,7 +105,7 @@ async function makeJob(userId: string, label: string) {
     data: { userId, key: `kavram-${label}`, term: `Kavram ${label}` },
   })
 
-  return { filePath, resume, version, posting, analysis, adaptation, session, account, accessPass, excludedConcept }
+  return { filePath, resume, version, posting, analysis, adaptation, session, account, subscription, excludedConcept }
 }
 
 describe("account deletion · real database", () => {
@@ -129,7 +130,7 @@ describe("account deletion · real database", () => {
     expect(await prisma.jobPosting.findUnique({ where: { id: is.posting.id } })).toBeNull()
     expect(await prisma.session.findUnique({ where: { id: is.session.id } })).toBeNull()
     expect(await prisma.account.findUnique({ where: { id: is.account.id } })).toBeNull()
-    expect(await prisma.accessPass.findUnique({ where: { id: is.accessPass.id } })).toBeNull()
+    expect(await prisma.subscription.findUnique({ where: { id: is.subscription.id } })).toBeNull()
     expect(await prisma.excludedConcept.findUnique({ where: { id: is.excludedConcept.id } })).toBeNull()
     expect(await prisma.user.findUnique({ where: { id: dbUser.id } })).toBeNull()
 

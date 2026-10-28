@@ -6,11 +6,11 @@ export const LANDING_FAQ: { s: string; c: string }[] = [
   },
   {
     s: "Skor ücretsiz mi?",
-    c: "Evet. CV'ni yükleyip ilanı yapıştırman yeter, kayıt gerekmez. Uyarlama için e-postanla giriş yapman isteniyor; işin kaybolmaz, yaptığın analiz hesabına taşınır.",
+    c: "Evet, ayda 5 analize kadar. CV'ni yükleyip ilanı yapıştırman yeter, kayıt gerekmez. Uyarlama için e-postanla giriş yapman isteniyor; işin kaybolmaz, yaptığın analiz hesabına taşınır.",
   },
   {
     s: "Uyarlama ücretli mi?",
-    c: "İlk uyarlaman ücretsiz. Sonrası için tek seferlik bir paket seçersin: 1 hafta, 1 ay ya da 3 ay. Süre boyunca istediğin kadar uyarlar ve ön yazı oluşturursun; otomatik yenileme yok, fiyatlara KDV dahil.",
+    c: "Her ay 5 analiz ve 1 uyarlama ücretsiz; ayda 1 uyarlama ön yazısı ve PDF/DOCX'iyle birlikte. Daha fazlası için aylık ya da 3 aylık abonelik seçersin; ikisi de 7 gün ücretsiz denemeyle başlar. Abonelik otomatik yenilenir, istediğin an iptal edebilirsin; fiyatlara KDV dahil.",
   },
   {
     s: "Deneyimimi abartıyor ya da uyduruyor mu?",

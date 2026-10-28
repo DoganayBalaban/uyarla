@@ -74,12 +74,15 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2>6. Ücretler</h2>
+        <h2>6. Ücretler ve abonelik</h2>
         <p>
-          Skor her zaman ücretsizdir; ilk uyarlaman da ücretsizdir. Sonraki uyarlamalar için tek
-          seferlik bir erişim dönemi (1 hafta, 1 ay ya da 3 ay) satın alırsın. Ödeme tek seferliktir,
-          otomatik yenileme yoktur. Fiyatlar satın almadan önce paket ekranında gösterilir; iade ve
-          cayma koşulları <Link href="/refund">iade ve cayma</Link> sayfasındadır.
+          Her ay 5 analiz ve 1 uyarlama ücretsizdir. Daha fazlası için aylık (1 Ay) ya da üç aylık (3 Ay) aboneliği
+          seçersin. Abonelik, seçtiğin dönemin sonunda aynı tutarla otomatik yenilenir; Hesabım&apos;daki
+          &quot;Aboneliği yönet&quot; bağlantısından istediğin an ücretsiz iptal edebilirsin (6502 sayılı Kanun md. 51).
+          İptal ettiğinde erişimin ödediğin dönemin sonuna kadar sürer. 1 Ay ve 3 Ay 7 gün ücretsiz denemeyle başlar:
+          deneme bitmeden iptal edersen ücret alınmaz, bitişten 3 gün önce e-postayla hatırlatılır ve deneme hesap
+          başına bir kez kullanılabilir. Fiyatlar satın almadan önce paket ekranında gösterilir; iade ve cayma
+          koşulları <Link href="/refund">iade ve cayma</Link> sayfasındadır.
         </p>
       </section>
 

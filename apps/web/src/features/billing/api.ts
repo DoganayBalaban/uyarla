@@ -7,18 +7,34 @@ export async function createCheckout(plan: PlanKey, returnTo: string | null): Pr
   return (await api.post<{ url: string }>("/billing/checkout", { plan, returnTo })).data
 }
 
+/** "Aboneliği yönet": Polar müşteri portalının adresi (DOG-158). */
+export async function openPortal(): Promise<{ url: string }> {
+  return (await api.post<{ url: string }>("/billing/portal")).data
+}
+
+/** `GET /api/billing/status` (DOG-158): abonelik ve ücretsiz kota. */
 export interface BillingStatus {
-  passEndsAt: string | null
-  /** En son açılan aktif dönemin oluşturulma zamanı (DOG-80); eski yanıtlarda yok. */
-  lastPassAt?: string | null
-  freeUsed: boolean
-  /** Kalan ücretsiz uyarlama (DOG-81). */
-  freeLeft: number
-  /** Son 24 saatteki uyarlamalar; günlük sınır yalnız dönem içinde işliyor. */
+  /** Abonelik ya da yönetici: ücretli özellikler açık. */
+  access: boolean
+  /** Yönetici hesabı: kota ve günlük tavan yok. */
+  unlimited: boolean
+  /** Hiç aboneliği olmamış: düğme "7 gün ücretsiz başla". */
+  trialEligible: boolean
+  subscription: {
+    plan: string
+    status: string
+    currentPeriodEnd: string | null
+    cancelAtPeriodEnd: boolean
+    trialEnd: string | null
+    createdAt: string
+    /** Paket ekranındaki fiyat (yenilemede çekilecek tutar); yapılandırmada yoksa null. */
+    priceTry: number | null
+  } | null
+  /** Ücretsiz kullanıcıda bu ayki kota; abonede ve yöneticide null. */
+  quota: { analyses: { used: number; limit: number }; adaptations: { used: number; limit: number }; resetsAt: string } | null
+  /** Son 24 saatteki uyarlamalar; günlük tavan yalnız abonelikte işliyor. */
   usedLast24h: number
   dailyCap: number
-  /** Yönetici hesabı: ödeme duvarı ve günlük tavan yok. Eski yanıtlarda yok. */
-  unlimited?: boolean
 }
 
 export const billingStatusKey = ["billing-status"] as const

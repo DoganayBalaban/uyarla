@@ -21,6 +21,8 @@ import {
   type PracticeEntry,
 } from "@uyarla/core/interview/practiceRecord"
 import { api, apiErrorMessage, apiStatus } from "@/lib/api"
+import { billingStatusKey, useBillingStatus } from "@/features/billing/api"
+import { LockedFeature, isLocked } from "@/features/billing/components/LockedFeature"
 import { InterviewPrepWaiting } from "@/features/applications/components/InterviewPrepWaiting"
 import type { PrepWaitingPreview } from "@/features/applications/prepWaiting"
 
@@ -64,6 +66,10 @@ export function InterviewPrepView({ analysisId }: { analysisId: string }) {
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key(analysisId) }),
   })
+  // Abonelikte (DOG-158): ücretsizde kilitli kart; durum yüklenirken kilit yok, sunucu yine 402 veriyor.
+  const billing = useBillingStatus()
+  const locked = isLocked(billing.data)
+  const returnTo = `/applications/${encodeURIComponent(analysisId)}/interview`
 
   if (query.isPending) {
     return (
@@ -91,6 +97,8 @@ export function InterviewPrepView({ analysisId }: { analysisId: string }) {
     try {
       await start.mutateAsync()
     } catch (e) {
+      // Abonelik bitmiş olabilir: durum yenilenince kilit kartı görünüyor.
+      if (apiStatus(e) === 402) return void queryClient.invalidateQueries({ queryKey: billingStatusKey })
       setError(await apiErrorMessage(e, "Hazırlık paketini başlatamadık. Birazdan tekrar dener misin?"))
     }
   }
@@ -124,7 +132,14 @@ export function InterviewPrepView({ analysisId }: { analysisId: string }) {
       )}
       {record?.status === "failed" && <p className="m-0 text-sm text-destructive">Hazırlık paketini yazamadık. Tekrar dener misin?</p>}
 
-      {!running && data.prepAttemptsLeft > 0 && (
+      {locked && !prep && (
+        <LockedFeature
+          title="Mülakat hazırlık paketi"
+          description="Bu ilana özel olası sorular, CV'nden cevap iskeletleri ve yazılı pratik abonelikte."
+          returnTo={returnTo}
+        />
+      )}
+      {!running && !locked && data.prepAttemptsLeft > 0 && (
         <Button type="button" variant={prep ? "outline" : "default"} onClick={() => void create()} disabled={start.isPending}>
           {start.isPending ? <LoaderCircle className="motion-safe:animate-spin" aria-hidden /> : <Sparkles aria-hidden />}
           {prep ? `Yeniden hazırla (${data.prepAttemptsLeft} hakkın kaldı)` : "Hazırlık paketini oluştur"}
@@ -136,7 +151,7 @@ export function InterviewPrepView({ analysisId }: { analysisId: string }) {
         </p>
       )}
 
-      {prep && <PrepSections prep={prep} practice={{ analysisId, entries: record?.practice ?? [] }} />}
+      {prep && <PrepSections prep={prep} practice={{ analysisId, entries: record?.practice ?? [], locked, returnTo }} />}
     </div>
   )
 }
@@ -153,7 +168,14 @@ function Flag({ issues }: { issues: Array<{ detail: string }> }) {
   )
 }
 
-export function PrepSections({ prep, practice }: { prep: InterviewPrep; practice?: { analysisId: string; entries: PracticeEntry[] } }) {
+export function PrepSections({
+  prep,
+  practice,
+}: {
+  prep: InterviewPrep
+  /** `locked`: ücretsiz kullanıcıda pratik kutusu yerine kilitli kart (DOG-158). */
+  practice?: { analysisId: string; entries: PracticeEntry[]; locked?: boolean; returnTo?: string }
+}) {
   const bridges = prep.consistency.length + prep.bridges.length
   const tabs = [
     { id: "questions", label: "Olası sorular", count: prep.questions.length },
@@ -284,6 +306,10 @@ export function PrepSections({ prep, practice }: { prep: InterviewPrep; practice
             Bir soruyu seç, mülakatta söyleyeceğin gibi yaz. Geri bildirim STAR yapısına, uzunluğa ve CV&apos;nde olmayan
             iddialara bakar.
           </p>
+          {/* Ücretsizde sekmenin başında tek kilit kartı (DOG-158); sorular görünüyor, cevap kutusu yok. */}
+          {practice.locked && (
+            <LockedFeature compact title="Yazılı pratik" description="Cevabına geri bildirim abonelikte." returnTo={practice.returnTo ?? "/plans"} />
+          )}
           {prep.questions.map((q, i) => (
             <Card key={i} className="gap-2 py-4 shadow-xs">
               <CardHeader className="px-5">
@@ -292,9 +318,11 @@ export function PrepSections({ prep, practice }: { prep: InterviewPrep; practice
                   {q.question}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-5 text-sm">
-                <PracticeBox analysisId={practice.analysisId} questionIndex={i} entries={practice.entries.filter((p) => p.questionIndex === i)} />
-              </CardContent>
+              {!practice.locked && (
+                <CardContent className="px-5 text-sm">
+                  <PracticeBox analysisId={practice.analysisId} questionIndex={i} entries={practice.entries.filter((p) => p.questionIndex === i)} />
+                </CardContent>
+              )}
             </Card>
           ))}
         </TabsContent>

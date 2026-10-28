@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest"
 import {
-  accessEndingEmail,
-  accessOpenedEmail,
   accountDeletedEmail,
   activationNoAnalysisEmail,
   applicationRemindersEmail,
@@ -52,16 +50,8 @@ describe("applicationRemindersEmail (DOG-98, DOG-128)", () => {
   })
 })
 
-describe("access and account e-mails (DOG-129)", () => {
-  it("says the pass does not renew, without sales pressure", () => {
-    const { subject, text } = accessEndingEmail(new Date("2026-10-22T12:00:00Z"))
-    expect(subject).toBe("Erişim dönemin 22 Ekim tarihinde bitiyor")
-    expect(text).toContain("otomatik yenilenmiyor")
-    expect(text.toLocaleLowerCase("tr")).not.toMatch(/son şans|kaçırma|indirim/)
-  })
-
-  it("confirms access with its end date and the deletion with Polar's retention", () => {
-    expect(accessOpenedEmail(new Date("2026-11-20T12:00:00Z")).text).toContain("20 Kasım")
+describe("account e-mails (DOG-129)", () => {
+  it("confirms the deletion with Polar's retention", () => {
     expect(accountDeletedEmail().text).toContain("Polar fatura kaydını")
   })
 })

@@ -83,4 +83,21 @@ describe("PrepSections (DOG-118)", () => {
     expect(html).toContain("Eksik kalan gereksinimler")
     expect(html).toContain("Senin soracakların")
   })
+
+  it("practice tab: a subscriber gets the answer box, a free user one lock card, never code text (DOG-158)", () => {
+    const render = (locked: boolean) =>
+      renderToStaticMarkup(
+        <QueryClientProvider client={new QueryClient()}>
+          <PrepSections prep={{ ...PREP, questions: [PREP.questions[0]!, { ...PREP.questions[0]!, question: "İkinci soru?" }] }} practice={{ analysisId: "a1", entries: [], locked, returnTo: "/applications/a1/interview" }} />
+        </QueryClientProvider>,
+      )
+    const open = render(false)
+    expect(open).not.toContain("practice.locked")
+    expect(open).not.toContain("abonelikte")
+    expect(open).toContain("Cevabını yaz, geri bildirim al")
+    const locked = render(true)
+    expect(locked).not.toContain("practice.locked")
+    expect(locked).not.toContain("Cevabını yaz, geri bildirim al")
+    expect(locked.match(/Yazılı pratik/g)).toHaveLength(1)
+  })
 })

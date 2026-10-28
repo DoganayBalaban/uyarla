@@ -3,12 +3,12 @@ import type { BillingEvent, BillingProvider } from "@/server/billing/provider"
 import { WebhookSignatureError } from "@/server/billing/provider"
 
 /**
- * Polar (DOG-34). Merchant of record: vergiyi ve faturayı Polar üstleniyor,
- * kart bilgisi uyarla'ya hiç gelmiyor. Kullanıcı kimliği ve paket ödeme
- * oturumunun `metadata`'sında gidip siparişle geri dönüyor. Kimlik
- * `external_customer_id` olarak da gidiyor, ama o Polar müşteri kaydına bağlı:
- * aynı e-postayla daha önce açılmış bir müşteri başka kimlik taşıyabilir.
- * Bu yüzden önce `metadata.user_id` okunuyor.
+ * Polar (DOG-34, abonelik DOG-158). Merchant of record: vergiyi ve faturayı
+ * Polar üstleniyor, kart bilgisi uyarla'ya hiç gelmiyor. Abonelik durumu
+ * bildirimlerle geliyor; plan ürün kimliğinden okunuyor. Kullanıcı kimliği
+ * ödeme oturumunun `metadata`'sında gidip abonelikle geri dönüyor; yedek
+ * `external_customer_id` (o Polar müşteri kaydına bağlı: aynı e-postayla daha
+ * önce açılmış müşteri başka kimlik taşıyabilir, bu yüzden metadata önce).
  *
  * SDK çağrıları `PolarDeps` arkasında: testte sahte, üretimde gerçek SDK.
  */
@@ -20,23 +20,54 @@ export interface PolarDeps {
     success_url: string
     metadata: Record<string, string>
     locale: string
+    allow_trial: boolean
   }): Promise<{ url: string }>
+  createCustomerSession(
+    body: { external_customer_id: string; return_url: string } | { customer_id: string; return_url: string },
+  ): Promise<{ customer_portal_url: string }>
+  revokeSubscription(id: string): Promise<unknown>
   validateEvent(body: string, headers: Record<string, string>, secret: string): Promise<{ type: string; data: unknown }>
   isVerificationError(error: unknown): boolean
   /** SDK'nın tanımadığı olay türü; 500 dönersek Polar durmadan yeniden dener. */
   isUnknownTypeError(error: unknown): boolean
 }
 
-interface OrderData {
+/** Abonelik durumunu değiştiren bildirimler; hepsi aynı yere gidiyor (spec §4.3). */
+const SUBSCRIPTION_EVENTS = new Set([
+  "subscription.created",
+  "subscription.updated",
+  "subscription.active",
+  "subscription.canceled",
+  "subscription.uncanceled",
+  "subscription.revoked",
+  "subscription.past_due",
+])
+
+interface SubscriptionData {
   id?: unknown
   status?: unknown
+  product_id?: unknown
+  current_period_end?: unknown
+  cancel_at_period_end?: unknown
+  trial_end?: unknown
+  ended_at?: unknown
+  created_at?: unknown
+  modified_at?: unknown
   metadata?: Record<string, unknown> | null
+  customer_id?: unknown
   customer?: { external_id?: unknown } | null
 }
 
-export function createPolarProvider(config: { webhookSecret: string }, deps: PolarDeps): BillingProvider {
+const date = (v: unknown) => (typeof v === "string" && v ? new Date(v) : null)
+
+export function createPolarProvider(
+  config: { webhookSecret: string; products: Partial<Record<"month" | "quarter", string | undefined>> },
+  deps: PolarDeps,
+): BillingProvider {
+  const planOf = (productId: unknown) =>
+    (Object.entries(config.products).find(([, id]) => id && id === productId)?.[0] as "month" | "quarter" | undefined) ?? null
   return {
-    async createCheckout({ userId, email, productId, plan, successUrl }) {
+    async createCheckout({ userId, email, productId, plan, successUrl, allowTrial }) {
       const checkout = await deps.createCheckout({
         products: [productId],
         external_customer_id: userId,
@@ -44,8 +75,23 @@ export function createPolarProvider(config: { webhookSecret: string }, deps: Pol
         success_url: successUrl,
         metadata: { plan, user_id: userId },
         locale: "tr",
+        // Polar'ın kendi deneme kuralı değil, ekranda gösterdiğimiz hak geçerli.
+        allow_trial: allowTrial,
       })
       return { url: checkout.url }
+    },
+
+    async createPortalSession({ userId, customerId, returnUrl }) {
+      // Aynı e-postayla önce açılmış Polar müşterisi başka dış kimlik taşıyabilir;
+      // bildirimden kaydettiğimiz müşteri kimliği her zaman doğru kayda gider.
+      const session = await deps.createCustomerSession(
+        customerId ? { customer_id: customerId, return_url: returnUrl } : { external_customer_id: userId, return_url: returnUrl },
+      )
+      return { url: session.customer_portal_url }
+    },
+
+    async revokeSubscription(id) {
+      await deps.revokeSubscription(id)
     },
 
     async parseWebhook(rawBody, headers): Promise<BillingEvent | null> {
@@ -57,15 +103,26 @@ export function createPolarProvider(config: { webhookSecret: string }, deps: Pol
         if (deps.isUnknownTypeError(error)) return null
         throw error
       }
-      if (event.type !== "order.paid" && event.type !== "order.refunded") return null
-      const order = event.data as OrderData
-      if (typeof order.id !== "string") return null
-      // Kısmi iade erişimi kapatmıyor; yalnız tam iade ("refunded") kapatıyor.
-      if (event.type === "order.refunded") return order.status === "refunded" ? { type: "refunded", orderId: order.id } : null
-      const userId = order.metadata?.user_id || order.customer?.external_id
-      const plan = order.metadata?.plan
-      if (typeof userId !== "string" || !userId || typeof plan !== "string") return null
-      return { type: "paid", orderId: order.id, userId, plan }
+      if (!SUBSCRIPTION_EVENTS.has(event.type)) return null
+      const s = event.data as SubscriptionData
+      const userId = s.metadata?.user_id || s.customer?.external_id
+      const modifiedAt = date(s.modified_at) ?? date(s.created_at)
+      if (typeof s.id !== "string" || typeof s.status !== "string" || !modifiedAt) return null
+      // Sessizce düşmesin (son inceleme): para alınmış ama erişim açılmamış olabilir.
+      if (typeof userId !== "string" || !userId) return { type: "unmatched", subscriptionId: s.id, reason: "user" }
+      return {
+        type: "subscription",
+        subscriptionId: s.id,
+        userId,
+        plan: planOf(s.product_id) ?? "unknown",
+        status: s.status,
+        currentPeriodEnd: date(s.current_period_end),
+        cancelAtPeriodEnd: s.cancel_at_period_end === true,
+        trialEnd: date(s.trial_end),
+        endedAt: date(s.ended_at),
+        modifiedAt,
+        customerId: typeof s.customer_id === "string" && s.customer_id ? s.customer_id : null,
+      }
     },
   }
 }
@@ -89,9 +146,11 @@ export function polarProviderFromEnv(env: Record<string, string | undefined> = p
   if (!accessToken || !webhookSecret) throw new BillingNotConfiguredError()
   const polar = createPolar({ accessToken, environment: env.POLAR_SERVER === "production" ? "production" : "sandbox" })
   return createPolarProvider(
-    { webhookSecret },
+    { webhookSecret, products: { month: env.POLAR_PRODUCT_MONTH?.trim(), quarter: env.POLAR_PRODUCT_QUARTER?.trim() } },
     {
       createCheckout: (body) => polar.checkouts.create(body),
+      createCustomerSession: (body) => polar.customerSessions.create(body),
+      revokeSubscription: (id) => polar.subscriptions.revoke(id),
       validateEvent: (body, headers, secret) => webhooks.validateEvent(body, headers, secret),
       isVerificationError: (error) => error instanceof webhooks.PolarWebhookVerificationError,
       isUnknownTypeError: (error) => error instanceof webhooks.PolarWebhookUnknownTypeError,

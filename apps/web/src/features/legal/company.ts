@@ -12,5 +12,5 @@ export const LEGAL = {
   contact: "kvkk@uyarla.com.tr",
   /** Genel sorular, destek ve iade talepleri. */
   support: "iletisim@uyarla.com.tr",
-  lastUpdated: "23 Ekim 2026",
+  lastUpdated: "28 Ekim 2026",
 } as const

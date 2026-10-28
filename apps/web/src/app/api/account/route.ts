@@ -5,6 +5,8 @@ import { authErrorResponse, ensureOwner, ensureSession, getSession } from "@/ser
 import { deleteAccountBodySchema } from "@/features/account/schema"
 import { buildExportZip, collectUserData } from "@/server/dataExport"
 import { deleteUsers } from "@/server/deleteAccount"
+import { BillingNotConfiguredError, polarProviderFromEnv } from "@/server/billing/polar"
+import { revokeOpenSubscriptions } from "@/server/billing/subscriptions"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 import { mailClientFromEnv } from "@/server/email/send"
 import { accountDeletedEmail } from "@/server/email/templates"
@@ -41,6 +43,18 @@ export async function DELETE(request: Request) {
     // bellekte, gönderimden sonra hiçbir yerde kalmıyor. Anonim hesabın
     // adresi yer tutucu.
     const owner = await prisma.user.findUnique({ where: { id: user.id }, select: { email: true, isAnonymous: true } })
+
+    // Açık abonelik Polar'da iptal ediliyor (DOG-158); yoksa silinmiş hesaptan
+    // ücret çekilmeye devam ederdi. Polar'a ulaşılamazsa silme yine sürüyor
+    // (revokeOpenSubscriptions uyarı düşüyor).
+    if (owner && !owner.isAnonymous) {
+      try {
+        await revokeOpenSubscriptions(prisma, polarProviderFromEnv(), user.id)
+      } catch (error) {
+        // Ödeme ayarlanmamışsa (yerel) abonelik de yok.
+        if (!(error instanceof BillingNotConfiguredError)) throw error
+      }
+    }
 
     const result = await deleteUsers(prisma, [user.id])
 
