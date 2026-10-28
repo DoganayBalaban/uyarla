@@ -24,4 +24,8 @@ describe("plans (DOG-158)", () => {
     expect(FEATURE_ROWS.find((r) => r.label.startsWith("İlan analizi"))).toEqual({ label: "İlan analizi ve uyum skoru", free: "Ayda 5", paid: "Sınırsız" })
     expect(FEATURE_ROWS.find((r) => r.label === "Mülakat hazırlık paketi")).toEqual({ label: "Mülakat hazırlık paketi", free: false, paid: true })
   })
+
+  it("lists job search links as free (DOG-160)", () => {
+    expect(FEATURE_ROWS.find((r) => r.label === "İş arama bağlantıları")).toEqual({ label: "İş arama bağlantıları", free: true, paid: true })
+  })
 })

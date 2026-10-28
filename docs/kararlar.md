@@ -3895,3 +3895,16 @@ yanından geçen bir yol.
 - 1 Ay ve 3 Ay'da 7 günlük deneme: kart alınıyor, denemede her şey açık, hesap başına bir kez.
 - Ücretsiz katman takvim ayına bağlı: ayda 5 analiz ve 1 uyarlama. Mülakat hazırlığı, pratik, form yanıtları ve LinkedIn yazımı abonelikte.
 - Polar, merchant of record ve TL kararı aynen geçerli. Ayrıntı: `docs/superpowers/specs/2026-10-28-abonelik-design.md`.
+
+## K-108 · Tanıtım sayfası başvuru yolculuğunu anlatıyor
+
+**Bağlam:** Tanıtım sayfası yalnızca CV skorunu ve uyarlamayı anlatıyordu. İş arama, form yanıtları, başvuru panosu, mülakat hazırlığı ve LinkedIn denetimi görünmüyordu (DOG-160, 28 Ekim).
+
+**Karar:**
+- Sayfa tek bir başvuru hikâyesi: Bul → Uyarla → Başvur → Takip et → Hazırlan → Görünür ol. Sekmeli vitrin ve listeye ekleme reddedildi.
+- Her adımda motion ile tarayıcıda oynayan sahne var, video dosyası yok. Örnek kişi Elif Yılmaz.
+- Sahnelerdeki örnek veri uydurma kuralına uyuyor ve bu testle denetleniyor.
+- Erişim çipleri `FEATURE_ROWS`'tan türetiliyor.
+- "3 adım" ve bento bölümleri kalkıyor.
+
+Ayrıntı: `docs/superpowers/specs/2026-10-28-tanitim-yolculuk-design.md`.

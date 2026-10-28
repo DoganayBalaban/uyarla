@@ -12,6 +12,8 @@ import { LANDING_FAQ } from "@/features/landing/faq"
 import { Pricing } from "@/features/landing/components/Pricing"
 import { JobSitesStrip } from "@/features/landing/components/JobSitesStrip"
 import type { PlanOffer } from "@/features/billing/plans"
+import { JOURNEY, accessChips, type StepId } from "@/features/landing/journey"
+import { JourneyRail } from "@/features/landing/components/JourneyRail"
 import s from "@/features/landing/landing.module.css"
 
 /**
@@ -23,27 +25,6 @@ import s from "@/features/landing/landing.module.css"
  * gerçek veri gelene kadar konmadı. Henüz yapılmamış özellikler "Yakında"
  * rozetiyle gösteriliyor.
  */
-
-const STEPS: { number: string; icon: IconName; title: string; text: string }[] = [
-  {
-    number: "01",
-    icon: "upload",
-    title: "CV'ni yükle",
-    text: "PDF veya DOCX. Kayıt olmana gerek yok.",
-  },
-  {
-    number: "02",
-    icon: "board",
-    title: "İlanı yapıştır",
-    text: "Başvurmak istediğin ilanın metnini olduğu gibi yapıştır.",
-  },
-  {
-    number: "03",
-    icon: "score",
-    title: "Skorunu gör, uyarla",
-    text: "Uyumunu ve eksik anahtar kelimeleri gör. İstersen tek tıkla uyarla.",
-  },
-]
 
 const FEATURES: {
   label: string
@@ -90,42 +71,6 @@ const FEATURES: {
   },
 ]
 
-const BENTO_ITEMS: { icon: IconName; title: string; text: string; comingSoon?: boolean; wide?: boolean }[] = [
-  {
-    icon: "score",
-    title: "ATS uyum skoru",
-    text: "Rakam, durum etiketi ve gereksinim bazında döküm.",
-    wide: true,
-  },
-  { icon: "key", title: "Eksik anahtar kelimeler", text: "İlanın aradığı ama CV'nde olmayan kavramlar." },
-  { icon: "pen", title: "Madde madde uyarlama", text: "Özet, deneyim ve beceriler ilana göre." },
-  {
-    icon: "shield",
-    title: "Uydurma kontrolü",
-    text: "Anlamı kayan ya da yeni olgu ekleyen maddeyi yakalar, gerekçesini söyler.",
-    wide: true,
-  },
-  { icon: "doc", title: "PDF ve DOCX", text: "ATS'nin okuyabildiği sade şablon." },
-  {
-    icon: "mail",
-    title: "Ön yazı",
-    text: "İlana ve senin deneyimine özel ön yazı; uydurma kontrolünden geçer.",
-  },
-  {
-    icon: "columns",
-    title: "Başvuru panosu",
-    text: "Her analiz bir kart: başvurdun mu, mülakat mı, teklif mi, tek yerde gör.",
-    wide: true,
-  },
-  {
-    icon: "globe",
-    title: "İngilizce CV",
-    text: "Türkçe CV'nden ilana özel İngilizce CV.",
-    comingSoon: true,
-    wide: true,
-  },
-]
-
 const PERSONAS = [
   {
     id: "photo-persona-1",
@@ -159,6 +104,36 @@ const PERSONAS = [
 ]
 
 
+/** Her adımın sahnesi; sahnesi gelmemiş adım yalnızca metinle (PR 2–4 dolduruyor). */
+const STEP_VISUAL: Partial<Record<StepId, React.ReactNode>> = {}
+
+function AccessChips({ step }: { step: (typeof JOURNEY)[number] }) {
+  return (
+    <ul className={s.accessChips} aria-label="Erişim">
+      {accessChips(step).map((c) => (
+        <li key={c.short} className={`${s.accessChip} ${c.paid ? s.accessChipPaid : ""}`}>
+          {c.short} · {c.access}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function Ticks({ items }: { items: string[] }) {
+  return (
+    <ul className={s.tickList}>
+      {items.map((m) => (
+        <li key={m}>
+          <span className={s.tick}>
+            <Icon name="check" size={14} />
+          </span>
+          {m}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
   return (
     <div className={s.page}>
@@ -180,7 +155,7 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
               <Link href="/analyze" className={`${s.buttonPrimary} ${s.buttonLarge}`}>
                 Ücretsiz skorumu gör
               </Link>
-              <a href="#nasil" className={`${s.buttonSecondary} ${s.buttonLarge}`}>
+              <a href="#yolculuk" className={`${s.buttonSecondary} ${s.buttonLarge}`}>
                 Nasıl çalışır?
               </a>
             </div>
@@ -218,105 +193,72 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
           </div>
         </section>
 
-        {/* ——— Nasıl çalışır ——— */}
-        <section id="nasil" className={s.section}>
-          <div className={s.container}>
-            <div className={s.sectionHeader}>
-              <span className={s.sectionLabel}>Nasıl çalışır</span>
-              <h2 className={s.h2}>Üç adım. Kayıt yok, kurulum yok.</h2>
-              <p className={s.sectionLead}>Skorunu görmek tamamen ücretsiz.</p>
-            </div>
-            <ol className={s.steps}>
-              {STEPS.map((a, i) => (
-                <li key={a.number} className={s.step}>
-                  <div className={s.stepTop}>
-                    <span className={s.stepIcon}>
-                      <Icon name={a.icon} size={22} />
+        {/* ——— Başvuru yolculuğu (DOG-160) ——— */}
+        <JourneyRail steps={JOURNEY} />
+        {JOURNEY.map((step, i) => (
+          <section key={step.id} id={step.id} className={`${s.section} ${s.journeySection} ${i % 2 === 1 ? s.sectionTinted : ""}`}>
+            <div className={s.container}>
+              {step.id === "uyarla" ? (
+                <>
+                  <div className={s.sectionHeader}>
+                    <span className={s.sectionLabel}>
+                      {step.number} · {step.name}
                     </span>
-                    <span className={s.stepNumber}>{a.number}</span>
+                    <h2 className={s.h2}>{step.title}</h2>
+                    <p className={s.sectionLead}>{step.text}</p>
+                    <AccessChips step={step} />
                   </div>
-                  <h3 className={s.h3}>{a.title}</h3>
-                  <p className={s.stepText}>{a.text}</p>
-                  {i < STEPS.length - 1 && <span className={s.stepLine} aria-hidden="true" />}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        {/* ——— Özellik blokları ——— */}
-        <section id="ozellikler" className={`${s.section} ${s.sectionTinted}`}>
-          <div className={s.container}>
-            {FEATURES.map((o, i) => (
-              <div key={o.label} className={`${s.feature} ${i % 2 === 1 ? s.featureReversed : ""}`}>
-                <div className={s.featureText}>
-                  <span className={s.sectionLabel}>{o.label}</span>
-                  <h2 className={s.h2}>{o.title}</h2>
-                  <p className={s.sectionLead}>{o.text}</p>
-                  <ul className={s.tickList}>
-                    {o.bullets.map((m) => (
-                      <li key={m}>
-                        <span className={s.tick}>
-                          <Icon name="check" size={14} />
-                        </span>
-                        {m}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className={s.featureVisual}>{o.visual}</div>
-              </div>
-            ))}
-
-            <div className={`${s.feature} ${s.featureReversed}`}>
-              <div className={s.featureText}>
-                <span className={s.sectionLabel}>Çıktı</span>
-                <h2 className={s.h2}>Başvurmaya hazır, ATS'nin okuyabildiği CV.</h2>
-                <p className={s.sectionLead}>
-                  Uyarlanmış CV'ni sade, tek sütunlu bir şablonla PDF veya DOCX olarak indir. Süs yok,
-                  tablo yok; hem insan hem yazılım rahat okur.
-                </p>
-                <FileChips />
-              </div>
-              <div className={s.featureVisual}>
-                <Photo
-                  id="photo-output"
-                  file="output.png"
-                  ratio="5 / 4"
-                  description="Masada basılı CV ya da ekranda açık PDF; elde kahve, sade kompozisyon"
-                  alt="Kafe masasında basılı bir CV, açık dizüstü ve bir fincan Türk kahvesi"
-                  sizes="(max-width: 900px) 92vw, 560px"
-                  className={s.outputPhoto}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ——— Bento ——— */}
-        <section className={s.section}>
-          <div className={s.container}>
-            <div className={s.sectionHeader}>
-              <span className={s.sectionLabel}>Hepsi tek yerde</span>
-              <h2 className={s.h2}>Başvur, uyarla, takip et.</h2>
-              <p className={s.sectionLead}>Bugün skor ve uyarlama hazır. Sıradakiler yolda.</p>
-            </div>
-            <div className={s.bento}>
-              {BENTO_ITEMS.map((b) => (
-                <div key={b.title} className={`${s.bentoCard} ${b.wide ? s.bentoWide : ""}`}>
-                  <div className={s.bentoTop}>
-                    <span className={s.bentoIcon}>
-                      <Icon name={b.icon} size={22} />
+                  {FEATURES.map((o, j) => (
+                    <div key={o.label} className={`${s.feature} ${j % 2 === 1 ? s.featureReversed : ""}`}>
+                      <div className={s.featureText}>
+                        <span className={s.sectionLabel}>{o.label}</span>
+                        <h3 className={s.h2}>{o.title}</h3>
+                        <p className={s.sectionLead}>{o.text}</p>
+                        <Ticks items={o.bullets} />
+                      </div>
+                      <div className={s.featureVisual}>{o.visual}</div>
+                    </div>
+                  ))}
+                  <div className={`${s.feature} ${s.featureReversed}`}>
+                    <div className={s.featureText}>
+                      <span className={s.sectionLabel}>Çıktı</span>
+                      <h3 className={s.h2}>Başvurmaya hazır, ATS'nin okuyabildiği CV.</h3>
+                      <p className={s.sectionLead}>
+                        Uyarlanmış CV'ni sade, tek sütunlu bir şablonla PDF veya DOCX olarak indir. Süs yok,
+                        tablo yok; hem insan hem yazılım rahat okur.
+                      </p>
+                      <FileChips />
+                    </div>
+                    <div className={s.featureVisual}>
+                      <Photo
+                        id="photo-output"
+                        file="output.png"
+                        ratio="5 / 4"
+                        description="Masada basılı CV ya da ekranda açık PDF; elde kahve, sade kompozisyon"
+                        alt="Kafe masasında basılı bir CV, açık dizüstü ve bir fincan Türk kahvesi"
+                        sizes="(max-width: 900px) 92vw, 560px"
+                        className={s.outputPhoto}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className={`${s.feature} ${i % 2 === 1 ? s.featureReversed : ""}`}>
+                  <div className={s.featureText}>
+                    <span className={s.sectionLabel}>
+                      {step.number} · {step.name}
                     </span>
-                    {b.comingSoon && <span className={s.comingSoon}>Yakında</span>}
+                    <h2 className={s.h2}>{step.title}</h2>
+                    <p className={s.sectionLead}>{step.text}</p>
+                    <Ticks items={step.bullets} />
+                    <AccessChips step={step} />
                   </div>
-                  <h3 className={s.h3}>{b.title}</h3>
-                  <p className={s.bentoText}>{b.text}</p>
+                  {STEP_VISUAL[step.id] && <div className={s.featureVisual}>{STEP_VISUAL[step.id]}</div>}
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        </section>
+          </section>
+        ))}
 
         {/* ——— Dürüstlük ——— */}
         <section id="durustluk" className={s.honesty}>
@@ -466,8 +408,8 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
           <nav className={s.footerLinks} aria-label="Alt menü">
             <div>
               <p className={s.footerHeading}>Ürün</p>
-              <a href="#nasil">Nasıl çalışır</a>
-              <a href="#ozellikler">Özellikler</a>
+              <a href="#yolculuk">Nasıl çalışır</a>
+              <a href="#bul">Özellikler</a>
               <a href="#fiyat">Fiyat</a>
               <Link href="/analyze">Ücretsiz skor</Link>
             </div>
