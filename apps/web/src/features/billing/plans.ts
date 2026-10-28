@@ -60,6 +60,7 @@ export const FEATURE_ROWS = [
   { label: "LinkedIn hakkında ve deneyim yazımı", free: false, paid: true },
   { label: "LinkedIn teşhisi ve başlık önerileri", free: true, paid: true },
   { label: "Başvuru panosu, takip mesajı ve teşekkür notu", free: true, paid: true },
+  { label: "İş arama bağlantıları", free: true, paid: true },
   { label: "CV kütüphanesi, hatırlatmalar, Chrome eklentisi", free: true, paid: true },
 ] as const satisfies ReadonlyArray<{ label: string; free: string | boolean; paid: string | boolean }>
 
