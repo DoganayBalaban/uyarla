@@ -3,7 +3,7 @@
 import { MotionGlobalConfig, useAnimationFrame } from "motion/react"
 import { useEffect, useState } from "react"
 import { REELS } from "@/features/landing/reels/reels"
-import { ReelFrame, reelLength } from "@/features/landing/reels/ReelFrame"
+import { ReelFrame, reelLength, type ReelTiming } from "@/features/landing/reels/ReelFrame"
 
 declare global {
   interface Window {
@@ -14,15 +14,15 @@ declare global {
 
 /**
  * Dikey videolar (DOG-162). Normalde oynatıcı: video seç, oynat, kaydır.
- * `?n=3&capture=1`: yalnızca kare, köşede; animasyonlar kapalı ve an
+ * `?n=3&capture=1&body=<ms>&end=<ms>`: yalnızca kare, köşede; süreler seslendirmeden; animasyonlar kapalı ve an
  * `window.__reel.setMs` ile seçiliyor; kare kare ekran görüntüsü için.
  */
-export function ReelShowcase({ n, capture }: { n: number | null; capture: boolean }) {
+export function ReelShowcase({ n, capture, timing }: { n: number | null; capture: boolean; timing?: ReelTiming }) {
   const [current, setCurrent] = useState(n ?? REELS[0]!.n)
   const [ms, setMs] = useState(0)
   const [playing, setPlaying] = useState(!capture)
   const reel = REELS.find((r) => r.n === current) ?? REELS[0]!
-  const length = reelLength(reel)
+  const length = reelLength(reel, timing)
 
   useAnimationFrame((_, delta) => {
     if (playing && !capture) setMs((m) => (m + Math.min(delta, 64)) % length)
@@ -42,7 +42,7 @@ export function ReelShowcase({ n, capture }: { n: number | null; capture: boolea
     }
   }, [capture, length])
 
-  if (capture) return <ReelFrame reel={reel} ms={ms} />
+  if (capture) return <ReelFrame reel={reel} ms={ms} timing={timing} />
 
   return (
     <main className="mx-auto flex max-w-5xl flex-wrap gap-8 px-4 py-10">
