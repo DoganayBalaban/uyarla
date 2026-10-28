@@ -16,7 +16,7 @@ describe("landing pricing (DOG-84)", () => {
   it("has a pricing section that menus link to", () => {
     expect(src("features/landing/components/Pricing.tsx")).toContain('id="fiyat"')
     expect(src("features/landing/LandingPage.tsx")).toContain("<Pricing plans={plans} />")
-    expect(src("components/layout/Navbar.tsx")).toContain('"/#fiyat"')
+    expect(src("components/layout/marketingLinks.ts")).toContain('"/#fiyat"')
   })
 
   it("reads prices from the same plans as the plans screen", () => {

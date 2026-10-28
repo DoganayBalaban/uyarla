@@ -1,7 +1,7 @@
 /**
  * Tanıtım sayfasında kaydırırken üst çubukta hangi bölümün yanacağı. Okuma
  * çizgisini (`line`, sayfa koordinatında) geçmiş son bölüm aktif; hero'da
- * henüz hiçbiri değil. Ara bölümler (bento, personalar) bir öncekinin
+ * henüz hiçbiri değil. Ara bölümler (adımlar, personalar) bir öncekinin
  * devamı sayılıyor, sekme sönüp yanıp durmasın diye.
  */
 export function activeSection(sections: { id: string; top: number }[], line: number): string | null {
