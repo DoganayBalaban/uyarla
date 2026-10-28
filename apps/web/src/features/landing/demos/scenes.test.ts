@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { DEMO_BULLETS } from "@/features/landing/demos/demoScript"
-import { ELIF_CV, JOB_SCENE, inCv } from "@/features/landing/demos/scenes"
+import { APPLY_SCENE, ELIF_CV, JOB_SCENE, inCv } from "@/features/landing/demos/scenes"
 
 /** Sahnelerin örnek verisi uydurma kuralına uyuyor mu (spec §6). */
 describe("Elif's sample CV", () => {
@@ -24,5 +24,13 @@ describe("job search scene", () => {
     expect(JOB_SCENE.links.find((l) => l.site === "linkedin")!.note).toBe("İstanbul, Türkiye")
     expect(JOB_SCENE.links.find((l) => l.site === "kariyernet")!.note).toBe("Şehri sitede seçersin")
     expect(JSON.stringify(JOB_SCENE)).not.toMatch(/\d+ (ilan|sonuç)/)
+  })
+})
+
+describe("apply scene", () => {
+  it("keeps the answer within its limit and every claim in the CV", () => {
+    expect(APPLY_SCENE.answer.length).toBeLessThanOrEqual(APPLY_SCENE.limit)
+    expect(APPLY_SCENE.limit).toBe(140)
+    for (const q of [...APPLY_SCENE.answerEvidence, APPLY_SCENE.letterEvidence]) expect(inCv(q), q).toBe(true)
   })
 })
