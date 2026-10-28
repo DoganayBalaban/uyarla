@@ -11,6 +11,9 @@ import {
   downloadUnlocked,
   span,
   ease,
+  phaseAt,
+  loopMs,
+  phaseReached,
 } from "@/features/landing/demos/demoScript"
 
 describe("heroPhaseAt", () => {
@@ -77,5 +80,33 @@ describe("span / ease", () => {
     expect(ease(0)).toBe(0)
     expect(ease(0.5)).toBe(0.5)
     expect(ease(1)).toBe(1)
+  })
+})
+
+describe("phaseAt, loopMs, phaseReached", () => {
+  const P = [
+    { id: "a", ms: 100 },
+    { id: "b", ms: 300 },
+  ] as const
+
+  it("finds the phase and its progress, looping", () => {
+    expect(loopMs(P)).toBe(400)
+    expect(phaseAt(P, 0)).toEqual({ phase: "a", progress: 0 })
+    expect(phaseAt(P, 250)).toEqual({ phase: "b", progress: 0.5 })
+    expect(phaseAt(P, 399).phase).toBe("b")
+    expect(phaseAt(P, 400)).toEqual({ phase: "a", progress: 0 })
+    expect(phaseAt(P, -100)).toEqual({ phase: "b", progress: 2 / 3 })
+  })
+
+  it("tells whether a phase has been reached", () => {
+    expect(phaseReached(P, "b", "a")).toBe(true)
+    expect(phaseReached(P, "a", "b")).toBe(false)
+    expect(phaseReached(P, "b", "b")).toBe(true)
+  })
+
+  it("keeps the hero helper identical", () => {
+    for (const ms of [0, 1799, 1800, 5000, HERO_LOOP_MS - 1, HERO_LOOP_MS + 7]) {
+      expect(heroPhaseAt(ms)).toEqual(phaseAt(HERO_PHASES, ms))
+    }
   })
 })
