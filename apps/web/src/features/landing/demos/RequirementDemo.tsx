@@ -1,11 +1,12 @@
 "use client"
 
-import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/react"
+import { AnimatePresence, motion, useInView } from "motion/react"
 import { Check, ChevronDown, X } from "lucide-react"
 import { useRef, useState } from "react"
 import { DEMO_REQUIREMENTS } from "@/features/landing/demos/demoScript"
 import { DemoRing } from "@/features/landing/demos/parts"
 import s from "@/features/landing/landing.module.css"
+import { useReducedMotionAfterMount } from "@/features/landing/demos/useScenePlayer"
 
 /**
  * Gereksinim listesi, canlı: ekrana girince satırlar sırayla taranır;
@@ -14,7 +15,7 @@ import s from "@/features/landing/landing.module.css"
 export function RequirementDemo() {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, amount: 0.4 })
-  const reduced = useReducedMotion()
+  const reduced = useReducedMotionAfterMount()
   const shown = inView || reduced
   const [open, setOpen] = useState<string | null>(DEMO_REQUIREMENTS[2]?.text ?? null)
   const matched = DEMO_REQUIREMENTS.filter((r) => r.evidence).length

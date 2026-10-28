@@ -25,7 +25,7 @@ export function BoardFilm({ ms }: { ms: number }) {
               <div
                 className={`mt-1.5 rounded-md border bg-card p-1.5 text-[11px] shadow-xs transition-transform ${phase === "drag" ? "translate-x-3 rotate-2" : ""}`}
               >
-                <p className="line-clamp-3 font-medium break-words">{BOARD_SCENE.position}</p>
+                <p className="font-medium break-words">{BOARD_SCENE.position}</p>
                 <p className={`mt-1 font-semibold tabular-nums ${at("adapted") ? "text-brand-green" : "text-brand-amber"}`}>{score}</p>
               </div>
             )}

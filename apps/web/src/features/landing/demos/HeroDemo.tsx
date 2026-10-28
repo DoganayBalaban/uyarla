@@ -1,6 +1,6 @@
 "use client"
 
-import { AnimatePresence, motion, useAnimationFrame, useInView, useReducedMotion } from "motion/react"
+import { AnimatePresence, motion, useAnimationFrame, useInView } from "motion/react"
 import { Check, Download, FileText, Link2, Loader2, MousePointer2, Pause, Play, ShieldCheck, Sparkles } from "lucide-react"
 import { useRef, useState } from "react"
 import { UyarlaLogo } from "@/components/brand/UyarlaMark"
@@ -22,6 +22,7 @@ import {
   type HeroPhaseId,
 } from "@/features/landing/demos/demoScript"
 import { BulletText, DemoRing } from "@/features/landing/demos/parts"
+import { useReducedMotionAfterMount } from "@/features/landing/demos/useScenePlayer"
 import s from "@/features/landing/landing.module.css"
 
 /**
@@ -57,7 +58,7 @@ function phaseStart(id: HeroPhaseId): number {
 export function HeroDemo() {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { amount: 0.25 })
-  const reduced = useReducedMotion()
+  const reduced = useReducedMotionAfterMount()
   const [ms, setMs] = useState(0)
   const [paused, setPaused] = useState(false)
 

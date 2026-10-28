@@ -1,9 +1,10 @@
 "use client"
 
-import { AnimatePresence, animate, motion, useMotionValue, useReducedMotion, useTransform } from "motion/react"
+import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react"
 import { useEffect } from "react"
 import { scoreStatus } from "@/lib/scoreStatus"
 import type { Decision, Segment } from "@/features/landing/demos/demoScript"
+import { useReducedMotionAfterMount } from "@/features/landing/demos/useScenePlayer"
 
 /**
  * Demoların ortak parçaları: skor halkası ve madde metni. Ürün ekranlarındaki
@@ -32,7 +33,7 @@ export function DemoRing({
   muted?: boolean
   label?: string
 }) {
-  const reduced = useReducedMotion()
+  const reduced = useReducedMotionAfterMount()
   const value = useMotionValue(score)
   const rounded = useTransform(value, (v) => Math.round(v))
   const dash = useTransform(value, (v) => `${(C * Math.max(0, Math.min(100, v))) / 100} ${C}`)

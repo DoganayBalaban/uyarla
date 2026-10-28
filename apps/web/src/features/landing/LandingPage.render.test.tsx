@@ -22,4 +22,13 @@ describe("LandingPage journey (DOG-160)", () => {
     expect(html).not.toContain("Başvur, uyarla, takip et.")
     expect(html).toContain("Olmayan bir deneyimi asla eklemez.")
   })
+
+  it("tells the whole journey up top and answers the new questions (DOG-160)", () => {
+    expect(html).toContain("Mülakat hazırlığı ve LinkedIn denetimi")
+    expect(html).toContain("başvur, takip et, mülakata hazırlan")
+    expect(html).toContain("Başvuru formlarını siz mi dolduruyorsunuz?")
+    expect(html).toContain("Mülakat hazırlığında sorular nereden geliyor?")
+    expect(html).toContain("LinkedIn profilimi nasıl denetliyorsunuz?")
+    expect(html).toContain("Gönderimi sen yaparsın")
+  })
 })

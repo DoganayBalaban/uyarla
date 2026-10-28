@@ -1,7 +1,7 @@
 "use client"
 
 import { useAnimationFrame, useInView, useReducedMotion } from "motion/react"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { loopMs, type Phase } from "@/features/landing/demos/demoScript"
 import s from "@/features/landing/landing.module.css"
 
@@ -17,13 +17,26 @@ export function shownMs(clock: number, loop: number, reduced: boolean): number {
 }
 
 /**
+ * Hareket azaltma tercihi, bileşen bağlandıktan sonra. Sunucu tercihi
+ * bilmiyor; ilk çizimde istemci de bilmiyormuş gibi davranmazsa sahne
+ * sunucudakinden farklı kare çiziyor ve React ağacı baştan kuruyordu
+ * (hidrasyon hatası).
+ */
+export function useReducedMotionAfterMount(): boolean {
+  const reduced = useReducedMotion() ?? false
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  return mounted && reduced
+}
+
+/**
  * Tanıtım sahnelerinin saati (DOG-160). Yalnız sahne ekrandayken yürüyor;
  * üç sahne aynı anda oynamıyor. Hareket azaltmada son kare duruyor.
  */
 export function useScenePlayer(loop: number) {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { amount: 0.3 })
-  const reduced = useReducedMotion() ?? false
+  const reduced = useReducedMotionAfterMount()
   const [clock, setClock] = useState(0)
   useAnimationFrame((_, delta) => {
     if (inView && !reduced) setClock((c) => sceneClock(c, delta, loop, true))
