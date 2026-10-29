@@ -1386,19 +1386,12 @@
   padding: 0;
   list-style: none;
 }
-.sectionHeader .accessChips {
-  justify-content: center;
-}
 .accessChip {
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--brand-green) 35%, transparent);
   background: color-mix(in srgb, var(--brand-green) 10%, transparent);
   padding: 0.2rem 0.65rem;
   font-size: 0.8125rem;
-}
-.accessChipPaid {
-  border-color: color-mix(in srgb, var(--brand-blue) 35%, transparent);
-  background: var(--blue-soft);
 }
 
 /* ——— Chrome eklentisi (DOG-163) ——— */
