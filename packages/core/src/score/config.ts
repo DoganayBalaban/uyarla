@@ -70,6 +70,11 @@ export interface ScoringConfig {
    * × İK ilanı: 42).
    */
   titleWeight: number
+  /**
+   * Eşiği geçen anlamsal eşleşmenin katkısı: benzerlik değeri kadar
+   * ("similarity") ya da tam ("full").
+   */
+  semanticCredit: "similarity" | "full"
 }
 
 const ALL_EVIDENCE_KINDS: readonly Evidence["kind"][] = [
@@ -82,11 +87,15 @@ const ALL_EVIDENCE_KINDS: readonly Evidence["kind"][] = [
 ]
 
 /**
- * Başlangıç değerleri hipotezdir. Eşik bilinçli olarak yüksek: uydurma
- * eşleşme (yanlış pozitif), kaçırmadan daha zararlıdır — kullanıcıya olmayan
- * bir yetkinliği varmış gibi gösterir ve dürüstlük ilkesini çiğner (spec §7).
+ * Formülün 2. sürümü (DOG-103), olduğu gibi. Kayıtlı analizler kendi
+ * sürümüyle yeniden hesaplanıyor ("ilanda yok" işareti, düzeltmeler); bu
+ * değerler sonraki sürümlerde değişmemeli.
+ *
+ * Eşik bilinçli olarak yüksek: uydurma eşleşme (yanlış pozitif), kaçırmadan
+ * daha zararlıdır — kullanıcıya olmayan bir yetkinliği varmış gibi gösterir
+ * ve dürüstlük ilkesini çiğner (spec §7).
  */
-export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
+const REVISION_2: ScoringConfig = {
   mustWeight: 2.0,
   niceWeight: 1.0,
   // text-embedding-3-small ile ölçüldü (DOG-42). Eşik gömme modeline bağlı:
@@ -120,7 +129,13 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   // kutuda gösteriliyorlar.
   unscoredTypes: ["soft", "condition"],
   titleWeight: 2,
+  semanticCredit: "similarity",
 }
+
+/** 1. sürüm: kişisel nitelikler skorda, unvan yok. */
+const REVISION_1: ScoringConfig = { ...REVISION_2, unscoredTypes: [], titleWeight: 0 }
+
+export const DEFAULT_SCORING_CONFIG: ScoringConfig = REVISION_2
 
 /**
  * Skor formülünün sürümü; analiz sonucuna yazılıyor. 2: soft gereksinimler
@@ -128,3 +143,15 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
  * formülle; yenisiyle karşılaştırılacaksa yeniden hesaplanmalı.
  */
 export const SCORING_REVISION = 2
+
+const PAST_REVISIONS: Readonly<Record<number, ScoringConfig>> = { 1: REVISION_1, 2: REVISION_2 }
+
+/**
+ * Kayıtlı bir sonucun formülü. Sürümü olmayan sonuç 1. sürüm; bilinmeyen
+ * yeni bir sürüm bugünkü formül sayılıyor.
+ */
+export function scoringConfigFor(revision: number | undefined): ScoringConfig {
+  const r = revision ?? 1
+  if (r >= SCORING_REVISION) return DEFAULT_SCORING_CONFIG
+  return PAST_REVISIONS[r] ?? REVISION_1
+}

@@ -340,7 +340,7 @@ function matchRequirement(
         if (ev.kind === "summary" && !summarySemantic) continue
         const similarityScore = cosineSimilarity(vec, evidenceVector)
         if (similarityScore < cfg.semanticThreshold) continue
-        const contribution = similarityScore * evidenceMultiplier(ev, cfg)
+        const contribution = (cfg.semanticCredit === "full" ? 1 : similarityScore) * evidenceMultiplier(ev, cfg)
         if (!best || contribution > best.contribution) {
           best = { similarity: similarityScore, contribution, evidence: ev }
         }
