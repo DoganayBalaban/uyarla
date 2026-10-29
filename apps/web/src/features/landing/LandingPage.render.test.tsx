@@ -12,10 +12,10 @@ describe("LandingPage journey (DOG-160)", () => {
     expect(html).toContain('href="#takip"')
   })
 
-  it("labels access from the pricing table", () => {
-    expect(html).toContain("İş arama")
-    expect(html).toContain("Abonelikte")
-    expect(html).toContain("Ayda 1 ücretsiz")
+  it("shows no access chips; the pricing table carries free vs paid (29 Ekim)", () => {
+    expect(html).not.toContain('aria-label="Erişim"')
+    expect(html).not.toContain("Ön yazı · Ayda 1 ücretsiz")
+    expect(html).not.toContain("Chrome eklentisi · Ücretsiz")
   })
 
   it("drops the three-step and bento blocks, keeps the adapt demos", () => {
