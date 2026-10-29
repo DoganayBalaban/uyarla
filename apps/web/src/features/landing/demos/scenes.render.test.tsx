@@ -1,13 +1,14 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { loopMs } from "@/features/landing/demos/demoScript"
-import { APPLY_PHASES, APPLY_SCENE, BOARD_GATE_MS, BOARD_PHASES, BOARD_SCENE, INTERVIEW_PHASES, INTERVIEW_SCENE, JOB_PHASES, LINKEDIN_PHASES, LINKEDIN_SCENE, CHECK_PHASES } from "@/features/landing/demos/scenes"
+import { APPLY_PHASES, APPLY_SCENE, BOARD_GATE_MS, BOARD_PHASES, BOARD_SCENE, INTERVIEW_PHASES, INTERVIEW_SCENE, JOB_PHASES, LINKEDIN_PHASES, LINKEDIN_SCENE, CHECK_PHASES, EXT_PHASES } from "@/features/landing/demos/scenes"
 import { JobSearchDemo, JobSearchFilm } from "@/features/landing/demos/JobSearchDemo"
 import { ApplyFilm } from "@/features/landing/demos/ApplyDemo"
 import { BoardFilm } from "@/features/landing/demos/BoardDemo"
 import { InterviewFilm } from "@/features/landing/demos/InterviewDemo"
 import { LinkedInFilm } from "@/features/landing/demos/LinkedInDemo"
 import { CheckFilm } from "@/features/landing/demos/CheckFilm"
+import { ExtensionDemo, ExtensionFilm } from "@/features/landing/demos/ExtensionDemo"
 
 /** Her sahne son karesinde (hareket azaltma) anlamlı metni gösteriyor. */
 describe("scenes (DOG-160)", () => {
@@ -43,13 +44,15 @@ describe("scenes (DOG-160)", () => {
     expect(html).toContain("Sonuç")
   })
 
-  it("linkedin ends with the rewritten headline, its sources and the coming-soon extension", () => {
+  it("linkedin ends with the rewritten headline, its sources and the extension", () => {
     const html = renderToStaticMarkup(<LinkedInFilm ms={loopMs(LINKEDIN_PHASES) - 1} />)
     expect(html).toContain("Başlık")
     expect(html).toContain("Geliştirilebilir")
     for (const p of LINKEDIN_SCENE.parts) expect(html).toContain(p.text)
     expect(html).toContain("Hedef rolün")
-    expect(html).toContain("Yakında")
+    // Eklenti mağazada (DOG-163): "Yakında" yok.
+    expect(html).toContain("Chrome eklentisiyle")
+    expect(html).not.toContain("Yakında")
   })
 
   it("uses the product's own wording and sources (son inceleme)", () => {
@@ -75,5 +78,15 @@ describe("scenes (DOG-160)", () => {
     const last = renderToStaticMarkup(<CheckFilm ms={loopMs(CHECK_PHASES) - 1} />)
     expect(last).toContain("Eski hâli kalacak")
     expect(last).toContain("Karar verildi, indirme açık.")
+  })
+
+  it("extension film sends the posting from its page and ends on the score (DOG-163)", () => {
+    const point = renderToStaticMarkup(<ExtensionFilm ms={1500 + 1200} />)
+    expect(point).toContain("uyarla&#x27;ya gönder")
+    expect(point).toContain("Kuzey Yazılım")
+    const last = renderToStaticMarkup(<ExtensionFilm ms={loopMs(EXT_PHASES) - 1} />)
+    expect(last).toContain("Elif_Yilmaz_CV.pdf")
+    expect(last).toContain(">28<")
+    expect(renderToStaticMarkup(<ExtensionDemo />)).toContain('role="figure"')
   })
 })

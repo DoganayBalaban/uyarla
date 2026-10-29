@@ -43,7 +43,15 @@ describe("LandingPage journey (DOG-160)", () => {
     for (const { href } of MARKETING_LINKS) expect(withPlans, href).toContain(`id="${href.slice(2)}"`)
     expect(html).not.toMatch(/<nav[^>]*id="yolculuk"/)
     expect(MARKETING_LINKS).toContainEqual({ href: "/#gorunur", label: "LinkedIn" })
+    expect(MARKETING_LINKS).toContainEqual({ href: "/#eklenti", label: "Eklenti" })
     expect(MARKETING_LINKS.map((l) => l.label)).not.toContain("Özellikler")
     expect(html).toContain("LinkedIn denetimi")
+  })
+
+  it("has an extension section that links to its page and the store (DOG-163)", () => {
+    expect(html).toContain('id="eklenti"')
+    expect(html).toContain("Chrome&#x27;a ekle")
+    expect(html).toContain('href="/eklenti"')
+    expect(html).not.toMatch(/[Ee]klenti[^<]{0,40}[Yy]akında/)
   })
 })

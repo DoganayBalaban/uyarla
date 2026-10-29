@@ -1400,3 +1400,11 @@
   border-color: color-mix(in srgb, var(--brand-blue) 35%, transparent);
   background: var(--blue-soft);
 }
+
+/* ——— Chrome eklentisi (DOG-163) ——— */
+.extensionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}

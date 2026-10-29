@@ -7,6 +7,7 @@
 export const MARKETING_LINKS = [
   { href: "/#yolculuk", label: "Nasıl çalışır" },
   { href: "/#gorunur", label: "LinkedIn" },
+  { href: "/#eklenti", label: "Eklenti" },
   { href: "/#durustluk", label: "Dürüstlük" },
   { href: "/#fiyat", label: "Fiyat" },
   { href: "/#sss", label: "SSS" },
