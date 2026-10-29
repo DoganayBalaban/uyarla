@@ -81,10 +81,8 @@ export const JOURNEY: JourneyStep[] = [
     title: "LinkedIn profilin de hazır.",
     text: "Profilini hedef rolüne göre denetler; başlık, hakkında ve deneyim için profilindeki bilgilere dayanan öneriler yazar.",
     bullets: ["Bölüm bölüm: Başlık, Hakkında, Deneyim, Beceriler", "Her öneri profilindeki bir satıra dayanır", "Chrome eklentisiyle profilini tek tıkla aktar"],
-    rows: [
-      { label: "LinkedIn teşhisi ve başlık önerileri", short: "Teşhis ve başlık" },
-      { label: "LinkedIn hakkında ve deneyim yazımı", short: "Hakkında ve deneyim" },
-    ],
+    // Erişim çipi yok (29 Ekim); ücretsiz/abonelik ayrımı fiyat tablosunda.
+    rows: [],
   },
 ]
 
