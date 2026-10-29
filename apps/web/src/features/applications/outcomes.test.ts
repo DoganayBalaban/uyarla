@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { outcomesByBand, personalOutcomeSignal } from "@/features/applications/outcomes"
 
-const card = (score: number | null, stage: "saved" | "applied" | "interview" | "offer" | "rejected") => ({ score, stage })
+// Formülün 2. sürümüyle kaydedilmiş başvurular: eşikleri 22/35 (DOG-165).
+const card = (score: number | null, stage: "saved" | "applied" | "interview" | "offer" | "rejected") => ({ score, stage, scoringRevision: 2 })
 
 describe("outcomes by score band (DOG-124)", () => {
   it("counts resolved and positive outcomes with the screen's thresholds", () => {
@@ -27,5 +28,14 @@ describe("outcomes by score band (DOG-124)", () => {
       "Yüksek uyumlu 2 sonuçlanmış başvurunun 1 tanesi mülakata döndü.",
       "Düşük uyumlu 1 sonuçlanmış başvurunun 0 tanesi mülakata döndü.",
     ])
+  })
+
+  it("bands each application by the formula its score was saved with (DOG-165)", () => {
+    const bands = outcomesByBand([
+      { score: 40, stage: "interview", scoringRevision: 2 },
+      { score: 40, stage: "interview", scoringRevision: 3 },
+    ])
+    expect(bands.find((b) => b.label === "Yüksek uyum")!.resolved).toBe(1)
+    expect(bands.find((b) => b.label === "Orta uyum")!.resolved).toBe(1)
   })
 })

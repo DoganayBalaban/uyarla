@@ -97,9 +97,16 @@ describe("toBoardCard · company (DOG-64)", () => {
 describe("scoreBadge", () => {
   it("uses the same thresholds as the analysis result", () => {
     // DOG-72: sonuç ve panoda 36 "Yüksek uyum", başvuru panosunda "Düşük" idi.
-    expect(scoreBadge(36).text).toBe("Yüksek")
-    expect(scoreBadge(25).text).toBe("Orta")
+    expect(scoreBadge(55).text).toBe("Yüksek")
+    expect(scoreBadge(36).text).toBe("Orta")
     expect(scoreBadge(10).text).toBe("Düşük")
+  })
+
+  it("labels a card by the formula its score was saved with (DOG-165)", () => {
+    expect(scoreBadge(36, 2).text).toBe("Yüksek")
+    expect(toBoardCard(row({ score: 36, result: { scoringRevision: 2 } })).scoringRevision).toBe(2)
+    // Sürümü olmayan sonuç 1. sürüm.
+    expect(toBoardCard(row({ score: 36, result: {} })).scoringRevision).toBe(1)
   })
 })
 

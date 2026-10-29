@@ -10,7 +10,7 @@ import { scoreStatus } from "@/lib/scoreStatus"
  */
 export function SectionCards({ total, metrics }: { total: number; metrics: DashboardMetrics }) {
   const waiting = total - metrics.applied
-  const band = metrics.averageScore === null ? null : scoreStatus(metrics.averageScore)
+  const band = metrics.averageScore === null ? null : scoreStatus(metrics.averageScore, metrics.averageRevision ?? undefined)
   const cards = [
     {
       label: "Analiz",

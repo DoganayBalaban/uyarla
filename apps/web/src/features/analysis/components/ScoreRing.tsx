@@ -9,9 +9,20 @@ import { scoreStatus } from "@/lib/scoreStatus"
  * (ör. https://21st.dev/@sean0205/components/progress/radial) yaygın
  * deseni: SVG halka, dolum animasyonu, ortada değer.
  */
-export function ScoreRing({ score, size = 132, className }: { score: number; size?: number; className?: string }) {
+export function ScoreRing({
+  score,
+  revision,
+  size = 132,
+  className,
+}: {
+  score: number
+  /** Skorun formül sürümü (DOG-165); etiket o sürümün eşiğiyle. */
+  revision?: number
+  size?: number
+  className?: string
+}) {
   const reducedMotion = useReducedMotion() ?? false
-  const d = scoreStatus(score)
+  const d = scoreStatus(score, revision)
   const r = 44
   const circumference = 2 * Math.PI * r
   const filled = (circumference * Math.max(0, Math.min(100, score))) / 100

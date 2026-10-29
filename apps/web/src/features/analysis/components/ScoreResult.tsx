@@ -164,7 +164,7 @@ export function ScoreResult({
     setTab("posting")
   }
   const exclusion = applyExclusions(result)
-  const state = scoreStatus(exclusion.score)
+  const state = scoreStatus(exclusion.score, result.scoringRevision ?? 1)
   const summary = summarizeRequirements(exclusion.active)
   // Kendi eşiğimiz (DOG-91): zorunluların tamamı ve unvan.
   const ready = readiness(result)
@@ -210,7 +210,7 @@ export function ScoreResult({
         <Card className="relative overflow-hidden py-0 shadow-xs">
           <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-primary/10 blur-3xl" />
           <CardContent className="relative flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:p-8">
-            <ScoreRing score={exclusion.score} size={148} className="shrink-0 self-center sm:self-auto" />
+            <ScoreRing score={exclusion.score} revision={result.scoringRevision ?? 1} size={148} className="shrink-0 self-center sm:self-auto" />
 
             <div className="min-w-0 flex-1">
               <p className="m-0 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Uyum skoru</p>
@@ -487,7 +487,7 @@ export function ScoreResult({
 
   return (
     <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start lg:gap-6">
-      <ResultNavPanel score={exclusion.score} items={navItems} onSelect={goTo} />
+      <ResultNavPanel score={exclusion.score} revision={result.scoringRevision ?? 1} items={navItems} onSelect={goTo} />
       <section className="min-w-0 space-y-4">
         <ResultNavStrip items={navItems} onSelect={goTo} />
         {postingText ? (
@@ -789,8 +789,18 @@ function ConditionLine({ ok, text, note }: { ok: boolean; text: string; note: st
 }
 
 /** Geniş ekranda yapışkan özet (DOG-131): skor ve kategori satırları. */
-function ResultNavPanel({ score, items, onSelect }: { score: number; items: ResultNavItem[]; onSelect: (i: ResultNavItem) => void }) {
-  const state = scoreStatus(score)
+function ResultNavPanel({
+  score,
+  revision,
+  items,
+  onSelect,
+}: {
+  score: number
+  revision: number
+  items: ResultNavItem[]
+  onSelect: (i: ResultNavItem) => void
+}) {
+  const state = scoreStatus(score, revision)
   return (
     <aside aria-label="Sonuç özeti" className="sticky top-20 hidden rounded-xl border bg-card p-4 shadow-xs lg:block">
       <p className="m-0 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Uyum skoru</p>

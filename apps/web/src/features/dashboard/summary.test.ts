@@ -102,7 +102,17 @@ describe("dashboard summary · DOG-145", () => {
       ],
       now,
     )
-    expect(o.metrics).toEqual({ analysesLast30: 2, applied: 3, positive: 2, averageScore: 60 })
+    expect(o.metrics).toEqual({ analysesLast30: 2, applied: 3, positive: 2, averageScore: 60, averageRevision: 3 })
+  })
+
+  it("averages only the scores of the newest formula (DOG-165)", () => {
+    // Eski formülün skoru yeni ölçekle karışmasın: 80 (sürüm 3) ve 30 (sürüm 2).
+    const o = summarize([card({ score: 80, scoringRevision: 3 }), card({ score: 30, scoringRevision: 2 })], now)
+    expect(o.metrics.averageScore).toBe(80)
+    expect(o.metrics.averageRevision).toBe(3)
+    const old = summarize([card({ score: 30, scoringRevision: 2 }), card({ score: 40, scoringRevision: 1 })], now)
+    expect(old.metrics.averageScore).toBe(30)
+    expect(old.metrics.averageRevision).toBe(2)
   })
 
   it("builds a daily timeline in Istanbul time, empty days included", () => {

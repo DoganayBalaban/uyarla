@@ -15,6 +15,7 @@ import { postingTermsFrom } from "@/features/adaptation/postingTerms"
 import { waitingPreview } from "@/features/adaptation/waiting"
 import { adaptJobId } from "@uyarla/worker/adapt-queue"
 import { adaptQueue } from "@/server/adaptQueue"
+import { SCORING_REVISION } from "@uyarla/core/score/config"
 
 export const runtime = "nodejs"
 
@@ -41,8 +42,12 @@ export async function GET(
       stage: running ? await runningStage(id) : null,
       preview: running ? waitingPreview(profile, adaptation.analysis.result, adaptation.createdAt) : null,
       draft,
-      // Eski formülle kaydedilmiş analizde "önce" de bugünkü formülle (DOG-103).
-      scoreBefore: scoringRevision >= 2 ? scoreBefore : ((await computeScoreBefore(profile, scoringPosting, draft, excluded)) ?? scoreBefore),
+      // Eski formülle kaydedilmiş analizde "önce" de bugünkü formülle (DOG-103,
+      // DOG-165): "sonra" bugünkü formülle; fark formülden değil CV'den gelsin.
+      scoreBefore:
+        scoringRevision >= SCORING_REVISION
+          ? scoreBefore
+          : ((await computeScoreBefore(profile, scoringPosting, draft, excluded)) ?? scoreBefore),
       // Yeni skor yalnızca taslak varken hesaplanıyor; çalışırken boşuna
       // gömme çağrısı yapılmaz.
       scoreAfter: await computeScoreAfter(profile, scoringPosting, draft, excluded),
