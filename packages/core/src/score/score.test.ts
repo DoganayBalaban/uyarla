@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { conceptTexts, isProperNoun, score, weightedScore } from "./score.js"
-import { DEFAULT_SCORING_CONFIG, SCORING_REVISION } from "./config.js"
+import { DEFAULT_SCORING_CONFIG, SCORING_REVISION, scoringConfigFor } from "./config.js"
 import type { Evidence } from "./evidence.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import type { JobPostingData, Requirement } from "../schemas/job.js"
@@ -188,7 +188,7 @@ describe("score · weighting", () => {
     expect(outcome.score).toBe(33)
   })
 
-  it("a semantic match contributes its similarity, not full credit", () => {
+  it("in revision 2 a semantic match contributes its similarity, not full credit", () => {
     const outcome = score(
       {
         profile: PROFILE,
@@ -197,7 +197,7 @@ describe("score · weighting", () => {
         evidenceVectors: [V.mid],
         conceptVectors: [V.near],
       },
-      { ...DEFAULT_SCORING_CONFIG, semanticThreshold: 0.5 },
+      { ...scoringConfigFor(2), semanticThreshold: 0.5 },
     )
     // cos([1,0],[0.8,0.6]) = 0.8
     expect(outcome.requirements[0]!.confidence).toBeCloseTo(0.8)
@@ -365,7 +365,7 @@ describe("score · proportional confidence (K-23)", () => {
     expect(outcome.requirements[0]!.status).toBe("missing")
   })
 
-  it("an exact keyword match contributes more than a semantic match", () => {
+  it("in revision 2 an exact keyword match contributes more than a semantic match", () => {
     const word = score({
       profile: PROFILE,
       posting: testPosting([req("React", "must", ["react"])]),
@@ -381,7 +381,7 @@ describe("score · proportional confidence (K-23)", () => {
         evidenceVectors: [V.mid],
         conceptVectors: [V.near],
       },
-      { ...DEFAULT_SCORING_CONFIG, semanticThreshold: 0.5 },
+      { ...scoringConfigFor(2), semanticThreshold: 0.5 },
     )
 
     expect(word.requirements[0]!.confidence).toBe(1)
@@ -733,6 +733,48 @@ describe("score · deneyim süresi şartı (DOG-75)", () => {
     expect(result.status).toBe("missing")
   })
 
+  it("also counts a role in the same field as a matching role (revision 3)", () => {
+    // Örnek rapor: "Dijital pazarlamada en az 2 yıl". Adayın 17 aylık "Digital
+    // Marketing Executive" rolü kelimeyle eşleşiyor; 2023'ten beri süren
+    // "Performance Marketing Specialist" aynı alanda ("marketing"). Toplam 2 yılı aşıyor.
+    const marketing: Requirement = {
+      text: "Dijital pazarlamada en az 2 yıl deneyim",
+      type: "experience",
+      importance: "must",
+      concepts: [{ term: "Dijital pazarlama", synonyms: ["digital marketing"] }],
+    }
+    const roles = [role("Performance Marketing Specialist", "Mar 2023", "Present"), role("Digital Marketing Executive", "Sep 2021", "Feb 2023")]
+    const evidence = roles.map((r) => ({ text: `${r.title} · ${r.company}`, matchText: `${r.title} · ${r.company}`, kind: "role" as const, sourceRef: null }))
+    const outcome = score({
+      profile: profileWith(roles),
+      posting: testPosting([marketing]),
+      evidence,
+      evidenceVectors: [V.far, V.far],
+      conceptVectors: [V.near],
+      now: NOW,
+    }).requirements[0]!
+    expect(outcome.status).toBe("matched")
+  })
+
+  it("also counts a role whose title is semantically about the requirement (revision 3)", () => {
+    const sales: Requirement = {
+      text: "En az 2 yıl saha satışı deneyimi",
+      type: "experience",
+      importance: "must",
+      concepts: [{ term: "saha satışı", synonyms: [] }],
+    }
+    const roles = [role("Bölge Temsilcisi", "Jan 2022", "Present")]
+    const outcome = score({
+      profile: profileWith(roles),
+      posting: testPosting([sales]),
+      evidence: [{ text: "Bölge Temsilcisi · Bir Şirket", matchText: "Bölge Temsilcisi · Bir Şirket", kind: "role", sourceRef: null }],
+      evidenceVectors: [V.mid],
+      conceptVectors: [V.near],
+      now: NOW,
+    }).requirements[0]!
+    expect(outcome.status).toBe("matched")
+  })
+
   it("leaves the decision alone when dates are unreadable", () => {
     const result = run([role("Software Testing Engineer", "", "")])
     expect(result.status).toBe("matched")
@@ -895,10 +937,11 @@ describe("weightedScore · soft requirements and title (DOG-103)", () => {
 
   it("an unrelated short posting no longer looks like a strong match", () => {
     // Muhasebe CV'si × kısa İK ilanı (canlıda 42, "Yüksek uyum"): iki genel
-    // şart karşılanmış, rolün iki şartı eksik, unvan yok.
+    // şart karşılanmış, rolün iki şartı eksik, unvan yok. Sürüm 2'nin değerleri.
+    const v2 = scoringConfigFor(2)
     const reqs = [req("education", "must", 1), req("skill", "must", 1), req("experience", "must", 0), req("skill", "must", 0)]
-    expect(weightedScore(reqs)).toBe(50)
-    expect(weightedScore(reqs, DEFAULT_SCORING_CONFIG, [], { level: "none" })).toBe(40)
+    expect(weightedScore(reqs, v2)).toBe(50)
+    expect(weightedScore(reqs, v2, [], { level: "none" })).toBe(40)
   })
 
   it("is 0 when every requirement is excluded, even with a matching title", () => {
@@ -957,5 +1000,108 @@ describe("score · conditions (DOG-115)", () => {
     expect(outcome.languageChecks).toEqual([
       { index: 0, language: "İngilizce", required: "C1", cvLine: "English (B1)", found: "B1", status: "below" },
     ])
+  })
+})
+
+/**
+ * Skorun 3. sürümü: anlamsal eşleşme tam sayılıyor, genel şartlar (diploma,
+ * dil, ofis programları) tercih edilen bir gereksinim kadar, "benzer bir
+ * işte X yıl" unvan ve süreyle ölçülüyor.
+ */
+describe("score · revision 3", () => {
+  it("is the current revision", () => {
+    expect(SCORING_REVISION).toBe(3)
+  })
+
+  it("counts a semantic match over the threshold as fully met", () => {
+    const outcome = score({
+      profile: PROFILE,
+      posting: testPosting([req("Arayüz", "must", ["yok"])]),
+      evidence: [ev("madde")],
+      evidenceVectors: [V.mid],
+      conceptVectors: [V.near],
+    })
+    expect(outcome.requirements[0]!.method).toBe("semantic")
+    expect(outcome.requirements[0]!.confidence).toBe(1)
+    expect(outcome.score).toBe(100)
+  })
+
+  it("still discounts a summary sentence", () => {
+    const summary: Evidence = { text: "Üç yıllık pazarlama", matchText: "Üç yıllık pazarlama", kind: "summary", sourceRef: null }
+    const outcome = score({
+      profile: PROFILE,
+      posting: testPosting([{ text: "Pazarlama deneyimi", type: "experience", importance: "must", concepts: [{ term: "dijital büyüme", synonyms: [] }] }]),
+      evidence: [summary],
+      evidenceVectors: [V.mid],
+      conceptVectors: [V.near],
+    })
+    expect(outcome.requirements[0]!.confidence).toBeCloseTo(DEFAULT_SCORING_CONFIG.summaryWeight)
+  })
+
+  const result = (requirement: Requirement, confidence: number) => ({ requirement, confidence })
+  const generic = {
+    education: { text: "Üniversitelerin ilgili bölümlerinden mezun", type: "education", importance: "must", concepts: [{ term: "Üniversite mezunu", synonyms: [] }] } as Requirement,
+    english: { text: "İyi derecede İngilizce", type: "skill", importance: "must", concepts: [{ term: "İngilizce", synonyms: ["English"] }] } as Requirement,
+    office: { text: "MS Office programlarını kullanabilen", type: "skill", importance: "must", concepts: [{ term: "MS Office", synonyms: [] }] } as Requirement,
+  }
+  const roleSkill = { text: "İş hukuku bilgisi", type: "skill", importance: "must", concepts: [{ term: "İş hukuku", synonyms: [] }] } as Requirement
+  const roleExperience = { text: "İK alanında deneyim", type: "experience", importance: "must", concepts: [{ term: "İnsan kaynakları", synonyms: [] }] } as Requirement
+
+  it("weighs a generic must (degree, language, office) like a nice-to-have", () => {
+    // Muhasebe CV'si × kısa İK ilanı: diploma ve Excel var, rolün iki şartı yok.
+    const unrelated = [result(generic.education, 1), result(generic.office, 1), result(roleExperience, 0), result(roleSkill, 0)]
+    // (1 + 1) / (1 + 1 + 2 + 2) = 0,33
+    expect(weightedScore(unrelated)).toBe(33)
+    // Sürüm 2'de dördü eşit: 2 / 4.
+    expect(weightedScore(unrelated, scoringConfigFor(2))).toBe(50)
+  })
+
+  it("does not lower a candidate who meets the role's own requirements", () => {
+    const fit = [result(generic.education, 1), result(generic.english, 0), result(roleExperience, 1), result(roleSkill, 1)]
+    // (1 + 0 + 2 + 2) / (1 + 1 + 2 + 2) = 0,83; sürüm 2'de 6 / 8 = 0,75.
+    expect(weightedScore(fit)).toBe(83)
+    expect(weightedScore(fit, scoringConfigFor(2))).toBe(75)
+  })
+
+  it("does not treat a role-specific tool as generic", () => {
+    const erp = { text: "ERP sistemleri (Logo vb.)", type: "skill", importance: "must", concepts: [{ term: "ERP sistemleri", synonyms: [] }, { term: "Logo", synonyms: [] }] } as Requirement
+    expect(weightedScore([result(erp, 1), result(roleSkill, 0)])).toBe(50)
+  })
+
+  describe("'benzer bir işte X yıl' is measured by the title and the years", () => {
+    const NOW = new Date("2026-10-15T12:00:00Z")
+    const similar: Requirement = {
+      text: "Benzer bir işte en az 3 yıl deneyim sahibi olmak",
+      type: "experience",
+      importance: "must",
+      concepts: [{ term: "Benzer bir işte en az 3 yıl deneyim sahibi olmak", synonyms: [] }],
+    }
+    const role = (title: string, startDate: string, endDate: string) => ({ company: "Bir Şirket", title, startDate, endDate, bullets: [] })
+    const run = (experience: ReturnType<typeof role>[]) =>
+      score({
+        profile: { ...PROFILE, experience } as ResumeProfile,
+        posting: { ...testPosting([similar]), position: "Muhasebe Uzmanı" },
+        evidence: experience.map((r) => ({ text: r.title, matchText: r.title, kind: "role" as const, sourceRef: r.title })),
+        evidenceVectors: experience.map(() => V.far),
+        conceptVectors: [V.near],
+        now: NOW,
+      }).requirements[0]!
+
+    it("is met by enough years in a role with the posting's title", () => {
+      const r = run([role("Genel Muhasebe Uzmanı", "2020", "Present")])
+      expect(r.status).toBe("matched")
+      expect(r.confidence).toBe(1)
+    })
+
+    it("is missing with the years shown when the similar role is too short", () => {
+      const r = run([role("Muhasebe Uzmanı", "Jan 2025", "Present")])
+      expect(r.status).toBe("missing")
+      expect(r.missingConcepts.join(" ")).toContain("3 yıl")
+    })
+
+    it("does not count years in an unrelated role", () => {
+      const r = run([role("İnsan Kaynakları Uzmanı", "2015", "Present")])
+      expect(r.status).toBe("missing")
+    })
   })
 })
