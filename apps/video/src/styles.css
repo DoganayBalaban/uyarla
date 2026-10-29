@@ -1,0 +1,11 @@
+/* Tanıtım sahnelerinin stili: web'in teması ve Tailwind sınıfları. */
+@import "../../web/src/app/globals.css";
+@source "../../web/src";
+
+/* Remotion kareleri paralel çiziyor: hareket yalnızca kare numarasından. */
+*,
+*::before,
+*::after {
+  transition: none !important;
+  animation: none !important;
+}
