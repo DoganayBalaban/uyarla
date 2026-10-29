@@ -157,7 +157,9 @@ export function score(
   const results: RequirementResult[] = input.posting.requirements.map((requirement) => {
     const vectorSlice = input.conceptVectors.slice(cursor, cursor + requirement.concepts.length)
     cursor += requirement.concepts.length
-    if (cfg.similarRoleByTitle && isSimilarRoleRequirement(requirement)) return similarRole(requirement, input, title)
+    // İlanda unvan yoksa (ya da tahminse) "benzer iş" neye göre bilinmiyor:
+    // kavram ve toplam süreyle, sürüm 2'deki gibi.
+    if (cfg.similarRoleByTitle && title && isSimilarRoleRequirement(requirement)) return similarRole(requirement, input, title)
     return checkDuration(matchRequirement(requirement, vectorSlice, input, cfg), input, vectorSlice, cfg)
   })
 
@@ -253,12 +255,12 @@ function isSimilarRoleRequirement(requirement: Requirement): boolean {
  * taşıyan roller ve onlardaki süre. Unvan eşleşmesi score/title.ts'ninki;
  * süre o rollerin toplamı.
  */
-function similarRole(requirement: Requirement, input: ScoreInput, title: TitleMatch | null): RequirementResult {
+function similarRole(requirement: Requirement, input: ScoreInput, title: TitleMatch): RequirementResult {
   const roles = input.profile.experience.filter(
-    (role) => titleMatch(input.posting.position, { ...input.profile, headline: null, experience: [role] })?.level !== "none",
+    (role) => titleMatch(title.position, { ...input.profile, headline: null, experience: [role] })?.level !== "none",
   )
   const label = requirement.concepts[0]?.term ?? requirement.text
-  if (!title || roles.length === 0) {
+  if (roles.length === 0) {
     return { requirement, status: "missing", confidence: 0, evidence: null, method: null, matchedConcepts: [], missingConcepts: [label] }
   }
   const evidence = input.evidence.find((e) => e.kind === "role" && roles.some((r) => e.text.includes(r.title))) ?? null

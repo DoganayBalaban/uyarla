@@ -1103,5 +1103,19 @@ describe("score · revision 3", () => {
       const r = run([role("İnsan Kaynakları Uzmanı", "2015", "Present")])
       expect(r.status).toBe("missing")
     })
+
+    it("falls back to the concept and the total years when the posting has no title", () => {
+      // Unvan yok ya da tahmin ("(Tahmini)"): "benzer iş" neye göre, bilinmiyor.
+      const experience = [role("Genel Muhasebe Uzmanı", "2020", "Present")]
+      const r = score({
+        profile: { ...PROFILE, experience } as ResumeProfile,
+        posting: { ...testPosting([similar]), position: "Muhasebe Uzmanı (Tahmini)" },
+        evidence: [{ text: similar.text, matchText: similar.text, kind: "bullet", sourceRef: null }],
+        evidenceVectors: [V.near],
+        conceptVectors: [V.near],
+        now: NOW,
+      }).requirements[0]!
+      expect(r.status).toBe("matched")
+    })
   })
 })
