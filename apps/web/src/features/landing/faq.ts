@@ -18,7 +18,11 @@ export const LANDING_FAQ: { s: string; c: string }[] = [
   },
   {
     s: "LinkedIn profilimi nasıl denetliyorsunuz?",
-    c: "LinkedIn'den profilini PDF olarak indirip yüklersin; hedef rolüne göre başlık, hakkında, deneyim ve beceriler bölümlerini tek tek değerlendiririz. Teşhis ve başlık önerileri ücretsiz; hakkında ve deneyim yazımı abonelikte. Eklentiyle tek tıkla aktarım yakında.",
+    c: "LinkedIn'den profilini PDF olarak indirip yüklersin; hedef rolüne göre başlık, hakkında, deneyim ve beceriler bölümlerini tek tek değerlendiririz. Chrome eklentisiyle profil sayfandan tek tıkla da gönderebilirsin. Teşhis ve başlık önerileri ücretsiz; hakkında ve deneyim yazımı abonelikte.",
+  },
+  {
+    s: "Chrome eklentisi ne yapıyor?",
+    c: "İlan sayfasındayken araç çubuğundaki uyarla simgesine basarsın; ilan metni uyarla'da dolu açılır, varsayılan CV'n varsa analiz kendiliğinden başlar. Sayfayı yalnızca simgeye bastığında okur; kendi LinkedIn profilini de aynı yolla denetime gönderebilirsin. Ücretsiz.",
   },
   {
     s: "Başvuru formlarını siz mi dolduruyorsunuz?",

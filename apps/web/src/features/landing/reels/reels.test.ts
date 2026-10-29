@@ -4,7 +4,7 @@ import { SCENE_LIST } from "@/features/landing/demos/sceneList"
 
 describe("reels (DOG-162)", () => {
   it("has the eleven scene videos of the plan (9 is a screen recording)", () => {
-    expect(REELS.map((r) => r.n)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12])
+    expect(REELS.map((r) => r.n)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13])
   })
 
   it("points every video at an existing scene and phase window", () => {

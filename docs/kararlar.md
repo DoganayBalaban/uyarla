@@ -3908,3 +3908,14 @@ yanından geçen bir yol.
 - "3 adım" ve bento bölümleri kalkıyor.
 
 Ayrıntı: `docs/superpowers/specs/2026-10-28-tanitim-yolculuk-design.md`.
+
+## K-109 · Chrome eklentisi mağazadaymış gibi tanıtılıyor
+
+**Bağlam:** Eklenti (DOG-70, DOG-71, DOG-157) hiç pazarlanmadı. Tanıtımda "Yakında" diye geçiyordu; Chrome Web Mağazası yayını, geliştirici ücreti yüzünden bekliyordu (DOG-159). Kullanıcı 29 Ekim'de ücreti ödeyeceğini söyledi (DOG-163).
+
+**Karar:**
+- Tanıtım sayfasında yolculuktan sonra `#eklenti` bölümü ve menüde "Eklenti" bağlantısı var. Ayrıca `/eklenti` sayfası ve 13 numaralı TikTok videosu geldi.
+- "Yakında" ifadeleri kalktı.
+- "Chrome'a ekle" düğmeleri `NEXT_PUBLIC_EXTENSION_STORE_URL`'ye gidiyor; değişken boşken `#`.
+- Tanıtımdaki eklenti metinleri eklentinin kendi kaynağıyla (`manifest.json`, `background.ts`) bir testle eşleştiriliyor.
+- 13 numaralı video mağaza yayımından önce paylaşılmıyor.

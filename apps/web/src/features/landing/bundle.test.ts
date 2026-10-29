@@ -20,6 +20,7 @@ const ENTRIES = [
   "features/landing/demos/BoardDemo.tsx",
   "features/landing/demos/InterviewDemo.tsx",
   "features/landing/demos/LinkedInDemo.tsx",
+  "features/landing/demos/ExtensionDemo.tsx",
   "features/landing/components/JourneyRail.tsx",
 ]
 

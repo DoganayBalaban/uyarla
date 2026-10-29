@@ -44,7 +44,7 @@ export function LinkedInFilm({ ms }: { ms: number }) {
         </ul>
       )}
       <p className="text-right text-xs text-muted-foreground">
-        Eklentiyle profilini aktar · <span className="rounded-full border px-1.5 py-0.5">Yakında</span>
+        Chrome eklentisiyle profilini tek tıkla aktar
       </p>
     </div>
   )

@@ -4,7 +4,8 @@ import type { Phase } from "@/features/landing/demos/demoScript"
  * TikTok deneyinin dikey videoları (DOG-162). Her video bir tanıtım
  * sahnesinin bir aralığını oynatıyor, açılış cümlesi üstte; sonda
  * kapanış kartı. Açılış cümleleri içerik planındaki tablonun aynısı;
- * 9 numara gerçek ürünün ekran kaydı olduğu için burada yok.
+ * 9 numara gerçek ürünün ekran kaydı olduğu için burada yok; 13 numara
+ * Chrome eklentisi (DOG-163), planın dışında ek video.
  */
 export type Reel = {
   n: number
@@ -41,6 +42,7 @@ export const REELS: Reel[] = [
   { n: 10, hook: "Maddelerini ilanın diliyle yazınca skor nasıl değişir?", scene: "hero", from: "score", to: "hold", voice: ["Maddelerini ilanın diliyle yazınca skor nasıl değişir?", "uyarla, ilanın terimini deneyimine dayanarak ekler ve kaynağını gösterir.", "Bu örnekte skor yirmi sekizden kırk bire çıkıyor."] },
   { n: 11, hook: "Mülakat cevabın dağılıyorsa: STAR.", scene: "hazirlan", from: "answer", voice: ["Mülakat cevabın dağılıyorsa: STAR.", "Durum, görev, eylem, sonuç.", "uyarla'nın pratiğinde cevabını yazarsın; eksik kalan adımı gösterir. Bu cevapta sonuç eksik."] },
   { n: 12, hook: "“Başvur” demeden önce tek kontrol.", scene: "takip", to: "adapted", voice: ["“Başvur” demeden önce tek kontrol.", "Zorunlu bir gereksinim CV'nde görünmüyorsa uyarla seni uyarır.", "Önce uyarlayabilir ya da yine de başvurabilirsin."] },
+  { n: 13, hook: "İlanı gördüğün sayfadan tek tıkla skorunu gör.", scene: "eklenti", voice: ["İlanı gördüğün sayfadan tek tıkla skorunu gör.", "uyarla'nın Chrome eklentisi, ilan sayfasındaki metni alır ve analizi senin için açar.", "Kopyala yapıştır yok. Kendi LinkedIn profilini de aynı yolla denetime gönderebilirsin.", "Eklenti ücretsiz."] },
 ]
 
 /** Sahnenin oynatılacak aralığı: başlangıç anı ve uzunluğu. */
