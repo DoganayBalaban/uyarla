@@ -153,3 +153,31 @@ export const CHECK_PHASES = [
   { id: "hold", ms: 1500 },
 ] as const
 export type CheckPhase = (typeof CHECK_PHASES)[number]["id"]
+
+export const EXT_PHASES = [
+  { id: "page", ms: 1500 },
+  { id: "point", ms: 1300 },
+  { id: "click", ms: 600 },
+  { id: "open", ms: 2400 },
+  { id: "score", ms: 2400 },
+  { id: "hold", ms: 1800 },
+] as const
+export type ExtPhase = (typeof EXT_PHASES)[number]["id"]
+
+/**
+ * Eklenti sahnesi (DOG-163): ilan sayfasında uyarla simgesine basılıyor,
+ * uyarla ilan metni dolu açılıyor; varsayılan CV'si olan kullanıcıda analiz
+ * kendiliğinden başlıyor. Skor mevcut demo senaryosundan (28).
+ */
+export const EXT_SCENE = {
+  host: "ornek-ilan-sitesi.com",
+  title: SCENE_ROLE,
+  company: SCENE_COMPANY,
+  posting: [
+    "React ve TypeScript ile arayüz geliştirme",
+    "Birim testi (Jest, Testing Library)",
+    "Kod incelemesi, genç geliştiricilere mentorluk",
+  ],
+  resume: "Elif_Yilmaz_CV.pdf",
+  score: DEMO_BASE_SCORE,
+}
