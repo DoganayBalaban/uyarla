@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { UyarlaLogo } from "@/components/brand/UyarlaMark"
 import { Photo } from "@/features/landing/components/Photo"
@@ -12,7 +11,7 @@ import { LANDING_FAQ } from "@/features/landing/faq"
 import { Pricing } from "@/features/landing/components/Pricing"
 import { JobSitesStrip } from "@/features/landing/components/JobSitesStrip"
 import type { PlanOffer } from "@/features/billing/plans"
-import { JOURNEY, accessChips, type StepId } from "@/features/landing/journey"
+import { JOURNEY, type StepId } from "@/features/landing/journey"
 import { JourneyRail } from "@/features/landing/components/JourneyRail"
 import { JobSearchDemo } from "@/features/landing/demos/JobSearchDemo"
 import { ApplyDemo } from "@/features/landing/demos/ApplyDemo"
@@ -120,19 +119,6 @@ const STEP_VISUAL: Partial<Record<StepId, React.ReactNode>> = {
   gorunur: <LinkedInDemo />,
 }
 
-function AccessChips({ step }: { step: (typeof JOURNEY)[number] }) {
-  if (step.rows.length === 0) return null
-  return (
-    <ul className={s.accessChips} aria-label="Erişim">
-      {accessChips(step).map((c) => (
-        <li key={c.short} className={`${s.accessChip} ${c.paid ? s.accessChipPaid : ""}`}>
-          {c.short} · {c.access}
-        </li>
-      ))}
-    </ul>
-  )
-}
-
 function Ticks({ items }: { items: string[] }) {
   return (
     <ul className={s.tickList}>
@@ -155,11 +141,6 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
         {/* ——— Hero ——— */}
         <section className={s.hero}>
           <div className={`${s.container} ${s.heroText}`}>
-            <Link href="#hazirlan" className={s.heroBadge}>
-              <span className={s.heroBadgeTag}>Yeni</span>
-              Mülakat hazırlığı ve LinkedIn denetimi<span className={s.heroBadgeMore}>: başvurunun her adımında</span>
-              <ArrowRight size={14} aria-hidden />
-            </Link>
             <h1 className={s.heroTitle}>Her ilana, doğru CV.</h1>
             <p className={s.heroLead}>
               İlanı yapıştır, CV'nin ne kadar uyduğunu gör ve ilana özel hâle getir; sonra başvur, takip et,
@@ -224,7 +205,6 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
                       </span>
                       <h2 className={s.h2}>{step.title}</h2>
                       <p className={s.sectionLead}>{step.text}</p>
-                      <AccessChips step={step} />
                     </div>
                     {FEATURES.map((o, j) => (
                       <div key={o.label} className={`${s.feature} ${j % 2 === 1 ? s.featureReversed : ""}`}>
@@ -269,7 +249,6 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
                       <h2 className={s.h2}>{step.title}</h2>
                       <p className={s.sectionLead}>{step.text}</p>
                       <Ticks items={step.bullets} />
-                      <AccessChips step={step} />
                     </div>
                     {STEP_VISUAL[step.id] && <div className={s.featureVisual}>{STEP_VISUAL[step.id]}</div>}
                   </div>
@@ -297,9 +276,6 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
                     "Kendi LinkedIn profilini de tek tıkla denetime gönder",
                   ]}
                 />
-                <ul className={s.accessChips} aria-label="Erişim">
-                  <li className={s.accessChip}>Chrome eklentisi · Ücretsiz</li>
-                </ul>
                 <div className={s.extensionActions}>
                   <a href={storeHref()} className={s.buttonPrimary}>
                     Chrome&apos;a ekle

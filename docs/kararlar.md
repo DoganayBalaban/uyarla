@@ -3904,7 +3904,7 @@ yanından geçen bir yol.
 - Sayfa tek bir başvuru hikâyesi: Bul → Uyarla → Başvur → Takip et → Hazırlan → Görünür ol. Sekmeli vitrin ve listeye ekleme reddedildi.
 - Her adımda motion ile tarayıcıda oynayan sahne var, video dosyası yok. Örnek kişi Elif Yılmaz.
 - Sahnelerdeki örnek veri uydurma kuralına uyuyor ve bu testle denetleniyor.
-- Erişim çipleri `FEATURE_ROWS`'tan türetiliyor.
+- Erişim çipleri `FEATURE_ROWS`'tan türetiliyordu; 29 Ekim'de kullanıcı isteğiyle kalktı, ücretsiz/abonelik ayrımı yalnızca fiyat tablosunda.
 - "3 adım" ve bento bölümleri kalkıyor.
 
 Ayrıntı: `docs/superpowers/specs/2026-10-28-tanitim-yolculuk-design.md`.

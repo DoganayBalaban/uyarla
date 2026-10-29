@@ -259,40 +259,6 @@
   color: var(--brand-green);
 }
 
-/* Duyuru rozeti: başlığın üstünde, yeni çıkan özelliğe bağlantı. */
-.heroBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1.75rem;
-  padding: 0.3rem 0.85rem 0.3rem 0.35rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  text-decoration: none;
-  box-shadow: 0 1px 2px rgb(17 17 20 / 0.04);
-  transition: border-color 0.2s, color 0.2s;
-}
-.heroBadge:hover {
-  border-color: color-mix(in srgb, var(--brand-blue) 40%, var(--border));
-  color: var(--foreground);
-}
-@media (max-width: 560px) {
-  .heroBadgeMore {
-    display: none;
-  }
-}
-.heroBadgeTag {
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  background: var(--brand-blue-soft);
-  color: var(--brand-blue);
-  font-weight: 600;
-  font-size: 0.75rem;
-}
-
 /* Gerçek ekran görüntüsü; arkasında kobalt ışıma, altı zemine eriyor. */
 .heroShot {
   position: relative;
@@ -1386,19 +1352,12 @@
   padding: 0;
   list-style: none;
 }
-.sectionHeader .accessChips {
-  justify-content: center;
-}
 .accessChip {
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--brand-green) 35%, transparent);
   background: color-mix(in srgb, var(--brand-green) 10%, transparent);
   padding: 0.2rem 0.65rem;
   font-size: 0.8125rem;
-}
-.accessChipPaid {
-  border-color: color-mix(in srgb, var(--brand-blue) 35%, transparent);
-  background: var(--blue-soft);
 }
 
 /* ——— Chrome eklentisi (DOG-163) ——— */

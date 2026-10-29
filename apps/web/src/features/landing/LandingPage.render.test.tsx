@@ -12,10 +12,10 @@ describe("LandingPage journey (DOG-160)", () => {
     expect(html).toContain('href="#takip"')
   })
 
-  it("labels access from the pricing table", () => {
-    expect(html).toContain("İş arama")
-    expect(html).toContain("Abonelikte")
-    expect(html).toContain("Ayda 1 ücretsiz")
+  it("shows no access chips; the pricing table carries free vs paid (29 Ekim)", () => {
+    expect(html).not.toContain('aria-label="Erişim"')
+    expect(html).not.toContain("Ön yazı · Ayda 1 ücretsiz")
+    expect(html).not.toContain("Chrome eklentisi · Ücretsiz")
   })
 
   it("drops the three-step and bento blocks, keeps the adapt demos", () => {
@@ -25,7 +25,7 @@ describe("LandingPage journey (DOG-160)", () => {
   })
 
   it("tells the whole journey up top and answers the new questions (DOG-160)", () => {
-    expect(html).toContain("Mülakat hazırlığı ve LinkedIn denetimi")
+    expect(html).not.toContain("Mülakat hazırlığı ve LinkedIn denetimi")
     expect(html).toContain("başvur, takip et, mülakata hazırlan")
     expect(html).toContain("Başvuru formlarını siz mi dolduruyorsunuz?")
     expect(html).toContain("Mülakat hazırlığında sorular nereden geliyor?")
