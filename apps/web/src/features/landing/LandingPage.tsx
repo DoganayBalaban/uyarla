@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { UyarlaLogo } from "@/components/brand/UyarlaMark"
 import { Photo } from "@/features/landing/components/Photo"
@@ -142,11 +141,6 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
         {/* ——— Hero ——— */}
         <section className={s.hero}>
           <div className={`${s.container} ${s.heroText}`}>
-            <Link href="#hazirlan" className={s.heroBadge}>
-              <span className={s.heroBadgeTag}>Yeni</span>
-              Mülakat hazırlığı ve LinkedIn denetimi<span className={s.heroBadgeMore}>: başvurunun her adımında</span>
-              <ArrowRight size={14} aria-hidden />
-            </Link>
             <h1 className={s.heroTitle}>Her ilana, doğru CV.</h1>
             <p className={s.heroLead}>
               İlanı yapıştır, CV'nin ne kadar uyduğunu gör ve ilana özel hâle getir; sonra başvur, takip et,
