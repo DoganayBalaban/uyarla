@@ -1,6 +1,7 @@
 import type { ExtractResult, LlmProvider } from "../llm/types.js"
 import { JobPostingDraftParseSchema, JobPostingSchema, jobPostingDraftJsonSchema } from "../schemas/job.js"
-import type { JobPostingData } from "../schemas/job.js"
+import type { JobPostingData, RequirementDraft } from "../schemas/job.js"
+import { looksLikeCondition } from "../score/conditions.js"
 import { splitIntoConcepts } from "./concepts.js"
 import { parseDeadline } from "./deadline.js"
 import { addLanguageEquivalents } from "./equivalents.js"
@@ -47,13 +48,22 @@ export async function extractJobPosting(
   const posting = JobPostingSchema.parse({
     ...draft,
     deadline: parseDeadline(deadlineText, options.now),
-    requirements: draft.requirements.map((req) => ({
-      ...req,
-      concepts: splitIntoConcepts(req.text, req.type),
-    })),
+    requirements: draft.requirements.map((req) => {
+      const type = correctedType(req)
+      return { ...req, type, concepts: splitIntoConcepts(req.text, type) }
+    }),
   })
 
   // Karşı dildeki karşılıklar (DOG-73): İngilizce CV ↔ Türkçe ilan.
   const withEquivalents = await addLanguageEquivalents(llm, posting)
   return { data: withEquivalents.data, tokens: tokens + withEquivalents.tokens }
+}
+
+/**
+ * Model evet/hayır şartını bazen beceri ya da deneyim diye yazıyor ("Aktif
+ * araç kullanabilen", "5 hours overlap with PST"). Şart skora girmiyor;
+ * yanlış türle girince CV'de bulunamayıp "eksik" görünüyordu (sürüm 3).
+ */
+export function correctedType(req: Pick<RequirementDraft, "text" | "type">): RequirementDraft["type"] {
+  return req.type !== "condition" && looksLikeCondition(req.text) ? "condition" : req.type
 }

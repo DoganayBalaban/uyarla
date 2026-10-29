@@ -24,7 +24,8 @@ describe("HeroFilm", () => {
     expect(renderToStaticMarkup(<HeroFilm ms={at("analyze", 0.5)} />)).toContain("Analiz ediliyor")
     const score = renderToStaticMarkup(<HeroFilm ms={at("score", 0.9)} />)
     expect(score).toContain("Tek tıkla uyarla")
-    expect(score).toContain("Orta uyum")
+    // Formülün 3. sürümünde (DOG-165) 28 "Düşük", 41 "Orta" uyum.
+    expect(score).toContain("Düşük uyum")
   })
 
   it("ends on the adapted CV with the higher score and the chosen new wording", () => {
@@ -32,7 +33,7 @@ describe("HeroFilm", () => {
     expect(html).toContain("CV&#x27;n hazır")
     expect(html).toContain("+13")
     expect(html).toContain(">41<")
-    expect(html).toContain("stroke-brand-green")
+    expect(html).toContain("stroke-brand-amber")
     expect(html).toContain("✓ Yeni hâli")
     expect(html).toContain("genç geliştiricilere mentorluk")
   })

@@ -13,7 +13,7 @@ const summary: DashboardSummary = {
   stageCounts: { saved: 4, applied: 0, interview: 0, offer: 0, rejected: 0 },
   pending: [],
   recentAnalyses: [],
-  metrics: { analysesLast30: 2, applied: 0, positive: 0, averageScore: 28 },
+  metrics: { analysesLast30: 2, applied: 0, positive: 0, averageScore: 38, averageRevision: 3 },
   timeline: [],
   outcomeSignal: null,
 }

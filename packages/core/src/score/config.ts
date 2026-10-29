@@ -70,6 +70,24 @@ export interface ScoringConfig {
    * × İK ilanı: 42).
    */
   titleWeight: number
+  /**
+   * Eşiği geçen anlamsal eşleşmenin katkısı: benzerlik değeri kadar
+   * ("similarity") ya da tam ("full").
+   */
+  semanticCredit: "similarity" | "full"
+  /**
+   * Genel şartların (diploma, dil, ofis programları) ağırlığı; null ise
+   * önemlerine göre (sürüm 2). Neredeyse her adayın karşıladığı bir şart
+   * uyum hakkında az şey söylüyor: muhasebe CV'si kısa bir İK ilanında
+   * diploması ve Excel'iyle, rolün kendi şartları yokken 40 alıyordu.
+   */
+  genericWeight: number | null
+  /**
+   * "Benzer bir işte en az 3 yıl" unvanla ve o unvandaki süreyle ölçülsün
+   * (sürüm 3). Kavramı olmayan bu gereksinim önceden hiçbir CV'de
+   * bulunamıyordu.
+   */
+  similarRoleByTitle: boolean
 }
 
 const ALL_EVIDENCE_KINDS: readonly Evidence["kind"][] = [
@@ -82,11 +100,15 @@ const ALL_EVIDENCE_KINDS: readonly Evidence["kind"][] = [
 ]
 
 /**
- * Başlangıç değerleri hipotezdir. Eşik bilinçli olarak yüksek: uydurma
- * eşleşme (yanlış pozitif), kaçırmadan daha zararlıdır — kullanıcıya olmayan
- * bir yetkinliği varmış gibi gösterir ve dürüstlük ilkesini çiğner (spec §7).
+ * Formülün 2. sürümü (DOG-103), olduğu gibi. Kayıtlı analizler kendi
+ * sürümüyle yeniden hesaplanıyor ("ilanda yok" işareti, düzeltmeler); bu
+ * değerler sonraki sürümlerde değişmemeli.
+ *
+ * Eşik bilinçli olarak yüksek: uydurma eşleşme (yanlış pozitif), kaçırmadan
+ * daha zararlıdır — kullanıcıya olmayan bir yetkinliği varmış gibi gösterir
+ * ve dürüstlük ilkesini çiğner (spec §7).
  */
-export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
+const REVISION_2: ScoringConfig = {
   mustWeight: 2.0,
   niceWeight: 1.0,
   // text-embedding-3-small ile ölçüldü (DOG-42). Eşik gömme modeline bağlı:
@@ -120,11 +142,50 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   // kutuda gösteriliyorlar.
   unscoredTypes: ["soft", "condition"],
   titleWeight: 2,
+  semanticCredit: "similarity",
+  genericWeight: null,
+  similarRoleByTitle: false,
 }
+
+/** 1. sürüm: kişisel nitelikler skorda, unvan yok. */
+const REVISION_1: ScoringConfig = { ...REVISION_2, unscoredTypes: [], titleWeight: 0 }
+
+/**
+ * 3. sürüm (DOG-165): değerlendirme setinde iyi uyumlu çiftler 37–83
+ * alıyordu ve "Yüksek uyum" 35'ten başlıyordu.
+ *   - Eşiği geçen anlamsal eşleşme tam sayılıyor. Benzerlik değeri bir
+ *     olasılık değil: bu gömme modelinde doğru eşleşmeler de 0,55–0,70
+ *     çıkıyor; eşleşme kararı zaten eşikte veriliyor.
+ *   - Genel şartlar tercih edilen bir gereksinim kadar.
+ *   - "Benzer bir işte X yıl" unvan ve süreyle.
+ * Kavram bölücüdeki düzeltmeler (extract/concepts.ts) yeni çıkarılan
+ * ilanlarda; kayıtlı ilanların kavramları değişmiyor.
+ */
+const REVISION_3: ScoringConfig = {
+  ...REVISION_2,
+  semanticCredit: "full",
+  genericWeight: 1,
+  similarRoleByTitle: true,
+}
+
+export const DEFAULT_SCORING_CONFIG: ScoringConfig = REVISION_3
 
 /**
  * Skor formülünün sürümü; analiz sonucuna yazılıyor. 2: soft gereksinimler
- * skordan çıktı, unvan girdi (DOG-103). Eski sonuçların kayıtlı skoru eski
- * formülle; yenisiyle karşılaştırılacaksa yeniden hesaplanmalı.
+ * skordan çıktı, unvan girdi (DOG-103). 3: anlamsal eşleşme tam, genel
+ * şartlar hafif, benzer iş unvanla (DOG-165). Eski sonuçların kayıtlı skoru
+ * eski formülle; yenisiyle karşılaştırılacaksa yeniden hesaplanmalı.
  */
-export const SCORING_REVISION = 2
+export const SCORING_REVISION = 3
+
+const PAST_REVISIONS: Readonly<Record<number, ScoringConfig>> = { 1: REVISION_1, 2: REVISION_2, 3: REVISION_3 }
+
+/**
+ * Kayıtlı bir sonucun formülü. Sürümü olmayan sonuç 1. sürüm; bilinmeyen
+ * yeni bir sürüm bugünkü formül sayılıyor.
+ */
+export function scoringConfigFor(revision: number | undefined): ScoringConfig {
+  const r = revision ?? 1
+  if (r >= SCORING_REVISION) return DEFAULT_SCORING_CONFIG
+  return PAST_REVISIONS[r] ?? REVISION_1
+}

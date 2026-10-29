@@ -6,12 +6,15 @@ import { SAMPLE_POSTINGS } from "@/features/analysis/samplePostings"
  * cevabı. Uydurma bir rapor değil; uyarla'nın gerçek çıktısı. Kurgusal
  * pazarlama CV'si (eval/sources/cv/cv-d-pazarlama, kişi ve şirketler
  * uydurma) örnek pazarlama ilanıyla yerelde analiz edildi (21 Ekim 2026),
- * sonuç olduğu gibi buraya alındı. Puanlama değişirse yeniden üretilmeli.
+ * sonuç olduğu gibi buraya alındı. Puanlama değişirse yeniden üretilmeli:
+ * skorun 3. sürümünde (DOG-165, 29 Ekim 2026) ilanın gereksinim metinleri
+ * aynı kalarak kavramlar yeniden bölündü ve skor yeniden hesaplandı (34 → 46);
+ * biçim bulguları CV dosyasına bağlı, değişmedi.
  */
 export const SAMPLE_REPORT_POSTING = SAMPLE_POSTINGS.find((p) => p.id === "marketing")!
 
 export const SAMPLE_REPORT: ScoreResultView = {
-  "score": 34,
+  "score": 46,
   "format": {
     "passed": [
       "E-posta adresi",
@@ -40,8 +43,8 @@ export const SAMPLE_REPORT: ScoreResultView = {
     ]
   },
   "titleMatch": {
-    "level": "none",
     "position": "Dijital Pazarlama Uzmanı",
+    "level": "none",
     "resumeTitle": null
   },
   "requirements": [
@@ -62,7 +65,7 @@ export const SAMPLE_REPORT: ScoreResultView = {
             "synonyms": [
               "İşletme",
               "iletişim",
-              "Business / Communication"
+              "business / communication"
             ]
           }
         ],
@@ -71,21 +74,21 @@ export const SAMPLE_REPORT: ScoreResultView = {
       "missingConcepts": []
     },
     {
-      "method": "semantic",
+      "method": "keyword",
       "status": "matched",
       "evidence": {
-        "kind": "bullet",
-        "text": "Digital Marketing Executive · Parlak Dijital Ajans: Perakende ve otomotiv müşterileri için arama ve sosyal medya\nreklamlarını yönettim."
+        "kind": "role",
+        "text": "Digital Marketing Executive · Parlak Dijital Ajans"
       },
-      "confidence": 0.501762172803367,
+      "confidence": 1,
       "requirement": {
         "text": "Dijital pazarlamada en az 2 yıl deneyim",
         "type": "experience",
         "concepts": [
           {
-            "term": "Dijital pazarlamada en az 2 yıl",
+            "term": "Dijital pazarlama",
             "synonyms": [
-              "At least 2 years in digital marketing"
+              "digital marketing"
             ]
           }
         ],
@@ -107,11 +110,17 @@ export const SAMPLE_REPORT: ScoreResultView = {
         "concepts": [
           {
             "term": "Google Ads",
-            "synonyms": []
+            "synonyms": [
+              "Google AdWords",
+              "AdWords"
+            ]
           },
           {
             "term": "Meta Business Suite",
-            "synonyms": []
+            "synonyms": [
+              "Facebook Business Manager",
+              "Meta Business Manager"
+            ]
           }
         ],
         "importance": "must"
@@ -121,17 +130,23 @@ export const SAMPLE_REPORT: ScoreResultView = {
       ]
     },
     {
-      "method": null,
-      "status": "missing",
-      "evidence": null,
-      "confidence": 0,
+      "method": "keyword",
+      "status": "matched",
+      "evidence": {
+        "kind": "bullet",
+        "text": "Performance Marketing Specialist · Moda Sepeti: GA4 ve Looker Studio ile haftalık performans panolarını hazırladım."
+      },
+      "confidence": 0.5,
       "requirement": {
         "text": "Google Analytics 4 ile raporlama",
         "type": "skill",
         "concepts": [
           {
             "term": "Google Analytics 4",
-            "synonyms": []
+            "synonyms": [
+              "GA4",
+              "Google Analytics"
+            ]
           },
           {
             "term": "raporlama",
@@ -143,7 +158,6 @@ export const SAMPLE_REPORT: ScoreResultView = {
         "importance": "must"
       },
       "missingConcepts": [
-        "Google Analytics 4",
         "raporlama"
       ]
     },
@@ -188,7 +202,7 @@ export const SAMPLE_REPORT: ScoreResultView = {
           {
             "term": "Analitik düşünme",
             "synonyms": [
-              "Analytical thinking"
+              "analytical thinking"
             ]
           },
           {
@@ -212,16 +226,14 @@ export const SAMPLE_REPORT: ScoreResultView = {
         "kind": "skill",
         "text": "Google Ads"
       },
-      "confidence": 0.7267883475772854,
+      "confidence": 1,
       "requirement": {
         "text": "Google Ads sertifikası",
         "type": "skill",
         "concepts": [
           {
             "term": "Google Ads sertifikası",
-            "synonyms": [
-              "Google Ads certification"
-            ]
+            "synonyms": []
           }
         ],
         "importance": "nice"
@@ -240,7 +252,7 @@ export const SAMPLE_REPORT: ScoreResultView = {
           {
             "term": "E-posta pazarlama araçları",
             "synonyms": [
-              "Email marketing tools"
+              "email marketing tools"
             ]
           }
         ],
@@ -254,12 +266,11 @@ export const SAMPLE_REPORT: ScoreResultView = {
   "languageChecks": [],
   "missingKeywords": [
     "Meta Business Suite",
-    "Google Analytics 4",
     "raporlama",
     "Excel pivot tablo",
     "formüller",
     "Analitik düşünme",
     "E-posta pazarlama araçları"
   ],
-  "scoringRevision": 2
+  "scoringRevision": 3
 }

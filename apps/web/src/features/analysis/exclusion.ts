@@ -1,5 +1,5 @@
 import type { RequirementResult } from "@/features/analysis/components/ScoreResult"
-import { DEFAULT_SCORING_CONFIG, SCORING_REVISION } from "@uyarla/core/score/config"
+import { SCORING_REVISION, scoringConfigFor } from "@uyarla/core/score/config"
 import { weightedScore } from "@uyarla/core/score/score"
 import type { RequirementResult as CoreRequirementResult } from "@uyarla/core/score/score"
 import type { TitleMatch } from "@uyarla/core/score/title"
@@ -15,24 +15,19 @@ import type { TitleMatch } from "@uyarla/core/score/title"
  * istemci de skor modülü üzerinden OpenAI istemcisini çekiyordu. Alt yollar
  * (K-68) ve bağımlılıksız vektör modülüyle ikisi de kalktı.
  */
-const UNSCORED_TYPES: readonly string[] = DEFAULT_SCORING_CONFIG.unscoredTypes
-
-/** Eski formül (sürüm 1): kişisel nitelikler skorda, unvan yok. */
-const LEGACY_CONFIG = { ...DEFAULT_SCORING_CONFIG, unscoredTypes: [] }
-
 export function adjustedScore(
   requirements: Pick<RequirementResult, "requirement" | "confidence">[],
   excluded: readonly number[],
   context: { title?: { level: string } | null; revision?: number } = { revision: SCORING_REVISION },
 ): number {
-  const current = (context.revision ?? 1) >= SCORING_REVISION
-  // Kayıtlı sonuç JSON'dan geliyor; alanlar core tipinin dar birleşimlerini
+  // Kayıtlı sonuç kendi formülüyle: 1. sürümde unvan yok, kişisel nitelikler
+  // skorda. Alanlar JSON'dan geliyor; core tipinin dar birleşimlerini
   // taşıyor ama derleyici bunu bilmiyor.
   return weightedScore(
     requirements as unknown as Pick<CoreRequirementResult, "requirement" | "confidence">[],
-    current ? DEFAULT_SCORING_CONFIG : LEGACY_CONFIG,
+    scoringConfigFor(context.revision),
     excluded,
-    current ? ((context.title as Pick<TitleMatch, "level"> | null | undefined) ?? null) : null,
+    (context.title as Pick<TitleMatch, "level"> | null | undefined) ?? null,
   )
 }
 
@@ -69,12 +64,12 @@ export function applyExclusions<T extends RequirementResult & { missingConcepts?
   positionCorrection?: string
 }): ExclusionView<T> {
   const skip = new Set(result.excluded ?? [])
-  const current = (result.scoringRevision ?? 1) >= SCORING_REVISION
+  const unscored: readonly string[] = scoringConfigFor(result.scoringRevision).unscoredTypes
   const all = result.requirements.map((item, index) => ({ item, index, excluded: skip.has(index) }))
   // İlanda yalnızca kişisel nitelik varsa skora onlar giriyor (core ile aynı).
-  const separateSoft = current && all.some((r) => !UNSCORED_TYPES.includes(r.item.requirement.type))
+  const separateSoft = unscored.length > 0 && all.some((r) => !unscored.includes(r.item.requirement.type))
   const isCondition = (r: { item: T }) => r.item.requirement.type === "condition"
-  const isSoft = (r: { item: T }) => separateSoft && !isCondition(r) && UNSCORED_TYPES.includes(r.item.requirement.type)
+  const isSoft = (r: { item: T }) => separateSoft && !isCondition(r) && unscored.includes(r.item.requirement.type)
   const rows = all.filter((r) => !isSoft(r) && !isCondition(r))
   const softRows = all.filter(isSoft).map(({ item, index }) => ({ item, index }))
   const conditionRows = all.filter(isCondition).map(({ item, index }) => ({ item, index }))

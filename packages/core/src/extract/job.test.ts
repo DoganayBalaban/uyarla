@@ -39,6 +39,19 @@ describe("extractJobPosting", () => {
     expect(data.requirements[1]!.concepts.map((c) => c.term)).toEqual(["Next.js"])
   })
 
+  it("corrects a yes/no condition the model typed as a skill (revision 3)", async () => {
+    const draft = {
+      ...DRAFT,
+      requirements: [
+        { text: "Aktif araç kullanabilen", type: "skill", importance: "must" },
+        { text: "At least 5 hours overlap with PST timezone", type: "experience", importance: "must" },
+        { text: "Seyahat sektöründe deneyim", type: "experience", importance: "must" },
+      ],
+    }
+    const { data } = await extractJobPosting(llmReturning(draft), "ilan metni")
+    expect(data.requirements.map((r) => r.type)).toEqual(["condition", "condition", "experience"])
+  })
+
   it("turns the deadline phrase into a date in code, and null when absent (DOG-120)", async () => {
     const now = new Date("2026-10-20T09:00:00Z")
     const { data } = await extractJobPosting(llmReturning({ ...DRAFT, deadlineText: "Son başvuru: 3 Kasım" }), "ilan", { now })

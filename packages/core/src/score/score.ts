@@ -1,6 +1,7 @@
 import type { Language } from "../normalize/language.js"
 import { cosineSimilarity } from "../llm/vector.js"
-import { containsKeyword } from "../normalize/turkish.js"
+import { mentionedLanguages } from "../normalize/languageNames.js"
+import { containsKeyword, normalizeText } from "../normalize/turkish.js"
 import type { JobPostingData, Requirement } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { DEFAULT_SCORING_CONFIG, SCORING_REVISION, type ScoringConfig } from "./config.js"
@@ -10,7 +11,7 @@ import type { RememberedFact } from "../adapt/facts.js"
 import { matchCondition } from "./conditions.js"
 import { checkLanguages, type LanguageCheck } from "./languages.js"
 import type { CorrectedRequirement, ExclusionMark, RequirementCorrection, RequirementReport } from "./exclusions.js"
-import { titleMatch, type TitleMatch } from "./title.js"
+import { coreTokens, titleMatch, type TitleMatch } from "./title.js"
 
 export interface ScoreInput {
   profile: ResumeProfile
@@ -151,11 +152,15 @@ export function score(
 ): ScoreResult {
   // Kavram vektörleri düzleştirilmiş geliyor; her gereksinim kendi dilimini
   // alıyor.
+  const title = titleMatch(input.posting.position, input.profile)
   let cursor = 0
   const results: RequirementResult[] = input.posting.requirements.map((requirement) => {
     const vectorSlice = input.conceptVectors.slice(cursor, cursor + requirement.concepts.length)
     cursor += requirement.concepts.length
-    return checkDuration(matchRequirement(requirement, vectorSlice, input, cfg), input)
+    // İlanda unvan yoksa (ya da tahminse) "benzer iş" neye göre bilinmiyor:
+    // kavram ve toplam süreyle, sürüm 2'deki gibi.
+    if (cfg.similarRoleByTitle && title && isSimilarRoleRequirement(requirement)) return similarRole(requirement, input, title)
+    return checkDuration(matchRequirement(requirement, vectorSlice, input, cfg), input, vectorSlice, cfg)
   })
 
 
@@ -165,7 +170,6 @@ export function score(
   // kullanıcı "React'in var ama Docker'ın yok" bilgisini görmeli.
   const missingWords = [...new Set(results.flatMap((r) => r.missingConcepts))]
 
-  const title = titleMatch(input.posting.position, input.profile)
   return {
     score: weightedScore(results, cfg, [], title),
     requirements: results,
@@ -201,7 +205,11 @@ export function weightedScore(
   let weightedSum = 0
   let totalWeight = 0
   for (const result of pool) {
-    const weight = result.requirement.importance === "must" ? cfg.mustWeight : cfg.niceWeight
+    const importanceWeight = result.requirement.importance === "must" ? cfg.mustWeight : cfg.niceWeight
+    const weight =
+      cfg.genericWeight !== null && isGenericRequirement(result.requirement)
+        ? Math.min(importanceWeight, cfg.genericWeight)
+        : importanceWeight
     totalWeight += weight
     weightedSum += weight * result.confidence
   }
@@ -215,6 +223,58 @@ export function weightedScore(
 }
 
 const TITLE_CREDIT: Record<TitleMatch["level"], number> = { exact: 1, partial: 0.5, none: 0 }
+
+/** Ofis programları: neredeyse her ilanda, neredeyse her CV'de. */
+const OFFICE = /^(?:ms |microsoft )?(?:office|excel|word|powerpoint|outlook)(?: programları| programs| programlari)?$/u
+
+/**
+ * Genel şart (sürüm 3): diploma, dil ya da ofis programı. Kavramların hepsi
+ * böyleyse; "ERP sistemleri, Logo" rolün kendi aracı.
+ */
+export function isGenericRequirement(requirement: Pick<Requirement, "type" | "concepts">): boolean {
+  if (requirement.type === "education") return true
+  if (requirement.concepts.length === 0) return false
+  return requirement.concepts.every((c) => {
+    const term = normalizeText(c.term).trim()
+    const languages = mentionedLanguages(c.term)
+    const isLanguage = languages.length === 1 && [languages[0]!.name, languages[0]!.en].some((n) => normalizeText(n).trim() === term)
+    return isLanguage || OFFICE.test(term)
+  })
+}
+
+/** "Benzer bir işte en az 3 yıl", "similar role": ilanın kendi unvanına bakıyor. */
+const SIMILAR_ROLE =
+  /(?<![\p{L}])(?:benzer (?:bir )?(?:iş|pozisyon|görev|rol|alan)\p{L}*|aynı (?:pozisyon|görev)\p{L}*|similar (?:role|position|capacity)s?|(?:a )?comparable role)/u
+
+function isSimilarRoleRequirement(requirement: Requirement): boolean {
+  return requirement.type === "experience" && SIMILAR_ROLE.test(requirement.text.toLocaleLowerCase("tr"))
+}
+
+/**
+ * "Benzer bir işte X yıl" (sürüm 3): CV'de ilanın unvanını (tam ya da yakın)
+ * taşıyan roller ve onlardaki süre. Unvan eşleşmesi score/title.ts'ninki;
+ * süre o rollerin toplamı.
+ */
+function similarRole(requirement: Requirement, input: ScoreInput, title: TitleMatch): RequirementResult {
+  const roles = input.profile.experience.filter(
+    (role) => titleMatch(title.position, { ...input.profile, headline: null, experience: [role] })?.level !== "none",
+  )
+  const label = requirement.concepts[0]?.term ?? requirement.text
+  if (roles.length === 0) {
+    return { requirement, status: "missing", confidence: 0, evidence: null, method: null, matchedConcepts: [], missingConcepts: [label] }
+  }
+  const evidence = input.evidence.find((e) => e.kind === "role" && roles.some((r) => e.text.includes(r.title))) ?? null
+  const matched: RequirementResult = {
+    requirement,
+    status: "matched",
+    confidence: 1,
+    evidence,
+    method: "keyword",
+    matchedConcepts: [label],
+    missingConcepts: [],
+  }
+  return checkDurationOver(matched, input, roles)
+}
 
 /**
  * Kavram bir özel ad mı: teknoloji, ürün, marka. Her kelimesi büyük harfle
@@ -334,15 +394,18 @@ function matchRequirement(
     // CV'de olmayan yetkinlikti (K-38, birikmiş işler #15 seçenek 3).
     const vec = conceptVectors[i]
     if (vec && semanticEnabled && !isProperNoun(concept)) {
-      let best: { similarity: number; contribution: number; evidence: Evidence } | null = null
+      // Kanıt benzerlik × çarpanla seçiliyor; katkı sürüm 3'te tam × çarpan
+      // (benzerlik bir olasılık değil, eşleşme kararı eşikte veriliyor).
+      let best: { rank: number; contribution: number; evidence: Evidence } | null = null
       for (const { evidence: ev, vector: evidenceVector } of eligibleEvidence) {
         if (!evidenceVector) continue
         if (ev.kind === "summary" && !summarySemantic) continue
         const similarityScore = cosineSimilarity(vec, evidenceVector)
         if (similarityScore < cfg.semanticThreshold) continue
-        const contribution = similarityScore * evidenceMultiplier(ev, cfg)
-        if (!best || contribution > best.contribution) {
-          best = { similarity: similarityScore, contribution, evidence: ev }
+        const rank = similarityScore * evidenceMultiplier(ev, cfg)
+        if (!best || rank > best.rank) {
+          const credit = cfg.semanticCredit === "full" ? 1 : similarityScore
+          best = { rank, contribution: credit * evidenceMultiplier(ev, cfg), evidence: ev }
         }
       }
       if (best) {
@@ -400,20 +463,67 @@ function matchRequirement(
  * Süre metni eksik listesine ekleniyor ama kavram değil: uyarlama yalnızca
  * kavram adlarını hedef alıyor (adapt/targets.ts), CV'ye süre yazdırılamaz.
  */
-function checkDuration(result: RequirementResult, input: ScoreInput): RequirementResult {
+function checkDuration(
+  result: RequirementResult,
+  input: ScoreInput,
+  conceptVectors: number[][],
+  cfg: ScoringConfig,
+): RequirementResult {
+  if (result.status !== "matched") return result
+  const roles = input.profile.experience
+  const terms = result.requirement.concepts.flatMap((c) => [c.term, ...c.synonyms])
+  const direct = roles.filter((role) => {
+    const text = [role.title, ...role.bullets.map((b) => b.text)].join("\n")
+    return terms.some((t) => containsKeyword(text, t)) || roleIsAbout(role, conceptVectors, input, cfg)
+  })
+  // Aynı alandaki roller de (sürüm 3): "Digital Marketing Executive" eşleşiyorsa
+  // "Performance Marketing Specialist" de pazarlama deneyimi. Alan, unvanın rol
+  // sözcüğü (son kelime) dışındaki kelimeleri; "Muhasebe Uzmanı" ile "Software
+  // Testing Engineer" ortak alan taşımıyor.
+  const fields = new Set(direct.flatMap((role) => fieldTokens(role.title)))
+  const relevant = roles.filter((role) => direct.includes(role) || fieldTokens(role.title).some((f) => fields.has(f)))
+  return checkDurationOver(result, input, relevant.length > 0 ? relevant : roles)
+}
+
+/** Unvanın alan kelimeleri: rol sözcüğü (son kelime) ve kıdem dışında kalanlar. */
+function fieldTokens(title: string): string[] {
+  return coreTokens(title).slice(0, -1)
+}
+
+/**
+ * Rol gereksinimin konusunda mı: unvanı ya da bir maddesi kavramla anlamsal
+ * eşiği geçiyor (sürüm 3). "Dijital pazarlamada 2 yıl" şartında "Performance
+ * Marketing Specialist" rolü "digital marketing" kelimesini taşımıyor ama
+ * aynı iş; yalnızca kelimeye bakınca süre kısa görünüyordu.
+ */
+function roleIsAbout(
+  role: ResumeProfile["experience"][number],
+  conceptVectors: number[][],
+  input: ScoreInput,
+  cfg: ScoringConfig,
+): boolean {
+  const entry = `${role.title} · ${role.company}`
+  return input.evidence.some((ev, j) => {
+    if (ev.kind !== "role" && ev.kind !== "bullet") return false
+    if (ev.text !== entry && !ev.text.startsWith(`${entry}: `)) return false
+    const vector = input.evidenceVectors[j]
+    return !!vector && conceptVectors.some((v) => cosineSimilarity(v, vector) >= cfg.semanticThreshold)
+  })
+}
+
+/** Süre şartı, verilen rollerin toplam süresiyle. */
+function checkDurationOver(
+  result: RequirementResult,
+  input: ScoreInput,
+  roles: ResumeProfile["experience"],
+): RequirementResult {
   if (result.status !== "matched") return result
   // Kullanıcının düzelttiği yıl (DOG-90) ilan metninden okunanın yerine geçiyor.
   const years = (result.requirement as CorrectedRequirement).minYears ?? requiredYears(result.requirement.text)
   if (years === null) return result
 
   const now = input.now ?? new Date()
-  const roles = input.profile.experience
-  const terms = result.requirement.concepts.flatMap((c) => [c.term, ...c.synonyms])
-  const relevant = roles.filter((role) => {
-    const text = [role.title, ...role.bullets.map((b) => b.text)].join("\n")
-    return terms.some((t) => containsKeyword(text, t))
-  })
-  const months = experienceMonths(relevant.length > 0 ? relevant : roles, now)
+  const months = experienceMonths(roles, now)
   if (months === null || months >= years * 12) return result
 
   const have = (Math.round((months / 12) * 10) / 10).toLocaleString(input.posting.language === "en" ? "en" : "tr")

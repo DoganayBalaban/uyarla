@@ -25,11 +25,11 @@ export const MIN_RESOLVED_FOR_SIGNAL = 3
 
 const BANDS = ["Yüksek uyum", "Orta uyum", "Düşük uyum"] as const
 
-export function outcomesByBand(rows: ReadonlyArray<{ score: number | null; stage: Stage }>): BandOutcome[] {
+export function outcomesByBand(rows: ReadonlyArray<{ score: number | null; stage: Stage; scoringRevision?: number }>): BandOutcome[] {
   const out = new Map<string, BandOutcome>(BANDS.map((label) => [label, { label, resolved: 0, positive: 0, waiting: 0 }]))
   for (const r of rows) {
     if (r.score === null || r.stage === "saved") continue
-    const band = out.get(scoreStatus(r.score).label)!
+    const band = out.get(scoreStatus(r.score, r.scoringRevision).label)!
     if (r.stage === "applied") band.waiting++
     else {
       band.resolved++
@@ -43,7 +43,7 @@ export function outcomesByBand(rows: ReadonlyArray<{ score: number | null; stage
  * Kullanıcının kendi başvurularından sinyal: en az üç başvuru sonuçlanınca.
  * Yalnızca kendi verisi; başkalarının sonuçları kullanılmıyor.
  */
-export function personalOutcomeSignal(rows: ReadonlyArray<{ score: number | null; stage: Stage }>): string[] | null {
+export function personalOutcomeSignal(rows: ReadonlyArray<{ score: number | null; stage: Stage; scoringRevision?: number }>): string[] | null {
   const bands = outcomesByBand(rows)
   if (bands.reduce((n, b) => n + b.resolved, 0) < MIN_RESOLVED_FOR_SIGNAL) return null
   return bands
