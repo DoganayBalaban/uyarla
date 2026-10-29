@@ -41,7 +41,7 @@ export function RecentAnalysesTable({ cards, totalCount }: { cards: BoardCard[];
           </TableHeader>
           <TableBody>
             {cards.map((k) => {
-              const state = k.score === null ? null : scoreStatus(k.score)
+              const state = k.score === null ? null : scoreStatus(k.score, k.scoringRevision)
               return (
                 <TableRow key={k.analysisId} className="relative">
                   <TableCell className="max-w-0 pl-5 sm:w-1/2">

@@ -86,7 +86,7 @@ export function ApplicationDetail({ analysisId }: { analysisId: string }) {
     updateCard.mutate({ analysisId, change })
   }
 
-  const badge = card.score === null ? null : scoreBadge(card.score)
+  const badge = card.score === null ? null : scoreBadge(card.score, card.scoringRevision)
   return (
     <div>
       <PageCrumb label={card.position} />

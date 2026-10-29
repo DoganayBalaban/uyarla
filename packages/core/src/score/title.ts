@@ -34,7 +34,15 @@ const NOISE = new Set(
   ].flatMap((w) => normalizeTokens(w)),
 )
 
+/**
+ * İlan unvan yazmayınca model bir tahmin yazıyor: "AI/ML Engineer
+ * (implied)", "AI/Yazılım Geliştirici (Tahmini)". Tahmin edilen unvan
+ * aranmış sayılmaz; skora girmiyor (sürüm 3).
+ */
+const INFERRED = /\((?:implied|inferred|assumed|estimated|tahmini|tahmin|varsayılan|çıkarım)\)/iu
+
 export function titleMatch(position: string, profile: ResumeProfile): TitleMatch | null {
+  if (INFERRED.test(position)) return null
   // LLM bazen iki unvanı birlikte yazıyor: "Yapay Zeka Mühendisi / Yapay Zeka
   // Geliştiricisi". Herhangi biri yeterli.
   const alternatives = position

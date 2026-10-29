@@ -22,6 +22,8 @@ export interface BoardCard {
   /** İlan çıkarımının bulduğu şirket; eski kayıtlarda ve şirket yazmayan ilanlarda null. */
   company: string | null
   score: number | null
+  /** Skorun formül sürümü (DOG-165); etiket o sürümün eşiğiyle. Sürümü olmayan sonuç 1. */
+  scoringRevision?: number
   stage: Stage
   stageChangedAt: string | null
   noteText: string | null
@@ -105,6 +107,7 @@ export function toBoardCard(s: BoardRow): BoardCard {
     // Örnek ilanın şirketi yok; kart gerçek başvuruyla karışmasın (DOG-101).
     company: s.jobPosting.company?.trim() || (isSamplePosting(s.jobPosting.rawText) ? "Örnek ilan" : null),
     score: s.score === null ? null : Math.round(s.score),
+    scoringRevision: (s.result as { scoringRevision?: number } | null | undefined)?.scoringRevision ?? 1,
     stage: isStage(s.stage) ? s.stage : "saved",
     stageChangedAt: s.stageChangedAt?.toISOString() ?? null,
     noteText: s.note,
@@ -206,8 +209,8 @@ const BADGE_CLASS = {
  * `scoreStatus`'tan: başvuru panosu eskiden kendi 40/70 eşiğini kullanıyor ve
  * aynı skoru sonuç ekranından farklı etiketliyordu (DOG-72).
  */
-export function scoreBadge(score: number): { text: string; cls: string } {
-  const text = scoreStatus(score).label.replace(/ uyum$/, "")
+export function scoreBadge(score: number, revision?: number): { text: string; cls: string } {
+  const text = scoreStatus(score, revision).label.replace(/ uyum$/, "")
   // Koyu temada durum renklerinin açık tonları: AA kontrastı için.
   const cls = text === "Yüksek" ? BADGE_CLASS.high : text === "Orta" ? BADGE_CLASS.medium : BADGE_CLASS.low
   return { text, cls }

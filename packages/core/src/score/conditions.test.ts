@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { Requirement } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { matchCondition } from "./conditions.js"
+import { looksLikeCondition, matchCondition } from "./conditions.js"
 import { collectEvidence } from "./evidence.js"
 
 const condition = (text: string): Requirement => ({
@@ -71,5 +71,35 @@ describe("matchCondition", () => {
 
   it("does not take an office-days requirement as residence", () => {
     expect(run("Ankara ofisimizden haftada 3 gün çalışabilecek", profile()).status).toBe("missing")
+  })
+})
+
+describe("looksLikeCondition (revision 3)", () => {
+  // Model bu şartları bazen beceri ya da deneyim diye yazıyor; skora girip
+  // CV'de bulunamadıkları için "eksik" görünüyorlardı.
+  it("recognizes yes/no conditions the model typed as skill or experience", () => {
+    for (const text of [
+      "Aktif araç kullanabilen",
+      "B sınıfı ehliyet sahibi",
+      "At least 5 hours overlap with PST timezone (7am-5pm).",
+      "Askerlik hizmetini tamamlamış",
+      "Şehir dışı seyahat engeli olmayan",
+      "Must be authorized to work in the EU",
+      "Hafta sonu çalışabilecek",
+    ]) {
+      expect(looksLikeCondition(text), text).toBe(true)
+    }
+  })
+
+  it("does not take a skill or an industry for a condition", () => {
+    for (const text of [
+      "Seyahat sektöründe deneyim",
+      "Araç takip sistemleri bilgisi",
+      "Vardiya planlaması deneyimi",
+      "Excel'i iyi derecede kullanabilen",
+      "Travel booking platforms experience",
+    ]) {
+      expect(looksLikeCondition(text), text).toBe(false)
+    }
   })
 })

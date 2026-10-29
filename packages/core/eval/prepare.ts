@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { splitIntoConcepts } from "../src/extract/concepts.js"
 import { addLanguageEquivalents } from "../src/extract/equivalents.js"
-import { extractJobPosting } from "../src/extract/job.js"
+import { correctedType, extractJobPosting } from "../src/extract/job.js"
 import { extractResumeProfile } from "../src/extract/resume.js"
 import {
   OpenAiCompatibleEmbeddingProvider,
@@ -84,7 +84,10 @@ async function main() {
     if (recomputeConcepts) {
       posting = {
         ...posting,
-        requirements: posting.requirements.map((r) => ({ ...r, concepts: splitIntoConcepts(r.text, r.type) })),
+        requirements: posting.requirements.map((r) => {
+          const type = correctedType(r)
+          return { ...r, type, concepts: splitIntoConcepts(r.text, type) }
+        }),
       }
       if (withEquivalents) posting = (await addLanguageEquivalents(llm, posting)).data
       writeFileSync(join(CACHE, `ilan-${id}.json`), JSON.stringify(posting, null, 2))

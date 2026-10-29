@@ -2577,7 +2577,7 @@ deneyimde görünüyor, beceri listesi de temizlendi. Skor eval'i değişmedi
 
 ## K-64 · Skor: kişisel nitelikler dışarıda, unvan içeride; eşikler yeniden
 
-**Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-103 · **Değiştirdiği:** DOG-66 eşikleri
+**Tarih:** 18 Ekim 2026 · **Durum:** Sürüm 1–2 analizlerinde geçerli; yenileri K-110 · **Kapsam:** DOG-103 · **Değiştirdiği:** DOG-66 eşikleri
 
 **Bağlam:** Canlıda muhasebe CV'si kısa bir İK ilanında 42 alıp "Yüksek uyum"
 gördü. Aynı ekran "ilandaki unvan CV'nde geçmiyor" da diyordu. K2'de iki
@@ -3919,3 +3919,31 @@ Ayrıntı: `docs/superpowers/specs/2026-10-28-tanitim-yolculuk-design.md`.
 - "Chrome'a ekle" düğmeleri `NEXT_PUBLIC_EXTENSION_STORE_URL`'ye gidiyor; değişken boşken `#`.
 - Tanıtımdaki eklenti metinleri eklentinin kendi kaynağıyla (`manifest.json`, `background.ts`) bir testle eşleştiriliyor.
 - 13 numaralı video mağaza yayımından önce paylaşılmıyor.
+
+## K-110 · Skor formülü sürüm 3: doğru kavramlar, adil ağırlıklar, doğal eşikler
+
+**Tarih:** 29 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-165 · **Değiştirdiği:** K-64 eşikleri (yeni analizlerde)
+
+**Bağlam:** Kullanıcı 50'nin üstünde skor görmediğini, 30'larda "Yüksek uyum" gördüğünü söyledi: "neye göre?" Değerlendirme setinde (20 çift) iyi uyumlu çiftler 37–83 alıyordu ve "Yüksek" 35'ten başlıyordu. Çiftlerin tek tek dökümünde puanın büyük kısmı haksız kayıptı:
+- Kavram bölücü "X ve Y gibi" listesinin her örneğini ayrı zorunlu sayıyordu. İngilizce anlatı cümlelerini ("You've owned code…"), "orta veya ileri düzey"i, "veya benzeri framework'lerden"i kavram yapıyordu. "Türkiye" tek başına kavram oluyor, adresinde Türkiye yazan her CV eşleşiyordu.
+- Eşiği geçen anlamsal eşleşme benzerlik değeri kadar (~0,6) sayılıyordu; değer bir olasılık değil.
+- İlan unvan yazmayınca modelin tahmini ("AI/ML Engineer (implied)") puanlanıyordu.
+- "Aktif araç kullanabilen", "PST saatiyle 5 saat çakışma" şart yerine beceri sayılıp eksik görünüyordu.
+- Diploma, dil, Excel gibi genel şartlar alakasız adayı yukarı taşıyordu (muhasebe CV'si × İK ilanı: 40).
+
+**Karar:**
+- Kavram bölücü (yeni ilanlarda): örnek listeleri seçenek; anlatı ve "avantaj" cümleleri, düzey ve süre ifadeleri, "konusunda/alanında" kuyrukları, bulunma eki ("pazarlamada"), "veya benzeri", "ilgili …" ve yer adları ayıklanıyor. Dil gereksinimi dilin adına iniyor. Yaygın araç kısa adları eş anlamlı (GA4, GTM, K8s); belirsiz kısa adlar ("Office", "Logo") yok.
+- Formül (`SCORING_REVISION = 3`, `scoringConfigFor`):
+  - Eşiği geçen anlamsal eşleşme tam sayılıyor; kanıt yine benzerlikle seçiliyor.
+  - Genel şartlar (eğitim, dil, ofis programı) tercih edilen bir gereksinim kadar.
+  - "Benzer bir işte X yıl" ilanın unvanını taşıyan roller ve onlardaki süreyle; ilanda unvan yoksa eski yol.
+  - Süre şartında kavramı geçen rolle aynı alandaki ("Marketing") ve anlamca ilgili roller de sayılıyor.
+  - Tahmin edilen unvan skora girmiyor. Şart gibi yazılmış maddeler ilan çıkarımında şart oluyor.
+- Eşikler sürüme göre: sürüm 3'te Orta ≥ 30, Yüksek ≥ 50 ("ilanın istediklerinin yarısından fazlası CV'nde kanıtlı"). Sürüm 1–2 analizleri kendi eşiğiyle (22/35) etiketleniyor; pano ortalaması yalnızca en yeni formülün skorlarından.
+- Kayıtlı analizler kendi formülüyle yeniden hesaplanıyor ("ilanda yok" işareti); uyarlamada eski formüllü analizin "önce" skoru bugünkü formülle, "sonra" ile aynı.
+- Örnek rapor sürüm 3 ile yeniden hesaplandı (34 → 46).
+- Görünen sayıyı ölçeklemek (35 → 65) reddedildi: sayı kapsama oranı olmaktan çıkar, 65 gören "ilanın %65'i bende" sanardı.
+
+**Ölçüm (20 çift):** İsabet %95,4 ve uydurma 1 değişmedi; kelime eşleşmesi 36'dan 43'e çıktı, anlamsal tahmin 12'den 7'ye indi. Yüksek beklenenler 37–80, orta 17–45, düşük 0–25 (önce 0–40). Etiket isabeti 16/20'den 18/20'ye. Kalan ikisi gerçek eksik: 5 yıl isteyen ilana 1 yıllık CV (36) ve profesyonel GenAI deneyimi isteyen ilana yeni mezun (17).
+
+**Açık:** Tanıtım demosu 28 → 41 artık "Düşük → Orta". TikTok videoları 3, 10 ve 14 bu demonun karelerini eski etiketlerle taşıyor; yayından önce yeniden çizilmeli. Değerlendirme seti 20 çift; eşikler yeni çiftlerle yeniden sınanmalı.

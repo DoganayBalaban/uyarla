@@ -37,6 +37,27 @@ const TOPICS: Topic[] = [
 ]
 
 /**
+ * Model bazen evet/hayır şartını beceri ya da deneyim diye yazıyor ("Aktif
+ * araç kullanabilen", "5 hours overlap with PST"). Bunlar CV'de aranıp
+ * bulunamayınca "eksik" görünüyor ve skoru düşürüyordu. Kalıplar dar: bir
+ * sektör ya da beceri ("seyahat sektörü", "araç takip sistemleri") şart değil.
+ */
+const CONDITION_ASKS: RegExp[] = [
+  ...TOPICS.map((topic) => topic.asks),
+  /seyahat (?:engel|sinirlama|kisitlama)|seyahate (?:engel|açik|uygun)|willing(?:ness)? to (?:travel|relocate)|ability to travel|travel (?:up to|requirement)/,
+  /(?:overlap|örtüş|çakış)\p{L}* (?:with )?\p{L}* (?:time ?zone|saat dilimi)|time ?zone|saat dilimi/u,
+  /(?:authori[sz]ed|eligible|right) to work|work (?:authori[sz]ation|permit)|çalişma izni|visa sponsorship/,
+  /hafta ?sonu (?:çaliş|mesai)|vardiyali (?:çaliş|sistem)|gece vardiya|nöbet (?:tutabil|usulü)/,
+  /(?:taşinma|relocat)\p{L}* (?:engel|uygun|açik)|relocate/u,
+]
+
+/** Gereksinim metni bir evet/hayır şartı mı soruyor (ilan çıkarımında türü düzeltmek için). */
+export function looksLikeCondition(text: string): boolean {
+  const folded = normalizeText(text)
+  return CONDITION_ASKS.some((pattern) => pattern.test(folded))
+}
+
+/**
  * İkamet şartında aranan şehirler. Tam liste değil: ilanlarda en sık geçenler.
  * Listede olmayan şehir "kontrol et"e düşüyor, yanlış eşleşmeye değil.
  */

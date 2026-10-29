@@ -56,4 +56,11 @@ describe("titleMatch", () => {
     expect(titleMatch("AI Engineer (Remote)", profile(null, ["AI Engineer"]))?.level).toBe("exact")
     expect(titleMatch("(Tahmini)", profile(null, ["AI Engineer"]))).toBeNull()
   })
+
+  it("leaves an inferred posting title out of the score (revision 3)", () => {
+    // İlan unvan yazmayınca model bir tahmin yazıyor: "AI/ML Engineer (implied)".
+    expect(titleMatch("AI/ML Engineer (implied)", profile("AI Engineer", []))).toBeNull()
+    expect(titleMatch("AI/Yazılım Geliştirici (Tahmini)", profile(null, ["Yazılım Geliştirici"]))).toBeNull()
+    expect(titleMatch("Frontend Developer (Remote)", profile(null, ["Frontend Developer"]))?.level).toBe("exact")
+  })
 })

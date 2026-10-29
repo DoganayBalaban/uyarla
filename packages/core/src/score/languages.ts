@@ -1,3 +1,4 @@
+import { mentionedLanguages } from "../normalize/languageNames.js"
 import { normalizeText } from "../normalize/turkish.js"
 import type { Requirement } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
@@ -24,27 +25,6 @@ export interface LanguageCheck {
   /** ok: istenen seviyede ya da üstünde; below: altında; unknown: CV seviye söylemiyor; absent: dil CV'de yok. */
   status: "ok" | "below" | "unknown" | "absent"
 }
-
-/**
- * Kalıplar normalizeText biçiminde: küçük harf, "ı" → "i", noktalama boşluk.
- * Böylece "İyi derecede İngilizce" ve "FLUENT ENGLISH" aynı kalıba düşüyor;
- * JavaScript'in `i` bayrağı "İ"yi "i" saymıyor.
- */
-const LANGUAGES: Array<{ name: string; pattern: RegExp }> = [
-  { name: "İngilizce", pattern: /ingilizce|english/ },
-  { name: "Almanca", pattern: /almanca|german(?!y)|deutsch/ },
-  { name: "Fransızca", pattern: /fransizca|french|fran[cç]ais/ },
-  { name: "İspanyolca", pattern: /ispanyolca|spanish|espa[nñ]ol/ },
-  { name: "İtalyanca", pattern: /italyanca|italian/ },
-  { name: "Rusça", pattern: /rusça|russian/ },
-  { name: "Arapça", pattern: /arapça|arabic/ },
-  { name: "Çince", pattern: /çince|chinese|mandarin/ },
-  { name: "Japonca", pattern: /japonca|japanese/ },
-  { name: "Korece", pattern: /korece|korean/ },
-  { name: "Felemenkçe", pattern: /felemenkçe|hollandaca|dutch/ },
-  { name: "Portekizce", pattern: /portekizce|portuguese/ },
-  { name: "Türkçe", pattern: /türkçe|turkish/ },
-]
 
 const CEFR = ["A1", "A2", "B1", "B2", "C1", "C2"] as const
 
@@ -79,11 +59,6 @@ function parseLevel(text: string): number | null {
   if (cefr) return CEFR.indexOf(`${cefr[1]!.toUpperCase()}${cefr[2]}` as (typeof CEFR)[number]) + 1
   for (const [pattern, level] of LEVEL_WORDS) if (pattern.test(folded)) return level
   return null
-}
-
-function mentionedLanguages(text: string) {
-  const folded = normalizeText(text)
-  return LANGUAGES.filter((l) => l.pattern.test(folded))
 }
 
 export function checkLanguages(requirements: Requirement[], profile: ResumeProfile): LanguageCheck[] {

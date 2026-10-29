@@ -8,6 +8,7 @@
 import { resultPath } from "@/features/analysis/paths"
 import { STAGES, type Stage, type BoardCard } from "@/features/applications/board"
 import { personalOutcomeSignal } from "@/features/applications/outcomes"
+import { SCORING_REVISION } from "@uyarla/core/score/config"
 
 export type PendingKind = "interview" | "decide" | "deadline" | "ready" | "adapt"
 
@@ -30,6 +31,8 @@ export interface DashboardMetrics {
   positive: number
   /** Skoru olan analizlerin ortalaması, yuvarlanmış; hiç yoksa null. */
   averageScore: number | null
+  /** Ortalamaya giren skorların formül sürümü; etiket bu sürümün eşiğiyle. */
+  averageRevision: number | null
 }
 
 /** Grafiğin bir günü: o gün yapılan analiz sayısı ve ortalama skoru. */
@@ -120,12 +123,18 @@ export function summarize(cards: BoardCard[], now = new Date()): DashboardSummar
     .sort((x, y) => PENDING_ORDER[x.kind] - PENDING_ORDER[y.kind])
     .slice(0, PENDING_LIMIT)
 
-  const scores = cards.map((k) => k.score).filter((n): n is number => n !== null)
+  // Ortalama yalnızca en yeni formülün skorlarıyla (DOG-165): ölçek sürümden
+  // sürüme değişti, iki ölçeğin ortalaması hiçbir şey söylemez. Eski
+  // analizler zamanla ortalamadan çıkıyor.
+  const scored = cards.filter((k) => k.score !== null).map((k) => ({ score: k.score!, revision: k.scoringRevision ?? SCORING_REVISION }))
+  const averageRevision = scored.length ? Math.max(...scored.map((s) => s.revision)) : null
+  const scores = scored.filter((s) => s.revision === averageRevision).map((s) => s.score)
   const metrics: DashboardMetrics = {
     analysesLast30: cards.filter((k) => daysBetween(dayOf(new Date(k.createdAt)), today) < 30).length,
     applied: cards.length - stageCounts.saved,
     positive: stageCounts.interview + stageCounts.offer,
     averageScore: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null,
+    averageRevision,
   }
 
   return {

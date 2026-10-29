@@ -1,4 +1,4 @@
-import { DEFAULT_SCORING_CONFIG, SCORING_REVISION, type ScoringConfig } from "@uyarla/core/score/config"
+import { scoringConfigFor, type ScoringConfig } from "@uyarla/core/score/config"
 
 /**
  * Sonuç bölümlerinin skor etkisi rozetleri (DOG-132). Etiketler elle
@@ -29,11 +29,10 @@ function times(n: number): string {
   return Number.isInteger(n) ? String(n) : n.toLocaleString("tr-TR", { maximumFractionDigits: 1 })
 }
 
-export function scoreImpacts(revision: number | undefined, config: ScoringConfig = DEFAULT_SCORING_CONFIG): ScoreImpacts {
-  const current = (revision ?? 1) >= SCORING_REVISION
-  const unscored: readonly string[] = current ? config.unscoredTypes : []
+export function scoreImpacts(revision: number | undefined, config: ScoringConfig = scoringConfigFor(revision)): ScoreImpacts {
+  const unscored: readonly string[] = config.unscoredTypes
   const ratio = config.mustWeight / config.niceWeight
-  const titleScored = current && config.titleWeight > 0
+  const titleScored = config.titleWeight > 0
 
   const titleHint =
     config.titleWeight === config.mustWeight

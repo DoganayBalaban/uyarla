@@ -344,8 +344,8 @@ function BoardColumns({ cards, onUpdate }: { cards: BoardCard[]; onUpdate: (id: 
   )
 }
 
-function ScoreBadge({ score }: { score: number | null }) {
-  const badge = score === null ? null : scoreBadge(score)
+function ScoreBadge({ score, revision }: { score: number | null; revision?: number }) {
+  const badge = score === null ? null : scoreBadge(score, revision)
   if (!badge || score === null) return <span className="text-muted-foreground">—</span>
   return (
     <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold whitespace-nowrap", badge.cls)} title="ATS uyum skoru">
@@ -398,7 +398,7 @@ function BoardCardView({ card, onUpdate }: { card: BoardCard; onUpdate: (id: str
         <GripVertical className="mt-0.5 size-4 shrink-0 cursor-grab text-muted-foreground opacity-0 transition group-hover:opacity-100" aria-hidden />
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-        <ScoreBadge score={card.score} />
+        <ScoreBadge score={card.score} revision={card.scoringRevision} />
         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
           <CalendarDays className="size-3.5" aria-hidden />
           {DATE_FORMAT.format(new Date(card.createdAt))}
@@ -513,7 +513,7 @@ function ApplicationTable({ cards, onUpdate }: { cards: BoardCard[]; onUpdate: (
                       {card.company && <span className="block truncate text-xs text-muted-foreground">{card.company}</span>}
                     </TableCell>
                     <TableCell>
-                      <ScoreBadge score={card.score} />
+                      <ScoreBadge score={card.score} revision={card.scoringRevision} />
                     </TableCell>
                     <TableCell>
                       <StageSelect value={card.stage} onChange={(s) => onUpdate(card.analysisId, { stage: s })} className="h-7 text-xs" />
@@ -549,7 +549,7 @@ function ApplicationTable({ cards, onUpdate }: { cards: BoardCard[]; onUpdate: (
                 </Link>
                 {card.company && <span className="block text-xs text-muted-foreground">{card.company}</span>}
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <ScoreBadge score={card.score} />
+                  <ScoreBadge score={card.score} revision={card.scoringRevision} />
                   <DeadlineBadge card={card} />
                   {card.interviewAt && (
                     <span className="rounded-full bg-brand-amber/10 px-2 py-0.5 text-xs font-semibold text-brand-amber">Mülakat {day(card.interviewAt)}</span>
