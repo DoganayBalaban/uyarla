@@ -121,6 +121,7 @@ const STEP_VISUAL: Partial<Record<StepId, React.ReactNode>> = {
 }
 
 function AccessChips({ step }: { step: (typeof JOURNEY)[number] }) {
+  if (step.rows.length === 0) return null
   return (
     <ul className={s.accessChips} aria-label="Erişim">
       {accessChips(step).map((c) => (
