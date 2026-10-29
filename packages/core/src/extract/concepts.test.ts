@@ -80,7 +80,8 @@ describe("splitIntoConcepts · Turkish constructions", () => {
 
   it("makes a parenthesized abbreviation a synonym of the preceding concept", () => {
     expect(conceptItem("Next.js ile sunucu tarafı render (SSR) deneyimi")).toEqual([
-      { term: "Next.js", synonyms: [] },
+      // Araç eşlemesi (skor sürüm 3): "NextJS" yazan CV de karşılıyor.
+      { term: "Next.js", synonyms: ["NextJS"] },
       { term: "sunucu tarafı render", synonyms: ["SSR"] },
     ])
     expect(conceptItem("Web performansı ve erişilebilirlik (WCAG) konusunda bilgi")).toEqual([
@@ -228,8 +229,194 @@ describe("splitIntoConcepts · 'veya ilgili bölümler' (DOG-75)", () => {
   })
 
   it("handles the English form", () => {
+    // Skor sürüm 3: derece sözcükleri atılıyor; CV'nin eğitim satırı
+    // "B.Sc. Computer Science" yazıyor, kelime eşleşmesi kurulabilsin.
     expect(splitIntoConcepts("Bachelor's degree in Computer Science or related field", "education")).toEqual([
-      { term: "Bachelor degree in Computer Science", synonyms: [] },
+      { term: "Computer Science", synonyms: [] },
     ])
+  })
+})
+
+/**
+ * Değerlendirme setindeki ilanlarda yanlış bölünen gereksinimler (skor
+ * sürüm 3). Beklenen çıktı, işe alımcının cümleden anladığı: "X ve Y gibi"
+ * örnek listesi seçenektir, dolgu ve anlatı cümlesi kavram değildir.
+ */
+describe("splitIntoConcepts · examples, filler and narrative (scoring revision 3)", () => {
+  const concepts = (text: string, type?: Parameters<typeof splitIntoConcepts>[1]) => splitIntoConcepts(text, type)
+  const terms = (text: string, type?: Parameters<typeof splitIntoConcepts>[1]) => concepts(text, type).map((c) => c.term)
+
+  it("turns a Turkish 'gibi' list into one option, with the category as an alternative", () => {
+    const [portals, ...rest] = concepts("Kariyer.net ve LinkedIn gibi kariyer portallarını kullanabilen")
+    expect(rest).toHaveLength(0)
+    expect(portals!.term).toBe("Kariyer.net / LinkedIn")
+    expect(portals!.synonyms).toEqual(expect.arrayContaining(["Kariyer.net", "LinkedIn", "kariyer portalları"]))
+
+    const [tools] = concepts("Trello, Asana veya Jira gibi iş takip araçlarını etkin kullanabilen")
+    expect(tools!.term).toBe("Trello / Asana / Jira")
+    expect(tools!.synonyms).toContain("iş takip araçları")
+
+    const [vectors] = concepts("FAISS, Pinecone, Weaviate, Milvus, Chroma veya Azure AI Search gibi vektör veritabanlarıyla çalışma deneyimi")
+    expect(vectors!.term).toBe("FAISS / Pinecone / Weaviate / Milvus / Chroma / Azure AI Search")
+    expect(vectors!.synonyms).toContain("vektör veritabanları")
+  })
+
+  it("keeps every example of a 'gibi' list and drops the generic head word", () => {
+    const list = concepts("Meta Ads, Google Ads, LinkedIn Ads ve TikTok gibi kanallarda en az 5 yıl performans pazarlaması deneyimi")
+    expect(list.map((c) => c.term)).toEqual(["Meta Ads / Google Ads / LinkedIn Ads / TikTok"])
+    expect(list[0]!.synonyms).toContain("performans pazarlaması")
+  })
+
+  it("reads English 'such as' and 'including' lists as options", () => {
+    const [solution, ...rest] = concepts(
+      "Proven experience delivering at least one production-grade LLM solution, such as a RAG system, AI agent, or intelligent assistant",
+    )
+    expect(rest).toHaveLength(0)
+    expect(solution!.term).toBe("RAG system / AI agent / intelligent assistant")
+    expect(solution!.synonyms).toContain("production-grade LLM solution")
+
+    expect(terms("Strong understanding of NLP concepts and their application to tasks such as classification, information extraction, NER, summarization, and semantic search")).toEqual([
+      "NLP concepts",
+      "classification / information extraction / NER / summarization / semantic search",
+    ])
+    expect(terms("Strong Python development skills, including clean code, testing, asynchronous programming, type safety, and version control")).toEqual([
+      "Python development",
+      "clean code / testing / asynchronous programming / type safety / version control",
+    ])
+  })
+
+  it("drops narrative sentences and keeps the requirement sentence", () => {
+    expect(terms("2+ years building LLM or agent systems that shipped to productions watching real users adopt. Not internal demos, not prototypes. Be ready to talk about what broke in production and what you did about it.")).toEqual([
+      "LLM / agent systems",
+    ])
+    expect(terms("4+ years of production software engineering: APIs, services, data infrastructure. You've owned code that other people depended on, with tests, CI/CD, and on-call attached.")).toEqual([
+      "production software engineering", "APIs", "services", "data infrastructure",
+    ])
+    expect(terms("Hands on with LangChain, LangGraph, or equivalent agent/orchestration frameworks. You've built with them, hit their limits, and worked around them.")).toEqual([
+      "LangChain / LangGraph / agent/orchestration",
+    ])
+    expect(terms("Experience at early-stage startups or high-growth environments where you wore multiple hats.")).toEqual([
+      "early-stage startups / high-growth environments",
+    ])
+  })
+
+  it("does not count an 'is a strong advantage' sentence inside a requirement", () => {
+    expect(terms("Experience developing AI applications on cloud platforms; GCP and Vertex AI experience is a strong advantage")).toEqual([
+      "AI applications on cloud platforms",
+    ])
+  })
+
+  it("strips English lead-ins and trailing preference words", () => {
+    expect(terms("Solid expertise in RAG architectures, retrieval techniques, tool/function calling, context management, and document processing")).toEqual([
+      "RAG architectures", "retrieval", "tool/function calling", "context management", "document processing",
+    ])
+    expect(terms("Familiarity with agent frameworks, MCP, vector databases, and model fine-tuning techniques is preferred")).toEqual([
+      "agent", "MCP", "vector databases", "model fine-tuning",
+    ])
+    expect(terms("Retrieval-augmented generation (RAG) at depth: Hybrid and graph retrieval, chunking and embedding strategy, ranking, grounding.")).toEqual([
+      "Retrieval-augmented generation", "Hybrid retrieval", "graph retrieval", "chunking", "embedding strategy", "ranking", "grounding",
+    ])
+  })
+
+  it("reads degree requirements without the degree words", () => {
+    expect(terms("Bachelor’s degree in Computer Engineering, Software Engineering, or a related field", "education")).toEqual([
+      "Computer Engineering / Software Engineering",
+    ])
+    expect(terms("Master’s or Ph.D. is a plus", "education")).toEqual(["Master / Ph.D"])
+    expect(terms("Üniversitelerin İnsan Kaynakları Yönetimi veya İktisadi ve İdari Bilimler lisans bölümlerinden mezun", "education")).toEqual([
+      "Üniversitelerin İnsan Kaynakları Yönetimi / İktisadi ve İdari Bilimler",
+    ])
+  })
+
+  it("reduces a language requirement to the language, with its other name", () => {
+    for (const text of ["İyi derecede İngilizce bilen", "İyi seviyede İngilizce bilmek", "Tercihen iyi derecede İngilizce dil bilgisine sahip"]) {
+      const [language, ...rest] = concepts(text)
+      expect(rest, text).toHaveLength(0)
+      expect(language!.term, text).toBe("İngilizce")
+      expect(language!.synonyms, text).toContain("English")
+    }
+    const [english] = concepts("Excellent command of English")
+    expect(english!.term).toBe("English")
+    expect(english!.synonyms).toContain("İngilizce")
+  })
+
+  it("cuts Turkish 'konusunda / alanında / süreçlerinde' tails and duration phrases", () => {
+    expect(terms("İnsan kaynakları alanında en az 3 yıl deneyimli")).toEqual(["İnsan kaynakları"])
+    expect(terms("Yapay zekâ, makine öğrenmesi, doğal dil işleme veya veri bilimi alanlarında en az 5 yıl deneyim")).toEqual([
+      "Yapay zekâ / makine öğrenmesi / doğal dil işleme / veri bilimi",
+    ])
+    expect(terms("Üretken yapay zekâ ve LLM tabanlı projelerde en az 2 yıl uygulamalı deneyim")).toEqual(["Üretken yapay zekâ", "LLM tabanlı projeler"])
+    expect(terms("REST API, mikroservis mimarileri ve sistem entegrasyonları konusunda tecrübeli olmak")).toEqual([
+      "REST API", "mikroservis mimarileri", "sistem entegrasyonları",
+    ])
+    expect(terms("Generative AI ve LLM tabanlı uygulamalar konusunda profesyonel proje geliştirme deneyimine sahip olmak")).toEqual([
+      "Generative AI", "LLM tabanlı uygulamalar",
+    ])
+    expect(terms("AI Agent ve agentic workflow teknolojileri konusunda deneyimli olmak")).toEqual(["AI Agent", "agentic workflow"])
+    expect(terms("VUK konusunda temel bilgi sahibi olmanı")).toEqual(["VUK"])
+    expect(terms("MS Excel'i iyi derecede kullanabilen")).toEqual(["MS Excel"])
+    expect(terms("Tercihen üretim / fabrika ortamında olmak üzere, insan kaynakları alanında en az 3-5 yıl tecrübe sahibi")).toEqual([
+      "üretim / fabrika", "insan kaynakları",
+    ])
+    expect(terms("medikal estetik, sağlık turizmi veya klinik/hastane sektörlerinde edinilmiş deneyim tercih sebebidir")).toEqual([
+      "medikal estetik / sağlık turizmi / klinik/hastane",
+    ])
+  })
+
+  it("drops 'veya benzeri' tails, catch-alls and back-references", () => {
+    expect(terms("LangChain, LlamaIndex, Semantic Kernel, AutoGen, CrewAI veya benzeri framework'lerden en az biriyle deneyim")).toEqual([
+      "LangChain / LlamaIndex / Semantic Kernel / AutoGen / CrewAI",
+    ])
+    expect(terms("LangGraph, n8n veya benzeri agent orchestration ve workflow automation araçlarından en az biriyle uygulama geliştirmiş olmak")).toEqual([
+      "LangGraph / n8n",
+    ])
+    expect(terms("LLM API’lerini kullanarak AI Agent, RAG veya benzeri LLM tabanlı uygulamalar geliştirmiş olmak")).toEqual([
+      "LLM API", "AI Agent / RAG",
+    ])
+    expect(terms("4857 sayılı İş Kanunu, İş Hukuku, SGK mevzuatı ve ilgili yasal düzenlemeler hakkında bilgi sahibi")).toEqual([
+      "4857 sayılı İş Kanunu", "İş Hukuku", "SGK mevzuatı",
+    ])
+    expect(terms("Raporlama ve içgörü üretimi süreçlerinde AI araçlarını (ChatGPT, Gemini, Claude vb.) aktif kullanan, bu araçları iş akışına entegre etmiş")).toEqual([
+      "Raporlama", "içgörü üretimi", "ChatGPT / Gemini / Claude",
+    ])
+  })
+
+  it("does not read a level phrase as an option list", () => {
+    expect(terms("GA4, Google Tag Manager ve Looker Studio'da orta veya ileri düzey hakimiyet")).toEqual([
+      "GA4", "Google Tag Manager", "Looker Studio",
+    ])
+  })
+
+  it("keeps fixed phrases joined by 've' together", () => {
+    expect(terms("İşe alım, oryantasyon, performans yönetimi, eğitim ve gelişim, özlük işleri ve çalışan ilişkileri süreçlerinde deneyimli")).toEqual([
+      "İşe alım", "oryantasyon", "performans yönetimi", "eğitim ve gelişim", "özlük işleri", "çalışan ilişkileri",
+    ])
+  })
+
+  it("never makes a place name a concept on its own", () => {
+    expect(terms("Türkiye ve yurt dışı pazarlarını ayrı ayrı yönetebilecek çok pazarlı reklam yönetimi tecrübesi")).toEqual([
+      "çok pazarlı reklam yönetimi",
+    ])
+  })
+
+  it("drops the locative before 'deneyim': 'pazarlamada 2 yıl deneyim' is about 'pazarlama'", () => {
+    expect(terms("Dijital pazarlamada en az 2 yıl deneyim")).toEqual(["Dijital pazarlama"])
+    expect(terms("Satışta en az 3 yıl deneyimli")).toEqual(["Satış"])
+    expect(terms("Muhasebede 3 yıl tecrübe")).toEqual(["Muhasebe"])
+    // Türkçe ek kuralına uymayan sonlar kelimenin kendisi.
+    expect(terms("Website deneyimi")).toEqual(["Website"])
+    expect(terms("Node deneyimi")).toEqual(["Node"])
+  })
+
+  it("knows the common short names of tools", () => {
+    // Örnek rapor: CV "GA4 ve Looker Studio ile … panolar" yazıyor, ilan "Google Analytics 4".
+    const [ga] = concepts("Google Analytics 4 ile raporlama")
+    expect(ga!.synonyms).toContain("GA4")
+    const [ga4, gtm] = concepts("GA4 ve Google Tag Manager bilgisi")
+    expect(ga4!.synonyms).toContain("Google Analytics 4")
+    expect(gtm!.synonyms).toContain("GTM")
+    expect(concepts("Kubernetes deneyimi")[0]!.synonyms).toContain("K8s")
+    // Belirsiz kısa adlar eklenmiyor: "Office" bir CV'de "back office" olabilir.
+    expect(concepts("MS Office programlarını kullanabilen")[0]!.synonyms).not.toContain("Office")
   })
 })
