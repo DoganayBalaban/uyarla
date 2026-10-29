@@ -20,10 +20,14 @@ describe("journey (DOG-160)", () => {
   })
 
   it("shows both a free and a paid chip where a step mixes them", () => {
-    const linkedin = accessChips(JOURNEY.find((s) => s.id === "gorunur")!)
-    expect(linkedin.some((c) => !c.paid)).toBe(true)
-    expect(linkedin.some((c) => c.paid)).toBe(true)
+    const apply = accessChips(JOURNEY.find((s) => s.id === "basvur")!)
+    expect(apply.some((c) => !c.paid)).toBe(true)
+    expect(apply.some((c) => c.paid)).toBe(true)
     expect(accessChips(JOURNEY.find((s) => s.id === "bul")!)).toEqual([{ short: "İş arama", access: "Ücretsiz", paid: false }])
+  })
+
+  it("shows no access chips on the LinkedIn step", () => {
+    expect(accessChips(JOURNEY.find((s) => s.id === "gorunur")!)).toEqual([])
   })
 })
 
