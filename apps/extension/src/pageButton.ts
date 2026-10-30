@@ -1,3 +1,5 @@
+import { brandSvg } from "./brand.js"
+
 /**
  * İlan ve profil sayfasındaki uyarla düğmesi (DOG-169). Yerleşim A: sitenin
  * kendi başvuru düğmesinin hemen yanında. Başvuru düğmesi bulunamazsa
@@ -63,7 +65,7 @@ button {
 :host([data-yer="kose"]) button { box-shadow: 0 6px 18px rgba(0, 0, 0, .2); }
 button:hover { background: #4338ca; }
 button:focus-visible { outline: 3px solid #a5b4fc; outline-offset: 2px; }
-.u { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 5px; background: #fff; color: #4f46e5; font-weight: 800; font-size: 12px; }
+.logo { display: block; height: 12px; width: auto; flex: none; color: #fff; }
 `
 
 const buttons = new WeakMap<Element, { button: HTMLButtonElement; onClick: () => void }>()
@@ -81,10 +83,8 @@ export function placeButton(doc: Document, options: { label: string; onClick: ()
     style.textContent = STYLE
     const button = doc.createElement("button")
     button.type = "button"
-    const mark = doc.createElement("span")
-    mark.className = "u"
-    mark.textContent = "u"
-    mark.setAttribute("aria-hidden", "true")
+    const mark = brandSvg(doc, "icon")
+    mark.classList.add("logo")
     button.append(mark, doc.createElement("span"))
     shadow.append(style, button)
     const entry = { button, onClick: options.onClick }
