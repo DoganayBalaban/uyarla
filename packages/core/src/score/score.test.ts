@@ -913,6 +913,26 @@ describe("conceptTexts · cross-language (DOG-104)", () => {
   })
 })
 
+describe("conceptTexts · example lists (DOG-166)", () => {
+  it("embeds the kind of an example list along with its members", () => {
+    const posting = {
+      position: "x",
+      company: null,
+      seniority: null,
+      language: "tr" as const,
+      requirements: [
+        {
+          text: "Meta Ads ve Google Ads gibi kanallarda performans pazarlaması",
+          type: "experience" as const,
+          importance: "must" as const,
+          concepts: [{ term: "Meta Ads / Google Ads", synonyms: ["Meta Ads", "Google Ads", "performans pazarlaması"], category: "performans pazarlaması" }],
+        },
+      ],
+    }
+    expect(conceptTexts(posting, "tr")).toEqual(["performans pazarlaması (Meta Ads / Google Ads)"])
+  })
+})
+
 describe("weightedScore · soft requirements and title (DOG-103)", () => {
   const req = (type: Requirement["type"], importance: "must" | "nice", confidence: number) => ({
     requirement: { text: type, type, importance, concepts: [{ term: type, synonyms: [] }] } as Requirement,

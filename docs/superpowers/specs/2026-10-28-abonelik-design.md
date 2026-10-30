@@ -145,7 +145,7 @@ interface BillingProvider {
 ```
 
 - **Bildirim işleyicisi:** `subscription.created`, `updated`, `active`, `canceled`, `uncanceled` ve `revoked` aynı yere gidiyor. `providerSubscriptionId`'ye göre ekle-ya da-güncelle; gelen `modifiedAt` kayıttakinden eskiyse yok sayılıyor. Kullanıcı bulunamazsa (hesap silinmiş) yazılmıyor ve aboneliği iptal etme isteği gönderiliyor.
-- **Hesap silme:** Önce açık abonelikler `cancelSubscription` ile Polar'da iptal ediliyor, sonra satırlar siliniyor. Polar'a ulaşılamazsa silme durmuyor; Sentry'ye uyarı gidiyor, iptal elle yapılıyor.
+- **Hesap silme:** Önce açık abonelikler `cancelSubscription` ile Polar'da iptal ediliyor, sonra satırlar siliniyor. İptal edilemeyen abonelik varsa hesap silinmiyor; kullanıcı yeniden deniyor (K-111, ilk hâlinde silme durmuyordu). Polar'da zaten iptal edilmiş ya da bulunamayan abonelik iptal edilmiş sayılıyor.
 
 ### 4.4 API (`/api/billing/[action]`, tek dosya; Vercel 12 fonksiyon sınırı)
 
@@ -196,7 +196,7 @@ interface BillingProvider {
 | Kart reddedildi (`past_due`) | Erişim dönem sonuna kadar; Hesabım'da "Kartını güncelle" |
 | İade (`revoked`) | Erişim hemen kapanıyor |
 | Aktif abone yeniden abone olmak istiyor | Portal açılıyor |
-| Hesap silindi | Polar'da abonelik iptal, satırlar siliniyor; Polar'a ulaşılamazsa uyarı ve elle iptal |
+| Hesap silindi | Polar'da abonelik iptal, satırlar siliniyor; iptal edilemezse hesap silinmiyor, "yeniden dene" (K-111) |
 | Polar'a ulaşılamıyor (checkout, portal) | "Ödeme sayfasını açamadık, birazdan tekrar dene" |
 
 ## 8. Yapılandırma

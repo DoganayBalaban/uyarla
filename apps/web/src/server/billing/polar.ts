@@ -1,4 +1,4 @@
-import { createPolar, webhooks } from "@polar-sh/sdk/2026-10"
+import { createPolar, errors, webhooks } from "@polar-sh/sdk/2026-10"
 import type { BillingEvent, BillingProvider } from "@/server/billing/provider"
 import { WebhookSignatureError } from "@/server/billing/provider"
 
@@ -30,6 +30,8 @@ export interface PolarDeps {
   isVerificationError(error: unknown): boolean
   /** SDK'nın tanımadığı olay türü; 500 dönersek Polar durmadan yeniden dener. */
   isUnknownTypeError(error: unknown): boolean
+  /** Abonelik Polar'da zaten iptal edilmiş ya da hiç yok: iptal edilmiş sayılır. */
+  isGoneSubscriptionError(error: unknown): boolean
 }
 
 /** Abonelik durumunu değiştiren bildirimler; hepsi aynı yere gidiyor (spec §4.3). */
@@ -91,7 +93,13 @@ export function createPolarProvider(
     },
 
     async revokeSubscription(id) {
-      await deps.revokeSubscription(id)
+      try {
+        await deps.revokeSubscription(id)
+      } catch (error) {
+        // Zaten bitmiş abonelik iptal edilmiş sayılıyor; yoksa hesap silme
+        // ona takılıp hiç ilerlemezdi (K-111).
+        if (!deps.isGoneSubscriptionError(error)) throw error
+      }
     },
 
     async parseWebhook(rawBody, headers): Promise<BillingEvent | null> {
@@ -154,6 +162,7 @@ export function polarProviderFromEnv(env: Record<string, string | undefined> = p
       validateEvent: (body, headers, secret) => webhooks.validateEvent(body, headers, secret),
       isVerificationError: (error) => error instanceof webhooks.PolarWebhookVerificationError,
       isUnknownTypeError: (error) => error instanceof webhooks.PolarWebhookUnknownTypeError,
+      isGoneSubscriptionError: (error) => error instanceof errors.AlreadyCanceledSubscription || error instanceof errors.ResourceNotFound,
     },
   )
 }

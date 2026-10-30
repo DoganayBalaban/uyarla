@@ -20,6 +20,8 @@ import { saveProfile, uploadLibraryResume } from "@/features/onboarding/api"
 import { ONBOARDING_DEFERRED_COOKIE } from "@/features/onboarding/gate"
 import { GOAL_OPTIONS } from "@/features/onboarding/goals"
 import { GOALS, nameSchema, TARGET_ROLE_MAX_LENGTH } from "@/features/onboarding/schema"
+import { resumeStepCopy } from "@/features/onboarding/resumeStep"
+import { useLibrary } from "@/features/resumes/api"
 import { labelSchema } from "@/features/resumes/schema"
 import { apiErrorMessage, apiStatus } from "@/lib/api"
 
@@ -110,6 +112,8 @@ export function OnboardingFlow({ initialName, returnTo }: { initialName: string;
 
   const selectedGoal = goalForm.watch("goal")
   const resumeFile = resumeForm.watch("cv") as File | undefined
+  const library = useLibrary(step === 3)
+  const resumeCopy = resumeStepCopy(library.data?.[0] ?? null)
 
   // Adımlar arasında yatay kayma (DOG-155); hareket azaltmada yalnızca geçiş.
   const slide = reducedMotion
@@ -192,10 +196,8 @@ export function OnboardingFlow({ initialName, returnTo }: { initialName: string;
 
             {step === 3 && (
               <motion.form key="cv" {...slide} onSubmit={submitResume} noValidate>
-                <h1 className="m-0 text-2xl font-semibold tracking-tight">CV&apos;ni bir kez yükle</h1>
-                <p className="m-0 mt-1.5 text-sm text-muted-foreground">
-                  Her ilanda yeniden yüklemek yerine kayıtlı CV&apos;ni seçersin. İsteğe bağlı.
-                </p>
+                <h1 className="m-0 text-2xl font-semibold tracking-tight">{resumeCopy.title}</h1>
+                <p className="m-0 mt-1.5 text-sm text-muted-foreground">{resumeCopy.description}</p>
                 <div className="mt-6">
                   <ResumeUpload
                     value={resumeFile ?? null}
@@ -215,7 +217,7 @@ export function OnboardingFlow({ initialName, returnTo }: { initialName: string;
                 <StepActions
                   busy={busy}
                   nextLabel={resumeFile ? "Kaydet ve bitir" : "Bitir"}
-                  skipLabel="Sonra eklerim"
+                  skipLabel={resumeCopy.skipLabel}
                   onSkip={() => void finish()}
                 />
               </motion.form>

@@ -1,11 +1,10 @@
 "use client"
 
-import Link from "next/link"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { ChevronDown, CircleHelp, ExternalLink, FilePlus2, FileText, LoaderCircle, Pencil, Puzzle, Sparkles } from "lucide-react"
+import { ChevronDown, CircleHelp, ExternalLink, FileText, LoaderCircle, Pencil, Puzzle, Sparkles } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -41,14 +40,18 @@ export function AuditStart({
   extension: { installed: boolean } | null
   busy: boolean
   error: string | null
-  onStart: (body: { resumeId: string; targetRole: string | null; analysisIds: string[] }) => void
+  /** `file`: doğrudan yüklenen LinkedIn PDF'i; `resumeId`: CV'lerim'den seçilen. */
+  onStart: (body: { file: File | null; resumeId: string | null; targetRole: string | null; analysisIds: string[] }) => void
   onTargetRoleSave: (role: string) => Promise<void>
 }) {
   const library = useLibrary(true)
   const cards = useApplicationCards()
   const resumes = library.data ?? []
   const [resumeId, setResumeId] = useState<string | null>(null)
-  const chosen = resumeId ?? resumes.find((r) => /linkedin/i.test(`${r.label ?? ""} ${r.fileName ?? ""}`))?.id ?? resumes[0]?.id ?? null
+  const [file, setFile] = useState<File | null>(null)
+  // Kütüphanede yalnızca adı LinkedIn olan önceden seçili; ilk CV değil: yoksa
+  // asıl CV denetleniyordu.
+  const chosen = resumeId ?? resumes.find((r) => /linkedin/i.test(`${r.label ?? ""} ${r.fileName ?? ""}`))?.id ?? null
   const [picked, setPicked] = useState<string[]>([])
   const [editing, setEditing] = useState(false)
   const form = useForm<z.input<typeof roleSchema>>({ resolver: zodResolver(roleSchema), values: { role: targetRole ?? "" } })
@@ -188,14 +191,25 @@ export function AuditStart({
                   Profil başlığının altındaki <span className="font-medium text-foreground">Daha fazla</span> düğmesine bas.
                 </li>
                 <li>
-                  <span className="font-medium text-foreground">PDF olarak kaydet</span>&apos;i seç ve dosyayı CV&apos;lerim&apos;e yükle.
+                  <span className="font-medium text-foreground">PDF olarak kaydet</span>&apos;i seç ve dosyayı buraya yükle.
                 </li>
               </ol>
             </details>
-            {resumes.length > 0 ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="linkedinPdf">LinkedIn PDF&apos;in</Label>
+              <Input
+                id="linkedinPdf"
+                type="file"
+                accept="application/pdf,.pdf"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                className="cursor-pointer"
+              />
+              <p className="m-0 text-xs text-muted-foreground">Yalnızca bu denetim için; CV kütüphanene eklenmez.</p>
+            </div>
+            {!file && resumes.length > 0 && (
               <Select value={chosen ?? ""} onValueChange={setResumeId}>
-                <SelectTrigger aria-label="LinkedIn PDF'in" className="w-full">
-                  <SelectValue />
+                <SelectTrigger aria-label="ya da CV'lerim'den seç" className="w-full">
+                  <SelectValue placeholder="ya da CV'lerim'den seç" />
                 </SelectTrigger>
                 <SelectContent>
                   {resumes.map((r) => (
@@ -205,16 +219,12 @@ export function AuditStart({
                   ))}
                 </SelectContent>
               </Select>
-            ) : (
-              !library.isPending && (
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/cvs?ekle=1">
-                    <FilePlus2 aria-hidden /> CV'lerim'e yükle
-                  </Link>
-                </Button>
-              )
             )}
-            <Button type="button" disabled={!chosen || busy} onClick={() => chosen && onStart({ resumeId: chosen, targetRole, analysisIds: picked })}>
+            <Button
+              type="button"
+              disabled={(!file && !chosen) || busy}
+              onClick={() => onStart({ file, resumeId: file ? null : chosen, targetRole, analysisIds: picked })}
+            >
               {busy ? <LoaderCircle className="motion-safe:animate-spin" aria-hidden /> : <Sparkles aria-hidden />}
               Profilimi denetle
             </Button>

@@ -3947,3 +3947,35 @@ Ayrıntı: `docs/superpowers/specs/2026-10-28-tanitim-yolculuk-design.md`.
 **Ölçüm (20 çift):** İsabet %95,4 ve uydurma 1 değişmedi; kelime eşleşmesi 36'dan 43'e çıktı, anlamsal tahmin 12'den 7'ye indi. Yüksek beklenenler 37–80, orta 17–45, düşük 0–25 (önce 0–40). Etiket isabeti 16/20'den 18/20'ye. Kalan ikisi gerçek eksik: 5 yıl isteyen ilana 1 yıllık CV (36) ve profesyonel GenAI deneyimi isteyen ilana yeni mezun (17).
 
 **Açık:** Tanıtım demosu 28 → 41 artık "Düşük → Orta". TikTok videoları 3, 10 ve 14 bu demonun karelerini eski etiketlerle taşıyor; yayından önce yeniden çizilmeli. Değerlendirme seti 20 çift; eşikler yeni çiftlerle yeniden sınanmalı.
+
+## K-111 · Abonelik iptal edilemezse hesap silinmiyor
+
+**Tarih:** 30 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-166 · **Değiştirdiği:** abonelik spec'i §4.3 "Polar'a ulaşılamazsa silme durmuyor"
+
+**Bağlam:** Yerel kullanıcı testinde denemedeki hesap silindi. Polar'a ulaşılamadı, uyarı düştü, hesap yine silindi. Ekranda "Hesabın silindi" yazarken her sayfadaki bant "599 ₺ çekilecek" demeye devam etti. Üretimde aynı durumda kullanıcı silinmiş bir hesaptan ücret çekilmeye devam eder. Aboneliği elle iptal etmek için Sentry uyarısını görüp Polar panelinde bulmak gerekiyor; tek kişilik işletmede bu kaçar.
+
+**Karar:**
+- Açık aboneliklerden biri bile Polar'da iptal edilemezse hesap silinmiyor. Yanıt 502, `code: "subscription_cancel_failed"`: "Aboneliğini iptal edemedik, bu yüzden hesabın silinmedi. Birkaç dakika sonra yeniden dene; sürerse destek adresine yaz."
+- Polar'ın "zaten iptal edilmiş" (`AlreadyCanceledSubscription`) ve "bulunamadı" (`ResourceNotFound`) yanıtları iptal edilmiş sayılıyor. Yoksa bitmiş bir abonelik silmeyi sonsuza dek kilitlerdi.
+- Silme başarılı olunca istemcideki abonelik durumu önce boşaltılıyor, sonra önbellek temizleniyor. `clear()` tek başına açık ekrana haber vermiyordu; bant bu yüzden kalıyordu.
+
+**Bedeli:** Polar uzun süre ulaşılamazsa kullanıcı hesabını silemiyor. KVKK silme talebi o arada destek adresinden elle karşılanır. Ücret çekilmeye devam etmesinden iyidir.
+
+## K-112 · Örnek listesinin türü ve uyarlamada kanıt maddesi
+
+**Tarih:** 30 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-166
+
+**Bağlam:** Yerel kullanıcı testinde iki bulgu çıktı:
+- "Meta Ads, Google Ads, LinkedIn Ads ve TikTok gibi kanallarda 5 yıl performans pazarlaması" şartı "Performance Marketing Specialist" rolüne bağlanmadı. Tür adı ("performans pazarlaması") yalnızca eş anlamlılarda duruyordu. Gömülen metin marka listesiydi, karşı dildeki karşılık hiç sorulmuyordu. Gömme benzerliği 0,40; tür adıyla bile 0,46.
+- Uyarlama "çok pazarlı reklam yönetimi"ni Almanya/Hollanda maddesi yerine "Perakende … reklamlarını yönettim" maddesine önerdi. Gömme benzerliği 0,59'a 0,41; model "reklam"a yaslanıyor.
+
+**Karar:**
+- Kavramda isteğe bağlı `category` alanı var. Gömme metni `tür (üyeler)`. Ayrıca türün karşı dildeki karşılığı soruluyor ve eş anlamlılara ekleniyor ("performance marketing"). Bu karşılık `equivalents`'a girmiyor, çünkü uyarlama o alanı terimin yerine yazıyor.
+- Üyelerin hepsi özel ad olan seçenek grubu karşılık için gönderilmiyor.
+- Uyarlamada kavramla kelime paylaşan maddeler kendi aralarında, paylaşılan kökün CV'deki nadirliğiyle (ters belge sıklığı) yarışıyor. Kelime paylaşmayan madde ancak benzerliği daha yüksekse kazanıyor. Yazım doğrulaması zaten maddeden birebir dayanak istiyor.
+
+**Ölçüm (20 çift):** İsabet %95,4, uydurma 1 ve etiket isabeti 18/20 değişmedi.
+- cv-d×ilan-6 (testteki ilan) 65 → 69.
+- cv-a×ilan-2 37 → 35. Kaynağı bu değişiklik değil: modelin "kişisel veri koruma" için bu kez farklı ürettiği karşılık.
+
+Eski ilanlarda `category` yok; yeniden çıkarılınca gelir.

@@ -22,7 +22,7 @@ type Operation = ReturnType<Db["resume"]["updateMany"]>
  * verisi tek hesaba taşınır. Test bu yüzden koşulu birebir doğruluyor.
  */
 export function claimOperations(
-  prisma: Db,
+  prisma: Pick<Db, "resume" | "analysis" | "jobPosting">,
   anonymousId: string,
   freshId: string,
 ): Operation[] {
@@ -37,4 +37,28 @@ export function claimOperations(
     prisma.analysis.updateMany(condition),
     prisma.jobPosting.updateMany(condition),
   ]
+}
+
+/**
+ * İşi taşır; yeni hesabın CV kütüphanesi boşsa analizdeki en yeni CV
+ * kütüphaneye varsayılan olarak giriyor (DOG-166). Kayıtsız analizde CV
+ * kütüphaneye yazılmıyor (anonim kullanıcının kütüphanesi yok); kayıttan
+ * sonra CV'lerim boş kalıyor, kurulum aynı CV'yi yeniden istiyordu. Dolu
+ * kütüphaneye dokunulmuyor: kullanıcı kendi seçtiğini düzenlemiş.
+ */
+export async function claimAnonymousData(db: Db, anonymousId: string, freshId: string): Promise<void> {
+  await db.$transaction(async (tx) => {
+    const claimed = await tx.resume.findFirst({
+      where: { userId: anonymousId },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    })
+    for (const operation of claimOperations(tx, anonymousId, freshId)) await operation
+    if (!claimed || anonymousId === freshId) return
+    // Kütüphane yazımları kullanıcı satırını kilitliyor (resumeLibrary.ts).
+    await tx.$queryRaw`SELECT 1 FROM "User" WHERE id = ${freshId} FOR UPDATE`
+    const saved = await tx.resume.count({ where: { userId: freshId, savedAt: { not: null } } })
+    if (saved > 0) return
+    await tx.resume.update({ where: { id: claimed.id }, data: { savedAt: new Date(), isDefault: true } })
+  })
 }

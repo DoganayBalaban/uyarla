@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { diffWords } from "@/features/adaptation/diff"
+import { decisionParts, diffWords } from "@/features/adaptation/diff"
 
 describe("diffWords", () => {
   it("everything is same for identical text", () => {
@@ -58,5 +58,17 @@ describe("diffWords", () => {
     for (const k of [...old.split(" "), ...fresh.split(" ")]) {
       expect(all).toContain(k)
     }
+  })
+})
+
+describe("decisionParts (DOG-166)", () => {
+  it("shows the old text alone once the user keeps the old version", () => {
+    // Kullanıcı testi: "Eski hâli" seçiliyken madde hâlâ yeni metni fark görünümüyle gösteriyordu.
+    expect(decisionParts("rejected", "Raporları sundum", "Haftalık raporları sundum")).toEqual([{ kind: "same", text: "Raporları sundum" }])
+  })
+
+  it("shows the change while it is pending or accepted", () => {
+    expect(decisionParts("accepted", "a b", "a c")).toEqual(diffWords("a b", "a c"))
+    expect(decisionParts("pending", "a b", "a c")).toEqual(diffWords("a b", "a c"))
   })
 })

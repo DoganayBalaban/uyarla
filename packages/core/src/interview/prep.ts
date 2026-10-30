@@ -38,6 +38,8 @@ Kesin kurallar:
 - STAR alanlarında (durum, görev, eylem, sonuç) belgede karşılığı olmayan
   kısmı uydurma; onun yerine köşeli parantezli bir yer tutucu yaz
   (ör. "[ekip büyüklüğü]", "[ölçülen sonuç]"). Aday kendi bildiğiyle dolduracak.
+  Kanıt maddesinde ölçülmüş bir sonuç varsa (sayı, yüzde, önce/sonra) "sonuç"
+  alanına onu yaz; yer tutucu yalnızca belgede sonuç yoksa.
   "bosluk" sorusunda belgede karşılık yoksa dört alan da yer tutucu olsun;
   cevabın kendisi "kopruler"de.
 - "kanit" listesine CV'de "•" ile başlayan ilgili MADDE satırlarını, madde
@@ -166,6 +168,11 @@ export function consistencySummary(profile: ResumeProfile, rewritten: string[] =
   return items.slice(0, 6)
 }
 
+/** Yalnızca köşeli parantezli yer tutucu: "[ölçülen sonuç]". */
+function isPlaceholder(text: string): boolean {
+  return /^\[[^\]]*\]\.?$/.test(text.trim())
+}
+
 export async function generateInterviewPrep(llm: LlmProvider, input: InterviewPrepInput): Promise<ExtractResult<InterviewPrep>> {
   const source = [
     `GÖNDERİLEN CV\n${resumeFacts(input.profile)}`,
@@ -197,14 +204,23 @@ export async function generateInterviewPrep(llm: LlmProvider, input: InterviewPr
 
   return {
     data: {
-      questions: parsed.sorular.map((q) => ({
-        question: q.soru.trim(),
-        kind: KIND[q.tur],
-        why: q.neden.trim(),
-        evidence: [...new Set(q.kanit.map((k) => byKey.get(normalizeText(k))).filter((k): k is string => Boolean(k)))],
-        star: { situation: q.star.durum.trim(), task: q.star.gorev.trim(), action: q.star.eylem.trim(), result: q.star.sonuc.trim() },
-        verification: verify([q.star.durum, q.star.gorev, q.star.eylem, q.star.sonuc].join(" ")),
-      })),
+      questions: parsed.sorular.map((q) => {
+        const evidence = [...new Set(q.kanit.map((k) => byKey.get(normalizeText(k))).filter((k): k is string => Boolean(k)))]
+        // Model sonucu yer tutucu bıraktıysa ama kanıt maddesi ölçülmüş bir
+        // sonuç taşıyorsa sonuç o madde (DOG-166): CV'den birebir, uydurma
+        // değil. "ROAS'ı 4,1'den 5,3'e çıkardım" varken "[ölçülen sonuç]"
+        // yazıyordu.
+        const measured = isPlaceholder(q.star.sonuc) ? evidence.find(hasQuantity) : undefined
+        const result = measured ?? q.star.sonuc.trim()
+        return {
+          question: q.soru.trim(),
+          kind: KIND[q.tur],
+          why: q.neden.trim(),
+          evidence,
+          star: { situation: q.star.durum.trim(), task: q.star.gorev.trim(), action: q.star.eylem.trim(), result },
+          verification: verify([q.star.durum, q.star.gorev, q.star.eylem, result].join(" ")),
+        }
+      }),
       consistency: consistencySummary(input.profile, input.rewritten),
       // Köprü gereksinimi olumsuzlayarak anabiliyor ("5 yıl deneyimim yok"):
       // olumsuzlanan yan cümle sayı kontrolünden de çıkıyor. "4 yıllık

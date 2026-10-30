@@ -3,7 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma"
 import { nextCookies } from "better-auth/next-js"
 import { anonymous, magicLink } from "better-auth/plugins"
 import { prisma } from "@uyarla/db"
-import { claimOperations } from "@/server/claimAnonymousData"
+import { claimAnonymousData } from "@/server/claimAnonymousData"
 import { sendMagicLinkEmail } from "@/server/mail"
 import { providerSettings } from "@/features/auth/providers"
 
@@ -59,9 +59,8 @@ export const auth = betterAuth({
       onLinkAccount: async ({ anonymousUser, newUser }) => {
         // Tek işlemde: yarısı taşınmış bir kullanıcı, hiç taşınmamıştan daha
         // kötü — skorunu görüyor ama CV'si yok (spec §7).
-        await prisma.$transaction(
-          claimOperations(prisma, anonymousUser.user.id, newUser.user.id),
-        )
+        // Analizdeki CV boş kütüphaneye giriyor (DOG-166).
+        await claimAnonymousData(prisma, anonymousUser.user.id, newUser.user.id)
       },
     }),
     // EN SONDA olmak zorunda: sunucu tarafında auth.api.* çağrıldığında

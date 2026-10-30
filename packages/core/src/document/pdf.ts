@@ -38,6 +38,32 @@ export async function pdfPageCount(model: DocumentModel, options: PdfOptions = {
   return (await layoutPdf(model, options)).pages
 }
 
+/** pdfkit'in fontkit'e verdiği OpenType özellikleri: kerning kapalı. */
+const NO_KERNING = { kern: false } as unknown as string[]
+
+/**
+ * Kerning kapalı (DOG-166): harf arası düzeltmeler metin dizisine (TJ) sayı
+ * olarak giriyor ve pypdf gibi okuyucular büyük olanları boşluk sanıyor:
+ * "Google Tag Manager" → "Google T ag Manager". Bazı ATS'ler kelimeyi
+ * bölebilir. Ölçüm (genişlik, yükseklik) de aynı ayarla; yoksa satır
+ * kırılımı yazılandan farklı hesaplanır.
+ */
+function withoutKerning(doc: Doc): void {
+  const withFeatures = <T extends unknown[]>(args: T): T => {
+    const last = args.at(-1)
+    if (last && typeof last === "object" && !Array.isArray(last)) {
+      return [...args.slice(0, -1), { features: NO_KERNING, ...last }] as T
+    }
+    return [...args, { features: NO_KERNING }] as T
+  }
+  const text = doc.text.bind(doc) as (...args: unknown[]) => Doc
+  const widthOfString = doc.widthOfString.bind(doc) as (...args: unknown[]) => number
+  const heightOfString = doc.heightOfString.bind(doc) as (...args: unknown[]) => number
+  doc.text = ((...args: unknown[]) => text(...withFeatures(args))) as Doc["text"]
+  doc.widthOfString = ((...args: unknown[]) => widthOfString(...withFeatures(args))) as Doc["widthOfString"]
+  doc.heightOfString = ((...args: unknown[]) => heightOfString(...withFeatures(args))) as Doc["heightOfString"]
+}
+
 async function layoutPdf(model: DocumentModel, options: PdfOptions): Promise<{ buffer: Buffer; pages: number }> {
   const fontList = fontPaths()
   const scale = options.compact ? COMPACT_SPACING : 1
@@ -51,6 +77,7 @@ async function layoutPdf(model: DocumentModel, options: PdfOptions): Promise<{ b
     margins: { top: vertical, bottom: vertical, left: MARGIN, right: MARGIN },
     font: fontList.regular,
   })
+  withoutKerning(doc)
   let pages = 1
   doc.on("pageAdded", () => pages++)
   doc.registerFont("govde", fontList.regular)

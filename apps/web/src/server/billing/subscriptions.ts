@@ -44,8 +44,10 @@ export async function applySubscriptionEvent(db: Db, event: SubscriptionEvent): 
 
 /**
  * Hesap silinirken açık abonelikleri Polar'da iptal eder; yoksa silinmiş
- * hesaptan ücret çekilmeye devam ederdi. Polar'a ulaşılamazsa silme durmuyor:
- * uyarı düşüyor, iptal elle yapılıyor (spec §4.3). İptal edilen sayıyı döndürür.
+ * hesaptan ücret çekilmeye devam ederdi. İptal edilemeyenler `failed`'da
+ * dönüyor ve hesap silme onlar varken duruyor (K-111; spec §4.3'teki "silme
+ * durmuyor" kararının yerine): silinmiş hesabın aboneliğini elle bulmak zor,
+ * kullanıcıya "tekrar dene" demek kolay.
  */
 export async function revokeOpenSubscriptions(
   db: Db,
@@ -55,7 +57,7 @@ export async function revokeOpenSubscriptions(
     console.warn(message, extra)
     Sentry.captureMessage(message, { level: "warning", extra: { detail: extra } })
   },
-): Promise<number> {
+): Promise<{ revoked: number; failed: string[] }> {
   const now = new Date()
   const subs = await db.subscription.findMany({
     where: { userId },
@@ -64,13 +66,15 @@ export async function revokeOpenSubscriptions(
   // Erişim vermeyen ama Polar'ın hâlâ tahsil etmeye çalıştığı (unpaid) da iptal.
   const open = subs.filter((s) => grantsAccess(s, now) || s.status === "past_due" || s.status === "unpaid")
   let revoked = 0
+  const failed: string[] = []
   for (const s of open) {
     try {
       await provider.revokeSubscription(s.providerSubscriptionId)
       revoked++
     } catch (error) {
-      log("[billing] abonelik iptal edilemedi; Polar panelinden elle iptal et", { subscriptionId: s.providerSubscriptionId, error: String(error) })
+      failed.push(s.providerSubscriptionId)
+      log("[billing] abonelik iptal edilemedi; hesap silinmedi", { subscriptionId: s.providerSubscriptionId, error: String(error) })
     }
   }
-  return revoked
+  return { revoked, failed }
 }

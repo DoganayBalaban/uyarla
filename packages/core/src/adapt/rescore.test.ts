@@ -3,7 +3,7 @@ import type { EmbeddingProvider } from "../llm/types.js"
 import type { AdaptationDraft } from "../schemas/adaptation.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
-import { guardSummaryScore, rescore } from "./rescore.js"
+import { guardSummaryScore, rescore, rescoreOutcome } from "./rescore.js"
 
 const resumeProfile: ResumeProfile = {
   fullName: "Test", headline: null, summary: null,
@@ -65,6 +65,13 @@ describe("rescore", () => {
   it("reflects a match gained by an accepted rewrite in the score", async () => {
     const fresh = await rescore({ profile: resumeProfile, posting: testPosting, draft: draftData }, embedding)
     expect(fresh).toBeGreaterThan(0)
+  })
+
+  it("also returns each requirement's status for the adapted CV (DOG-166)", async () => {
+    const outcome = await rescoreOutcome({ profile: resumeProfile, posting: testPosting, draft: draftData }, embedding)
+    expect(outcome.score).toBe(await rescore({ profile: resumeProfile, posting: testPosting, draft: draftData }, embedding))
+    expect(outcome.requirements).toHaveLength(testPosting.requirements.length)
+    expect(outcome.requirements.every((r) => r.status === "matched" || r.status === "missing")).toBe(true)
   })
 
   it("an unaccepted rewrite does not count toward the score", async () => {

@@ -73,3 +73,10 @@ describe("parseHeader · tabs (DOG-107)", () => {
     expect(parseHeader("I. Z.\n+90 555 111 22 33\tad@ornek.com").headline).toBe("+90 555 111 22 33 · ad@ornek.com")
   })
 })
+
+describe("parseHeader · wrapped contact line (DOG-166)", () => {
+  it("does not repeat a separator a wrapped line already ends with", () => {
+    const h = parseHeader("Deniz Aksoy\nDijital Pazarlama Uzmanı · İstanbul, Türkiye ·\ndeniz.aksoy@ornek.com")
+    expect(h.headline).toBe("Dijital Pazarlama Uzmanı · İstanbul, Türkiye · deniz.aksoy@ornek.com")
+  })
+})

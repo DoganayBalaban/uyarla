@@ -51,7 +51,12 @@ export function conceptTexts(posting: JobPostingData, resumeLanguage?: Language)
   // (ölçüm: kaçırma 6 → 8).
   const crossLanguage = resumeLanguage !== undefined && resumeLanguage !== posting.language
   return posting.requirements.flatMap((r) =>
-    r.concepts.map((c) => (crossLanguage ? conceptEmbeddingText(c) : c.term)),
+    r.concepts.map((c) => {
+      const text = crossLanguage ? conceptEmbeddingText(c) : c.term
+      // Örnek listesinde anlam türde (DOG-166): "Meta Ads / Google Ads"
+      // vektörü "Performance Marketing Specialist" rolünü tanımıyordu.
+      return c.category ? `${c.category} (${text})` : text
+    }),
   )
 }
 

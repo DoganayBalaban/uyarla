@@ -25,7 +25,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSession } from "@/lib/authClient"
 import { apiErrorMessage } from "@/lib/api"
 import { loginPath } from "@/lib/returnPath"
-import { useDeleteAccount } from "@/features/account/api"
+import { forgetAccountData, useDeleteAccount } from "@/features/account/api"
+import { CONFIRM_WORD, isDeleteConfirmed } from "@/features/account/confirm"
 import { ProfileSection } from "@/features/account/components/ProfileSection"
 import { ExcludedConceptsSection } from "@/features/account/components/ExcludedConceptsSection"
 import { NotificationsSection } from "@/features/account/components/NotificationsSection"
@@ -33,8 +34,6 @@ import { AccessStatus } from "@/features/billing/components/AccessStatus"
 
 /** Marka rehberi §10.2'deki veri silme onay metni, birebir. */
 const CONFIRM_TEXT = "CV'ni ve tüm başvurularını kalıcı olarak silmek istediğine emin misin?"
-/** Silme yazarak onaylanıyor (DOG-153): yanlışlıkla basılan düğme yetmesin. */
-const CONFIRM_WORD = "SİL"
 
 type Section = "profil" | "abonelik" | "tercihler" | "veriler"
 
@@ -230,7 +229,7 @@ function DataSection({ onDeleted, registered }: { onDeleted: () => void; registe
   const queryClient = useQueryClient()
   const [typed, setTyped] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const confirmed = typed.trim().toLocaleUpperCase("tr-TR") === CONFIRM_WORD
+  const confirmed = isDeleteConfirmed(typed)
 
   async function deleteAccount() {
     setError(null)
@@ -238,8 +237,8 @@ function DataSection({ onDeleted, registered }: { onDeleted: () => void; registe
       await removeAccount.mutateAsync()
       // Oturum sunucuda silindi ama istemcideki oturum deposu eski hâlinde
       // kalıyordu: üst menüde silinen hesabın adı görünüyordu (DOG-74).
-      // Önbellekteki kullanıcı verisi (kütüphane, pano) de bırakılmıyor.
-      queryClient.clear()
+      // Önbellekteki kullanıcı verisi (kütüphane, pano, deneme bandı) de bırakılmıyor.
+      forgetAccountData(queryClient)
       onDeleted()
     } catch (e) {
       setError(await apiErrorMessage(e, "Hesabını silemedik. Birazdan tekrar dener misin?"))
