@@ -49,6 +49,31 @@ describe("visibility in a real browser (DOG-169)", () => {
   })
 })
 
+describe("placement inside LinkedIn's apply pill (DOG-169)", () => {
+  // Gerçek LinkedIn: "Başvur" yazısı görünür kabın içindeki bir bağlantı. Düğme bağlantının
+  // yanına, yani kabın içine giriyor ve kap kestiği için "Başvur"un altında kalıyordu.
+  it("sits after the apply button's outermost wrapper, beside the save button", () => {
+    const d = doc(`<div class="row"><div class="pill"><a href="/apply"><span>Başvur</span><svg></svg></a></div><button id="kaydet">Kaydedildi</button></div>`)
+    const host = placeButton(d, { label: "CV'mi bu ilana uyarla", onClick: () => {}, anchor: findApplyAnchor(d) })
+    expect(host.parentElement?.className).toBe("row")
+    expect(host.previousElementSibling?.className).toBe("pill")
+    expect(host.nextElementSibling?.id).toBe("kaydet")
+  })
+
+  it("moves to the corner when it would land on top of the apply button", () => {
+    const d = doc(`<div class="row"><button id="basvur">Başvur</button><span>Kaydet</span></div>`)
+    const view = d.defaultView!
+    const rect = (x: number, w: number) => ({ x, y: 0, left: x, top: 0, width: w, height: 36, right: x + w, bottom: 36, toJSON: () => ({}) })
+    const proto = view.Element.prototype as unknown as { getBoundingClientRect: (this: Element) => ReturnType<typeof rect> }
+    // Düğme, başvurunun tam üstüne düşüyor (kesilen kap).
+    proto.getBoundingClientRect = function () {
+      return this.id === "basvur" ? rect(0, 200) : this.tagName.toLowerCase() === "uyarla-dugme" && this.parentElement?.className === "row" ? rect(20, 160) : rect(0, 0)
+    }
+    const host = placeButton(d, { label: "CV'mi bu ilana uyarla", onClick: () => {}, anchor: findApplyAnchor(d) })
+    expect(host.getAttribute("data-yer")).toBe("kose")
+  })
+})
+
 describe("findProfileAnchor (DOG-169)", () => {
   it("finds the add-section link on the user's own LinkedIn profile", () => {
     const html = readFileSync(resolve(process.cwd(), "src/fixtures/linkedin-own-profile.html"), "utf8")

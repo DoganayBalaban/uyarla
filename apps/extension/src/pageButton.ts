@@ -49,6 +49,30 @@ export function findApplyAnchor(doc: Document): Element | null {
   return findByText(doc, APPLY)
 }
 
+/**
+ * Düğmenin görünür kabı: aynı metni taşıyan en dıştaki ata. LinkedIn'de
+ * "Başvur" bağlantısı, taşanı kesen bir hap kabın içinde; düğme bağlantının
+ * yanına girince kabın içinde kalıp "Başvur"un altına gizleniyordu (DOG-169).
+ */
+function outerControl(el: Element): Element {
+  const text = clean(el.textContent)
+  let current = el
+  while (current.parentElement && current.parentElement !== current.ownerDocument.body && clean(current.parentElement.textContent) === text) {
+    current = current.parentElement
+  }
+  return current
+}
+
+/** Düğme başvuru düğmesinin üstüne düşmüş mü (kesilen kap, üst üste binen katman). */
+function overlaps(host: Element, target: Element): boolean {
+  const h = host.getBoundingClientRect()
+  const t = target.getBoundingClientRect()
+  if (!h.width || !t.width) return false
+  const w = Math.min(h.right, t.right) - Math.max(h.left, t.left)
+  const y = Math.min(h.bottom, t.bottom) - Math.max(h.top, t.top)
+  return w > 0 && y > 0 && w * y > 0.5 * h.width * h.height
+}
+
 export function findProfileAnchor(doc: Document): Element | null {
   return findByText(doc, PROFILE)
 }
@@ -100,12 +124,14 @@ export function placeButton(doc: Document, options: { label: string; onClick: ()
   ;(entry.button.lastChild as HTMLElement).textContent = options.label
   entry.button.setAttribute("aria-label", `uyarla: ${options.label}`)
 
-  if (options.anchor) {
+  // Başvuru düğmesi görünmüyorsa yanı da anlamsız.
+  const target = options.anchor && shows(options.anchor) ? outerControl(options.anchor) : null
+  if (target) {
     host.removeAttribute("data-yer")
-    if (options.anchor.nextElementSibling !== host) options.anchor.insertAdjacentElement("afterend", host)
+    if (target.nextElementSibling !== host) target.insertAdjacentElement("afterend", host)
   }
-  // Çapa yoksa ya da yanında görünmüyorsa (gizli kap, taşan alan) köşede.
-  if (!options.anchor || !shows(host)) {
+  // Çapa yoksa, yanında görünmüyorsa (gizli kap) ya da başvuru düğmesinin üstüne düştüyse köşede.
+  if (!target || !shows(host) || overlaps(host, target)) {
     host.setAttribute("data-yer", "kose")
     if (host.parentElement !== doc.body) doc.body.append(host)
   }
