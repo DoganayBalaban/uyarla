@@ -98,23 +98,43 @@ export function alignmentTargets(
   // çok maddeye yazdırmak skora bir şey katmıyor, zorlama cümle üretiyordu
   // ("…ürün sayfalarını geliştirerek web performansı sağladım").
   const candidates: Array<{ bulletItem: number; concept: Concept; similarityScore: number }> = []
+  const bulletStems = input.bullets.map((b) => normalizeTokens(b))
   for (const { concept, index } of openItems) {
     const v = input.conceptVectors[index]
     if (!v) continue
-    let best: { bulletItem: number; similarityScore: number } | null = null
+    const weights = distinctiveness(concept.term, bulletStems)
+    // Kelime paylaşmayanlar arasında en yakını ve kelime paylaşanlar arasında
+    // en ayırt edici olanı ayrı ayrı bulunuyor.
+    let plain: { bulletItem: number; similarityScore: number } | null = null
+    let lexical: { bulletItem: number; similarityScore: number; weight: number } | null = null
     input.bullets.forEach((bulletItem, i) => {
       const mv = input.bulletVectors[i]
       if (!mv || mentionsConcept(bulletItem, concept)) return
+      const cosine = cosineSimilarity(mv, v)
+      const weight = weights.reduce((sum, w) => sum + (sharesStem(bulletStems[i]!, w.stem) ? w.weight : 0), 0)
+      if (weight === 0) {
+        if (!plain || cosine > plain.similarityScore) plain = { bulletItem: i, similarityScore: cosine }
+        return
+      }
       // Tüm madde ile kısa bir kavramı karşılaştırınca gömme sinyali
       // sulanıyor: "Bütçe yönetimi" ile "aylık 150.000 TL bütçeyi optimize
       // ettim" yalnızca 0,42 çıktı. Kavramın bir içerik kelimesi maddede
       // (kök düzeyinde) geçiyorsa aday güçlenir; bu sinyal gömme modelinden
       // bağımsız (K-38).
-      const similarityScore = cosineSimilarity(mv, v) + (sharesWord(bulletItem, concept.term) ? KEYWORD_BONUS : 0)
-      if (!best || similarityScore > best.similarityScore) best = { bulletItem: i, similarityScore }
+      const similarityScore = cosine + KEYWORD_BONUS
+      // Kelime paylaşanlar arasında CV'de nadir geçen kelimeyi taşıyan önde
+      // (DOG-166): "çok pazarlı reklam yönetimi"nde "reklam" ve "yönet" CV'nin
+      // her yerinde, "pazar" yalnızca Almanya/Hollanda maddesinde. Gömme
+      // modeli "reklam"a yaslanıp Perakende maddesini seçiyordu; yazım
+      // doğrulaması ise maddeden birebir dayanak istiyor.
+      if (!lexical || weight > lexical.weight + 1e-9 || (Math.abs(weight - lexical.weight) <= 1e-9 && similarityScore > lexical.similarityScore)) {
+        lexical = { bulletItem: i, similarityScore, weight }
+      }
     })
-    const selected = best as { bulletItem: number; similarityScore: number } | null
-    if (selected && selected.similarityScore >= opts.minSimilarity) candidates.push({ concept, ...selected })
+    const p = plain as { bulletItem: number; similarityScore: number } | null
+    const l = lexical as { bulletItem: number; similarityScore: number } | null
+    const selected = l && (!p || l.similarityScore >= p.similarityScore) ? l : p
+    if (selected && selected.similarityScore >= opts.minSimilarity) candidates.push({ concept, bulletItem: selected.bulletItem, similarityScore: selected.similarityScore })
   }
 
   return input.bullets.map((_, i) =>
@@ -129,15 +149,24 @@ export function alignmentTargets(
 const KEYWORD_BONUS = 0.1
 
 /**
- * Kavramın en az dört harfli bir kökü maddede geçiyor mu. Önek eşleşmesi:
- * kaynaştırma harfi kökte kalabiliyor ("bütçeyi" → "bütçey", "bütçe" →
- * "bütçe").
+ * Önek eşleşmesi: kaynaştırma harfi kökte kalabiliyor ("bütçeyi" → "bütçey",
+ * "bütçe" → "bütçe").
  */
-function sharesWord(bulletItem: string, termText: string): boolean {
-  const bulletStems = normalizeTokens(bulletItem)
-  return normalizeTokens(termText).some(
-    (k) => k.length >= 4 && bulletStems.some((m) => m.startsWith(k) || (m.length >= 4 && k.startsWith(m))),
-  )
+function sharesStem(bulletStems: string[], k: string): boolean {
+  return bulletStems.some((m) => m.startsWith(k) || (m.length >= 4 && k.startsWith(m)))
+}
+
+/**
+ * Kavramın en az dört harfli kökleri ve ayırt edicilikleri: maddelerin
+ * azında geçen kök çok şey söylüyor, her maddede geçen az (ters belge sıklığı).
+ */
+function distinctiveness(termText: string, bulletStems: string[][]): Array<{ stem: string; weight: number }> {
+  return normalizeTokens(termText)
+    .filter((k) => k.length >= 4)
+    .map((stem) => {
+      const df = bulletStems.filter((m) => sharesStem(m, stem)).length
+      return { stem, weight: df === 0 ? 0 : Math.log(1 + bulletStems.length / df) }
+    })
 }
 
 /** Kavramın terimi ya da eş anlamlılarından biri metinde geçiyor mu. */

@@ -167,6 +167,23 @@ describe("extractJobPosting · karşı dildeki karşılıklar (DOG-73)", () => {
     expect(data.requirements[0]!.concepts.flatMap((c) => c.synonyms)).toEqual(["test automation"])
   })
 
+  it("asks for the equivalent of an example list's kind (DOG-166)", async () => {
+    // "Meta Ads … gibi kanallarda performans pazarlaması": markalar çevrilmiyor ama tür
+    // çevrilmeli; yoksa "Performance Marketing Specialist" rolü şarta ne kelimeyle
+    // ne anlamla (0,42) bağlanıyordu.
+    const llm = sequence(
+      { ...DRAFT, requirements: [{ text: "Meta Ads ve Google Ads gibi kanallarda en az 5 yıl performans pazarlaması deneyimi", type: "experience", importance: "must" }] },
+      { items: [{ term: "performans pazarlaması", equivalents: ["performance marketing"] }] },
+    )
+    const { data } = await extractJobPosting(llm, "ilan metni")
+    expect(llm.calls[1]!.input).toContain("performans pazarlaması")
+    expect(llm.calls[1]!.input).not.toContain("Meta Ads")
+    const concept = data.requirements[0]!.concepts[0]!
+    expect(concept.synonyms).toContain("performance marketing")
+    // Karşılık alanı terimin kendi karşılığı için (uyarlama hizalaması); tür eklenmiyor.
+    expect(concept.equivalents).toBeUndefined()
+  })
+
   it("sends a concept that mixes an acronym with an ordinary word", async () => {
     // "API testleri" kısaltma yüzünden özel ad sayılıyor (K-38) ama
     // "testleri" sıradan bir kelime; karşılığı ("API testing") gerekli.

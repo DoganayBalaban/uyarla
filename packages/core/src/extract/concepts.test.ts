@@ -246,6 +246,15 @@ describe("splitIntoConcepts · examples, filler and narrative (scoring revision 
   const concepts = (text: string, type?: Parameters<typeof splitIntoConcepts>[1]) => splitIntoConcepts(text, type)
   const terms = (text: string, type?: Parameters<typeof splitIntoConcepts>[1]) => concepts(text, type).map((c) => c.term)
 
+  it("keeps the 'gibi' category as the option's kind (DOG-166)", () => {
+    // Gömme yalnızca marka listesini görüyordu; "Performance Marketing Specialist"
+    // rolü "performans pazarlaması" şartına anlamca bağlanamıyordu.
+    const [channels] = concepts("Meta Ads, Google Ads, LinkedIn Ads ve TikTok gibi kanallarda en az 5 yıl performans pazarlaması deneyimi")
+    expect(channels!.category).toBe("performans pazarlaması")
+    expect(concepts("Kariyer.net ve LinkedIn gibi kariyer portallarını kullanabilen")[0]!.category).toBe("kariyer portalları")
+    expect(concepts("React ve TypeScript bilgisi")[0]!.category).toBeUndefined()
+  })
+
   it("turns a Turkish 'gibi' list into one option, with the category as an alternative", () => {
     const [portals, ...rest] = concepts("Kariyer.net ve LinkedIn gibi kariyer portallarını kullanabilen")
     expect(rest).toHaveLength(0)
