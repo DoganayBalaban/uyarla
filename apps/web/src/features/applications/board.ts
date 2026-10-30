@@ -117,7 +117,7 @@ export function toBoardCard(s: BoardRow): BoardCard {
     // Örnek ilanın şirketi yok; kart gerçek başvuruyla karışmasın (DOG-101).
     company: s.jobPosting.company?.trim() || (isSamplePosting(s.jobPosting.rawText) ? "Örnek ilan" : null),
     score: adaptedScore !== null ? Math.round(adaptedScore) : analysisScore,
-    scoreBefore: adaptedScore !== null ? analysisScore : null,
+    scoreBefore: adaptedScore !== null && Math.round(adaptedScore) !== analysisScore ? analysisScore : null,
     scoringRevision: (s.result as { scoringRevision?: number } | null | undefined)?.scoringRevision ?? 1,
     stage: isStage(s.stage) ? s.stage : "saved",
     stageChangedAt: s.stageChangedAt?.toISOString() ?? null,

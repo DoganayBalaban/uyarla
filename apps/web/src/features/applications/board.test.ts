@@ -66,6 +66,9 @@ describe("board", () => {
     }
     const adapted = toBoardCard(row({ score: 58, result, adaptation: { id: "ad", status: "ready" } }))
     expect([adapted.score, adapted.scoreBefore, adapted.readiness?.missingMust]).toEqual([75, 58, 0])
+    // Skor değişmediyse "uyarlamadan önce" notu gürültü.
+    const same = toBoardCard(row({ score: 75, result, adaptation: { id: "ad", status: "ready" } }))
+    expect(same.scoreBefore).toBeNull()
     // Uyarlama düştüyse ya da yoksa analiz geçerli.
     const failed = toBoardCard(row({ score: 58, result, adaptation: { id: "ad", status: "failed" } }))
     expect([failed.score, failed.scoreBefore, failed.readiness?.missingMust]).toEqual([58, null, 2])
