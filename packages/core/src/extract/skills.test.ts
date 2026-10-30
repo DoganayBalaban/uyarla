@@ -64,6 +64,16 @@ describe("flattenSkillLines", () => {
     ).toEqual(["Salesforce CRM"])
   })
 
+  it("does not treat a combined certificates heading as a skill (DOG-166)", () => {
+    // İndirilen CV'nin beceri satırına "SERTİFİKALAR VE EĞİTİMLER" giriyordu.
+    expect(
+      flattenSkillLines({
+        lines: [{ label: "", items: ["Google Ads", "SERTİFİKALAR VE EĞİTİMLER"] }],
+        languages: [], certifications: [],
+      }),
+    ).toEqual(["Google Ads"])
+  })
+
   it("does not treat a lone proficiency level as a skill", () => {
     // Tablolu şablonun düzey sütunu: "Salesforce CRM | Orta" (DOG-60).
     expect(

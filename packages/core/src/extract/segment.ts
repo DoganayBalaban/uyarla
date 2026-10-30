@@ -35,7 +35,7 @@ export interface CodeSegments extends ResumeSegments {
 const MAX_HEADING_LENGTH = 60
 
 const LANGUAGE_OR_CERTIFICATE =
-  /^(certifications?|certificates|sertifikalar|sertifikalar belgeler|belgeler|languages|diller|yabancı diller?)$/
+  /^(certifications?|certificates|sertifikalar|sertifikalar belgeler|belgeler|languages|diller|yabancı diller?|kurslar|courses|(sertifikalar|sertifika) (ve )?(eğitimler|kurslar)|(eğitimler|kurslar) (ve )?sertifikalar|licenses (and )?certifications|certifications? (and )?(training|courses))$/
 
 const PATTERNS: Array<[ResumeSection, RegExp]> = [
   [
@@ -139,6 +139,15 @@ export function segmentResume(rawText: string): CodeSegments {
       return
     }
     if (t && active === "summary") summaryEmpty = false
+    // Adın altındaki başlıksız özet paragrafı (DOG-166): başlık bloğunda
+    // kalınca unvan satırına karışıyor, "özet yok" deniyordu.
+    if (t && active === "header" && !headingFound && !seekingSummary && blockList.header.some((l) => l.trim()) && isProse(t)) {
+      blockList.summary.push(line)
+      lastSummaryLine = t
+      seekingSummary = true
+      return
+    }
+    if (t && seekingSummary && isContactLine(t)) seekingSummary = false
     if (t && seekingSummary) {
       const fits = lastSummaryLine === null ? startsParagraph(t) : continuesParagraph(t, lastSummaryLine)
       if (fits) {
@@ -288,6 +297,19 @@ const YEAR = /\b(19|20)\d{2}\b/
  */
 function startsParagraph(t: string): boolean {
   return !BULLET.test(t) && !YEAR.test(t) && t.split(/\s+/).length >= 8
+}
+
+/**
+ * Düz yazı cümlesi mi: ayraçsız, en az sekiz kelime ve kelimelerin yarısı
+ * küçük harfle başlıyor. Unvan satırı ("Senior Software Engineer
+ * specializing in Distributed Systems") büyük harfli; "·" ve "|" iletişim
+ * satırının işareti.
+ */
+function isProse(t: string): boolean {
+  if (BULLET.test(t) || /[·|•]/.test(t)) return false
+  const words = t.split(/\s+/).filter((w) => /\p{L}/u.test(w))
+  if (words.length < 8) return false
+  return words.filter((w) => /^\p{Ll}/u.test(w)).length * 2 >= words.length
 }
 
 /** Önceki satır cümle ortasında bittiyse ya da yeni bir düz yazı cümlesiyse paragraf sürüyor. */
