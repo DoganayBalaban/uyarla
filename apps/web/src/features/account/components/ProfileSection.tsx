@@ -28,7 +28,7 @@ type ProfileFormOutput = z.output<typeof profileFormSchema>
 const selectClass =
   "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
 
-/** Ad, amaç, hedef rol (DOG-50). Onboarding'de atlananlar burada tamamlanıyor. */
+/** Ad, amaç, hedef rol (DOG-50). Kurulumda atlananlar burada tamamlanıyor. */
 export function ProfileSection() {
   const profile = useProfile(true)
   const save = useSaveProfile()
@@ -81,7 +81,7 @@ export function ProfileSection() {
     <Card className="shadow-xs">
       <CardHeader>
         <CardTitle className="text-base">Profilin</CardTitle>
-        <CardDescription>Onboarding'de atladıkların burada; hedef rolün iş aramanda ve önerilerde kullanılır.</CardDescription>
+        <CardDescription>Adın, amacın ve hedef rolün. Hedef rolün iş aramanda ve önerilerde kullanılır.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} noValidate className="grid gap-4 sm:grid-cols-2">
