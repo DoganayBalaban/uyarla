@@ -1,3 +1,4 @@
+import { withAdaptation } from "@uyarla/core/score/adapted"
 import {
   AdaptationDraftSchema,
   PermanentError,
@@ -87,7 +88,8 @@ const SENT_SELECT = {
 async function sentDocuments(analysisId: string) {
   const analysis = await prisma.analysis.findUnique({ where: { id: analysisId }, select: SENT_SELECT })
   if (!analysis?.resumeVersion) throw new PermanentError("Analiz bulunamadı", "analysis_not_found")
-  let profile = analysisProfile(analysis.resumeVersion.profile as unknown as ResumeProfile, analysis.result)
+  const baseProfile = analysisProfile(analysis.resumeVersion.profile as unknown as ResumeProfile, analysis.result)
+  let profile = baseProfile
   let rewritten: string[] = []
   const adaptation = analysis.adaptation
   if (adaptation && (adaptation.status === "draft" || adaptation.status === "ready")) {
@@ -102,6 +104,8 @@ async function sentDocuments(analysisId: string) {
   return {
     analysis,
     profile,
+    /** Taslak uygulandı: gönderilen CV uyarlanmış hâli. */
+    adapted: profile !== baseProfile,
     rewritten,
     coverLetter: letter?.status === "done" ? letter.paragraphs.map((p) => p.text) : [],
     posting: {
@@ -114,8 +118,13 @@ async function sentDocuments(analysisId: string) {
   }
 }
 
-/** Analiz sonucundan CV'de karşılığı olmayan zorunlu gereksinimler; şart, kişisel nitelik ve işaretliler hariç. */
-function missingMustRequirements(result: unknown): string[] {
+/**
+ * CV'de karşılığı olmayan zorunlu gereksinimler; şart, kişisel nitelik ve
+ * işaretliler hariç. Uyarlama varsa uyarlanmış CV'ye göre (DOG-166): paket
+ * gönderilen CV'nin eksiklerini sormalı, uyarlamada kapananları değil.
+ */
+export function missingMustRequirements(analysisResult: unknown, adapted: boolean): string[] {
+  const result = adapted ? withAdaptation((analysisResult ?? null) as Parameters<typeof withAdaptation>[0]) : analysisResult
   const r = result as { requirements?: Array<{ status: string; requirement: { text: string; importance: string; type: string } }>; excluded?: number[] } | null
   const excluded = new Set(r?.excluded ?? [])
   return (r?.requirements ?? [])
@@ -131,7 +140,7 @@ export const prismaInterviewPrepStore: InterviewPrepStore = {
       profile: sent.profile,
       coverLetter: sent.coverLetter,
       posting: sent.posting,
-      missingMust: missingMustRequirements(sent.analysis.result),
+      missingMust: missingMustRequirements(sent.analysis.result, sent.adapted),
       rewritten: sent.rewritten,
       record: (sent.analysis.interviewPrep ?? null) as InterviewPrepRecord | null,
     }

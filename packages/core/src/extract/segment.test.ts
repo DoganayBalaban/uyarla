@@ -378,3 +378,44 @@ describe("segmentResume · untitled entry in the skills block (DOG-109)", () => 
     expect(s.skillsBlock).toBe(block.join("\n"))
   })
 })
+
+describe("segmentResume · untitled summary under the name (DOG-166)", () => {
+  const text = [
+    "Deniz Aksoy",
+    "Dijital Pazarlama Uzmanı · Performance Marketing Specialist · İstanbul, Türkiye ·",
+    "deniz.aksoy@ornek.com",
+    "Performans Pazarlaması alanında 4 yıllık deneyime sahip işletme mezunuyum. Google Ads",
+    "reklam hesaplarını bütçe, hedef kitle ve kreatif yönetimiyle yönetiyorum. Kararlarımı veri odaklı",
+    "olarak alıyorum.",
+    "EĞİTİM",
+    "Marmara Üniversitesi · Lisans · İşletme 2017 - 2021",
+    "BECERİLER",
+    "Google Ads, Performans Pazarlaması, Looker Studio",
+    "DİLLER",
+    "İngilizce (Professional Working), Almanca (Elementary)",
+    "SERTİFİKALAR VE EĞİTİMLER",
+    "• Google Ads Search Certification",
+  ].join("\n")
+
+  it("gives a prose paragraph before the first heading to the summary", () => {
+    // Paragraf başlık satırına karışıyordu: "Özet bölümü yok" uyarısı çıkıyor, başlık düzeltilince özet kayboluyordu.
+    const b = segmentResume(text)
+    expect(b.summaryBlock).toBe(
+      "Performans Pazarlaması alanında 4 yıllık deneyime sahip işletme mezunuyum. Google Ads\nreklam hesaplarını bütçe, hedef kitle ve kreatif yönetimiyle yönetiyorum. Kararlarımı veri odaklı\nolarak alıyorum.",
+    )
+    expect(b.headerBlock).toBe("Deniz Aksoy\nDijital Pazarlama Uzmanı · Performance Marketing Specialist · İstanbul, Türkiye ·\ndeniz.aksoy@ornek.com")
+  })
+
+  it("keeps a long title line in the header", () => {
+    const b = segmentResume(["Ada Kaya", "Senior Software Engineer specializing in Distributed Systems and Cloud Infrastructure", "EXPERIENCE", "Acme · Engineer 2020 - 2024"].join("\n"))
+    expect(b.headerBlock).toContain("Senior Software Engineer specializing")
+    expect(b.summaryBlock).toBe("")
+  })
+
+  it("recognizes a combined certificates and courses heading", () => {
+    // "SERTİFİKALAR VE EĞİTİMLER" beceri sanılıyor, indirilen CV'nin beceri satırına giriyordu.
+    for (const heading of ["SERTİFİKALAR VE EĞİTİMLER", "Sertifikalar ve Kurslar", "Kurslar", "Licenses & Certifications", "Certifications and Training"]) {
+      expect(sectionHeading(heading), heading).toBe("skills")
+    }
+  })
+})

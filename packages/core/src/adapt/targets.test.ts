@@ -97,6 +97,46 @@ describe("alignmentTargets", () => {
     expect(targetList.map((h) => h.map((x) => x.label))).toEqual([["web performansı"], []])
   })
 
+  it("prefers the bullet that carries the concept's distinctive word over a closer generic one (DOG-166)", () => {
+    // Kullanıcı testi: "çok pazarlı reklam yönetimi" Almanya/Hollanda maddesine değil,
+    // "Perakende … reklamlarını yönettim" maddesine gidiyordu. Gömme benzerliği
+    // ölçümde 0,59'a 0,41: model "reklam"a yaslanıyor; "reklam" ve "yönet" CV'nin
+    // her yerinde, ayırt eden "pazar" yalnızca bir maddede.
+    const marketPosting: JobPostingData = {
+      ...basePosting,
+      requirements: [req("Çok pazarlı reklam yönetimi", [{ term: "çok pazarlı reklam yönetimi", synonyms: [] }])],
+    }
+    const marketResult: ScoreResult = {
+      ...outcome,
+      requirements: [{ ...outcome.requirements[0]!, requirement: marketPosting.requirements[0]!, missingConcepts: ["çok pazarlı reklam yönetimi"] }],
+    }
+    const angle = (cos: number) => [cos, Math.sqrt(1 - cos * cos)]
+    const targetList = alignmentTargets({
+      bullets: [
+        "Facebook ve Instagram reklam kampanyalarını aylık 1,2 milyon TL bütçeyle yönettim.",
+        "Almanya ve Hollanda pazarları için ayrı hesap yapıları kurup yerel kampanyaları yönettim.",
+        "Perakende ve otomotiv müşterileri için arama ve sosyal medya reklamlarını yönettim.",
+        "Kreatif ekiple haftalık toplantılar düzenleyip reklam görsellerinin üretim sürecini takip ettim.",
+      ],
+      bulletVectors: [angle(0.505), angle(0.407), angle(0.589), angle(0.555)],
+      posting: marketPosting,
+      conceptVectors: [[1, 0]],
+      result: marketResult,
+    })
+    expect(targetList.map((h) => h.length)).toEqual([0, 1, 0, 0])
+  })
+
+  it("still prefers a much closer bullet that shares no word", () => {
+    const targetList = alignmentTargets({
+      bullets: ["Sayfa yüklenme süresini azalttım", "Web sitesi için içerik yazdım"],
+      bulletVectors: [[1, 0], [0.3, 0.954]],
+      posting: basePosting,
+      conceptVectors: [[1, 0], [0, 1], [0, 1]],
+      result: outcome,
+    })
+    expect(targetList.map((h) => h.map((x) => x.label))).toEqual([["web performansı"], []])
+  })
+
   it("does not target an education requirement at a bullet", () => {
     // eval:adapt, cv-c: model bir deneyim maddesine "bilgisayar
     // mühendisliği" bölümünü yazıyordu.

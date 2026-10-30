@@ -118,3 +118,18 @@ describe("checkPostingTermInjection · dil sınırı (DOG-73)", () => {
     expect(checkPostingTermInjection("API testleri konusunda deneyimliyim.", "Manual & API Testing with Postman", p)).toEqual([])
   })
 })
+
+describe("checkPostingTermInjection · same root (DOG-166)", () => {
+  it("counts a verbal noun as present when the source has its root", () => {
+    // Kullanıcı testi: CV'de "Haftalık raporları müşterilere sundum" varken ön yazıdaki
+    // "raporlama" "CV'de yok" sayılıyordu.
+    expect(checkPostingTermInjection("Haftalık raporlama yaptım", "Haftalık raporları müşterilere sundum", posting(["Raporlama"]))).toEqual([])
+    expect(checkPostingTermInjection("Bütçe raporlaması hazırladım", "Bütçe raporlarını hazırladım", posting(["bütçe raporlama"]))).toEqual([])
+  })
+
+  it("still warns when the root is missing or too short to tell", () => {
+    expect(checkPostingTermInjection("Haftalık raporlama yaptım", "Kampanyaları yönettim", posting(["Raporlama"]))).toHaveLength(1)
+    // Dört harfli kök ("test" → "testleme") ayırt edici değil.
+    expect(checkPostingTermInjection("Testleme yaptım", "Test yazdım", posting(["testleme"]))).toHaveLength(1)
+  })
+})

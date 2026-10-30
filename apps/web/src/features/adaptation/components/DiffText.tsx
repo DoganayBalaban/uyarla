@@ -1,10 +1,13 @@
-import { diffWords } from "@/features/adaptation/diff"
+import { decisionParts } from "@/features/adaptation/diff"
 
-/** Kelime düzeyinde fark: eklenen yeşil vurgu, çıkarılan üstü çizili gri (rehber §9.5). */
-export function DiffText({ original, rewritten }: { original: string; rewritten: string }) {
+/**
+ * Kelime düzeyinde fark: eklenen yeşil vurgu, çıkarılan üstü çizili gri
+ * (rehber §9.5). `decision` "rejected" ise yalnızca eski metin (DOG-166).
+ */
+export function DiffText({ original, rewritten, decision = "pending" }: { original: string; rewritten: string; decision?: string }) {
   return (
     <p className="m-0 leading-relaxed">
-      {diffWords(original, rewritten).map((part, i) =>
+      {decisionParts(decision, original, rewritten).map((part, i) =>
         part.kind === "same" ? (
           <span key={i}>{part.text} </span>
         ) : (

@@ -159,7 +159,8 @@ export async function extractResumeProfile(
 // 5: İki sütunlu şablonda özet ve iletişim satırı kaybolmuyor (DOG-107).
 // 6: Beceri bloğuna düşen başlıksız iş kaydı deneyime taşınıyor (DOG-109).
 // 7: Düzeyiyle yazılmış dil ("B1 seviye İngilizce") beceri sayılmıyor.
-const RESUME_PARSER_REVISION = 7
+// 8: Adın altındaki başlıksız özet ve "Sertifikalar ve Eğitimler" başlığı (DOG-166).
+const RESUME_PARSER_REVISION = 8
 
 /**
  * Kayıtlı bir CV'nin ayrıştırılmış profili, aynı anahtarla üretildiyse yeniden

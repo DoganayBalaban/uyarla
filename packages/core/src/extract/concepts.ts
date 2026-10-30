@@ -413,7 +413,7 @@ function sentenceConcepts(rawSentence: string, parens: string[]): Concept[] {
   }
   const exampleText = examples.kind === "gibi" ? examples.head : examples.tail
   const option = optionConcept(fragmentsOf(rawItems(exampleText).items, parens).fragments, category ? [category] : [])
-  if (option) out.push(option)
+  if (option) out.push(category && option.term !== category ? { ...option, category } : option)
   return out
 }
 

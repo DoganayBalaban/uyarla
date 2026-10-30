@@ -45,14 +45,25 @@ export async function DELETE(request: Request) {
     const owner = await prisma.user.findUnique({ where: { id: user.id }, select: { email: true, isAnonymous: true } })
 
     // Açık abonelik Polar'da iptal ediliyor (DOG-158); yoksa silinmiş hesaptan
-    // ücret çekilmeye devam ederdi. Polar'a ulaşılamazsa silme yine sürüyor
-    // (revokeOpenSubscriptions uyarı düşüyor).
+    // ücret çekilmeye devam ederdi. İptal edilemeyen varsa hesap silinmiyor
+    // (K-111): silinmiş hesabın aboneliğini sonradan bulmak zor, kullanıcı
+    // birkaç dakika sonra yeniden deniyor.
     if (owner && !owner.isAnonymous) {
+      let failed: string[] = []
       try {
-        await revokeOpenSubscriptions(prisma, polarProviderFromEnv(), user.id)
+        ;({ failed } = await revokeOpenSubscriptions(prisma, polarProviderFromEnv(), user.id))
       } catch (error) {
         // Ödeme ayarlanmamışsa (yerel) abonelik de yok.
         if (!(error instanceof BillingNotConfiguredError)) throw error
+      }
+      if (failed.length > 0) {
+        return NextResponse.json(
+          {
+            error: `Aboneliğini iptal edemedik, bu yüzden hesabın silinmedi. Birkaç dakika sonra yeniden dene; sürerse ${LEGAL.support} adresine yaz.`,
+            code: "subscription_cancel_failed",
+          },
+          { status: 502 },
+        )
       }
     }
 

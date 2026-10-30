@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Skeleton } from "@/components/ui/skeleton"
 import { browserSendMessage, extensionIdsFromEnv, verifyHandoff } from "@/features/analysis/extensionHandoff"
-import { auditQueryKey, retryAudit, startAudit, useAudit } from "@/features/linkedin/api"
+import { auditQueryKey, retryAudit, startAudit, startAuditUpload, useAudit } from "@/features/linkedin/api"
 import { AuditResult } from "@/features/linkedin/components/AuditResult"
 import { AuditStart } from "@/features/linkedin/components/AuditStart"
 import { LinkedInAuditWaiting } from "@/features/linkedin/components/LinkedInAuditWaiting"
@@ -69,11 +69,12 @@ export function LinkedInAuditView({ initialTargetRole }: { initialTargetRole: st
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function start(body: { resumeId: string; targetRole: string | null; analysisIds: string[] }) {
+  async function start({ file, resumeId, ...body }: { file: File | null; resumeId: string | null; targetRole: string | null; analysisIds: string[] }) {
     setBusy(true)
     setError(null)
     try {
-      await startAudit({ source: "pdf", ...body })
+      if (file) await startAuditUpload(file, body)
+      else if (resumeId) await startAudit({ source: "pdf", resumeId, ...body })
       setRestart(false)
       await queryClient.invalidateQueries({ queryKey: auditQueryKey })
     } catch (e) {

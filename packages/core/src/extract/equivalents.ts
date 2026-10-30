@@ -24,8 +24,14 @@ export async function addLanguageEquivalents(
   llm: LlmProvider,
   posting: JobPostingData,
 ): Promise<ExtractResult<JobPostingData>> {
+  // Örnek listesinin türü de soruluyor (DOG-166): markalar çevrilmiyor ama
+  // "performans pazarlaması" çevrilmeli, rol unvanı İngilizce olabilir.
   const terms = [
-    ...new Set(posting.requirements.flatMap((r) => r.concepts.filter(needsEquivalent).map((c) => c.term))),
+    ...new Set(
+      posting.requirements.flatMap((r) =>
+        r.concepts.flatMap((c) => [...(needsEquivalent(c) ? [c.term] : []), ...(c.category ? [c.category] : [])]),
+      ),
+    ),
   ]
   if (terms.length === 0) return { data: posting, tokens: 0 }
 
@@ -52,12 +58,17 @@ export async function addLanguageEquivalents(
     requirements: posting.requirements.map((r) => ({
       ...r,
       concepts: r.concepts.map((c) => {
-        if (!asked.has(key(c.term))) return c
         const existing = new Set([c.term, ...c.synonyms].map(key))
-        const extra = (found.get(key(c.term)) ?? [])
-          .map((e) => e.trim())
-          .filter((e) => e.length > 0 && e.length <= MAX_EQUIVALENT_LENGTH && !existing.has(key(e)))
-        return extra.length ? { ...c, synonyms: [...new Set([...c.synonyms, ...extra])], equivalents: extra } : c
+        const usable = (term: string | undefined) =>
+          term && asked.has(key(term))
+            ? (found.get(key(term)) ?? []).map((e) => e.trim()).filter((e) => e.length > 0 && e.length <= MAX_EQUIVALENT_LENGTH && !existing.has(key(e)))
+            : []
+        const extra = usable(c.term)
+        // Türün karşılığı yalnızca eşleşme için; `equivalents` uyarlamada
+        // terimin yerine yazılıyor, tür orada terimin karşılığı değil.
+        const kind = usable(c.category).filter((e) => !extra.some((x) => key(x) === key(e)))
+        if (extra.length === 0 && kind.length === 0) return c
+        return { ...c, synonyms: [...new Set([...c.synonyms, ...extra, ...kind])], ...(extra.length ? { equivalents: extra } : {}) }
       }),
     })),
   }
@@ -72,5 +83,8 @@ const key = (text: string) => text.trim().toLocaleLowerCase("tr")
  * sayılıyor (K-38) ama "testleri" çevrilmeli; "Selenium WebDriver" çevrilmez.
  */
 function needsEquivalent(concept: { term: string; synonyms: string[] }): boolean {
+  // Seçenek grubu ("Meta Ads / Google Ads"): üyelerin hepsi özel adsa çevrilecek bir şey yok.
+  const members = concept.term.split(" / ")
+  if (members.length > 1) return members.some((m) => needsEquivalent({ term: m, synonyms: [] }))
   return !isProperNoun(concept) || /(^|\s)\p{Ll}/u.test(concept.term)
 }

@@ -22,6 +22,14 @@ export const ConceptSchema = z.object({
    * Bu alandan önce çıkarılmış ilanlarda yok.
    */
   equivalents: z.array(z.string()).optional(),
+  /**
+   * Örnek listesinin türü (DOG-166): "Meta Ads ve Google Ads gibi kanallarda
+   * performans pazarlaması" → "performans pazarlaması". Eşleşme için
+   * synonyms'te de var; ayrıca tutuluyor çünkü anlamsal eşleşmenin vektörü
+   * yalnızca marka listesinden çıkıyordu. Bu alandan önce çıkarılmış
+   * ilanlarda yok.
+   */
+  category: z.string().optional(),
 })
 
 export const RequirementSchema = z.object({

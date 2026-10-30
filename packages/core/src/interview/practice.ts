@@ -6,7 +6,7 @@ import type { ResumeProfile } from "../schemas/resume.js"
 import { toJsonSchema } from "../schemas/toJsonSchema.js"
 import { checkPostingTermInjection } from "../verify/injection.js"
 import { withoutNegatedClauses } from "../verify/negation.js"
-import { checkNumbers } from "../verify/numbers.js"
+import { checkNumbers, checkWordQuantities } from "../verify/numbers.js"
 
 /**
  * Yazılı mülakat pratiği (DOG-97). Kullanıcı hazırlık paketindeki bir soruya
@@ -15,8 +15,9 @@ import { checkNumbers } from "../verify/numbers.js"
  *   - STAR: dört parçadan hangileri var (model).
  *   - Güçlü yanlar ve geliştirme önerileri (model). Öneri yeni olgu
  *     getirmiyor ("şunu yaptığını söyle" yok); soru ya da yapı önerisi.
- *   - Kağıtta yok (kod): cevapta geçen ama CV'de olmayan sayı ya da ilan
- *     terimi. Hata değil, hatırlatma: mülakatta sorulursa kanıtlayabilmeli.
+ *   - Kağıtta yok (kod): cevapta geçen ama CV'de olmayan sayı (rakamla ya da
+ *     "iki katına" gibi yazıyla) ya da ilan terimi. Hata değil, hatırlatma:
+ *     mülakatta sorulursa kanıtlayabilmeli.
  *   - Uzunluk (kod): sesli 1–2 dakika, 80–250 kelime.
  */
 export const PRACTICE_PROMPT = `Sana bir mülakat sorusu, adayın bu soruya YAZDIĞI cevap ve adayın CV'si
@@ -28,6 +29,9 @@ Kesin kurallar:
   söyle" deme. Geliştirme önerileri soru ya da yapı önerisi olsun
   ("sonucu bir sayıyla anlatabilir misin?", "önce durumu bir cümleyle kur").
 - Klişe ve abartılı övgü yok. Kısa ve somut ol.
+- "CV'DE OLMAYAN İDDİALAR" listesindekileri güçlü yan diye övme; ölçülebilir
+  sonuç sayma. Sonuç onlara dayanıyorsa geliştirme önerisinde "mülakatta
+  sorulursa bunu nasıl kanıtlarsın?" diye hatırlat.
 - Türkçe yaz; "sen" dili.
 
 İstenen:
@@ -62,7 +66,7 @@ export interface PracticeInput {
 export function offPaperClaims(answer: string, source: string, posting: JobPostingData): string[] {
   const claim = withoutNegatedClauses(answer)
   const skills = { ...posting, requirements: posting.requirements.filter((r) => r.type !== "soft" && r.type !== "condition") }
-  return [...checkNumbers(claim, source), ...checkPostingTermInjection(claim, source, skills)].map((i) =>
+  return [...checkNumbers(claim, source), ...checkWordQuantities(claim, source), ...checkPostingTermInjection(claim, source, skills)].map((i) =>
     i.detail
       .replace(/^Bu maddede /, "Cevabında ")
       .replace("senin yazdığın hâlinde yok.", "CV'nde yok; sorulursa kanıtlayabilmelisin."),
@@ -73,11 +77,14 @@ export async function reviewAnswer(llm: LlmProvider, input: PracticeInput): Prom
   const source = [`CV\n${resumeFacts(input.profile)}`, input.coverLetter?.length ? `ÖN YAZI\n${input.coverLetter.join("\n\n")}` : null]
     .filter(Boolean)
     .join("\n\n")
+  // Model kağıtta olmayanı bilmeden "sonucu sayıyla verdin" diye övüyordu (DOG-166).
+  const offPaper = offPaperClaims(input.answer, source, input.posting)
+  const unsupported = offPaper.length ? `\n\nCV'DE OLMAYAN İDDİALAR\n${offPaper.map((c) => `- ${c}`).join("\n")}` : ""
   const { data, tokens } = await llm.extract({
     prompt: PRACTICE_PROMPT,
     schemaName: "practice_review",
     schema: reviewJsonSchema,
-    input: `SORU\n${input.question}\n\nADAYIN CEVABI\n${input.answer.trim()}\n\n${source}`,
+    input: `SORU\n${input.question}\n\nADAYIN CEVABI\n${input.answer.trim()}\n\n${source}${unsupported}`,
   })
   const parsed = ReviewSchema.parse(data)
   const words = input.answer.split(/\s+/).filter(Boolean).length
@@ -88,7 +95,7 @@ export async function reviewAnswer(llm: LlmProvider, input: PracticeInput): Prom
       improvements: parsed.gelistir.map((s) => s.trim()).filter(Boolean).slice(0, 3),
       words,
       length: words < ANSWER_MIN_WORDS ? "short" : words > ANSWER_MAX_WORDS ? "long" : "ok",
-      offPaper: offPaperClaims(input.answer, source, input.posting),
+      offPaper,
     },
     tokens,
   }

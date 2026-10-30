@@ -27,4 +27,11 @@ describe("AuditStart", () => {
     const html = render(<AuditStart {...base} targetRole={null} extension={{ installed: true }} />)
     expect(html).toContain('href="https://www.linkedin.com/in/me/"')
   })
+
+  it("takes the LinkedIn PDF right here instead of sending the user to the CV library (DOG-166)", () => {
+    const html = render(<AuditStart {...base} targetRole="Pazarlama" extension={null} />)
+    expect(html).toMatch(/<input[^>]*type="file"[^>]*accept="application\/pdf,.pdf"/)
+    expect(html).toContain("CV kütüphanene eklenmez")
+    expect(html).not.toContain("/cvs?ekle=1")
+  })
 })

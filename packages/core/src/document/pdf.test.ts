@@ -1,4 +1,5 @@
 import Module from "node:module"
+import { inflateSync } from "node:zlib"
 import { describe, it, expect } from "vitest"
 import { extractText } from "../documents/extractText.js"
 import type { DocumentModel } from "./model.js"
@@ -139,5 +140,27 @@ describe("renderPdf", () => {
       expect(pages.length).toBeLessThanOrEqual(2)
       expect(pages.at(-1)!.text).toContain("Madde 59")
     }
+  })
+})
+
+describe("renderPdf · kerning (DOG-166)", () => {
+  it("writes words without kerning gaps that some readers take for spaces", async () => {
+    // pypdf "Google Tag Manager"ı "Google T ag Manager" okuyordu: T ile a arasındaki
+    // kerning, metin dizisine (TJ) bir sayı olarak giriyor. Bazı ATS'ler kelimeyi böler.
+    const pdf = await renderPdf({ ...model, summary: "Google Tag Manager, Tableau ve Toyota" })
+    const raw = pdf.toString("latin1")
+    const streams = [...raw.matchAll(/stream\r?\n([\s\S]*?)\r?\nendstream/g)].map((m) => {
+      const bytes = Buffer.from(m[1]!, "latin1")
+      try {
+        return inflateSync(bytes).toString("latin1")
+      } catch {
+        return ""
+      }
+    })
+    const arrays = streams.flatMap((st) => [...st.matchAll(/\[([^\]]*)\]\s*TJ/g)].map((m) => m[1]!))
+    expect(arrays.length).toBeGreaterThan(0)
+    // pdfkit her dizinin sonuna 0 koyuyor; kerning sıfırdan farklı bir sayı.
+    const kerned = arrays.filter((a) => (a.match(/(?<=^|[>\s])-?\d+(?:\.\d+)?(?=\s|<|$)/g) ?? []).some((n) => Number(n) !== 0))
+    expect(kerned).toEqual([])
   })
 })

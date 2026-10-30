@@ -88,6 +88,21 @@ describe("generateInterviewPrep (DOG-118)", () => {
     expect(data.bridges.map((b) => b.verification.status)).toEqual(["ok", "flagged"])
   })
 
+  it("fills a placeholder result with the measured result its evidence bullet carries (DOG-166)", async () => {
+    // Kullanıcı testi: CV'de "ROAS'ı 4,1'den 5,3'e çıkardım" varken STAR "Sonuç: [ölçülen sonuç]" diyordu.
+    const placeholder = {
+      ...answer,
+      sorular: [{ ...answer.sorular[0]!, kanit: ["Sayfa yükleme süresini %40 kısalttım"], star: { ...answer.sorular[0]!.star, sonuc: "[ölçülen sonuç]" } }],
+    }
+    const { data } = await generateInterviewPrep(llm(placeholder), { profile: PROFILE, posting: POSTING, missingMust: [] })
+    expect(data.questions[0]!.star.result).toBe("Sayfa yükleme süresini %40 kısalttım")
+
+    // Kanıtta ölçü yoksa yer tutucu kalıyor: sonucu aday biliyor, biz uydurmuyoruz.
+    const unmeasured = { ...placeholder, sorular: [{ ...placeholder.sorular[0]!, kanit: ["React ile müşteri paneli geliştirdim"] }] }
+    const { data: kept } = await generateInterviewPrep(llm(unmeasured), { profile: PROFILE, posting: POSTING, missingMust: [] })
+    expect(kept.questions[0]!.star.result).toBe("[ölçülen sonuç]")
+  })
+
   it("does not flag an honest bridge", async () => {
     const { data } = await generateInterviewPrep(llm(answer), { profile: PROFILE, posting: POSTING, missingMust: ["Kubernetes bilgisi"] })
     expect(data.bridges[0]!.verification.status).toBe("ok")

@@ -1,4 +1,4 @@
-import { containsKeyword } from "../normalize/turkish.js"
+import { containsKeyword, normalizeTokens } from "../normalize/turkish.js"
 import type { VerificationIssue } from "../schemas/adaptation.js"
 import type { JobPostingData } from "../schemas/job.js"
 
@@ -28,6 +28,7 @@ export function checkPostingTermInjection(
   const warnings: VerificationIssue[] = []
   const seen = new Set<string>()
   const allowed = new Set(allowedTerms)
+  const sourceTokens = normalizeTokens(source)
 
   for (const conceptItem of conceptList) {
     if (seen.has(conceptItem.term)) continue
@@ -35,7 +36,7 @@ export function checkPostingTermInjection(
 
     const searchTerms = [conceptItem.term, ...conceptItem.synonyms]
     const inRewrite = searchTerms.some((t) => containsKeyword(rewritten, t))
-    const presentInSource = searchTerms.some((t) => containsKeyword(source, t))
+    const presentInSource = searchTerms.some((t) => containsKeyword(source, t) || containsRootOf(sourceTokens, t))
 
     if (inRewrite && !presentInSource) {
       seen.add(conceptItem.term)
@@ -47,4 +48,27 @@ export function checkPostingTermInjection(
   }
 
   return warnings
+}
+
+/** "-lama/-leme" ile türemiş ad: "raporlama" ← "rapor". */
+const VERBAL_NOUN = /^(.{5,})l[ae]m[ae]$/u
+
+/**
+ * Terim kaynakta kökünden geçiyor mu (DOG-166): CV'de "raporları sundum"
+ * varken "raporlama" uydurma sayılıyordu. Yalnızca "-lama/-leme" türetmesi
+ * ve en az beş harfli kök; çok kelimeli terimde kelimeler ardışık. Bedeli:
+ * "pazar" ile "pazarlama" da aynı kök sayılıyor; bu bir hatırlatma listesi.
+ */
+function containsRootOf(sourceTokens: string[], term: string): boolean {
+  const termTokens = normalizeTokens(term)
+  if (termTokens.length === 0) return false
+  const matches = (k: string, m: string) => {
+    if (k === m) return true
+    const root = k.match(VERBAL_NOUN)?.[1]
+    return !!root && (m === root || m.startsWith(`${root}l`))
+  }
+  for (let i = 0; i + termTokens.length <= sourceTokens.length; i++) {
+    if (termTokens.every((k, j) => matches(k, sourceTokens[i + j]!))) return true
+  }
+  return false
 }

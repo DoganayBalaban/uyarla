@@ -19,7 +19,9 @@ import type { StructuredSection } from "@uyarla/core/schemas/resume"
 import { analysisProfile } from "@uyarla/core/adapt/facts"
 import { CachedEmbeddingProvider, redisVectorStore } from "@uyarla/core/llm/embeddingCache"
 import { OpenAiCompatibleEmbeddingProvider, embeddingConfigFromEnv } from "@uyarla/core/llm/embedding"
-import { rescore } from "@uyarla/core/adapt/rescore"
+import { rescoreOutcome } from "@uyarla/core/adapt/rescore"
+import { adaptedSummary } from "@uyarla/core/score/adapted"
+import { rememberAdapted } from "@/server/adaptedScore"
 import { correctPosting, type RequirementCorrection } from "@uyarla/core/score/exclusions"
 import type { JobPostingData } from "@uyarla/core/schemas/job"
 import type { ResumeProfile } from "@uyarla/core/schemas/resume"
@@ -178,9 +180,17 @@ export async function computeScoreAfter(
   posting: JobPostingData,
   draft: AdaptationDraft | null,
   excluded: readonly number[] = [],
+  /**
+   * Verilirse özet analiz sonucuna da yazılıyor (DOG-166): pano, ayrıntı ve
+   * mülakat paketi uyarlanmış CV'yi görsün. Önizleme ("bunu kabul etsem")
+   * yazmıyor.
+   */
+  remember?: { analysisId: string; result: unknown },
 ): Promise<number | null> {
   if (!profile || !draft) return null
-  return rescore({ profile, posting, draft, excluded }, cachedEmbedding())
+  const outcome = await rescoreOutcome({ profile, posting, draft, excluded }, cachedEmbedding())
+  if (remember) await rememberAdapted(remember.analysisId, remember.result, adaptedSummary(outcome))
+  return outcome.score
 }
 
 /** Worker'la ortak önbellekli gömme sağlayıcısı (DOG-57). */

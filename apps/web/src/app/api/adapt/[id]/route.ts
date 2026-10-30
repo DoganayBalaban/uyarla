@@ -50,7 +50,10 @@ export async function GET(
           : ((await computeScoreBefore(profile, scoringPosting, draft, excluded)) ?? scoreBefore),
       // Yeni skor yalnızca taslak varken hesaplanıyor; çalışırken boşuna
       // gömme çağrısı yapılmaz.
-      scoreAfter: await computeScoreAfter(profile, scoringPosting, draft, excluded),
+      scoreAfter: await computeScoreAfter(profile, scoringPosting, draft, excluded, {
+        analysisId: adaptation.analysisId,
+        result: adaptation.analysis.result,
+      }),
       errorClass: adaptation.errorClass,
       coverLetter: letter,
       // Ön yazı kontrol listesi (DOG-96): her istekte hesaplanıyor, ucuz ve

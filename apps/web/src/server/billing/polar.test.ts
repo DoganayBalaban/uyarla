@@ -4,6 +4,7 @@ import { WebhookSignatureError } from "@/server/billing/provider"
 
 class FakeVerificationError extends Error {}
 class FakeUnknownTypeError extends Error {}
+class FakeGoneError extends Error {}
 
 const deps = (overrides: Partial<PolarDeps> = {}): PolarDeps => ({
   createCheckout: vi.fn().mockResolvedValue({ url: "https://sandbox.polar.sh/checkout/abc" }),
@@ -12,6 +13,7 @@ const deps = (overrides: Partial<PolarDeps> = {}): PolarDeps => ({
   validateEvent: vi.fn(),
   isVerificationError: (e) => e instanceof FakeVerificationError,
   isUnknownTypeError: (e) => e instanceof FakeUnknownTypeError,
+  isGoneSubscriptionError: (e) => e instanceof FakeGoneError,
   ...overrides,
 })
 const products = { month: "prod_m", quarter: "prod_q" }
@@ -122,6 +124,12 @@ describe("polar provider", () => {
     expect(d.createCustomerSession).toHaveBeenLastCalledWith({ customer_id: "cus_1", return_url: "https://uyarla.com.tr/account" })
     await p.revokeSubscription("sub_1")
     expect(d.revokeSubscription).toHaveBeenCalledWith("sub_1")
+  })
+
+  it("counts a subscription Polar already revoked or no longer has as revoked", async () => {
+    // Yoksa hesap silme, zaten bitmiş bir abonelik yüzünden sonsuza dek takılırdı.
+    await expect(provider(deps({ revokeSubscription: vi.fn().mockRejectedValue(new FakeGoneError("gone")) })).revokeSubscription("sub_1")).resolves.toBeUndefined()
+    await expect(provider(deps({ revokeSubscription: vi.fn().mockRejectedValue(new Error("polar kapalı")) })).revokeSubscription("sub_1")).rejects.toThrow("polar kapalı")
   })
 })
 
