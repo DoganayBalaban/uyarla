@@ -22,7 +22,7 @@ export const LANDING_FAQ: { s: string; c: string }[] = [
   },
   {
     s: "Chrome eklentisi ne yapıyor?",
-    c: "İlan sayfasındayken araç çubuğundaki uyarla simgesine basarsın; ilan metni uyarla'da dolu açılır, varsayılan CV'n varsa analiz kendiliğinden başlar. Sayfayı yalnızca simgeye bastığında okur; kendi LinkedIn profilini de aynı yolla denetime gönderebilirsin. Ücretsiz.",
+    c: "LinkedIn, Kariyer.net ve diğer iş sitelerinde ilan açıkken başvuru düğmesinin yanında bir uyarla düğmesi çıkar; basınca ilan metni uyarla'da dolu açılır, varsayılan CV'n varsa analiz kendiliğinden başlar. Başka sitelerde araç çubuğundaki simgenin menüsünü kullanırsın. Sen basmadan hiçbir şey göndermez; kendi LinkedIn profilini de aynı yolla denetime gönderebilirsin. Ücretsiz.",
   },
   {
     s: "Başvuru formlarını siz mi dolduruyorsunuz?",

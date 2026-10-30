@@ -1,35 +1,37 @@
 import Link from "next/link"
 import { Icon } from "@/features/landing/components/Icon"
 import { ExtensionDemo } from "@/features/landing/demos/ExtensionDemo"
-import { EXTENSION_ACTION_TITLE, EXTENSION_MENU_TITLE, storeHref } from "@/features/landing/extension"
+import { EXTENSION_MENU_TITLE, EXTENSION_PAGE_BUTTON, EXTENSION_PROFILE_BUTTON, storeHref } from "@/features/landing/extension"
 import s from "@/features/landing/landing.module.css"
 
 /**
  * Chrome eklentisinin sayfası (DOG-163). Metinler eklentinin gerçek
- * davranışından: activeTab ile yalnızca tıklanan sekme, ilan metni
- * bağlantının # kısmında, tek kullanımlık jeton, yalnızca kendi profil.
+ * davranışından (0.4.0, DOG-169): iş sitelerinde ilanın yanında düğme,
+ * simgede menü, ilan metni bağlantının # kısmında, tek kullanımlık jeton,
+ * yalnızca kendi profil.
  */
 
 const WAYS = [
   {
     icon: "board" as const,
-    title: "İlan sayfasında simgeye bas",
-    text: `Araç çubuğundaki uyarla simgesine (“${EXTENSION_ACTION_TITLE}”) bas. İlan metni ve bağlantısı uyarla'da dolu açılır; kayıtlıysan ve varsayılan CV'n seçiliyse analiz kendiliğinden başlar.`,
+    title: "İlanın yanındaki düğmeye bas",
+    text: `LinkedIn, Kariyer.net ve diğer iş sitelerinde ilan açıkken başvuru düğmesinin yanında “${EXTENSION_PAGE_BUTTON}” çıkar. Bas; ilan metni ve bağlantısı uyarla'da dolu açılır, kayıtlıysan ve varsayılan CV'n seçiliyse analiz kendiliğinden başlar.`,
   },
   {
     icon: "pen" as const,
-    title: "Seçili metni gönder",
-    text: `Eklenti sayfada ilanı bulamazsa ilan metnini seç, sağ tıkla ve “${EXTENSION_MENU_TITLE}” de.`,
+    title: "Başka bir sitede simgeyi aç",
+    text: `Araç çubuğundaki uyarla simgesi bir menü açar: sayfadaki ilanı bulursa adını gösterir, tek tıkla gönderir. Bulamazsa ilan metnini seç, sağ tıkla ve “${EXTENSION_MENU_TITLE}” de.`,
   },
   {
     icon: "eye" as const,
     title: "LinkedIn profilini denetlet",
-    text: "Kendi LinkedIn profil sayfandayken simgeye bas; profilin uyarla'nın LinkedIn denetimine gider. PDF indirmene gerek kalmaz.",
+    text: `Kendi LinkedIn profil sayfanda “${EXTENSION_PROFILE_BUTTON}” düğmesine bas; profilin uyarla'nın LinkedIn denetimine gider. PDF indirmene gerek kalmaz.`,
   },
 ]
 
 const PRIVACY = [
-  "Yalnızca simgeye bastığında, yalnızca o sekmeyi okur; arka planda sayfalarını izlemez.",
+  "Düğme yalnızca görünür; ilan ya da profil ancak sen bastığında gönderilir.",
+  "İş sitelerinde (LinkedIn, Kariyer.net ve diğerleri) düğmeyi göstermek için açık sayfanın ilan olup olmadığına bakar; başka sitelerde yalnızca simgeye bastığında o sekmeyi okur.",
   "İlan metni uyarla'ya bağlantının # kısmında gelir; analiz başlayana kadar sunucumuza gitmez.",
   "Analizi kendiliğinden başlatan tek kullanımlık bir jeton var: bağlantıyı yenilersen ya da başkasına gönderirsen analiz kendiliğinden başlamaz.",
   "Yalnızca kendi LinkedIn profilini gönderir; başkasının profilini okumaz.",
@@ -38,7 +40,7 @@ const PRIVACY = [
 const STEPS = [
   "“Chrome'a ekle”ye bas ve Chrome Web Mağazası'nda onayla.",
   "Araç çubuğundaki yapboz simgesinden uyarla'yı sabitle.",
-  "Bir ilan sayfasını aç ve uyarla simgesine bas.",
+  `Bir ilan sayfasını aç; başvuru düğmesinin yanındaki “${EXTENSION_PAGE_BUTTON}”e bas.`,
 ]
 
 function Ticks({ items }: { items: string[] }) {
@@ -118,7 +120,7 @@ export function ExtensionPage() {
             <div className={s.feature}>
               <div className={s.featureText}>
                 <span className={s.sectionLabel}>Gizlilik</span>
-                <h2 className={s.h2}>Yalnızca simgeye bastığında okur.</h2>
+                <h2 className={s.h2}>Sen basmadan hiçbir şey göndermez.</h2>
                 <Ticks items={PRIVACY} />
               </div>
               <div className={s.featureText}>

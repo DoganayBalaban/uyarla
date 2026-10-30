@@ -151,7 +151,7 @@ export function AuditStart({
             <CardContent className="space-y-3 px-5">
               <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
                 <li>LinkedIn'de kendi profilini aç.</li>
-                <li>Tarayıcının sağ üstündeki uyarla simgesine tıkla.</li>
+                <li>Profilindeki &ldquo;Profilimi uyarla ile denetle&rdquo; düğmesine bas.</li>
               </ol>
               {extension.installed ? (
                 <Button asChild>

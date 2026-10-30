@@ -5,8 +5,12 @@
  * girebilir.
  */
 
-/** Araç çubuğundaki simgenin adı (manifest `action.default_title`). */
-export const EXTENSION_ACTION_TITLE = "uyarla'ya gönder"
+/** Araç çubuğundaki simgenin adı (manifest `action.default_title`); basınca menü açılıyor (DOG-169). */
+export const EXTENSION_ACTION_TITLE = "uyarla"
+/** İlan sayfasında, sitenin başvuru düğmesinin yanındaki düğme (content.ts, DOG-169). */
+export const EXTENSION_PAGE_BUTTON = "CV'mi bu ilana uyarla"
+/** Kendi LinkedIn profilindeki düğme (content.ts, DOG-169). */
+export const EXTENSION_PROFILE_BUTTON = "Profilimi uyarla ile denetle"
 /** Seçili metinde sağ tık menüsü (background.ts). */
 export const EXTENSION_MENU_TITLE = "Seçili metni uyarla ile ölç"
 
