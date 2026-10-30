@@ -20,6 +20,34 @@ export async function updateCard(analysisId: string, change: CardChange): Promis
   await api.patch(`/applications/${encodeURIComponent(analysisId)}`, change)
 }
 
+/** Başvuruyu tamamen siler (DOG-171); ilan, analiz, uyarlama ve notlarıyla. */
+export async function deleteApplication(analysisId: string): Promise<void> {
+  await api.delete(`/applications/${encodeURIComponent(analysisId)}`)
+}
+
+/** Silinen başvuru panodan hemen düşüyor. */
+export function withoutCard(cards: BoardCard[], analysisId: string): BoardCard[] {
+  return cards.filter((c) => c.analysisId !== analysisId)
+}
+
+/** Silme: kart hemen kalkıyor, hata olursa geri geliyor; panodaki sayılar da yenileniyor. */
+export function useDeleteApplication() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (analysisId: string) => deleteApplication(analysisId),
+    onMutate: async (analysisId) => {
+      await queryClient.cancelQueries({ queryKey: applicationsQueryKey })
+      const previous = queryClient.getQueryData<BoardCard[]>(applicationsQueryKey)
+      if (previous) queryClient.setQueryData(applicationsQueryKey, withoutCard(previous, analysisId))
+      return { previous }
+    },
+    onError: (_error, _id, context) => {
+      if (context?.previous) queryClient.setQueryData(applicationsQueryKey, context.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries(),
+  })
+}
+
 /** Değişikliği kartlara uygular; iyimser güncellemede sunucu yanıtı beklenmeden. */
 export function applyCardChange(cards: BoardCard[], analysisId: string, change: CardChange, now = new Date()): BoardCard[] {
   return cards.map((k) =>

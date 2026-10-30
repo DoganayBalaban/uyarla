@@ -31,6 +31,7 @@ import { noteFormSchema, type NoteFormValues } from "@/features/applications/sch
 import { FollowUpPanel, OutreachPanel } from "@/features/applications/components/FollowUpPanel"
 import { ApplyCheck } from "@/features/applications/components/ApplyCheck"
 import { StageSelect } from "@/features/applications/components/StageSelect"
+import { DeleteApplication } from "@/features/applications/components/DeleteApplication"
 import { PageCrumb } from "@/components/layout/app-shell/PageActions"
 
 const DATE = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long" })
@@ -53,6 +54,7 @@ export function ApplicationDetail({ analysisId }: { analysisId: string }) {
   const cardsQuery = useApplicationCards()
   const updateCard = useUpdateCard()
   const [askApply, setAskApply] = useState(false)
+  const router = useRouter()
 
   if (cardsQuery.isPending) {
     return (
@@ -110,6 +112,7 @@ export function ApplicationDetail({ analysisId }: { analysisId: string }) {
             <span className="text-xs text-muted-foreground">uyarlamadan önce {card.scoreBefore}</span>
           )}
           <StageSelect value={card.stage} onChange={(stage) => update({ stage })} size="default" />
+          <DeleteApplication analysisId={analysisId} position={card.position} onDeleted={() => router.push("/applications")} className="size-9" />
         </div>
       </header>
 

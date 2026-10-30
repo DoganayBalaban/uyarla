@@ -34,6 +34,7 @@ export const EXPORTED_TABLES = [
   "emailLog",
   "emailConsent",
   "linkedInAudit",
+  "deletedUsage",
 ] as const satisfies readonly (typeof DELETION_ORDER)[number][]
 
 export interface ExportedResume {
@@ -70,10 +71,12 @@ export interface UserDataExport {
    * ödeme duvarının yanından geçen bir yol olmasın.
    */
   linkedinAudits: Record<string, unknown>[]
+  /** Silinen başvuruların harcadığı haklar: özellik ve tarih (DOG-171). */
+  deletedUsages: Record<string, unknown>[]
 }
 
 export async function collectUserData(db: Db, userId: string, now = new Date()): Promise<UserDataExport> {
-  const [user, accounts, sessions, resumes, jobPostings, analyses, excludedConcepts, emailLogs, emailConsents, linkedinAudits, subscriptions] = await Promise.all([
+  const [user, accounts, sessions, resumes, jobPostings, analyses, excludedConcepts, emailLogs, emailConsents, linkedinAudits, subscriptions, deletedUsages] = await Promise.all([
     db.user.findUniqueOrThrow({
       where: { id: userId },
       select: {
@@ -178,6 +181,7 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
       },
       orderBy: { createdAt: "asc" },
     }),
+    db.deletedUsage.findMany({ where: { userId }, select: { feature: true, usedAt: true, createdAt: true }, orderBy: { createdAt: "asc" } }),
   ])
 
   const unlocked = isAdmin(user) || hasAccess(subscriptions, now)
@@ -195,6 +199,7 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
     emailConsents,
     subscriptions,
     linkedinAudits: linkedinAudits.map((a) => ({ ...a, rewrites: a.rewrites ? lockRewrites(a.rewrites as unknown as LinkedInRewrites, unlocked).rewrites : null })),
+    deletedUsages,
   }
 }
 
