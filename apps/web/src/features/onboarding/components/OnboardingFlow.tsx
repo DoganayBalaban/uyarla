@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
-import { LoaderCircle } from "lucide-react"
+import { ExternalLink, LoaderCircle } from "lucide-react"
 import { Logo } from "@/components/layout/Logo"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -16,7 +17,10 @@ import { Progress } from "@/components/ui/progress"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ResumeUpload } from "@/features/analysis/components/ResumeUpload"
 import { resumeFileSchema } from "@/features/analysis/schema"
+import { browserSendMessage, extensionIdsFromEnv } from "@/features/analysis/extensionHandoff"
+import { EXTENSION_STORE_URL, detectExtension } from "@/features/linkedin/handoff"
 import { saveProfile, uploadLibraryResume } from "@/features/onboarding/api"
+import { extensionTarget, offersExtension } from "@/features/onboarding/extensionStep"
 import { ONBOARDING_DEFERRED_COOKIE } from "@/features/onboarding/gate"
 import { GOAL_OPTIONS } from "@/features/onboarding/goals"
 import { GOALS, nameSchema, TARGET_ROLE_MAX_LENGTH } from "@/features/onboarding/schema"
@@ -29,7 +33,11 @@ import { apiErrorMessage, apiStatus } from "@/lib/api"
  * Üç adımlı onboarding (spec §3): ad → amaç ve hedef rol → CV. Her "İleri"
  * o adımı kaydediyor; "Şimdilik geç" o ana kadar girileni bırakıp
  * onboarding'i tamamlandı işaretliyor ve kullanıcıyı hedefine yolluyor.
+ * Masaüstü Chrome'da ve eklenti kurulu değilse dördüncü adım Chrome
+ * eklentisi (DOG-170).
  */
+
+const EXTENSION_IDS = extensionIdsFromEnv(process.env.NEXT_PUBLIC_EXTENSION_IDS)
 
 const nameStepSchema = z.object({ name: nameSchema })
 const goalStepSchema = z.object({
@@ -49,7 +57,16 @@ type ResumeStepOutput = z.output<typeof resumeStepSchema>
 export function OnboardingFlow({ initialName, returnTo }: { initialName: string; returnTo: string }) {
   const router = useRouter()
   const reducedMotion = useReducedMotion() ?? false
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
+  // İlk çizimde yok: sunucu tarayıcıyı bilmiyor, eklenti yoklaması da tarayıcıda.
+  const [offerExtension, setOfferExtension] = useState(false)
+  const totalSteps = offerExtension ? 4 : 3
+
+  useEffect(() => {
+    void detectExtension(EXTENSION_IDS, browserSendMessage()).then((installed) =>
+      setOfferExtension(offersExtension({ userAgent: navigator.userAgent, installed })),
+    )
+  }, [])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -106,7 +123,8 @@ export function OnboardingFlow({ initialName, returnTo }: { initialName: string;
   const submitResume = resumeForm.handleSubmit((values) =>
     run(async () => {
       if (values.cv) await uploadLibraryResume(values.cv as File, values.label ?? "")
-      await finish()
+      if (offerExtension) setStep(4)
+      else await finish()
     }),
   )
 
@@ -134,9 +152,11 @@ export function OnboardingFlow({ initialName, returnTo }: { initialName: string;
         <div className="border-b px-6 pt-5 pb-4">
           <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
             <span>Hesabını kur</span>
-            <span className="tabular-nums">{step} / 3</span>
+            <span className="tabular-nums">
+              {step} / {totalSteps}
+            </span>
           </div>
-          <Progress value={(step / 3) * 100} aria-label={`Adım ${step} / 3`} className="mt-2 h-1.5" />
+          <Progress value={(step / totalSteps) * 100} aria-label={`Adım ${step} / ${totalSteps}`} className="mt-2 h-1.5" />
         </div>
         <CardContent className="p-6">
           <AnimatePresence mode="wait" initial={false}>
@@ -216,11 +236,39 @@ export function OnboardingFlow({ initialName, returnTo }: { initialName: string;
                 )}
                 <StepActions
                   busy={busy}
-                  nextLabel={resumeFile ? "Kaydet ve bitir" : "Bitir"}
+                  nextLabel={resumeFile ? (offerExtension ? "Kaydet ve devam et" : "Kaydet ve bitir") : offerExtension ? "İleri" : "Bitir"}
                   skipLabel={resumeCopy.skipLabel}
-                  onSkip={() => void finish()}
+                  onSkip={() => (offerExtension ? setStep(4) : void finish())}
                 />
               </motion.form>
+            )}
+
+            {step === 4 && (
+              <motion.div key="eklenti" {...slide}>
+                <h1 className="m-0 text-2xl font-semibold tracking-tight">Son adım: Chrome eklentisi</h1>
+                <p className="m-0 mt-1.5 text-sm text-muted-foreground">
+                  LinkedIn, Kariyer.net ve diğer iş sitelerinde ilanın yanında &ldquo;CV&apos;mi bu ilana uyarla&rdquo; düğmesi çıkar. İlanı
+                  kopyalamadan, bulduğun yerde ölçersin. Ücretsiz.
+                </p>
+                <Image
+                  src="/landing/eklenti/ilan.webp"
+                  alt="LinkedIn ilanında “Kolay Başvuru”nun yanında “CV'mi bu ilana uyarla” düğmesi"
+                  width={645}
+                  height={237}
+                  sizes="(min-width: 640px) 464px, 100vw"
+                  className="mt-6 h-auto w-full rounded-lg border bg-card shadow-sm"
+                />
+                <div className="mt-8 flex items-center justify-between gap-4">
+                  <Button type="button" variant="ghost" onClick={() => void finish()} disabled={busy} className="text-muted-foreground">
+                    Şimdi değil
+                  </Button>
+                  <Button asChild disabled={busy}>
+                    <a href={extensionTarget(EXTENSION_STORE_URL)} target="_blank" rel="noreferrer" onClick={() => void finish()}>
+                      Chrome&apos;a ekle <ExternalLink aria-hidden />
+                    </a>
+                  </Button>
+                </div>
+              </motion.div>
             )}
           </AnimatePresence>
 
