@@ -76,7 +76,7 @@ export function Navbar() {
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
                       "inline-flex items-center gap-2 rounded-button px-2.5 py-2 text-sm font-medium no-underline transition-colors sm:px-3",
-                      isActive ? "bg-brand-blue/10 text-brand-blue" : "text-muted-foreground hover:bg-background hover:text-foreground",
+                      isActive ? "bg-brand-blue/10 text-brand-blue dark:text-brand-blue-light" : "text-muted-foreground hover:bg-background hover:text-foreground",
                     )}
                   >
                     <Icon className="size-4" aria-hidden />
@@ -143,7 +143,7 @@ function MarketingLinks() {
             aria-current={isActive ? "location" : undefined}
             className={cn(
               "relative hidden rounded-button px-3 py-2 text-sm font-medium no-underline transition-colors md:inline-flex",
-              isActive ? "text-brand-blue" : "text-muted-foreground hover:text-foreground",
+              isActive ? "text-brand-blue dark:text-brand-blue-light" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {isActive && (
