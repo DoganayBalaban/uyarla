@@ -9,7 +9,17 @@
   --shadow-floating: 0 2px 4px rgb(17 17 20 / 0.04), 0 24px 56px -16px rgb(17 17 20 / 0.22);
   --blue-soft: color-mix(in srgb, var(--brand-blue) 9%, transparent);
   --surface: #ffffff;
+  /* Dönüşümlü bölüm zemini; koyuda zeminden bir ton açık. */
+  --surface-tint: var(--background);
   --text-secondary: #4b4b52;
+  /* Hero başlığının indiği ton ve ekran görüntüsü çerçevesinin üst çubuğu. */
+  --title-fade: #4b4b52;
+  --frame-bar: #fbfbfa;
+  --frame-dot: #e2e2e5;
+  /* Koyu bölüm (Dürüstlük) ve PDF rozeti. */
+  --night: var(--brand-night);
+  /* Birincil düğme; koyuda da marka kobaltı (üst çubuktaki düğmeyle aynı). */
+  --button-blue: var(--brand-blue);
   /* Metin olarak mavi/durum renkleri: açıkta marka tonu, koyuda AA için açık ton. */
   --blue-text: var(--brand-blue);
   --red-text: var(--brand-red);
@@ -28,28 +38,34 @@
   text-decoration: none;
 }
 
-/* Tanıtım sayfası tek tema, açık (DOG-160). Uygulamada koyu temayı seçen
-   ziyaretçide sayfa beyaz zemin üstünde açık renk yazıya dönüyordu; kapsam
-   içinde açık değerler geri yükleniyor (globals.css :root ile aynı). */
+/* Koyu tema. Önce tanıtım koyuda da açık kalmaya zorlanıyordu (DOG-160);
+   üst çubuk koyuya dönünce sayfa iki parça görünüyordu. Zemin ve kartlar
+   globals.css'in .dark değerlerinden geliyor; burada sayfaya özgü tonlar.
+   Kobalt koyu zeminde okunsun diye açılıyor: Tailwind sınıfları
+   (text-brand-blue, bg-brand-blue-soft) `--color-*`, modül `--brand-*`
+   okuyor, ikisi de burada. */
 :global(.dark) .page {
-  color-scheme: light;
-  --background: #fafaf9;
-  --foreground: #111114;
-  --card: #ffffff;
-  --card-foreground: #111114;
-  --popover: #ffffff;
-  --popover-foreground: #111114;
-  --primary: #2f4be0;
-  --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #6b6b73;
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
-  --border: #e7e5e4;
-  --input: #e7e5e4;
-  --ring: #93a4ff;
+  --surface: var(--background);
+  --surface-tint: #111114;
+  --text-secondary: #b4b4bb;
+  --title-fade: #9d9da6;
+  --frame-bar: #19191c;
+  --frame-dot: #303035;
+  --night: #121218;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -12px rgb(0 0 0 / 0.6);
+  --shadow-floating: 0 2px 4px rgb(0 0 0 / 0.4), 0 24px 56px -16px rgb(0 0 0 / 0.7);
+  --blue-text: var(--color-brand-blue-light);
+  --red-text: #f87171;
+  --green-text: #4ade80;
+
+  --button-blue: #2f4be0;
+
+  --color-brand-blue: #5b72ff;
+  --color-brand-blue-hover: #4a61f0;
+  --color-brand-blue-soft: rgb(91 114 255 / 0.16);
+  --brand-blue: var(--color-brand-blue);
+  --brand-blue-hover: var(--color-brand-blue-hover);
+  --brand-blue-soft: var(--color-brand-blue-soft);
 }
 
 .page :focus-visible {
@@ -131,18 +147,18 @@
   white-space: nowrap;
 }
 .page .buttonPrimary {
-  background: var(--brand-blue);
+  background: var(--button-blue);
   color: #fff;
   box-shadow:
     0 1px 0 rgb(255 255 255 / 0.18) inset,
-    0 8px 20px -8px color-mix(in srgb, var(--brand-blue) 70%, transparent);
+    0 8px 20px -8px color-mix(in srgb, var(--button-blue) 70%, transparent);
 }
 .page .buttonPrimary:hover {
-  background: color-mix(in srgb, var(--brand-blue) 90%, #000);
+  background: color-mix(in srgb, var(--button-blue) 90%, #000);
   transform: translateY(-1px);
   box-shadow:
     0 1px 0 rgb(255 255 255 / 0.18) inset,
-    0 14px 28px -10px color-mix(in srgb, var(--brand-blue) 80%, transparent);
+    0 14px 28px -10px color-mix(in srgb, var(--button-blue) 80%, transparent);
 }
 .page .buttonSecondary {
   background: var(--card);
@@ -205,7 +221,7 @@
 
 .heroTitle {
   /* Mürekkepten hafifçe açılan başlık (şablondaki gradyan metin). */
-  background: linear-gradient(to bottom, var(--foreground) 55%, #4b4b52);
+  background: linear-gradient(to bottom, var(--foreground) 55%, var(--title-fade));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -291,13 +307,13 @@
   gap: 6px;
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
-  background: #fbfbfa;
+  background: var(--frame-bar);
 }
 .heroFrameBar span {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #e2e2e5;
+  background: var(--frame-dot);
 }
 
 /* Hero filmi: tam görünsün diye ekran görüntüsündeki alt erime kapalı. */
@@ -410,7 +426,7 @@
   padding: 7rem 0;
 }
 .sectionTinted {
-  background: var(--background);
+  background: var(--surface-tint);
 }
 .sectionHeader {
   max-width: 40rem;
@@ -611,10 +627,13 @@
 .honesty {
   position: relative;
   padding: 7.5rem 0;
-  background: var(--brand-night);
+  background: var(--night);
   color: #f4f4f5;
   isolation: isolate;
   overflow: hidden;
+}
+:global(.dark) .honesty {
+  border-block: 1px solid var(--border);
 }
 .honestyBackdrop {
   position: absolute;
@@ -816,6 +835,10 @@
   border-radius: 32px;
   background: var(--brand-blue);
   color: #fff;
+}
+/* Koyuda da marka kobaltı: açılan ton beyaz yazının kontrastını düşürüyor. */
+:global(.dark) .finalCtaCard {
+  background: #2f4be0;
 }
 .finalCtaPattern {
   position: absolute;
@@ -1159,7 +1182,10 @@
   color: #fff;
 }
 .filePdf {
-  background: var(--brand-night);
+  background: var(--night);
+}
+:global(.dark) .filePdf {
+  background: #2a2a2e;
 }
 .fileDocx {
   background: var(--brand-blue);
