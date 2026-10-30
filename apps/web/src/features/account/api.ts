@@ -1,11 +1,23 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { Goal } from "@/features/onboarding/schema"
 import { saveProfile, type ProfilePatchInput } from "@/features/onboarding/api"
+import { billingStatusKey } from "@/features/billing/api"
 import { api } from "@/lib/api"
 
 /** Hesabı ve hesaba bağlı bütün verileri kalıcı olarak siler. */
 export async function deleteAccount(): Promise<void> {
   await api.delete("/account")
+}
+
+/**
+ * Silinen hesabın istemcideki verisini bırakır. `clear()` önbelleği boşaltıyor
+ * ama açık ekrana haber vermiyor: her sayfadaki deneme bandı "599 ₺
+ * çekilecek" demeye devam ediyordu. Kabuğun gösterdiği abonelik durumu önce
+ * boşaltılıyor ki açık gözlemciler de görsün.
+ */
+export function forgetAccountData(queryClient: QueryClient): void {
+  queryClient.setQueryData(billingStatusKey, null)
+  queryClient.clear()
 }
 
 export function useDeleteAccount() {

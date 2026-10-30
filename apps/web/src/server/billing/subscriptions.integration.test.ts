@@ -60,16 +60,19 @@ describe("applySubscriptionEvent (DOG-158)", () => {
 })
 
 describe("revokeOpenSubscriptions (DOG-158)", () => {
-  it("revokes the open ones at Polar and keeps going if Polar fails", async () => {
+  it("revokes the open ones at Polar and reports the ones Polar refused", async () => {
     const u = await makeUser("silinen")
     await applySubscriptionEvent(prisma, event(u.id, { subscriptionId: `sub_acik_${u.id}`, currentPeriodEnd: new Date(Date.now() + 864e6) }))
     await applySubscriptionEvent(prisma, event(u.id, { subscriptionId: `sub_bitmis_${u.id}`, status: "canceled", endedAt: new Date("2026-10-01T00:00:00Z") }))
     const revoke = vi.fn().mockRejectedValueOnce(new Error("polar kapalı"))
     const log = vi.fn()
     const provider = { revokeSubscription: revoke } as unknown as BillingProvider
-    expect(await revokeOpenSubscriptions(prisma, provider, u.id, log)).toBe(0)
+    // Hesap silme bu listeye bakıp duruyor: iptal edilemeyen abonelik silinmiş hesaptan ücret çekmeye devam ederdi.
+    expect(await revokeOpenSubscriptions(prisma, provider, u.id, log)).toEqual({ revoked: 0, failed: [`sub_acik_${u.id}`] })
     expect(revoke).toHaveBeenCalledWith(`sub_acik_${u.id}`)
     expect(revoke).not.toHaveBeenCalledWith(`sub_bitmis_${u.id}`)
     expect(log).toHaveBeenCalled()
+    revoke.mockResolvedValueOnce(undefined)
+    expect(await revokeOpenSubscriptions(prisma, provider, u.id, log)).toEqual({ revoked: 1, failed: [] })
   })
 })

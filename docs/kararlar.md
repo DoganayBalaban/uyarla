@@ -3947,3 +3947,16 @@ Ayrıntı: `docs/superpowers/specs/2026-10-28-tanitim-yolculuk-design.md`.
 **Ölçüm (20 çift):** İsabet %95,4 ve uydurma 1 değişmedi; kelime eşleşmesi 36'dan 43'e çıktı, anlamsal tahmin 12'den 7'ye indi. Yüksek beklenenler 37–80, orta 17–45, düşük 0–25 (önce 0–40). Etiket isabeti 16/20'den 18/20'ye. Kalan ikisi gerçek eksik: 5 yıl isteyen ilana 1 yıllık CV (36) ve profesyonel GenAI deneyimi isteyen ilana yeni mezun (17).
 
 **Açık:** Tanıtım demosu 28 → 41 artık "Düşük → Orta". TikTok videoları 3, 10 ve 14 bu demonun karelerini eski etiketlerle taşıyor; yayından önce yeniden çizilmeli. Değerlendirme seti 20 çift; eşikler yeni çiftlerle yeniden sınanmalı.
+
+## K-111 · Abonelik iptal edilemezse hesap silinmiyor
+
+**Tarih:** 30 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-166 · **Değiştirdiği:** abonelik spec'i §4.3 "Polar'a ulaşılamazsa silme durmuyor"
+
+**Bağlam:** Yerel kullanıcı testinde denemedeki hesap silindi. Polar'a ulaşılamadı, uyarı düştü, hesap yine silindi. Ekranda "Hesabın silindi" yazarken her sayfadaki bant "599 ₺ çekilecek" demeye devam etti. Üretimde aynı durumda kullanıcı silinmiş bir hesaptan ücret çekilmeye devam eder. Aboneliği elle iptal etmek için Sentry uyarısını görüp Polar panelinde bulmak gerekiyor; tek kişilik işletmede bu kaçar.
+
+**Karar:**
+- Açık aboneliklerden biri bile Polar'da iptal edilemezse hesap silinmiyor. Yanıt 502, `code: "subscription_cancel_failed"`: "Aboneliğini iptal edemedik, bu yüzden hesabın silinmedi. Birkaç dakika sonra yeniden dene; sürerse destek adresine yaz."
+- Polar'ın "zaten iptal edilmiş" (`AlreadyCanceledSubscription`) ve "bulunamadı" (`ResourceNotFound`) yanıtları iptal edilmiş sayılıyor. Yoksa bitmiş bir abonelik silmeyi sonsuza dek kilitlerdi.
+- Silme başarılı olunca istemcideki abonelik durumu önce boşaltılıyor, sonra önbellek temizleniyor. `clear()` tek başına açık ekrana haber vermiyordu; bant bu yüzden kalıyordu.
+
+**Bedeli:** Polar uzun süre ulaşılamazsa kullanıcı hesabını silemiyor. KVKK silme talebi o arada destek adresinden elle karşılanır. Ücret çekilmeye devam etmesinden iyidir.
