@@ -26,8 +26,8 @@ import { loginPath } from "@/lib/returnPath"
 import { CONTAINER } from "@/components/layout/PageShell"
 
 /**
- * Tanıtım ve yasal sayfaların üst çubuğu; (marketing) layout'unda ve kök hata
- * sayfalarında çiziliyor. Uygulama ekranları kenar çubuğu kabuğunda (DOG-144).
+ * Tanıtım sayfalarının üst çubuğu; (marketing) layout'unda, ziyaretçiye yasal
+ * sayfalarda ve kök hata sayfalarında çiziliyor. Uygulama ekranları kenar çubuğu kabuğunda (DOG-144).
  * Yapı, yükseklik ve hizalama her sayfada aynı, yalnızca içerik oturuma göre
  * değişiyor:
  *
