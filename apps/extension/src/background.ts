@@ -1,9 +1,9 @@
 import { LinkedInProfileDataSchema } from "@uyarla/core/linkedin/profileData"
 import { profileFromSnapshot, type ProfileSnapshot } from "@uyarla/core/linkedin/snapshot"
 import { issueToken, redeemToken, type TokenStore } from "./handoffToken.js"
-import { pickPosting, pickSelection, uyarlaUrl } from "./posting.js"
-import { encodeProfile, isProfileUrl, profileHandoffUrl } from "./profile.js"
-import { collectProfileSnapshot } from "./profileCollector.js"
+import { pickSelection, uyarlaUrl } from "./posting.js"
+import { readMessage } from "./messages.js"
+import { encodeProfile, profileHandoffUrl } from "./profile.js"
 
 /** Build sırasında esbuild `define` ile veriliyor (scripts/build.mjs). */
 declare const UYARLA_URL: string
@@ -83,45 +83,43 @@ function notify(message: string): void {
 
 /**
  * Kendi profil sayfası (DOG-157): görünen satırlar → profil → uyarla'nın
- * /linkedin sayfası. Başkasının profili okunmuyor ve gönderilmiyor.
+ * /linkedin sayfası. Başkasının profili okunmuyor ve gönderilmiyor. Satırlar
+ * sayfa düğmesinden ya da simge menüsünden geliyor (DOG-169).
  */
-async function sendProfile(tabId: number): Promise<void> {
-  const [result] = await chrome.scripting.executeScript({ target: { tabId }, func: collectProfileSnapshot })
-  const snapshot = result?.result as ProfileSnapshot | undefined
+async function sendProfile(snapshot: ProfileSnapshot | undefined): Promise<void> {
   if (!snapshot) return notify(PROFILE_UNREADABLE)
   if (!snapshot.own) return notify("Yalnızca kendi profilini gönderebilirsin.")
-  const parsed = LinkedInProfileDataSchema.safeParse(profileFromSnapshot(snapshot))
+  let parsed: ReturnType<typeof LinkedInProfileDataSchema.safeParse>
+  try {
+    parsed = LinkedInProfileDataSchema.safeParse(profileFromSnapshot(snapshot))
+  } catch {
+    return notify(PROFILE_UNREADABLE)
+  }
   if (!parsed.success || (!parsed.data.headline && parsed.data.experience.length === 0)) return notify(PROFILE_UNREADABLE)
   const { store, token } = issueToken(await readTokens(), Date.now())
   await chrome.storage.session.set({ [TOKENS_KEY]: store })
   await chrome.tabs.create({ url: profileHandoffUrl(UYARLA_URL, encodeProfile(parsed.data), token) })
 }
 
-/** Simge: açık sekmenin HTML'i (activeTab ile, yalnızca bu tıklamada). */
-chrome.action.onClicked.addListener(async (tab) => {
-  if (tab.id === undefined) return notFound(undefined)
-  if (tab.url && isProfileUrl(tab.url)) {
+/**
+ * Sayfa düğmesi ve simge menüsü (DOG-169). Simge artık menü açıyor; menü
+ * ve düğme ilanı ya da profili okuyup buraya gönderiyor, jeton burada.
+ * Yalnızca eklentinin kendi betiklerinden gelen mesajlar kabul ediliyor.
+ */
+chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
+  const read = readMessage(message, sender, { id: chrome.runtime.id, popupUrl: chrome.runtime.getURL("popup.html") })
+  if (!read) return false
+  void (async () => {
     try {
-      await sendProfile(tab.id)
+      if (read.type === "uyarla-ilan") await openUyarla(read.text, read.url)
+      else await sendProfile(read.snapshot)
+      sendResponse({ ok: true })
     } catch {
-      notify(PROFILE_UNREADABLE)
+      if (read.type === "uyarla-profil") notify(PROFILE_UNREADABLE)
+      sendResponse({ ok: false })
     }
-    return
-  }
-  try {
-    const [result] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: () => ({ html: document.documentElement.outerHTML, url: location.href }),
-    })
-    const page = result?.result as { html: string; url: string } | undefined
-    const text = page ? pickPosting(page) : null
-    if (!page || !text) return notFound(tab.id)
-    await chrome.action.setBadgeText({ tabId: tab.id, text: "" })
-    await openUyarla(text, page.url)
-  } catch {
-    // chrome://, Web Mağazası gibi betik çalıştırılamayan sayfalar.
-    await notFound(tab.id)
-  }
+  })()
+  return true
 })
 
 /** Sağ tık: seçili metin, her sitede. */

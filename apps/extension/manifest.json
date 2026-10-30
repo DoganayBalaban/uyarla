@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "uyarla — ilana uyumunu ölç",
   "short_name": "uyarla",
-  "version": "0.3.0",
-  "description": "İlan sayfasını ya da kendi LinkedIn profilini tek tıkla uyarla'ya gönder.",
+  "version": "0.4.0",
+  "description": "İş ilanlarında ve kendi LinkedIn profilinde tek tıkla uyarla: ilan sayfasında düğme, simgede menü.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1EU6kK0GW7kooZZnIBiari8Hu15YmiLaJNUIeKPtVcy38xJzmWUtIbO4U//CIshAxEyJ0FFzacsO1bJ7V5GFzEJ1ejrqGcm+ryhclYSL+Vq8grzUeyBhHwJRXwzEy2Z95VtdNwO+KotW6vhAuQu3bF7VCNZPsWMNXUKUgSM5Z3+yWqYLHOYALqwaONkhx2BKM0KiFtxWNCfd5oC1bNce2+/p4tNt458c4Flbv9hejeDnfbWQvSx92yNyC5QEt7ti3cHabOXHUHue1Vp1Tvmj2rdR2S1GBL9iDkWTZGPwobX5oW8LchfS+4ziGXDpaHMiiZ2x8QHTlLQhfVzXCH3+jQIDAQAB",
   "permissions": [
     "activeTab",
@@ -22,8 +22,37 @@
     "service_worker": "background.js",
     "type": "module"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://linkedin.com/*",
+        "https://*.linkedin.com/*",
+        "https://kariyer.net/*",
+        "https://*.kariyer.net/*",
+        "https://yenibiris.com/*",
+        "https://*.yenibiris.com/*",
+        "https://secretcv.com/*",
+        "https://*.secretcv.com/*",
+        "https://eleman.net/*",
+        "https://*.eleman.net/*",
+        "https://tr.indeed.com/*",
+        "https://*.tr.indeed.com/*",
+        "https://greenhouse.io/*",
+        "https://*.greenhouse.io/*",
+        "https://lever.co/*",
+        "https://*.lever.co/*",
+        "https://myworkdayjobs.com/*",
+        "https://*.myworkdayjobs.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
   "action": {
-    "default_title": "uyarla'ya gönder",
+    "default_title": "uyarla",
+    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/16.png",
       "32": "icons/32.png",

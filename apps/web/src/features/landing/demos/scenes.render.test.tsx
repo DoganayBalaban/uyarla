@@ -82,7 +82,9 @@ describe("scenes (DOG-160)", () => {
 
   it("extension film sends the posting from its page and ends on the score (DOG-163)", () => {
     const point = renderToStaticMarkup(<ExtensionFilm ms={1500 + 1200} />)
-    expect(point).toContain("uyarla&#x27;ya gönder")
+    // DOG-169: düğme ilanın kendi "Başvur"unun yanında.
+    expect(point).toContain("CV&#x27;mi bu ilana uyarla")
+    expect(point).toContain("Başvur")
     expect(point).toContain("Kuzey Yazılım")
     const last = renderToStaticMarkup(<ExtensionFilm ms={loopMs(EXT_PHASES) - 1} />)
     expect(last).toContain("Elif_Yilmaz_CV.pdf")

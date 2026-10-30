@@ -92,6 +92,14 @@ export interface ExtractedPosting {
   position: string | null
   company: string | null
   source: "json-ld" | "sayfa"
+  /**
+   * Sayfa açıkça bir ilan mı (DOG-169): JSON-LD JobPosting, LinkedIn
+   * açıklama kutusu ya da sitenin ilan başlığı ("İş ilanı hakkında") bulundu.
+   * Yalnızca ana metinden okunduysa false: simgeye basan kullanıcı için
+   * yeterli, ama eklentinin kendiliğinden çıkan düğmesi buna bakıyor; yoksa
+   * LinkedIn akışı gibi her uzun sayfa ilan sayılırdı.
+   */
+  marked: boolean
 }
 
 /** JSON-LD içinde JobPosting arar; @graph ve dizi biçimlerini de dolaşır. */
@@ -139,6 +147,7 @@ function jsonLdPosting(html: string): ExtractedPosting | null {
       position,
       company,
       source: "json-ld",
+      marked: true,
     }
   }
   return null
@@ -188,7 +197,7 @@ function linkedinPosting(html: string): ExtractedPosting | null {
   const position = clean(html.match(/class="[^"]*\btopcard__title\b[^"]*"[^>]*>([^<]*)</i)?.[1])
   const company = clean(html.match(/class="[^"]*\btopcard__org-name-link\b[^"]*"[^>]*>([^<]*)</i)?.[1])
   const heading = [position, company].filter(Boolean).join(" — ")
-  return { text: heading ? `${heading}\n\n${description}` : description, position, company, source: "sayfa" }
+  return { text: heading ? `${heading}\n\n${description}` : description, position, company, source: "sayfa", marked: true }
 }
 
 const SITE_RULES: SiteRule[] = [
@@ -240,22 +249,27 @@ function findRule(host: string | undefined): SiteRule | undefined {
   return SITE_RULES.find((k) => host === k.domain || host.endsWith(`.${k.domain}`))
 }
 
-/** Metni site kuralının başlangıç ve bitiş işaretleri arasına kırpar. */
-function truncate(text: string, rule: SiteRule | undefined): string {
+/** Metni site kuralının başlangıç ve bitiş işaretleri arasına kırpar; ilan başlığı bulunduysa `started`. */
+function truncate(text: string, rule: SiteRule | undefined): { text: string; started: boolean } {
   let rows = text.split("\n")
+  let started = false
   if (rule?.startedAt) {
     const startedAt = rule.startedAt
     const head = rows.findIndex((s) => startedAt.test(s.trim()))
-    if (head !== -1) rows = rows.slice(head + 1)
+    if (head !== -1) {
+      rows = rows.slice(head + 1)
+      started = true
+    }
   }
   const endings = [...(rule?.ending ?? []), ...COMMON_ENDINGS]
   const endIndex = rows.findIndex((s) => endings.some((b) => b.test(s.trim())))
   if (endIndex !== -1) rows = rows.slice(0, endIndex)
   const drop = rule?.dropLines ?? []
-  return rows
+  const kept = rows
     .filter((s) => !drop.some((d) => d.test(s.trim())))
     .join("\n")
     .trim()
+  return { text: kept, started }
 }
 
 /**
@@ -280,7 +294,7 @@ export function extractPostingText(html: string, host?: string): ExtractedPostin
     html.match(/<body\b[\s\S]*?<\/body>/i)?.[0] ??
     html
   const clean = body.replace(/<(nav|header|footer|aside|form)\b[\s\S]*?<\/\1>/gi, " ")
-  const bodyText = truncate(htmlToText(clean), rule)
+  const { text: bodyText, started } = truncate(htmlToText(clean), rule)
   if (bodyText.length < 200) return configured && configured.text.length >= 100 ? configured : null
 
   const rawTitle = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]
@@ -294,5 +308,6 @@ export function extractPostingText(html: string, host?: string): ExtractedPostin
     position,
     company,
     source: "sayfa",
+    marked: started,
   }
 }
