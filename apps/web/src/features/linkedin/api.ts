@@ -21,6 +21,15 @@ export async function startAudit(body: AuditRequest): Promise<{ auditId: string 
   return (await api.post<{ auditId: string }>("/linkedin/audits", body)).data
 }
 
+/** Denetim sayfasından doğrudan LinkedIn PDF'i (DOG-166); CV kütüphanesine girmiyor. */
+export async function startAuditUpload(file: File, body: { targetRole: string | null; analysisIds: string[] }): Promise<{ auditId: string }> {
+  const form = new FormData()
+  form.append("file", file)
+  if (body.targetRole) form.append("targetRole", body.targetRole)
+  form.append("analysisIds", JSON.stringify(body.analysisIds))
+  return (await api.post<{ auditId: string }>("/linkedin/audits", form)).data
+}
+
 export async function retryAudit(id: string): Promise<void> {
   await api.patch("/linkedin/audits", { id, action: "retry" })
 }

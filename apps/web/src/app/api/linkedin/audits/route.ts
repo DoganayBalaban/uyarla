@@ -1,3 +1,4 @@
+import { fileStoreFromEnv } from "@uyarla/core/storage/fileStore"
 import { prisma } from "@uyarla/db"
 import type { LinkedInAuditReport } from "@uyarla/core/linkedin/audit"
 import type { LinkedInProfileData } from "@uyarla/core/linkedin/profileData"
@@ -5,7 +6,7 @@ import { hasFailedRewrites, type LinkedInRewrites } from "@uyarla/core/linkedin/
 import { ADAPT_JOB_OPTIONS, LINKEDIN_AUDIT_JOB } from "@uyarla/worker/adapt-queue"
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { MAX_AUDIT_BODY_BYTES, MAX_RETRIES, auditRequestSchema, lockRewrites, presentedStatus, type AuditResponse, type AuditView } from "@/features/linkedin/audit"
+import { MAX_AUDIT_BODY_BYTES, MAX_RETRIES, auditRequestSchema, lockRewrites, parseAuditUpload, presentedStatus, type AuditResponse, type AuditView } from "@/features/linkedin/audit"
 import { firstIssue } from "@/lib/validation"
 import { adaptQueue } from "@/server/adaptQueue"
 import { isAdmin } from "@/server/admin"
@@ -13,6 +14,8 @@ import { authErrorResponse, ensureRegistered, getSession } from "@/server/authz"
 import { AuditBusyError, createAudit } from "@/server/linkedinAudit"
 import { userHasAccess } from "@/server/billing/entitlement"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
+import { createResume } from "@/server/resumeLibrary"
+import { storeUploadedResume } from "@/server/storeUpload"
 
 export const runtime = "nodejs"
 
@@ -70,25 +73,18 @@ export async function GET() {
   }
 }
 
-/** Yeni tarama (spec §4.1). */
+/**
+ * Yeni tarama (spec §4.1). JSON: eklentiden profil ya da kayıtlı bir CV.
+ * Form: denetim sayfasından doğrudan LinkedIn PDF'i (DOG-166); dosya CV
+ * kütüphanesine girmiyor.
+ */
 export async function POST(request: Request) {
   try {
     const { user } = ensureRegistered(await getSession())
-    const raw = await request.text()
-    if (Buffer.byteLength(raw, "utf8") > MAX_AUDIT_BODY_BYTES) {
-      return NextResponse.json({ error: "Profil verisi çok büyük. PDF ile dener misin?", code: "too_large" }, { status: 400 })
-    }
-    let json: unknown
-    try {
-      json = JSON.parse(raw)
-    } catch {
-      return NextResponse.json({ error: "Profil okunamadı. PDF ile dener misin?", code: "invalid" }, { status: 400 })
-    }
-    const parsed = auditRequestSchema.safeParse(json)
-    if (!parsed.success) return NextResponse.json({ error: firstIssue(parsed.error).message, code: "invalid" }, { status: 400 })
-    const input = parsed.data
+    const input = await readAuditRequest(request)
+    if (input instanceof NextResponse) return input
 
-    if (input.source === "pdf") {
+    if (input.source === "pdf" && input.resumeId) {
       const owned = await prisma.resume.count({ where: { id: input.resumeId, userId: user.id } })
       if (!owned) return NextResponse.json({ error: "CV bulunamadı." }, { status: 404 })
     }
@@ -99,13 +95,23 @@ export async function POST(request: Request) {
 
     await enforceRateLimit(redisStore, `linkedin-audit:${user.id}`, RATE_LIMITS.registered)
 
+    let resumeId = input.source === "pdf" ? input.resumeId : null
+    if (input.source === "pdf" && input.upload) {
+      const upload = input.upload
+      resumeId = (
+        await storeUploadedResume(fileStoreFromEnv(), Buffer.from(await upload.arrayBuffer()), upload.name, (filePath) =>
+          createResume(prisma, { userId: user.id, filePath, fileName: upload.name, label: "LinkedIn profili", saveToLibrary: false }),
+        )
+      ).resumeId
+    }
+
     // Günlük hak yalnızca kayıt açılınca düşüyor: süren taramaya çarpan istek (409) hak yemiyor.
     const audit = await createAudit(
       prisma,
       user.id,
       {
         source: input.source,
-        resumeId: input.source === "pdf" ? input.resumeId : null,
+        resumeId,
         profile: input.source === "extension" ? input.profile : null,
         targetRole: input.targetRole,
         analysisIds: input.analysisIds,
@@ -119,6 +125,40 @@ export async function POST(request: Request) {
     if (error instanceof AuditBusyError) return NextResponse.json({ error: error.message, auditId: error.auditId }, { status: 409 })
     return failure(error, "POST")
   }
+}
+
+type ReadRequest =
+  | { source: "extension"; profile: LinkedInProfileData; targetRole: string | null; analysisIds: string[] }
+  | { source: "pdf"; resumeId: string | null; upload: File | null; targetRole: string | null; analysisIds: string[] }
+
+/** İsteği okur; geçersizse kullanıcıya gidecek 400 yanıtı. */
+async function readAuditRequest(request: Request): Promise<ReadRequest | NextResponse> {
+  if (request.headers.get("content-type")?.startsWith("multipart/form-data")) {
+    let form: FormData
+    try {
+      form = await request.formData()
+    } catch {
+      return NextResponse.json({ error: "Dosya okunamadı. Tekrar dener misin?", code: "invalid" }, { status: 400 })
+    }
+    const parsed = parseAuditUpload(form)
+    if (!parsed.success) return NextResponse.json({ error: firstIssue(parsed.error).message, code: "invalid" }, { status: 400 })
+    return { source: "pdf", resumeId: null, upload: form.get("file") as File, targetRole: parsed.data.targetRole, analysisIds: parsed.data.analysisIds }
+  }
+
+  const raw = await request.text()
+  if (Buffer.byteLength(raw, "utf8") > MAX_AUDIT_BODY_BYTES) {
+    return NextResponse.json({ error: "Profil verisi çok büyük. PDF ile dener misin?", code: "too_large" }, { status: 400 })
+  }
+  let json: unknown
+  try {
+    json = JSON.parse(raw)
+  } catch {
+    return NextResponse.json({ error: "Profil okunamadı. PDF ile dener misin?", code: "invalid" }, { status: 400 })
+  }
+  const parsed = auditRequestSchema.safeParse(json)
+  if (!parsed.success) return NextResponse.json({ error: firstIssue(parsed.error).message, code: "invalid" }, { status: 400 })
+  const input = parsed.data
+  return input.source === "pdf" ? { ...input, upload: null } : input
 }
 
 /** Düşen yazımları yeniden dene (spec §6); günlük haktan düşmüyor, tarama başına 3 kez. */

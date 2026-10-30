@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { LinkedInRewrites } from "@uyarla/core/linkedin/rewrite"
-import { auditRequestSchema, isStuck, lockRewrites, presentedStatus } from "@/features/linkedin/audit"
+import { auditRequestSchema, isStuck, lockRewrites, parseAuditUpload, presentedStatus } from "@/features/linkedin/audit"
 
 const ok = { status: "ok" as const, issues: [] }
 const rewrites: LinkedInRewrites = {
@@ -39,6 +39,33 @@ describe("auditRequestSchema", () => {
   it("rejects more than three postings and a broken profile", () => {
     expect(auditRequestSchema.safeParse({ source: "pdf", resumeId: "r1", targetRole: null, analysisIds: ["a", "b", "c", "d"] }).success).toBe(false)
     expect(auditRequestSchema.safeParse({ source: "extension", profile: { headline: 5 }, targetRole: null, analysisIds: [] }).success).toBe(false)
+  })
+})
+
+describe("parseAuditUpload (DOG-166)", () => {
+  // LinkedIn PDF'i doğrudan denetim sayfasından; CV kütüphanesine girip "Temel CV" olmuyor.
+  const form = (fields: Record<string, string | File>) => {
+    const f = new FormData()
+    for (const [k, v] of Object.entries(fields)) f.append(k, v)
+    return f
+  }
+  const pdf = new File(["%PDF-1.4"], "Profile.pdf", { type: "application/pdf" })
+
+  it("reads the PDF, the target role and the chosen postings", () => {
+    const parsed = parseAuditUpload(form({ file: pdf, targetRole: "Pazarlama Uzmanı", analysisIds: JSON.stringify(["a1"]) }))
+    expect(parsed.success && { role: parsed.data.targetRole, ids: parsed.data.analysisIds, name: parsed.data.file.name }).toEqual({ role: "Pazarlama Uzmanı", ids: ["a1"], name: "Profile.pdf" })
+  })
+
+  it("treats a missing role and postings as none", () => {
+    const parsed = parseAuditUpload(form({ file: pdf }))
+    expect(parsed.success && [parsed.data.targetRole, parsed.data.analysisIds]).toEqual([null, []])
+  })
+
+  it("accepts only a PDF, because LinkedIn exports the profile as PDF", () => {
+    const docx = new File(["x"], "cv.docx")
+    expect(parseAuditUpload(form({ file: docx })).success).toBe(false)
+    expect(parseAuditUpload(form({})).success).toBe(false)
+    expect(parseAuditUpload(form({ file: pdf, analysisIds: JSON.stringify(["a", "b", "c", "d"]) })).success).toBe(false)
   })
 })
 

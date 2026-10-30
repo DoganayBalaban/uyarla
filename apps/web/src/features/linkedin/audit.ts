@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { resumeFileSchema } from "@/features/analysis/schema"
 import { LinkedInProfileDataSchema, type LinkedInProfileData } from "@uyarla/core/linkedin/profileData"
 import type { AuditSectionId, AuditSectionStatus, LinkedInAuditReport } from "@uyarla/core/linkedin/audit"
 import type { LinkedInRewrites } from "@uyarla/core/linkedin/rewrite"
@@ -22,6 +23,34 @@ export const auditRequestSchema = z.discriminatedUnion("source", [
   z.object({ source: z.literal("pdf"), resumeId: z.string().min(1), ...common }),
 ])
 export type AuditRequest = z.input<typeof auditRequestSchema>
+
+/**
+ * LinkedIn PDF'i doğrudan denetim sayfasından (DOG-166). Önce CV'lerim'e
+ * yüklemek gerekiyordu: profil "CV" diye kaydediliyor, ilk dosyaysa "Temel
+ * CV" oluyor ve yeni analizde CV yerine seçili geliyordu. Yüklenen PDF
+ * kütüphaneye girmiyor. LinkedIn profili yalnızca PDF olarak indiriyor.
+ */
+const auditUploadSchema = z.object({
+  // Dosya yoksa ya da bozuksa üstteki kural zaten hata veriyor.
+  file: resumeFileSchema.refine((f) => typeof f?.name !== "string" || f.name.toLowerCase().endsWith(".pdf"), "LinkedIn'den indirdiğin PDF'i seçer misin?"),
+  ...common,
+})
+
+export function parseAuditUpload(form: FormData) {
+  const role = form.get("targetRole")
+  let analysisIds: unknown = []
+  try {
+    const raw = form.get("analysisIds")
+    if (typeof raw === "string" && raw) analysisIds = JSON.parse(raw)
+  } catch {
+    analysisIds = null
+  }
+  return auditUploadSchema.safeParse({
+    file: form.get("file") ?? undefined,
+    targetRole: typeof role === "string" && role.trim() ? role : null,
+    analysisIds,
+  })
+}
 
 /** Worker kayda son dokunuşundan (updatedAt) bu yana 10 dakika geçtiyse tarama takılmış. */
 export function isStuck(since: Date, now: Date): boolean {
