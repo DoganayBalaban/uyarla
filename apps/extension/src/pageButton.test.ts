@@ -60,6 +60,20 @@ describe("placement inside LinkedIn's apply pill (DOG-169)", () => {
     expect(host.nextElementSibling?.id).toBe("kaydet")
   })
 
+  it("climbs out of a grid wrapper that also holds hidden text (kurucunun LinkedIn ölçümü)", () => {
+    // Gerçek sayfa (30 Ekim): a "Başvur" → div grid ("Başvur" + görünmeyen metin) → div flex "Başvur Kaydedildi".
+    // Düğme grid'in içinde "Başvur"la aynı hücreye düşüp altında kalıyordu.
+    const d = doc(`<div class="row"><div class="grid"><a href="/apply"><span>Başvur</span></a><div class="gizli">Şirket sitesinde açılır</div></div><button id="kaydet">Kaydedildi</button></div>`)
+    const proto = d.defaultView!.Element.prototype as unknown as { checkVisibility: (this: Element) => boolean }
+    proto.checkVisibility = function () {
+      return !this.closest(".gizli")
+    }
+    const host = placeButton(d, { label: "CV'mi bu ilana uyarla", onClick: () => {}, anchor: findApplyAnchor(d) })
+    expect(host.parentElement?.className).toBe("row")
+    expect(host.previousElementSibling?.className).toBe("grid")
+    expect(host.nextElementSibling?.id).toBe("kaydet")
+  })
+
   it("moves to the corner when it would land on top of the apply button", () => {
     const d = doc(`<div class="row"><button id="basvur">Başvur</button><span>Kaydet</span></div>`)
     const view = d.defaultView!
