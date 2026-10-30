@@ -165,8 +165,9 @@ export const EXT_PHASES = [
 export type ExtPhase = (typeof EXT_PHASES)[number]["id"]
 
 /**
- * Eklenti sahnesi (DOG-163): ilan sayfasında uyarla simgesine basılıyor,
- * uyarla ilan metni dolu açılıyor; varsayılan CV'si olan kullanıcıda analiz
+ * Eklenti sahnesi (DOG-163; 0.4.0, DOG-169): ilan sayfasında başvuru
+ * düğmesinin yanındaki uyarla düğmesine basılıyor, uyarla ilan metni dolu
+ * açılıyor; varsayılan CV'si olan kullanıcıda analiz
  * kendiliğinden başlıyor. Skor mevcut demo senaryosundan (28).
  */
 export const EXT_SCENE = {

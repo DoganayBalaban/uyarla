@@ -23,6 +23,7 @@ describe("extractPostingText", () => {
     const html = `<html><head><script type="application/ld+json">${JSON.stringify(ld)}</script></head><body><nav>Menü</nav></body></html>`
     const posting = extractPostingText(html)!
     expect(posting.source).toBe("json-ld")
+    expect(posting.marked).toBe(true)
     expect(posting.position).toBe("Frontend Geliştirici")
     expect(posting.company).toBe("Acme")
     expect(posting.text.startsWith("Frontend Geliştirici — Acme\n\nFrontend ekibimize")).toBe(true)
@@ -34,6 +35,8 @@ describe("extractPostingText", () => {
     const html = `<html><head><title>Veri Analisti | Beta</title></head><body><nav>Giriş Yap Kayıt Ol</nav><main><h1>Veri Analisti</h1>${descriptionText.repeat(2)}</main><footer>© Beta</footer></body></html>`
     const posting = extractPostingText(html)!
     expect(posting.source).toBe("sayfa")
+    // Yalnızca sayfa metni: ilan olduğu kesin değil (simgeye basan kullanıcı için yeterli).
+    expect(posting.marked).toBe(false)
     expect(posting.position).toBe("Veri Analisti | Beta")
     expect(posting.text.startsWith("Veri Analisti | Beta\n\n")).toBe(true)
     expect(posting.text).not.toContain("Giriş Yap")
@@ -186,6 +189,13 @@ describe("extractPostingText · LinkedIn signed-in search view (eklenti, Ekim 20
   ]
   const page = `<html><head><title>Intelligent Automation Consultant | Coderspace | LinkedIn</title></head><body>
     <header>LinkedIn menü</header><main>${lines.map((l) => `<div>${l}</div>`).join("")}</main></body></html>`
+
+  it("says the page is clearly a posting once the posting heading is there (DOG-169)", () => {
+    // Eklentinin kendiliğinden çıkan düğmesi buna bakıyor: LinkedIn akışı gibi uzun her sayfa ilan sayılmasın.
+    expect(extractPostingText(page, "www.linkedin.com")!.marked).toBe(true)
+    const feed = `<html><body><main>${["Ana sayfa", "Ahmet bir gönderi paylaştı", "Bugün harika bir gün, ekibimizle yeni bir projeye başladık ve herkese teşekkür ederim. ".repeat(4)].map((l) => `<div>${l}</div>`).join("")}</main></body></html>`
+    expect(extractPostingText(feed, "www.linkedin.com")?.marked ?? false).toBe(false)
+  })
 
   it("keeps only the selected posting and its added requirements", () => {
     const posting = extractPostingText(page, "www.linkedin.com")

@@ -19,7 +19,7 @@ import { BoardDemo } from "@/features/landing/demos/BoardDemo"
 import { InterviewDemo } from "@/features/landing/demos/InterviewDemo"
 import { LinkedInDemo } from "@/features/landing/demos/LinkedInDemo"
 import { ExtensionDemo } from "@/features/landing/demos/ExtensionDemo"
-import { EXTENSION_ACTION_TITLE, EXTENSION_MENU_TITLE, storeHref } from "@/features/landing/extension"
+import { EXTENSION_MENU_TITLE, EXTENSION_PAGE_BUTTON, storeHref } from "@/features/landing/extension"
 import s from "@/features/landing/landing.module.css"
 
 /**
@@ -266,13 +266,13 @@ export function LandingPage({ plans = [] }: { plans?: PlanOffer[] }) {
                 <span className={s.sectionLabel}>Chrome eklentisi</span>
                 <h2 className={s.h2}>İlanı bulduğun yerde ölç.</h2>
                 <p className={s.sectionLead}>
-                  İlan sayfasındayken araç çubuğundaki uyarla simgesine bas; ilan metni uyarla&apos;da dolu açılır, varsayılan CV&apos;n
-                  varsa skorun kendiliğinden hesaplanır. Kopyala yapıştır yok.
+                  İlan açıkken başvuru düğmesinin yanındaki uyarla düğmesine bas; ilan metni uyarla&apos;da dolu açılır, varsayılan
+                  CV&apos;n varsa skorun kendiliğinden hesaplanır. Kopyala yapıştır yok.
                 </p>
                 <Ticks
                   items={[
-                    `Simge: “${EXTENSION_ACTION_TITLE}”`,
-                    `İlanı bulamazsa metni seç, sağ tıkla: “${EXTENSION_MENU_TITLE}”`,
+                    `LinkedIn, Kariyer.net ve diğer iş sitelerinde ilanın yanında: “${EXTENSION_PAGE_BUTTON}”`,
+                    `Başka sitelerde simgedeki menüden ya da seçili metinle: “${EXTENSION_MENU_TITLE}”`,
                     "Kendi LinkedIn profilini de tek tıkla denetime gönder",
                   ]}
                 />

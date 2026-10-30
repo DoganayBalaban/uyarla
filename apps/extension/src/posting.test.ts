@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { MAX_EXTENSION_TEXT, pickPosting, pickSelection, uyarlaUrl } from "./posting.js"
+import { MAX_EXTENSION_TEXT, pickPosting, pickSelection, readPosting, uyarlaUrl } from "./posting.js"
 
 const LONG = "Genel muhasebe süreçlerini yürüteceksin. ".repeat(10)
 
@@ -11,6 +11,18 @@ describe("pickPosting", () => {
 
   it("returns null for a page without a posting", () => {
     expect(pickPosting({ html: "<html><body><p>Giriş yap</p></body></html>", url: "https://x.com" })).toBeNull()
+  })
+})
+
+describe("readPosting (DOG-169)", () => {
+  it("gives the title and company, and can insist the page is clearly a posting", () => {
+    const ld = { "@context": "https://schema.org", "@type": "JobPosting", title: "Muhasebe Uzmanı", hiringOrganization: { name: "Acme" }, description: `<p>${LONG}</p>` }
+    const html = `<html><head><script type="application/ld+json">${JSON.stringify(ld)}</script></head><body></body></html>`
+    expect(readPosting({ html, url: "https://www.kariyer.net/is-ilani/x" }, { marked: true })).toMatchObject({ position: "Muhasebe Uzmanı", company: "Acme" })
+    // Yalnızca sayfa metni: simgeye basınca yeter, kendiliğinden çıkan düğme için değil.
+    const plain = `<html><body><main><p>${LONG}</p></main></body></html>`
+    expect(readPosting({ html: plain, url: "https://www.linkedin.com/feed/" })).not.toBeNull()
+    expect(readPosting({ html: plain, url: "https://www.linkedin.com/feed/" }, { marked: true })).toBeNull()
   })
 })
 
