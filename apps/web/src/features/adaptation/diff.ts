@@ -56,3 +56,12 @@ export function diffWords(original: string, rewritten: string): DiffPart[] {
 
   return parts
 }
+
+/**
+ * Karara göre gösterilecek parçalar (DOG-166): "Eski hâli" seçiliyse belgeye
+ * eski metin giriyor; kartta da yalnızca o. Karar bekliyorken ya da yeni hâl
+ * seçiliyken fark.
+ */
+export function decisionParts(decision: string, original: string, rewritten: string): DiffPart[] {
+  return decision === "rejected" ? [{ kind: "same", text: original }] : diffWords(original, rewritten)
+}

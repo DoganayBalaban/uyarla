@@ -367,7 +367,7 @@ export function AdaptationView({ id }: { id: string }) {
             </CardHeader>
             <CardContent>
               <VerificationWarning v={draft.summary.verification} />
-              <DiffText original={draft.summary.original} rewritten={draft.summary.rewritten} />
+              <DiffText original={draft.summary.original} rewritten={draft.summary.rewritten} decision={draft.summary.decision} />
               <EditText
                 text={draft.summary.rewritten}
                 edited={draft.summary.edited}
@@ -423,7 +423,7 @@ export function AdaptationView({ id }: { id: string }) {
                         <DecisionToggle val={bullet.decision} busy={busy} onSelect={(d) => void decisionValue(bullet.id, d)} />
                       </div>
                       <VerificationWarning v={bullet.verification} />
-                      <DiffText original={bullet.original} rewritten={bullet.rewritten} />
+                      <DiffText original={bullet.original} rewritten={bullet.rewritten} decision={bullet.decision} />
                       <EditText
                         text={bullet.rewritten}
                         edited={bullet.edited}
