@@ -50,15 +50,20 @@ export function findApplyAnchor(doc: Document): Element | null {
 }
 
 /**
- * Düğmenin görünür kabı: aynı metni taşıyan en dıştaki ata. LinkedIn'de
- * "Başvur" bağlantısı, taşanı kesen bir hap kabın içinde; düğme bağlantının
- * yanına girince kabın içinde kalıp "Başvur"un altına gizleniyordu (DOG-169).
+ * Düğmenin görünür kabı: başvuru düğmesini tek görünür çocuk olarak taşıyan
+ * en dıştaki ata (DOG-169). LinkedIn'de "Başvur" bağlantısı önce kesen bir
+ * hap kabın, sonra görünmeyen bir ipucu metni de taşıyan bir grid'in içinde.
+ * Düğme bunların içine girince "Başvur"la aynı hücreye düşüp altında
+ * kalıyordu. Tırmanma "Başvur" ile "Kaydet"in bulunduğu satırda duruyor.
  */
 function outerControl(el: Element): Element {
-  const text = clean(el.textContent)
+  const visibleChildren = (parent: Element) =>
+    Array.from(parent.children).filter((c) => c.tagName.toLowerCase() !== BUTTON_TAG && shows(c) && !isHidden(c))
   let current = el
-  while (current.parentElement && current.parentElement !== current.ownerDocument.body && clean(current.parentElement.textContent) === text) {
-    current = current.parentElement
+  for (let parent = current.parentElement; parent && parent !== current.ownerDocument.body; parent = current.parentElement) {
+    const kids = visibleChildren(parent)
+    if (kids.length !== 1 || kids[0] !== current) break
+    current = parent
   }
   return current
 }
