@@ -99,9 +99,15 @@ export function ApplicationDetail({ analysisId }: { analysisId: string }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {badge && card.score !== null && (
-            <span className={cn("rounded-full px-2.5 py-1 text-sm font-semibold", badge.cls)} title="ATS uyum skoru">
+            <span
+              className={cn("rounded-full px-2.5 py-1 text-sm font-semibold", badge.cls)}
+              title={card.scoreBefore != null ? "Uyarlanmış CV'nin ATS uyum skoru" : "ATS uyum skoru"}
+            >
               {card.score} · {badge.text}
             </span>
+          )}
+          {card.scoreBefore != null && (
+            <span className="text-xs text-muted-foreground">uyarlamadan önce {card.scoreBefore}</span>
           )}
           <StageSelect value={card.stage} onChange={(stage) => update({ stage })} size="default" />
         </div>

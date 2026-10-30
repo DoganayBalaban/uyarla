@@ -5,6 +5,7 @@
  */
 
 import { readFollowUps, type FollowUpRecord } from "@uyarla/core/cover/followUpRecord"
+import { withAdaptation } from "@uyarla/core/score/adapted"
 import { scoreStatus } from "@/lib/scoreStatus"
 import { isSamplePosting } from "@/features/analysis/samplePostings"
 import { readiness } from "@/features/analysis/readiness"
@@ -21,7 +22,10 @@ export interface BoardCard {
   position: string
   /** İlan çıkarımının bulduğu şirket; eski kayıtlarda ve şirket yazmayan ilanlarda null. */
   company: string | null
+  /** Uyarlama varsa uyarlanmış CV'nin skoru (DOG-166), yoksa analizinki. */
   score: number | null
+  /** Uyarlanmış skor gösteriliyorsa analizin skoru ("58 → 75"); yoksa null. */
+  scoreBefore?: number | null
   /** Skorun formül sürümü (DOG-165); etiket o sürümün eşiğiyle. Sürümü olmayan sonuç 1. */
   scoringRevision?: number
   stage: Stage
@@ -35,7 +39,7 @@ export interface BoardCard {
   followUps: FollowUpRecord[]
   createdAt: string
   adaptation: { id: string; status: string } | null
-  /** Başvuruya hazır mı (DOG-91), uyarlamadan önceki analize göre; eski kayıtlarda null. */
+  /** Başvuruya hazır mı (DOG-91); uyarlama varsa uyarlanmış CV'ye göre (DOG-166). Eski kayıtlarda null. */
   readiness: { ready: boolean; missingMust: number; titleMissing: boolean } | null
   /** Mülakat hazırlık paketinin durumu (DOG-152); paket yoksa null. */
   prep?: PrepStatus | null
@@ -101,12 +105,19 @@ export function positionName(position: string, rawText: string): string {
 }
 
 export function toBoardCard(s: BoardRow): BoardCard {
+  // Uyarlanmış CV gönderilen CV: skor ve eksikler ondan (DOG-166). Düşen
+  // ya da süren uyarlamada analiz geçerli.
+  const usable = s.adaptation?.status === "draft" || s.adaptation?.status === "ready"
+  const adapted = usable ? withAdaptation((s.result ?? null) as Parameters<typeof withAdaptation>[0]) : null
+  const analysisScore = s.score === null ? null : Math.round(s.score)
+  const adaptedScore = adapted?.adaptedScore ?? null
   return {
     analysisId: s.id,
     position: positionName(s.jobPosting.position, s.jobPosting.rawText),
     // Örnek ilanın şirketi yok; kart gerçek başvuruyla karışmasın (DOG-101).
     company: s.jobPosting.company?.trim() || (isSamplePosting(s.jobPosting.rawText) ? "Örnek ilan" : null),
-    score: s.score === null ? null : Math.round(s.score),
+    score: adaptedScore !== null ? Math.round(adaptedScore) : analysisScore,
+    scoreBefore: adaptedScore !== null ? analysisScore : null,
     scoringRevision: (s.result as { scoringRevision?: number } | null | undefined)?.scoringRevision ?? 1,
     stage: isStage(s.stage) ? s.stage : "saved",
     stageChangedAt: s.stageChangedAt?.toISOString() ?? null,
@@ -116,7 +127,7 @@ export function toBoardCard(s: BoardRow): BoardCard {
     followUps: readFollowUps(s.followUps),
     createdAt: s.createdAt.toISOString(),
     adaptation: s.adaptation ? { id: s.adaptation.id, status: s.adaptation.status } : null,
-    readiness: cardReadiness(s.result),
+    readiness: cardReadiness(adaptedScore !== null ? adapted : s.result),
     prep: prepStatus(s.interviewPrep),
   }
 }

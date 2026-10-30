@@ -144,7 +144,10 @@ export async function PATCH(
   return NextResponse.json({
     status,
     draft: fresh,
-    scoreAfter: await computeScoreAfter(payload.profile, payload.scoringPosting, fresh, payload.excluded),
+    scoreAfter: await computeScoreAfter(payload.profile, payload.scoringPosting, fresh, payload.excluded, {
+      analysisId: payload.adaptation.analysisId,
+      result: payload.adaptation.analysis.result,
+    }),
     // Belge görünümü kararla birlikte güncelleniyor (DOG-93).
     document: adaptationDocument(payload.profile, fresh, payload.documentOptions),
     // Tek sayfa planının sonucu; yalnızca strateji seçildiğinde.

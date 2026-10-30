@@ -56,6 +56,21 @@ describe("board", () => {
     expect(shouldAskBeforeApplying(toBoardCard(row()), "applied")).toBe(false)
   })
 
+  it("shows the adapted CV's score and gaps once there is an adaptation (DOG-166)", () => {
+    // Kullanıcı testi: uyarlanmış CV 75 iken pano 58 ve "2 zorunlu eksik" gösteriyordu.
+    const must = (text: string) => ({ requirement: { text, importance: "must", type: "skill" }, status: "missing" })
+    const result = {
+      scoringRevision: 3,
+      requirements: [must("A"), must("B")],
+      adapted: { score: 75, statuses: ["matched", "matched"], titleLevel: null },
+    }
+    const adapted = toBoardCard(row({ score: 58, result, adaptation: { id: "ad", status: "ready" } }))
+    expect([adapted.score, adapted.scoreBefore, adapted.readiness?.missingMust]).toEqual([75, 58, 0])
+    // Uyarlama düştüyse ya da yoksa analiz geçerli.
+    const failed = toBoardCard(row({ score: 58, result, adaptation: { id: "ad", status: "failed" } }))
+    expect([failed.score, failed.scoreBefore, failed.readiness?.missingMust]).toEqual([58, null, 2])
+  })
+
   it("marks a card made from a sample posting (DOG-101)", () => {
     const rawText = SAMPLE_POSTINGS[1]!.text
     expect(toBoardCard(row({ jobPosting: { position: "Dijital Pazarlama Uzmanı", company: null, rawText, deadline: null } })).company).toBe("Örnek ilan")

@@ -5,7 +5,7 @@ import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import { collectEvidence } from "../score/evidence.js"
 import { DEFAULT_SCORING_CONFIG } from "../score/config.js"
-import { conceptTexts, score, weightedScore } from "../score/score.js"
+import { conceptTexts, score, weightedScore, type ScoreResult } from "../score/score.js"
 import { applyAdaptation } from "./profile.js"
 
 /**
@@ -30,6 +30,17 @@ export async function rescore(
   },
   embedding: EmbeddingProvider,
 ): Promise<number> {
+  return (await rescoreOutcome(input, embedding)).score
+}
+
+/**
+ * Yeniden skorlamanın tamamı: skor ve uyarlanmış CV'de her gereksinimin
+ * durumu (DOG-166). Pano ve mülakat paketi "zorunlu eksik"i bundan okuyor.
+ */
+export async function rescoreOutcome(
+  input: Parameters<typeof rescore>[0],
+  embedding: EmbeddingProvider,
+): Promise<ScoreResult> {
   const adapted = applyAdaptation(input.profile, input.draft)
   const evidenceList = collectEvidence(adapted)
   const evidenceTexts = evidenceList.map((k) => k.text)
@@ -45,8 +56,8 @@ export async function rescore(
     evidenceVectors: vecs.slice(0, evidenceTexts.length),
     conceptVectors: vecs.slice(evidenceTexts.length),
   })
-  if (!input.excluded?.length) return outcome.score
-  return weightedScore(outcome.requirements, DEFAULT_SCORING_CONFIG, input.excluded, outcome.titleMatch ?? null)
+  if (!input.excluded?.length) return outcome
+  return { ...outcome, score: weightedScore(outcome.requirements, DEFAULT_SCORING_CONFIG, input.excluded, outcome.titleMatch ?? null) }
 }
 
 /**
