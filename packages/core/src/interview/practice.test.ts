@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import type { LlmProvider } from "../llm/types.js"
 import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
@@ -38,6 +38,21 @@ describe("reviewAnswer (DOG-97)", () => {
     expect(data.star).toEqual({ situation: true, task: false, action: true, result: true })
     expect(data.length).toBe("short")
     expect(data.offPaper).toEqual(['Cevabında "8" sayısı geçiyor ama CV\'nde yok; sorulursa kanıtlayabilmelisin.'])
+  })
+
+  it("lists a quantity written in words that the CV does not have (DOG-166)", () => {
+    expect(offPaperClaims("Satışları iki katına çıkardım.", "CV\nSatışları artırdım.", POSTING)).toEqual([
+      'Cevabında "iki katına" geçiyor ama CV\'nde yok; sorulursa kanıtlayabilmelisin.',
+    ])
+  })
+
+  it("tells the model which claims are off paper so it does not praise them", async () => {
+    // Kullanıcı testi: geri bildirim CV'de olmayan "iki katına"yı ölçülebilir sonuç diye övdü.
+    const extract = vi.fn(llm.extract)
+    await reviewAnswer({ extract: extract as LlmProvider["extract"] }, { question: "Başarın?", answer: "Satışları iki katına çıkardım.", profile: PROFILE, posting: POSTING })
+    const call = extract.mock.calls[0]![0]
+    expect(call.input).toContain('"iki katına"')
+    expect(call.prompt).toMatch(/CV'DE OLMAYAN/)
   })
 
   it("does not list a negated posting term as off-paper", () => {

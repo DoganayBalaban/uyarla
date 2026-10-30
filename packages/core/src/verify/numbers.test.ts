@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { checkNumbers } from "./numbers.js"
+import { checkNumbers, checkWordQuantities } from "./numbers.js"
 
 describe("checkNumbers", () => {
   it("produces no warning when a source number is kept", () => {
@@ -59,5 +59,33 @@ describe("checkNumbers", () => {
     const warning = checkNumbers("%60 düşürdüm", "%40 düşürdüm")[0]!
     expect(warning.detail).toMatch(/[çğıöşüÇĞİÖŞÜ]/)
     expect(warning.detail).not.toMatch(/error|mismatch|invalid/i)
+  })
+})
+
+describe("checkWordQuantities", () => {
+  it("catches a quantity written in words that the source does not have", () => {
+    // Kullanıcı testi (DOG-166): "iki katına çıkardım" CV'de yoktu, pratik geri bildirimi bunu övdü.
+    const warnings = checkWordQuantities("Satışları iki katına çıkardım.", "Satışları artırdım.")
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]!.detail).toContain("iki katına")
+  })
+
+  it("reads multipliers, halves and percentages in words", () => {
+    const source = "Raporlama yaptım."
+    for (const text of ["Maliyeti yarıya indirdim.", "Geliri ikiye katladım.", "Hatayı yüzde elli azalttım.", "Trafiği üç kat artırdım."]) {
+      expect(checkWordQuantities(text, source), text).toHaveLength(1)
+    }
+  })
+
+  it("accepts the same quantity written in digits or words in the source", () => {
+    expect(checkWordQuantities("Satışları iki katına çıkardım.", "Satışları 2 katına çıkardım.")).toEqual([])
+    expect(checkWordQuantities("Hatayı yüzde elli azalttım.", "Hataları %50 azalttım.")).toEqual([])
+    expect(checkWordQuantities("Maliyeti yarıya indirdim.", "Maliyeti yarı yarıya düşürdüm.")).toEqual([])
+    expect(checkWordQuantities("Geliri ikiye katladım.", "Geliri iki katına çıkardım.")).toEqual([])
+  })
+
+  it("leaves ordinary words alone", () => {
+    // "bir" belirsizlik sıfatı, "on" tek başına sayı değil, "yarı zamanlı" ölçü değil.
+    expect(checkWordQuantities("Bir ekipte yarı zamanlı çalıştım, on gün içinde teslim ettim.", "Ekipte çalıştım.")).toEqual([])
   })
 })
