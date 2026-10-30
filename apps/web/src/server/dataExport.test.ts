@@ -19,6 +19,7 @@ const DATA: UserDataExport = {
   emailLogs: [],
   emailConsents: [],
   linkedinAudits: [],
+  deletedUsages: [],
 }
 
 describe("data export", () => {

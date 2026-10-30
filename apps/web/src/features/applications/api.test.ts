@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { applyCardChange } from "@/features/applications/api"
+import { applyCardChange, withoutCard } from "@/features/applications/api"
 import type { BoardCard } from "@/features/applications/board"
 
 const card = (analysisId: string, extra: Partial<BoardCard> = {}) =>
@@ -22,5 +22,12 @@ describe("applyCardChange", () => {
   it("stores an emptied note as null", () => {
     const [a] = applyCardChange([card("a", { noteText: "eski" })], "a", { note: "" }, now)
     expect(a!.noteText).toBeNull()
+  })
+})
+
+describe("withoutCard (DOG-171)", () => {
+  it("drops the deleted application from the board at once", () => {
+    expect(withoutCard([card("a"), card("b")], "a").map((c) => c.analysisId)).toEqual(["b"])
+    expect(withoutCard([card("a")], "yok").map((c) => c.analysisId)).toEqual(["a"])
   })
 })

@@ -24,6 +24,9 @@ import { FOLLOW_UP_ERROR_MESSAGE, addFollowUp } from "@/server/followUps"
 import { RATE_LIMITS, enforceRateLimit, redisStore } from "@/server/rateLimit"
 import { isAdmin } from "@/server/admin"
 import { PaymentRequiredError, requireEntitlement } from "@/server/billing/entitlement"
+import { fileStoreFromEnv } from "@uyarla/core/storage/fileStore"
+import { deleteFiles } from "@/server/deleteAccount"
+import { ApplicationNotFoundError, deleteApplication } from "@/server/deleteApplication"
 
 export const runtime = "nodejs"
 
@@ -266,4 +269,28 @@ async function runningPrepPreview(analysisId: string) {
     select: { result: true, resumeVersion: { select: { profile: true } } },
   })
   return prepWaitingPreview((analysis?.resumeVersion?.profile ?? null) as ResumeProfile | null, analysis?.result ?? null)
+}
+
+/**
+ * Başvuruyu tamamen siler (DOG-171): ilan, analiz, uyarlama, notlar, takip
+ * mesajları, mülakat paketi. Harcanan ücretsiz hak geri gelmiyor. Yalnızca bu
+ * başvuru için yüklenmiş CV dosyası işlem bittikten sonra depodan siliniyor.
+ */
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  try {
+    const session = ensureRegistered(await getSession())
+    const { files } = await deleteApplication(prisma, session.user.id, id)
+    if (files.length > 0) {
+      // Dosya silinemezse başvuru yine silinmiş sayılır; kayıt gitti, dosya yetim kalır.
+      await deleteFiles(files, fileStoreFromEnv()).catch((error) => console.error("[api/applications/[id]] DELETE dosya", error))
+    }
+    return NextResponse.json({ deleted: true })
+  } catch (error) {
+    if (error instanceof ApplicationNotFoundError) return NextResponse.json({ error: error.message }, { status: 404 })
+    const reply = authErrorResponse(error)
+    if (reply) return reply
+    console.error("[api/applications/[id]] DELETE", error)
+    return NextResponse.json({ error: "Başvuruyu silemedik. Birazdan tekrar dener misin?" }, { status: 500 })
+  }
 }
