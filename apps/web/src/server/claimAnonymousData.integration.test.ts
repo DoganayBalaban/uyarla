@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest"
 import { prisma } from "@uyarla/db"
-import { claimOperations } from "@/server/claimAnonymousData"
+import { claimAnonymousData, claimOperations } from "@/server/claimAnonymousData"
 
 const toClean: string[] = []
 
@@ -79,5 +79,33 @@ describe("claim · real database", () => {
     await expect(
       prisma.$transaction(claimOperations(prisma, anonUser.id, fresh.id)),
     ).resolves.toBeDefined()
+  })
+})
+
+describe("claimAnonymousData · the analyzed CV joins the library (DOG-166)", () => {
+  it("saves the newest claimed CV as the default when the new account has none", async () => {
+    // Kullanıcı testi: kayıttan sonra CV'lerim boştu, kurulum CV'yi yeniden istedi.
+    const anonUser = await makeUser("anonim")
+    const fresh = await makeUser("yeni")
+    const older = await prisma.resume.create({ data: { userId: anonUser.id, filePath: "/tmp/eski.pdf", rawText: "", createdAt: new Date("2026-10-01") } })
+    const { resume: newest } = await makeJob(anonUser.id)
+
+    await claimAnonymousData(prisma, anonUser.id, fresh.id)
+
+    const saved = await prisma.resume.findMany({ where: { userId: fresh.id, savedAt: { not: null } } })
+    expect(saved.map((r) => [r.id, r.isDefault])).toEqual([[newest.id, true]])
+    expect((await prisma.resume.findUnique({ where: { id: older.id } }))!.userId).toBe(fresh.id)
+  })
+
+  it("leaves an existing library alone", async () => {
+    const anonUser = await makeUser("anonim")
+    const fresh = await makeUser("yeni")
+    const own = await prisma.resume.create({ data: { userId: fresh.id, filePath: "/tmp/kendi.pdf", rawText: "", savedAt: new Date(), isDefault: true } })
+    const { resume: claimed } = await makeJob(anonUser.id)
+
+    await claimAnonymousData(prisma, anonUser.id, fresh.id)
+
+    expect((await prisma.resume.findUnique({ where: { id: claimed.id } }))!.savedAt).toBeNull()
+    expect((await prisma.resume.findUnique({ where: { id: own.id } }))!.isDefault).toBe(true)
   })
 })
