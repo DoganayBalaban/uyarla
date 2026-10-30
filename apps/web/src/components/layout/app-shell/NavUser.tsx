@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useTheme } from "next-themes"
-import { ChevronsUpDown, CreditCard, FileText, LogOut, Monitor, Moon, Settings, ShieldCheck, Sun } from "lucide-react"
+import { ChevronsUpDown, CreditCard, FileText, LogOut, Monitor, Moon, ReceiptText, Settings, ShieldCheck, Sun } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -98,6 +98,11 @@ export function NavUser({ name, email }: { name: string | null; email: string })
             <DropdownMenuItem asChild>
               <Link href="/terms" onClick={close}>
                 <FileText /> Kullanım koşulları
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/refund" onClick={close}>
+                <ReceiptText /> İade ve cayma
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

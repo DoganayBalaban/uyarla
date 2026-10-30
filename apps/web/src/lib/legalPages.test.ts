@@ -3,7 +3,7 @@ import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { LEGAL } from "@/features/legal/company"
 
-const page = (p: string) => readFileSync(join(__dirname, "../app/(marketing)", p, "page.tsx"), "utf8")
+const page = (p: string) => readFileSync(join(__dirname, "../app/(legal)", p, "page.tsx"), "utf8")
 
 describe("legal pages (DOG-34)", () => {
   it("refund page explains the withdrawal exception and how to ask for a refund", () => {

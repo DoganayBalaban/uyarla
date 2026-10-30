@@ -67,6 +67,9 @@ const TOP: Record<string, string> = {
   "/admin": "Yönetim",
   "/sample-report": "Örnek rapor",
   "/get-started": "Nereden başlamalıyım?",
+  "/privacy": "KVKK aydınlatma metni",
+  "/terms": "Kullanım koşulları",
+  "/refund": "İade ve cayma",
 }
 
 /** Üst çubuktaki konum yolu; son öge bağlantısız. */

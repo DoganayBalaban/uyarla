@@ -16,6 +16,7 @@ describe("app shell navigation (DOG-144)", () => {
     expect(breadcrumbs("/applications/abc")).toEqual([{ label: "Başvurular", href: "/applications" }, { label: "Başvuru" }])
     expect(breadcrumbs("/applications/abc/interview")).toEqual([{ label: "Mülakatlar", href: "/interviews" }, { label: "Hazırlık" }])
     expect(breadcrumbs("/adapt/xyz")).toEqual([{ label: "Uyarlama" }])
+    expect(breadcrumbs("/refund")).toEqual([{ label: "İade ve cayma" }])
     expect(breadcrumbs("/bilinmeyen")).toEqual([])
     expect(breadcrumbs("/analyze")).toEqual([{ label: "Yeni analiz" }])
     expect(breadcrumbs("/analyze", new URLSearchParams("analiz=a1"))).toEqual([{ label: "Analiz sonucu" }])
