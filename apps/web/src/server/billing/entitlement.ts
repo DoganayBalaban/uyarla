@@ -31,7 +31,7 @@ export const SUBSCRIPTION_SELECT = {
 
 /**
  * Erişim kararı için gereken her şey (DOG-158). Sayaç yok: o ayki kayıtlar
- * sayılıyor. Analiz kaydını worker açtığı için analiz kotası route'un açtığı
+ * sayılıyor; silinen başvuruların hakkı DeletedUsage'tan (DOG-171). Analiz kaydını worker açtığı için analiz kotası route'un açtığı
  * ilanlardan (JobPosting) sayılıyor; analizi başarısız olan ilan hak yemiyor.
  * Aynı analizin uyarlamasını yeniden açmak yeni kayıt açmadığı için hak
  * harcamıyor (api/adapt mevcut kaydı döndürüyor).
@@ -43,13 +43,27 @@ export async function loadUsage(
 ): Promise<{ subs: Array<SubscriptionLike & { plan: string }>; usage: Usage }> {
   const since = monthStart(now)
   const adaptations = { analysis: { userId }, status: { not: "failed" as const } }
-  const [analysesThisMonth, adaptationsThisMonth, adaptationsLast24h, subs] = await Promise.all([
+  const dayAgo = new Date(now.getTime() - DAY_MS)
+  // Silinen başvuruların harcadığı hak da sayılıyor (DOG-171, server/deleteApplication).
+  const deleted = (feature: string, after: { gte: Date } | { gt: Date }) =>
+    db.deletedUsage.count({ where: { userId, feature, usedAt: after } })
+  const [analyses, adaptationsMonth, adaptationsDay, deletedAnalyses, deletedMonth, deletedDay, subs] = await Promise.all([
     db.jobPosting.count({ where: { userId, createdAt: { gte: since }, NOT: { analyses: { some: { status: "failed" } } } } }),
     db.adaptation.count({ where: { ...adaptations, createdAt: { gte: since } } }),
-    db.adaptation.count({ where: { ...adaptations, createdAt: { gt: new Date(now.getTime() - DAY_MS) } } }),
+    db.adaptation.count({ where: { ...adaptations, createdAt: { gt: dayAgo } } }),
+    deleted("analysis", { gte: since }),
+    deleted("adaptation", { gte: since }),
+    deleted("adaptation", { gt: dayAgo }),
     db.subscription.findMany({ where: { userId }, select: SUBSCRIPTION_SELECT }),
   ])
-  return { subs, usage: { analysesThisMonth, adaptationsThisMonth, adaptationsLast24h } }
+  return {
+    subs,
+    usage: {
+      analysesThisMonth: analyses + deletedAnalyses,
+      adaptationsThisMonth: adaptationsMonth + deletedMonth,
+      adaptationsLast24h: adaptationsDay + deletedDay,
+    },
+  }
 }
 
 const DENY_MESSAGE: Record<DenyCode, string> = {

@@ -1,5 +1,6 @@
 "use client"
 
+import { DeleteApplication } from "@/features/applications/components/DeleteApplication"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
@@ -417,6 +418,7 @@ function BoardCardView({ card, onUpdate }: { card: BoardCard; onUpdate: (id: str
             Aç
           </Link>
         </Button>
+        <DeleteApplication analysisId={card.analysisId} position={card.position} />
       </div>
     </article>
   )

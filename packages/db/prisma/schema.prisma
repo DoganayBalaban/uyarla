@@ -46,6 +46,7 @@ model User {
   linkedinAudits LinkedInAudit[]
   // Abonelik (DOG-158, K-107); Polar bildirimleriyle güncelleniyor.
   subscriptions Subscription[]
+  deletedUsages DeletedUsage[]
 }
 
 model Resume {
@@ -409,4 +410,20 @@ model Subscription {
   updatedAt              DateTime  @default(now()) @updatedAt
 
   @@index([userId])
+}
+
+/// Silinen başvurunun harcadığı hak (DOG-171). Kota o ayın ilan ve uyarlama
+/// kayıtlarından sayılıyor; başvuru silinince kayıt gidiyor ve hak geri
+/// açılırdı. Kişisel veri yok: yalnızca hangi özellik ve asıl tarihi.
+model DeletedUsage {
+  id      String   @id @default(cuid())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// "analysis" | "adaptation" (features/billing/access Feature).
+  feature String
+  /// Silinen kaydın oluşturulduğu an; kota penceresi buna göre.
+  usedAt  DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId, feature, usedAt])
 }
