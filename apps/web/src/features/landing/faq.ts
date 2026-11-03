@@ -14,7 +14,7 @@ export const LANDING_FAQ: { s: string; c: string }[] = [
   },
   {
     s: "Mülakat hazırlığında sorular nereden geliyor?",
-    c: "İlandan ve başvurduğun CV'den. Kanıtı CV'nde olan sorunun yanında o satır durur. Yazılı pratikte cevabını STAR yapısına göre değerlendiririz; CV'nde olmayan bir sayı ya da iddia kullanırsan “kâğıtta yok” diye işaretleriz. Abonelikte.",
+    c: "İlandan ve başvurduğun CV'den. Kanıtı CV'nde olan sorunun yanında o satır durur. Görüşme provasında Deniz ilanı ve CV'ni bilerek soru sorar; CV'nde olmayan bir sayı ya da iddia kullanırsan üstüne gider. Sonunda cevaplarını STAR yapısına göre değerlendiririz ve kâğıtta olmayanı işaretleriz. Abonelikte.",
   },
   {
     s: "LinkedIn profilimi nasıl denetliyorsunuz?",

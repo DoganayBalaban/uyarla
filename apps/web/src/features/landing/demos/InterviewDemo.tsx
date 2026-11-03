@@ -3,7 +3,6 @@
 import { Check, Minus, TriangleAlert } from "lucide-react"
 import { phaseAt, phaseReached, typedSlice } from "@/features/landing/demos/demoScript"
 import { INTERVIEW_PHASES, INTERVIEW_SCENE, type InterviewPhase } from "@/features/landing/demos/scenes"
-import { Scene } from "@/features/landing/demos/useScenePlayer"
 import s from "@/features/landing/landing.module.css"
 
 /** Hazırlan sahnesinin `ms` anındaki karesi. Saf. */
@@ -40,16 +39,5 @@ export function InterviewFilm({ ms }: { ms: number }) {
         </p>
       )}
     </div>
-  )
-}
-
-export function InterviewDemo() {
-  return (
-    <Scene
-      label="Mülakat pratiği: soru CV'deki kanıtıyla geliyor; cevap STAR yapısına göre değerlendiriliyor ve CV'de olmayan “12 geliştirici” ifadesi işaretleniyor."
-      phases={INTERVIEW_PHASES}
-    >
-      {(ms) => <InterviewFilm ms={ms} />}
-    </Scene>
   )
 }

@@ -119,6 +119,32 @@ export const INTERVIEW_SCENE = {
   notOnPaper: "12 geliştirici",
 }
 
+export const SIMULATION_PHASES = [
+  { id: "opening", ms: 900 },
+  { id: "question", ms: 1700 },
+  { id: "answer", ms: 3400 },
+  { id: "typing", ms: 1100 },
+  { id: "probe", ms: 2800 },
+  { id: "report", ms: 2800 },
+  { id: "hold", ms: 1600 },
+] as const
+export type SimulationPhase = (typeof SIMULATION_PHASES)[number]["id"]
+
+/**
+ * Simülasyon sahnesi (DOG-172, DOG-173): Deniz hazırlan sahnesindeki soruyu
+ * soruyor, Elif aynı cevabı veriyor; cevaptaki "12 geliştirici" CV'de yok,
+ * Deniz gerçek görüşmeci gibi üstüne gidiyor. Ürün de böyle: kod iddiayı
+ * buluyor, görüşmeciye iletiyor. Sonunda rapor.
+ */
+export const SIMULATION_SCENE = {
+  progress: "Soru 2 / 5",
+  question: "Bir kod incelemesinde görüş ayrılığını nasıl çözdünüz?",
+  answer: INTERVIEW_SCENE.answer,
+  probe: "12 geliştiricilik bir ekipten söz ettiniz. O ekipte sizin rolünüz tam olarak neydi?",
+  star: INTERVIEW_SCENE.star,
+  notOnPaper: INTERVIEW_SCENE.notOnPaper,
+}
+
 export const LINKEDIN_PHASES = [
   { id: "profile", ms: 1500 },
   { id: "audit", ms: 2200 },

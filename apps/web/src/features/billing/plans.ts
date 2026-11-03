@@ -56,6 +56,7 @@ export const FEATURE_ROWS = [
   { label: "CV uyarlama (ön yazı ve PDF/DOCX dahil)", free: "Ayda 1", paid: "Sınırsız (24 saatte 30)" },
   { label: "Mülakat hazırlık paketi", free: false, paid: true },
   { label: "Yazılı mülakat pratiği", free: false, paid: true },
+  { label: "Mülakat simülasyonu (Deniz ile görüşme provası)", free: false, paid: true },
   { label: "Başvuru formu yanıtları", free: false, paid: true },
   { label: "LinkedIn hakkında ve deneyim yazımı", free: false, paid: true },
   { label: "LinkedIn teşhisi ve başlık önerileri", free: true, paid: true },
@@ -68,6 +69,6 @@ export const FEATURE_ROWS = [
 export const SUBSCRIPTION_FEATURES = [
   "Sınırsız analiz ve CV uyarlama",
   "Her ilana özel ön yazı, PDF ya da DOCX",
-  "Mülakat hazırlık paketi ve yazılı pratik",
+  "Mülakat hazırlığı ve Deniz ile görüşme provası",
   "LinkedIn hakkında ve deneyim yazımı",
 ] as const
