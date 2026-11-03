@@ -16,7 +16,7 @@ import { JourneyRail } from "@/features/landing/components/JourneyRail"
 import { JobSearchDemo } from "@/features/landing/demos/JobSearchDemo"
 import { ApplyDemo } from "@/features/landing/demos/ApplyDemo"
 import { BoardDemo } from "@/features/landing/demos/BoardDemo"
-import { InterviewDemo } from "@/features/landing/demos/InterviewDemo"
+import { SimulationDemo } from "@/features/landing/demos/SimulationDemo"
 import { LinkedInDemo } from "@/features/landing/demos/LinkedInDemo"
 import { ExtensionDemo } from "@/features/landing/demos/ExtensionDemo"
 import { EXTENSION_MENU_TITLE, EXTENSION_PAGE_BUTTON, storeHref } from "@/features/landing/extension"
@@ -115,7 +115,7 @@ const STEP_VISUAL: Partial<Record<StepId, React.ReactNode>> = {
   bul: <JobSearchDemo />,
   basvur: <ApplyDemo />,
   takip: <BoardDemo />,
-  hazirlan: <InterviewDemo />,
+  hazirlan: <SimulationDemo />,
   gorunur: <LinkedInDemo />,
 }
 

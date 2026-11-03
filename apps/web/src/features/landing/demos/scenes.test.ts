@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { DEMO_BULLETS, DEMO_REQUIREMENTS } from "@/features/landing/demos/demoScript"
-import { APPLY_SCENE, BOARD_SCENE, ELIF_CV, INTERVIEW_SCENE, JOB_SCENE, LINKEDIN_SCENE, SCENE_ROLE, inCv } from "@/features/landing/demos/scenes"
+import { APPLY_SCENE, BOARD_SCENE, ELIF_CV, INTERVIEW_SCENE, JOB_SCENE, LINKEDIN_SCENE, SCENE_ROLE, SIMULATION_SCENE, inCv } from "@/features/landing/demos/scenes"
 
 /** Sahnelerin örnek verisi uydurma kuralına uyuyor mu (spec §6). */
 describe("Elif's sample CV", () => {
@@ -51,6 +51,16 @@ describe("interview scene", () => {
     expect(INTERVIEW_SCENE.answer).toContain(INTERVIEW_SCENE.notOnPaper)
     expect(inCv(INTERVIEW_SCENE.notOnPaper)).toBe(false)
     expect(INTERVIEW_SCENE.star.map((x) => x.label)).toEqual(["Durum", "Görev", "Eylem", "Sonuç"])
+  })
+})
+
+describe("simulation scene (DOG-173)", () => {
+  it("probes exactly the claim that is not on paper, as the product does", () => {
+    expect(SIMULATION_SCENE.answer).toContain(SIMULATION_SCENE.notOnPaper)
+    expect(inCv(SIMULATION_SCENE.notOnPaper)).toBe(false)
+    expect(SIMULATION_SCENE.probe).toContain("12 geliştirici")
+    // Deniz değerlendirmiyor, iddiayı adaya mal etmiyor: yalnızca soruyor.
+    expect(SIMULATION_SCENE.probe).toMatch(/\?$/)
   })
 })
 

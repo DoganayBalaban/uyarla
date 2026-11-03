@@ -6,6 +6,7 @@
   "scripts": {
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts Tanitim out/tanitim.mp4",
+    "render:simulasyon": "remotion render src/index.ts Simulasyon out/simulasyon.mp4",
     "typecheck": "tsc --noEmit",
     "test": "echo 'video paketinde birim testi yok; sahnelerin testleri apps/web\\'de' && exit 0"
   },

@@ -52,8 +52,8 @@ export const JOURNEY: JourneyStep[] = [
     number: "05",
     name: "Hazırlan",
     title: "Mülakata kendi CV'nle hazırlan.",
-    text: "Sorular ilandan, cevapların kanıtı CV'nden gelir. Yazılı pratikte cevabını STAR yapısına göre değerlendirir; CV'nde olmayan iddiayı işaretler.",
-    bullets: ["Her soru CV'deki kanıtıyla", "STAR: durum, görev, eylem, sonuç", "Kâğıtta olmayan iddia odada da yok"],
+    text: "Görüşmeci Deniz ilanı ve gönderdiğin CV'yi bilerek seninle görüşme provası yapar. CV'nde olmayan bir iddiada bulunursan gerçek bir görüşmeci gibi üstüne gider; sonunda her cevabını STAR yapısına göre değerlendirir.",
+    bullets: ["Olası sorular, CV'deki kanıtlarıyla", "Deniz ile görüşme provası, ek sorularıyla", "Kâğıtta olmayan iddia odada da yok"],
   },
   {
     id: "gorunur",
