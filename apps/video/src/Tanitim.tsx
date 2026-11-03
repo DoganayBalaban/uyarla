@@ -2,12 +2,13 @@ import { fade } from "@remotion/transitions/fade"
 import { slide } from "@remotion/transitions/slide"
 import { linearTiming, TransitionSeries } from "@remotion/transitions"
 import { Fragment } from "react"
-import { AbsoluteFill, Audio, Easing, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion"
+import { AbsoluteFill, Audio, Easing, Sequence, staticFile, useCurrentFrame } from "remotion"
 import { UyarlaLogo } from "@/components/brand/UyarlaMark"
 import { SCENE_LIST } from "@/features/landing/demos/sceneList"
 import { JOURNEY } from "@/features/landing/journey"
 import { reelFrame, reelSegment } from "@/features/landing/reels/reels"
 import s from "@/features/landing/landing.module.css"
+import { rise, useEnter } from "./enter"
 import { FPS, TIMED, TRANSITION, type TimedSegment } from "./timing"
 
 /**
@@ -46,14 +47,6 @@ export function Tanitim() {
   )
 }
 
-/** `delay` karesinden sonra 0→1 yaylı giriş. */
-function useEnter(delay: number): number {
-  const frame = useCurrentFrame()
-  const { fps } = useVideoConfig()
-  return spring({ frame: frame - delay, fps, config: { damping: 200 } })
-}
-
-const rise = (p: number, px = 24) => ({ opacity: p, transform: `translateY(${(1 - p) * px}px)` })
 
 function Intro() {
   const logo = useEnter(0)

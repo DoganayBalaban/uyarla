@@ -5,10 +5,11 @@ import { JobSearchFilm } from "@/features/landing/demos/JobSearchDemo"
 import { ApplyFilm } from "@/features/landing/demos/ApplyDemo"
 import { BoardFilm } from "@/features/landing/demos/BoardDemo"
 import { InterviewFilm } from "@/features/landing/demos/InterviewDemo"
+import { SimulationFilm } from "@/features/landing/demos/SimulationDemo"
 import { LinkedInFilm } from "@/features/landing/demos/LinkedInDemo"
 import { CheckFilm } from "@/features/landing/demos/CheckFilm"
 import { ExtensionFilm } from "@/features/landing/demos/ExtensionDemo"
-import { APPLY_PHASES, BOARD_PHASES, CHECK_PHASES, EXT_PHASES, INTERVIEW_PHASES, JOB_PHASES, LINKEDIN_PHASES } from "@/features/landing/demos/scenes"
+import { APPLY_PHASES, BOARD_PHASES, CHECK_PHASES, EXT_PHASES, INTERVIEW_PHASES, JOB_PHASES, LINKEDIN_PHASES, SIMULATION_PHASES } from "@/features/landing/demos/scenes"
 
 /** Vitrinde (`/ui/landing`) kare kare bakılan sahneler. */
 export const SCENE_LIST: { id: string; name: string; phases: readonly Phase[]; Film: (p: { ms: number }) => React.ReactNode }[] = [
@@ -17,6 +18,7 @@ export const SCENE_LIST: { id: string; name: string; phases: readonly Phase[]; F
   { id: "basvur", name: "Başvur", phases: APPLY_PHASES, Film: ApplyFilm },
   { id: "takip", name: "Takip et", phases: BOARD_PHASES, Film: BoardFilm },
   { id: "hazirlan", name: "Hazırlan", phases: INTERVIEW_PHASES, Film: InterviewFilm },
+  { id: "simulasyon", name: "Mülakat simülasyonu", phases: SIMULATION_PHASES, Film: SimulationFilm },
   { id: "gorunur", name: "Görünür ol", phases: LINKEDIN_PHASES, Film: LinkedInFilm },
   { id: "kontrol", name: "Uydurma kontrolü", phases: CHECK_PHASES, Film: CheckFilm },
   { id: "eklenti", name: "Chrome eklentisi", phases: EXT_PHASES, Film: ExtensionFilm },

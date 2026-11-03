@@ -1,6 +1,7 @@
 import { loadFont } from "@remotion/google-fonts/Geist"
 import { MotionGlobalConfig } from "motion/react"
 import { Composition } from "remotion"
+import { Simulasyon, SIMULASYON_FRAMES } from "./Simulasyon"
 import { Tanitim } from "./Tanitim"
 import { FPS, HEIGHT, TOTAL_FRAMES, WIDTH } from "./timing"
 
@@ -12,5 +13,10 @@ const { fontFamily } = loadFont("normal", { weights: ["400", "500", "600", "700"
 document.documentElement.style.setProperty("--font-geist", fontFamily)
 
 export function Root() {
-  return <Composition id="Tanitim" component={Tanitim} durationInFrames={TOTAL_FRAMES} fps={FPS} width={WIDTH} height={HEIGHT} />
+  return (
+    <>
+      <Composition id="Tanitim" component={Tanitim} durationInFrames={TOTAL_FRAMES} fps={FPS} width={WIDTH} height={HEIGHT} />
+      <Composition id="Simulasyon" component={Simulasyon} durationInFrames={SIMULASYON_FRAMES} fps={FPS} width={WIDTH} height={HEIGHT} />
+    </>
+  )
 }

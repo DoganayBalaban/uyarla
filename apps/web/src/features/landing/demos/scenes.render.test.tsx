@@ -1,11 +1,12 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { loopMs } from "@/features/landing/demos/demoScript"
-import { APPLY_PHASES, APPLY_SCENE, BOARD_GATE_MS, BOARD_PHASES, BOARD_SCENE, INTERVIEW_PHASES, INTERVIEW_SCENE, JOB_PHASES, LINKEDIN_PHASES, LINKEDIN_SCENE, CHECK_PHASES, EXT_PHASES } from "@/features/landing/demos/scenes"
+import { APPLY_PHASES, APPLY_SCENE, BOARD_GATE_MS, BOARD_PHASES, BOARD_SCENE, INTERVIEW_PHASES, INTERVIEW_SCENE, JOB_PHASES, LINKEDIN_PHASES, LINKEDIN_SCENE, CHECK_PHASES, EXT_PHASES, SIMULATION_PHASES, SIMULATION_SCENE } from "@/features/landing/demos/scenes"
 import { JobSearchDemo, JobSearchFilm } from "@/features/landing/demos/JobSearchDemo"
 import { ApplyFilm } from "@/features/landing/demos/ApplyDemo"
 import { BoardFilm } from "@/features/landing/demos/BoardDemo"
 import { InterviewFilm } from "@/features/landing/demos/InterviewDemo"
+import { SimulationDemo, SimulationFilm } from "@/features/landing/demos/SimulationDemo"
 import { LinkedInFilm } from "@/features/landing/demos/LinkedInDemo"
 import { CheckFilm } from "@/features/landing/demos/CheckFilm"
 import { ExtensionDemo, ExtensionFilm } from "@/features/landing/demos/ExtensionDemo"
@@ -35,6 +36,40 @@ describe("scenes (DOG-160)", () => {
     const gate = renderToStaticMarkup(<BoardFilm ms={BOARD_GATE_MS} />)
     expect(gate).toContain("Önce uyarlamak ister misin?")
     expect(gate).toContain(`${BOARD_SCENE.missingMust} zorunlu gereksinim CV&#x27;nde görünmüyor`)
+  })
+
+  it("simulation: Deniz asks, probes the off-paper claim and ends with feedback (DOG-173)", () => {
+    const at = (id: string) => {
+      let t = 0
+      for (const p of SIMULATION_PHASES) {
+        if (p.id === id) return t + p.ms / 2
+        t += p.ms
+      }
+      throw new Error(id)
+    }
+    // Gelecek öğeler yer kaplıyor ama görünmüyor (kart büyümesin): görünürlüğü sarmalayıcıdan oku.
+    const shown = (html: string, text: string) => {
+      const i = html.indexOf(text)
+      if (i < 0) return false
+      // Metne kadar açık kalan div'ler: biri görünmezse metin görünmez.
+      const open: string[] = []
+      for (const tag of html.slice(0, i).match(/<div\b[^>]*>|<\/div>/g) ?? []) {
+        if (tag === "</div>") open.pop()
+        else open.push(tag)
+      }
+      return !open.includes('<div class="invisible">')
+    }
+    const typing = renderToStaticMarkup(<SimulationFilm ms={at("answer")} />)
+    expect(shown(typing, SIMULATION_SCENE.question)).toBe(true)
+    expect(shown(typing, SIMULATION_SCENE.probe)).toBe(false)
+    expect(shown(typing, "Kâğıtta yok:")).toBe(false)
+    const end = renderToStaticMarkup(<SimulationFilm ms={loopMs(SIMULATION_PHASES) - 1} />)
+    expect(end).toContain("Deniz")
+    expect(end).toContain(SIMULATION_SCENE.progress)
+    expect(shown(end, SIMULATION_SCENE.probe)).toBe(true)
+    expect(shown(end, "Kâğıtta yok:")).toBe(true)
+    expect(shown(end, SIMULATION_SCENE.answer.slice(0, 20))).toBe(true)
+    expect(renderToStaticMarkup(<SimulationDemo />)).toContain('role="figure"')
   })
 
   it("interview ends with STAR feedback and the not-on-paper flag", () => {
