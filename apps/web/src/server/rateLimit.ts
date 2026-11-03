@@ -28,6 +28,9 @@ export const RATE_LIMITS = {
   scorePreview: { limit: 150, windowSeconds: 3600 },
   // LinkedIn profil denetimi (DOG-157): günde 5 tarama, yapay zekâ maliyetinin üst sınırı.
   linkedinAudit: { limit: 5, windowSeconds: 86400 },
+  // Mülakat simülasyonu (DOG-172): her cevap bir LLM çağrısı. Bir görüşme ~8
+  // mesaj; saatte birkaç görüşme yeter.
+  interviewSimulation: { limit: 60, windowSeconds: 3600 },
 } satisfies Record<string, RateLimitRule>
 
 /**

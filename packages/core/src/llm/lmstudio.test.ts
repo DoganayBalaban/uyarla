@@ -50,6 +50,12 @@ describe("LmStudioProvider", () => {
     ])
   })
 
+  it("passes the requested temperature", async () => {
+    const create = vi.fn().mockResolvedValue({ choices: [{ message: { content: "{}" } }] })
+    await new LmStudioProvider(cfg, fakeClient(create)).extract({ prompt: "p", schemaName: "s", schema: {}, input: "i", temperature: 0.7 })
+    expect((create.mock.calls[0]![0] as { temperature: number }).temperature).toBe(0.7)
+  })
+
   it("counts tokens as 0 when usage is missing", async () => {
     const provider = new LmStudioProvider(
       cfg,

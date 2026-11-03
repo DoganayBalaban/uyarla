@@ -6,12 +6,14 @@ import {
   applyAdaptation,
   readFollowUps,
   readFormAnswers,
+  readSimulations,
   type CoverLetterRecord,
   type FormAnswerRecord,
   type FollowUpRecord,
   type InterviewPrepRecord,
   type JobPostingData,
   type ResumeProfile,
+  type SimulationRecord,
 } from "@uyarla/core"
 import { prisma } from "@uyarla/db"
 
@@ -49,6 +51,25 @@ export interface InterviewPrepStore {
   updatePrep(analysisId: string, change: (current: InterviewPrepRecord | null) => InterviewPrepRecord | null): Promise<void>
 }
 
+/** Mülakat simülasyonunun bağlamı (DOG-172): hazırlıkla aynı belgeler. */
+export interface SimulationContext {
+  profile: ResumeProfile
+  coverLetter: string[]
+  posting: JobPostingData
+  missingMust: string[]
+  rewritten: string[]
+  simulation: SimulationRecord | null
+}
+
+export interface SimulationStore {
+  getContext(analysisId: string, simulationId: string): Promise<SimulationContext>
+  /**
+   * Kaydı kilit altında okuyup günceller; web ucu da mesaj ekliyor. Yazılan
+   * kaydı döndürüyor; `change` null dönerse (kayıt bu arada değişti) null.
+   */
+  update(analysisId: string, simulationId: string, change: (current: SimulationRecord) => SimulationRecord | null): Promise<SimulationRecord | null>
+}
+
 /** Başvuru formu yanıtının bağlamı (DOG-123): gönderilen belgeler ve soru. */
 export interface FormAnswerContext {
   profile: ResumeProfile
@@ -70,6 +91,7 @@ const day = (d: Date | null) => d?.toISOString().slice(0, 10) ?? null
 
 const SENT_SELECT = {
   followUps: true,
+  interviewSimulations: true,
   formAnswers: true,
   interviewPrep: true,
   result: true,
@@ -151,6 +173,36 @@ export const prismaInterviewPrepStore: InterviewPrepStore = {
       const row = await tx.analysis.findUnique({ where: { id: analysisId }, select: { interviewPrep: true } })
       const next = change((row?.interviewPrep ?? null) as InterviewPrepRecord | null)
       if (next) await tx.analysis.update({ where: { id: analysisId }, data: { interviewPrep: next as unknown as object } })
+    })
+  },
+}
+
+/** SimulationStore'un Prisma uygulaması (DOG-172). */
+export const prismaSimulationStore: SimulationStore = {
+  async getContext(analysisId, simulationId) {
+    const sent = await sentDocuments(analysisId)
+    return {
+      profile: sent.profile,
+      coverLetter: sent.coverLetter,
+      posting: sent.posting,
+      missingMust: missingMustRequirements(sent.analysis.result, sent.adapted),
+      rewritten: sent.rewritten,
+      simulation: readSimulations(sent.analysis.interviewSimulations).find((s) => s.id === simulationId) ?? null,
+    }
+  },
+  async update(analysisId, simulationId, change) {
+    return prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Analysis" WHERE id = ${analysisId} FOR UPDATE`
+      const row = await tx.analysis.findUnique({ where: { id: analysisId }, select: { interviewSimulations: true } })
+      // Ham dizi korunuyor: bu sürümün tanımadığı kayıtlar silinmesin.
+      const list = rawList(row?.interviewSimulations)
+      const index = list.findIndex((s) => s.id === simulationId)
+      if (index < 0) return null
+      const updated = change(list[index] as unknown as SimulationRecord)
+      if (!updated) return null
+      const next = list.map((s, i) => (i === index ? (updated as unknown as typeof s) : s))
+      await tx.analysis.update({ where: { id: analysisId }, data: { interviewSimulations: next as unknown as object } })
+      return updated
     })
   },
 }

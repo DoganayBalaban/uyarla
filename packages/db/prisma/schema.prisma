@@ -188,6 +188,9 @@ model Analysis {
   interviewPrep  Json?
   // Başvuru formu yanıtları (DOG-123): soru, sınır ve CV'ye dayanan yanıt.
   formAnswers    Json?
+  // Mülakat simülasyonları (DOG-172): [{ id, phase, messages, report, … }].
+  // Eski kayıtlarda boş.
+  interviewSimulations Json?
 
   @@index([resumeVersionId, jobPostingId])
   @@index([userId])

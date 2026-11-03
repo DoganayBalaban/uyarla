@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Fragment, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Check, ChevronDown, LoaderCircle, Sparkles, TriangleAlert, X } from "lucide-react"
+import { Check, ChevronDown, LoaderCircle, MessagesSquare, Sparkles, TriangleAlert, X } from "lucide-react"
 import { PageCrumb } from "@/components/layout/app-shell/PageActions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import type { InterviewPrep, InterviewPrepRecord } from "@uyarla/core/interview/prep"
+import { INTERVIEWER_NAME } from "@uyarla/core/interview/simulationRecord"
 import {
   ANSWER_MAX_LENGTH,
   ANSWER_MAX_WORDS,
@@ -150,6 +151,19 @@ export function InterviewPrepView({ analysisId }: { analysisId: string }) {
           {error}
         </p>
       )}
+
+      <Card className="flex-row items-center gap-3 px-5 py-4 shadow-xs">
+        <MessagesSquare className="size-5 shrink-0 text-primary" aria-hidden />
+        <div className="min-w-0 flex-1">
+          <p className="m-0 text-sm font-medium">Görüşme provası</p>
+          <p className="m-0 text-sm text-muted-foreground">
+            {INTERVIEWER_NAME} ilanı ve gönderdiğin CV&apos;yi bilerek görüşmeni yapar; sonunda her cevabına geri bildirim.
+          </p>
+        </div>
+        <Button asChild size="sm" variant="outline">
+          <Link href={`${returnTo}/simulation`}>Simülasyona geç</Link>
+        </Button>
+      </Card>
 
       {prep && <PrepSections prep={prep} practice={{ analysisId, entries: record?.practice ?? [], locked, returnTo }} />}
     </div>

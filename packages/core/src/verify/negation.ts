@@ -15,9 +15,12 @@
  *     çıkarılıyor: Türkçede olumsuz fiil sonda ("X, Y ve Z ile çalışmadım"),
  *     İngilizcede başta ("I have not worked on GCP, but …").
  *   - "doğrudan" olumsuzluk değil ("doğrudan yönettim").
+ *   - Birinci kişi olumsuz fiil ekle tanınıyor, tek tek sayılmıyor
+ *     ("yazmadım", "uygulamadım", "kullanmıyorum", "görmemiştim"); görüşme
+ *     simülasyonunda (DOG-172) aday listede olmayan fiillerle reddediyordu.
  */
 const NEGATION =
-  /(değil|yok\b|olmadı|olmama|olmasa da|bulunmamakta|bulunmuyor|bulunmamaktadır|yer almıyor|yer almamakta|çalışmadım|kullanmadım|yapmadım|edinmedim|sahip değil|have not|haven't|has not|hasn't|did not|didn't|do not have|don't have|no direct|not worked|not used)/i
+  /(değil|yok\b|olmadı|olmama|olmasa da|bulunmamakta|bulunmuyor|bulunmamaktadır|yer almıyor|yer almamakta|sahip değil|\p{L}+m[ae]d[ıi](?:m|k)\b|\p{L}+m[ıiuü]yor(?:um|uz)\b|\p{L}+m[ae]m[ıi]ş[ıi]m\b|have not|haven't|has not|hasn't|did not|didn't|do not have|don't have|no direct|not worked|not used)/iu
 
 const CONNECTOR = /\s*(?:;|\b(?:ancak|ama|fakat|lakin|buna karşın|yine de|but|however|yet)\b)\s*/i
 

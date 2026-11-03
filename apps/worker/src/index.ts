@@ -20,18 +20,21 @@ import {
   LINKEDIN_AUDIT_JOB,
   INTERVIEW_PREP_JOB,
   PRACTICE_JOB,
+  INTERVIEW_QUEUE,
   type ContributionJobData,
   type FollowUpJobData,
   type FormAnswerJobData,
   type LinkedInAuditJobData,
   type InterviewPrepJobData,
   type PracticeJobData,
+  type SimulationJobData,
 } from "./adapt-queue.js"
 import { runFollowUp } from "./follow-up-pipeline.js"
-import { prismaFollowUpStore, prismaFormAnswerStore, prismaInterviewPrepStore } from "./follow-up-store.js"
+import { prismaFollowUpStore, prismaFormAnswerStore, prismaInterviewPrepStore, prismaSimulationStore } from "./follow-up-store.js"
 import { runFormAnswer } from "./form-answer-pipeline.js"
 import { prismaLinkedInAuditStore, runLinkedInAudit } from "./linkedin-audit-pipeline.js"
 import { runInterviewPrep, runPractice } from "./interview-prep-pipeline.js"
+import { runSimulation } from "./simulation-pipeline.js"
 import { initErrorTracking, reportJobFailure } from "./observability.js"
 import { runAnalysis } from "./pipeline.js"
 import { ANALYZE_QUEUE, type AnalyzeJobData } from "./queue.js"
@@ -255,6 +258,31 @@ adaptWorker.on("completed", (job) => {
   console.log(`[adapt] tamamlandı: uyarlama ${job.data.adaptationId}`)
 })
 
+// Mülakat simülasyonu (DOG-172): her tur kullanıcıyı bekletiyor, ayrı
+// kuyrukta. Turlar kısa (tek çağrı); birkaç görüşme aynı anda ilerleyebilir.
+const interviewWorker = new Worker<SimulationJobData, void>(
+  INTERVIEW_QUEUE,
+  async (job) => {
+    try {
+      await runSimulation({ llm, store: prismaSimulationStore }, job.data)
+    } catch (error) {
+      const lastAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1)
+      if (error instanceof PermanentError || lastAttempt) {
+        // Ekran "Deniz yazıyor"da takılı kalmasın; kullanıcı aynı adımı yeniden deneyebiliyor.
+        await prismaSimulationStore.update(job.data.analysisId, job.data.simulationId, (current) => ({ ...current, failed: true })).catch(() => {})
+      }
+      if (error instanceof PermanentError) throw toUnrecoverable(error, "interview")
+      throw error
+    }
+  },
+  workerOptions(connection, 4),
+)
+
+interviewWorker.on("failed", (job, error) => {
+  console.error(`[interview] iş başarısız: ${job?.id ?? "?"} — ${error.message}`)
+  reportJobFailure(INTERVIEW_QUEUE, job, error)
+})
+
 console.log(
-  `[worker] ${ANALYZE_QUEUE} ve ${ADAPT_QUEUE} kuyrukları dinleniyor · model: ${llmConfig.model}`,
+  `[worker] ${ANALYZE_QUEUE}, ${ADAPT_QUEUE} ve ${INTERVIEW_QUEUE} kuyrukları dinleniyor · model: ${llmConfig.model}`,
 )

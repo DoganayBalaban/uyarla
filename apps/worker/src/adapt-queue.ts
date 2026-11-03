@@ -61,6 +61,28 @@ export interface PracticeJobData {
   practiceId: string
 }
 
+/**
+ * Mülakat simülasyonu (DOG-172) ayrı kuyrukta: görüşmenin her turu kullanıcıyı
+ * bekletiyor, adapt kuyruğu eşzamanlılık 1 ile bir uyarlamanın arkasına
+ * düşerse aday dakikalarca yanıt bekler.
+ */
+export const INTERVIEW_QUEUE = "interview"
+export const SIMULATION_JOB = "simulation"
+
+export interface SimulationJobData {
+  analysisId: string
+  simulationId: string
+}
+
+/**
+ * Turun iş kimliği: aynı adım iki kez kuyruğa girmesin (çift tıklama). Mesaj
+ * sayısı adımı belirliyor; görüşmeyi bitirme ve yeniden deneme kendi
+ * etiketiyle (düşen işin kimliği kuyrukta duruyor, aynısı eklenemez).
+ */
+export function simulationJobId(simulationId: string, messageCount: number, tag = "turn"): string {
+  return `sim-${simulationId}-${messageCount}-${tag}`
+}
+
 export interface AdaptJobData {
   /**
    * Uyarlama kaydı web katmanında oluşturuluyor ve kimliği buraya geliyor.
