@@ -7,6 +7,11 @@ export interface ExtractOptions {
   schema: Record<string, unknown>
   /** İşlenecek ham metin. */
   input: string
+  /**
+   * Varsayılan 0: çıkarım aynı girdide aynı çıktıyı vermeli. Görüşme
+   * simülasyonu (DOG-172) gibi sohbet işlerinde daha yüksek.
+   */
+  temperature?: number
 }
 
 export interface ExtractResult<T> {

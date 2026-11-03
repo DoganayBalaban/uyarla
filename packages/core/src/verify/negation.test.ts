@@ -35,4 +35,12 @@ describe("withoutNegatedClauses", () => {
   it("does not take 'doğrudan' for a negation", () => {
     expect(withoutNegatedClauses("Kubernetes kümesini doğrudan yönettim.")).toContain("Kubernetes")
   })
+
+  it("recognizes any first-person negative verb, not only a fixed list (DOG-172)", () => {
+    expect(withoutNegatedClauses("Jest ile doğrudan birim testi yazmadım.")).not.toContain("Jest")
+    expect(withoutNegatedClauses("Henüz kendim düzenli test yazmıyorum, bu pozisyonda geliştirmek istiyorum.")).not.toContain("test yazmıyorum")
+    expect(withoutNegatedClauses("Alt metin ekledim, ama WCAG'ı sistemli olarak uygulamadım.")).not.toContain("WCAG")
+    expect(withoutNegatedClauses("Kubernetes kümesini kurdum ve yönettim.")).toContain("Kubernetes")
+    expect(withoutNegatedClauses("Sayfa yükleme süresini %40 kısalttım.")).toContain("%40")
+  })
 })

@@ -5,7 +5,7 @@ export const DAILY_CAP = 30
 /** Ücretsiz katman: takvim ayı başına (DOG-158, K-107). */
 export const FREE_QUOTA = { analyses: 5, adaptations: 1 } as const
 
-export type Feature = "analysis" | "adaptation" | "interview_prep" | "practice" | "form_answer" | "linkedin_rewrite"
+export type Feature = "analysis" | "adaptation" | "interview_prep" | "practice" | "interview_simulation" | "form_answer" | "linkedin_rewrite"
 export type DenyCode = "analysis_quota" | "adaptation_quota" | "subscription_required" | "daily_cap"
 
 /** Polar aboneliğinin bizde tutulan hâli; Prisma satırı buna uyuyor. */

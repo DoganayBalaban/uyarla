@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { ANSWER_MAX_LENGTH, ANSWER_MIN_LENGTH } from "@uyarla/core/interview/practiceRecord"
+import { SIMULATION_MESSAGE_MAX_LENGTH } from "@uyarla/core/interview/simulationRecord"
 import { LIMIT_RANGE, QUESTION_MAX_LENGTH, QUESTION_MIN_LENGTH } from "@uyarla/core/cover/formAnswerRecord"
 import { OUTREACH_NOTE_MAX_LENGTH } from "@uyarla/core/cover/followUpRecord"
 import { NOTE_MAX_LENGTH, STAGES } from "@/features/applications/board"
@@ -87,3 +88,21 @@ export const formAnswerRequestSchema = z
   })
 
 export type FormAnswerRequest = z.infer<typeof formAnswerRequestSchema>
+
+/** `POST /api/applications/[id]/simulations` (DOG-172): görüşmeyi başlat, cevap ver, bitir, yeniden dene. */
+export const simulationRequestSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("start") }),
+  z.object({
+    type: z.literal("answer"),
+    simulationId: z.string().min(1),
+    text: z
+      .string({ error: "Cevap gerekli." })
+      .trim()
+      .min(1, "Cevap gerekli.")
+      .max(SIMULATION_MESSAGE_MAX_LENGTH, `Cevabın en fazla ${SIMULATION_MESSAGE_MAX_LENGTH} karakter olabilir.`),
+  }),
+  z.object({ type: z.literal("end"), simulationId: z.string().min(1) }),
+  z.object({ type: z.literal("retry"), simulationId: z.string().min(1) }),
+])
+
+export type SimulationRequest = z.infer<typeof simulationRequestSchema>
