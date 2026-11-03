@@ -51,7 +51,8 @@ export class LmStudioProvider implements LlmProvider {
         },
         // Çıkarım yaratıcılık işi değil; aynı girdi aynı çıktıyı vermeli ki
         // değerlendirme setindeki iki çalıştırma karşılaştırılabilsin.
-        temperature: 0,
+        // Sohbet (DOG-172) kendi değerini veriyor.
+        temperature: opts.temperature ?? 0,
       })
     } catch (cause) {
       throw classifyApiError(cause, "LLM çağrısı", "llm")

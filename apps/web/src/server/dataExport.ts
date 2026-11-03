@@ -142,6 +142,7 @@ export async function collectUserData(db: Db, userId: string, now = new Date()):
         // DOG-97, DOG-123).
         followUps: true,
         interviewPrep: true,
+        interviewSimulations: true,
         formAnswers: true,
         createdAt: true,
         adaptation: { select: { draft: true, coverLetter: true, status: true, createdAt: true } },
