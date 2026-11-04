@@ -6,7 +6,7 @@ import { WebAnalytics } from "@/components/providers/WebAnalytics"
 import { ThemeProvider } from "@/components/providers/ThemeProvider"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { Geist } from "next/font/google"
+import { Geist, Geist_Mono } from "next/font/google"
 import { siteUrl } from "@/lib/site"
 
 const TITLE = "uyarla · Her ilana, doğru CV."
@@ -32,11 +32,13 @@ export const metadata: Metadata = {
 // Başlık ve metin tek aile: Geist. next/font sunucudan veriyor; Google Fonts
 // isteği ve düzen kayması yok.
 const geist = Geist({ subsets: ["latin", "latin-ext"], variable: "--font-geist", display: "swap" })
+// Kod ve sayılar için Geist Mono (Vercel teması, DOG-174).
+const geistMono = Geist_Mono({ subsets: ["latin", "latin-ext"], variable: "--font-geist-mono", display: "swap" })
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     // suppressHydrationWarning: tema sınıfı istemcide <html>'e ekleniyor.
-    <html lang="tr" className={geist.variable} suppressHydrationWarning>
+    <html lang="tr" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body>
         <ThemeProvider>
           <TooltipProvider delayDuration={300}>

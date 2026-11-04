@@ -92,7 +92,7 @@ export function CoverLetterSection({
               "inline-flex items-center gap-2 rounded-button px-4 py-2.5 text-sm font-semibold transition",
               record?.status === "done"
                 ? "border border-border hover:border-brand-blue/40 hover:text-brand-blue"
-                : "bg-brand-blue text-white shadow-sm shadow-brand-blue/30 hover:bg-brand-blue/90",
+                : "bg-brand-blue text-primary-foreground shadow-sm shadow-brand-blue/30 hover:bg-brand-blue/90",
             )}
           >
             {record?.status === "done" ? (
@@ -176,7 +176,7 @@ export function CoverLetterSection({
             <button
               type="button"
               onClick={() => void copy()}
-              className="inline-flex items-center gap-2 rounded-button bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-brand-blue/30 transition hover:bg-brand-blue/90"
+              className="inline-flex items-center gap-2 rounded-button bg-brand-blue px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm shadow-brand-blue/30 transition hover:bg-brand-blue/90"
             >
               {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
               {copied ? "Kopyalandı" : "Metni kopyala"}

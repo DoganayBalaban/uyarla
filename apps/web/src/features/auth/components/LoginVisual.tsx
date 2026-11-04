@@ -40,8 +40,8 @@ export function LoginVisual() {
       aria-hidden="true"
       className="relative isolate h-full w-full overflow-hidden rounded-[28px] bg-brand-night"
     >
-      {/* Zemin: mavinin iki tonu, köşede hafif mercan. */}
-      <div className="absolute inset-0 -z-20 bg-[radial-gradient(80%_60%_at_80%_10%,rgb(47_75_224/0.55),transparent_60%),radial-gradient(60%_50%_at_0%_100%,rgb(47_75_224/0.45),transparent_65%),radial-gradient(40%_30%_at_100%_100%,rgb(255_107_74/0.22),transparent_70%)]" />
+      {/* Zemin: iki hafif beyaz ışıma (Vercel teması, DOG-174), köşede mercan. */}
+      <div className="absolute inset-0 -z-20 bg-[radial-gradient(80%_60%_at_80%_10%,rgb(255_255_255/0.14),transparent_60%),radial-gradient(60%_50%_at_0%_100%,rgb(255_255_255/0.08),transparent_65%),radial-gradient(40%_30%_at_100%_100%,rgb(255_107_74/0.22),transparent_70%)]" />
 
       {/* Sade zemin (DOG-155): kurdele katmanı kalktı; bulanık animasyonlar ağırdı. */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-transparent via-brand-night/30 to-brand-night/70" />
@@ -83,7 +83,7 @@ export function LoginVisual() {
         </div>
 
         {/* Merkez: skor halkası. */}
-        <div className="absolute left-1/2 top-1/2 grid size-[22%] min-w-24 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/10 shadow-[0_0_60px_rgb(47_75_224/0.6)] ring-1 ring-white/20 backdrop-blur-md">
+        <div className="absolute left-1/2 top-1/2 grid size-[22%] min-w-24 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/10 shadow-[0_0_60px_rgb(255_255_255/0.18)] ring-1 ring-white/20 backdrop-blur-md">
           <svg viewBox="0 0 100 100" className="absolute inset-0 size-full -rotate-90">
             <circle cx="50" cy="50" r="44" fill="none" stroke="rgb(255 255 255 / 0.15)" strokeWidth="6" />
             <circle

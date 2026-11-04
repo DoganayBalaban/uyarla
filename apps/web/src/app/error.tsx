@@ -38,7 +38,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
             <button
               type="button"
               onClick={reset}
-              className="rounded-button bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-blue/90"
+              className="rounded-button bg-brand-blue px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-brand-blue/90"
             >
               Tekrar dene
             </button>

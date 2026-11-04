@@ -3979,3 +3979,16 @@ Ayrıntı: `docs/superpowers/specs/2026-10-28-tanitim-yolculuk-design.md`.
 - cv-a×ilan-2 37 → 35. Kaynağı bu değişiklik değil: modelin "kişisel veri koruma" için bu kez farklı ürettiği karşılık.
 
 Eski ilanlarda `category` yok; yeniden çıkarılınca gelir.
+
+## K-113 · Vercel teması: vurgu siyah-beyaz
+
+**Tarih:** 4 Kasım 2026 · **Durum:** Geçerli · **Kapsam:** DOG-174
+
+**Bağlam:** 7 Ekim'deki palet "mürekkep + kobalt"tı: metin mürekkep, tek vurgu kobalt (#2f4be0). Kullanıcı 21st.dev'deki Vercel temasını (serafimcloud) istedi. Bu temada vurgu rengi yok, primary açıkta siyah, koyuda beyaz.
+
+**Karar:** Tema birebir uygulandı (kobalt vurgu olarak korunmadı) ve tanıtım sayfası dahil tüm uygulamayı kapsıyor.
+- Anlamsal roller Vercel'in oklch değerleri: nötr griler, koyuda zemin saf siyah, `--radius` 0.5rem. Buton ve kart yarıçapı da bu ölçekte (8/12px; eskiden 10/16px). Geist Mono eklendi.
+- `brand-blue*` sınıfları ve modüldeki `--brand-blue*` adları sabit hex değil, primary'yi izliyor. Böylece 20 dosyadaki kullanım değişmeden temaya uyuyor. Bu zeminin üstündeki yazı `text-primary-foreground` olmalı: `text-white` koyuda beyaz üstüne beyaz kalıyor (17 satır çevrildi).
+- Gece bölümü (Dürüstlük) iki temada da koyu kalıyor. Oradaki simgeler beyaz zeminde, ışımalar beyaz. Son çağrı kartı açıkta gece rengi, koyuda kenarlı kart.
+- Grafikler Vercel'in sırasıyla: amber, mavi, griler.
+- Kapsam dışı kalanlar: e-posta şablonlarındaki kobalt ve eklentinin kendi düğmesi.

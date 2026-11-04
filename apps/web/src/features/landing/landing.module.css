@@ -18,9 +18,11 @@
   --frame-dot: #e2e2e5;
   /* Koyu bölüm (Dürüstlük) ve PDF rozeti. */
   --night: var(--brand-night);
-  /* Birincil düğme; koyuda da marka kobaltı (üst çubuktaki düğmeyle aynı). */
+  /* Birincil düğme ve vurgu metni primary'yi izliyor (DOG-174): açıkta
+     siyah, koyuda beyaz. Üstündeki yazı --on-blue. */
   --button-blue: var(--brand-blue);
-  /* Metin olarak mavi/durum renkleri: açıkta marka tonu, koyuda AA için açık ton. */
+  --on-blue: var(--primary-foreground);
+  /* Metin olarak vurgu/durum renkleri: koyuda durum renkleri AA için açık ton. */
   --blue-text: var(--brand-blue);
   --red-text: var(--brand-red);
   --green-text: var(--brand-green);
@@ -41,9 +43,7 @@
 /* Koyu tema. Önce tanıtım koyuda da açık kalmaya zorlanıyordu (DOG-160);
    üst çubuk koyuya dönünce sayfa iki parça görünüyordu. Zemin ve kartlar
    globals.css'in .dark değerlerinden geliyor; burada sayfaya özgü tonlar.
-   Kobalt koyu zeminde okunsun diye açılıyor: Tailwind sınıfları
-   (text-brand-blue, bg-brand-blue-soft) `--color-*`, modül `--brand-*`
-   okuyor, ikisi de burada. */
+   Vurgu primary'yi izlediği için koyuda ayrıca açılmıyor. */
 :global(.dark) .page {
   --surface: var(--background);
   --surface-tint: #111114;
@@ -54,18 +54,8 @@
   --night: #121218;
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -12px rgb(0 0 0 / 0.6);
   --shadow-floating: 0 2px 4px rgb(0 0 0 / 0.4), 0 24px 56px -16px rgb(0 0 0 / 0.7);
-  --blue-text: var(--color-brand-blue-light);
   --red-text: #f87171;
   --green-text: #4ade80;
-
-  --button-blue: #2f4be0;
-
-  --color-brand-blue: #5b72ff;
-  --color-brand-blue-hover: #4a61f0;
-  --color-brand-blue-soft: rgb(91 114 255 / 0.16);
-  --brand-blue: var(--color-brand-blue);
-  --brand-blue-hover: var(--color-brand-blue-hover);
-  --brand-blue-soft: var(--color-brand-blue-soft);
 }
 
 .page :focus-visible {
@@ -148,7 +138,7 @@
 }
 .page .buttonPrimary {
   background: var(--button-blue);
-  color: #fff;
+  color: var(--on-blue);
   box-shadow:
     0 1px 0 rgb(255 255 255 / 0.18) inset,
     0 8px 20px -8px color-mix(in srgb, var(--button-blue) 70%, transparent);
@@ -373,7 +363,7 @@
 }
 .heroChapterActive,
 .heroChapterActive:hover {
-  color: #fff;
+  color: var(--on-blue);
 }
 .heroChapterPill {
   position: absolute;
@@ -544,7 +534,7 @@
   flex: none;
   border-radius: 50%;
   background: var(--brand-blue);
-  color: #fff;
+  color: var(--on-blue);
 }
 
 /* ——— Bento ——— */
@@ -640,8 +630,8 @@
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(50rem 30rem at 0% 100%, color-mix(in srgb, var(--brand-blue) 35%, transparent), transparent 60%),
-    radial-gradient(30rem 20rem at 100% 0%, color-mix(in srgb, var(--brand-blue) 18%, transparent), transparent 70%);
+    radial-gradient(50rem 30rem at 0% 100%, rgb(255 255 255 / 0.07), transparent 60%),
+    radial-gradient(30rem 20rem at 100% 0%, rgb(255 255 255 / 0.04), transparent 70%);
 }
 .honestyBackdrop::after {
   content: "";
@@ -658,8 +648,9 @@
   gap: 5rem;
   align-items: center;
 }
+/* Bölüm iki temada da koyu; vurgu primary'yi izlemiyor, hep açık. */
 .sectionLabelDark {
-  color: var(--brand-blue-light);
+  color: #a1a1aa;
 }
 .honestyTitle {
   font-size: clamp(2.25rem, 4.6vw, 3.75rem);
@@ -694,7 +685,12 @@
   flex: none;
   border-radius: 12px;
   background: var(--brand-blue);
-  color: #fff;
+  color: var(--on-blue);
+}
+/* Gece bölümü iki temada da koyu: simge hep açık zeminde. */
+.honesty .principleIcon {
+  background: #fff;
+  color: #000;
 }
 .principleTitle {
   font-family: Geist, system-ui, sans-serif;
@@ -833,12 +829,13 @@
   align-items: center;
   padding: 4rem;
   border-radius: 32px;
-  background: var(--brand-blue);
+  background: var(--night);
   color: #fff;
 }
-/* Koyuda da marka kobaltı: açılan ton beyaz yazının kontrastını düşürüyor. */
+/* Kart her iki temada da koyu; koyu zeminde kenarla ayrılıyor (DOG-174). */
 :global(.dark) .finalCtaCard {
-  background: #2f4be0;
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--border) inset;
 }
 .finalCtaPattern {
   position: absolute;
@@ -1150,7 +1147,7 @@
 }
 .fakePrimary {
   background: var(--brand-blue);
-  color: #fff;
+  color: var(--on-blue);
 }
 
 .files {
@@ -1189,6 +1186,7 @@
 }
 .fileDocx {
   background: var(--brand-blue);
+  color: var(--on-blue);
 }
 .fileName {
   margin: 0;

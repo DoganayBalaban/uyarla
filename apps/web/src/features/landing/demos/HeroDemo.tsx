@@ -166,7 +166,7 @@ function AppBar() {
         <span className="font-semibold text-foreground">Yeni analiz</span>
         <span>Başvuru panosu</span>
       </div>
-      <span className="ml-auto flex size-6 items-center justify-center rounded-full bg-brand-blue text-[11px] font-bold text-white">
+      <span className="ml-auto flex size-6 items-center justify-center rounded-full bg-brand-blue text-[11px] font-bold text-primary-foreground">
         E
       </span>
     </div>
@@ -255,7 +255,7 @@ function JobScene({ p }: { p: number }) {
       </Card>
       <div className="relative mt-4 self-end">
         <motion.span
-          className="inline-block rounded-[10px] bg-brand-blue px-4 py-2 font-semibold text-white"
+          className="inline-block rounded-[10px] bg-brand-blue px-4 py-2 font-semibold text-primary-foreground"
           animate={{ scale: pressed ? 0.95 : 1 }}
         >
           Skorumu gör
@@ -329,7 +329,7 @@ function ScoreScene({ p }: { p: number }) {
       </div>
       <div className="relative self-start">
         <motion.span
-          className="inline-flex items-center gap-2 rounded-[10px] bg-brand-blue px-4 py-2 font-semibold text-white"
+          className="inline-flex items-center gap-2 rounded-[10px] bg-brand-blue px-4 py-2 font-semibold text-primary-foreground"
           animate={{ scale: pressed ? 0.95 : 1 }}
         >
           <Sparkles size={16} /> Tek tıkla uyarla
@@ -434,7 +434,7 @@ function AdaptScene({ p }: { p: number }) {
             <div className="relative">
               <motion.span
                 className={`flex items-center justify-center gap-2 rounded-[10px] py-2 font-semibold transition-colors ${
-                  ready ? "bg-brand-blue text-white" : "bg-border text-muted-foreground"
+                  ready ? "bg-brand-blue text-primary-foreground" : "bg-border text-muted-foreground"
                 }`}
                 animate={{ scale: p > 0.97 ? 0.96 : 1 }}
               >
