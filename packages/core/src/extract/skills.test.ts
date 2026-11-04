@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { flattenSkillLines, skillGroups } from "./skills.js"
+import { flattenSkillLines, separateCertificateLines, skillGroups } from "./skills.js"
 
 describe("flattenSkillLines", () => {
   it("takes items from a category line, not the category", () => {
@@ -346,5 +346,121 @@ describe("flattenSkillLines · language leaking into skills", () => {
         certifications: [],
       }),
     ).toEqual(["İngilizce teknik yazışma", "Python"])
+  })
+})
+
+describe("flattenSkillLines · long title-case skill names", () => {
+  it("keeps a capitalized skill name a little over the length limit", () => {
+    // 41 karakter; 40'lık sınır yüzünden düşüyordu.
+    expect(
+      flattenSkillLines({
+        lines: [
+          { label: "Dil Bilgisi, Yazım ve Noktalama Kuralları", items: [] },
+          { label: "Eğitim içerikleri ve uygulamalı atölyeler hazırladım", items: [] },
+        ],
+        languages: [], certifications: [],
+      }),
+    ).toEqual(["Dil Bilgisi, Yazım ve Noktalama Kuralları"])
+  })
+
+  it("still drops a long capitalized phrase that is really a title or sentence", () => {
+    expect(
+      flattenSkillLines({
+        lines: [{ label: "TÜBİTAK 2209-A Üniversite Öğrencileri Araştırma Projeleri Destekleme Programı", items: [] }],
+        languages: [], certifications: [],
+      }),
+    ).toEqual([])
+  })
+})
+
+describe("separateCertificateLines", () => {
+  // Model "kurum / sertifika adı / açıklama" düzenindeki kayıtları sertifika
+  // saymıyor ve beceri satırı olarak döndürüyordu: kurum adları beceri oldu.
+  const lines = {
+    lines: [
+      { label: "Python", items: [] },
+      { label: "K U R S V E S E R T İ F İ KA L A R", items: [] },
+      { label: "EUCONS SERTİFİKA", items: [] },
+      { label: "Temel HACCP ve ISO 22000 Gıda Güvenliği Bilgilendirme Eğitimi", items: [] },
+      {
+        label:
+          "TÜBİTAK 2209-A Üniversite Öğrencileri Araştırma Projeleri Destekleme Programı kapsamında hazırlamış olduğum araştırma projem desteklenmeye hak kazanmıştır",
+        items: [],
+      },
+      { label: "15. GIDA MÜHENDİSLERİ ÖĞRENCİ KONGRESİ", items: [] },
+      { label: "Hazırlanan bilimsel çalışmam kongre kapsamında poster sunumu olarak sunulmaya hak kazanmıştır", items: [] },
+      { label: "Pedagojik formasyon sertifikası", items: [] },
+      { label: "BECERİLER", items: [] },
+      { label: "Excel", items: [] },
+    ],
+    languages: [],
+    certifications: ["EUCONS SERTİFİKA"],
+  }
+
+  it("moves the lines under a certificate heading to certifications", () => {
+    const out = separateCertificateLines(lines)
+    expect(out.certifications).toEqual([
+      "EUCONS SERTİFİKA",
+      "Temel HACCP ve ISO 22000 Gıda Güvenliği Bilgilendirme Eğitimi",
+      "15. GIDA MÜHENDİSLERİ ÖĞRENCİ KONGRESİ",
+      "Pedagojik formasyon sertifikası",
+    ])
+    expect(flattenSkillLines(out)).toEqual(["Python", "Excel"])
+  })
+
+  it("drops description sentences under the certificate heading", () => {
+    const out = separateCertificateLines(lines)
+    expect(out.certifications.some((c) => c.includes("desteklenmeye"))).toBe(false)
+  })
+
+  it("leaves a block without a certificate heading untouched", () => {
+    const plain = { lines: [{ label: "Python", items: [] }], languages: [], certifications: ["AWS"] }
+    expect(separateCertificateLines(plain)).toEqual(plain)
+  })
+})
+
+describe("separateCertificateLines · without the heading in the model output", () => {
+  // Model bazen başlık satırını döndürmüyor, kurum satırlarını tarihiyle
+  // sertifikalara koyuyor; asıl sertifika adı beceri satırında kalıp
+  // uzunluk sınırına takılıyordu. Bölge ham metinden biliniyor.
+  const region = {
+    certificates: [
+      "12.04.2025 EUCONS SERTİFİKA",
+      "Temel HACCP ve ISO 22000 Gıda Güvenliği Bilgilendirme",
+      "Eğitimi.",
+      "Python for Data Science Sertifikası",
+    ].join("\n"),
+    skills: ["BECERİLER", "Python, Excel"].join("\n"),
+  }
+  const transcribed = {
+    lines: [
+      { label: "Temel HACCP ve ISO 22000 Gıda Güvenliği Bilgilendirme Eğitimi", items: [] },
+      { label: "Python for Data Science Sertifikası", items: [] },
+      { label: "Beceriler", items: ["Python", "Excel"] },
+    ],
+    languages: [],
+    certifications: ["12.04.2025 EUCONS SERTİFİKA"],
+  }
+
+  it("moves lines that appear only in the certificate region", () => {
+    const out = separateCertificateLines(transcribed, region)
+    expect(out.certifications).toEqual([
+      "12.04.2025 EUCONS SERTİFİKA",
+      "Temel HACCP ve ISO 22000 Gıda Güvenliği Bilgilendirme Eğitimi",
+      "Python for Data Science Sertifikası",
+    ])
+  })
+
+  it("keeps a skill that also appears inside a certificate name", () => {
+    expect(flattenSkillLines(separateCertificateLines(transcribed, region))).toEqual(["Python", "Excel"])
+  })
+
+  it("does not add a line already present with its date", () => {
+    const out = separateCertificateLines(
+      { lines: [{ label: "EUCONS SERTİFİKA", items: [] }], languages: [], certifications: ["12.04.2025 EUCONS SERTİFİKA"] },
+      region,
+    )
+    expect(out.certifications).toEqual(["12.04.2025 EUCONS SERTİFİKA"])
+    expect(out.lines).toEqual([])
   })
 })
