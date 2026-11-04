@@ -419,3 +419,116 @@ describe("segmentResume · untitled summary under the name (DOG-166)", () => {
     }
   })
 })
+
+describe("segmentResume · headings that slipped through", () => {
+  it("recognizes headings written with a dotless ı", () => {
+    // normalizeText "ı"yı "i"ye çeviriyor; "ı" içeren kalıplar hiç eşleşmiyordu.
+    expect(sectionHeading("İŞ DENEYİMLERİ")).toBe("experience")
+    expect(sectionHeading("Yabancı Diller")).toBe("skills")
+    expect(sectionHeading("Uzmanlık Alanları")).toBe("skills")
+    expect(sectionHeading("İLGİ ALANLARI")).toBe("ignore")
+  })
+
+  it("recognizes letter-spaced headings from design templates", () => {
+    // Canva çıktısı: harfler arasında tek boşluk, kelime sınırı yok.
+    expect(sectionHeading("İ Ş D E N E Y İ M L E R İ")).toBe("experience")
+    expect(sectionHeading("E Ğ İ T İ M")).toBe("education")
+    expect(sectionHeading("K U R S V E S E R T İ F İ KA L A R")).toBe("skills")
+    expect(sectionHeading("İ L E T İ Ş İ M")).toBe("header")
+    expect(sectionHeading("İ L G İ A L A N L A R I")).toBe("ignore")
+  })
+
+  it("does not take a letter-spaced name or title for a heading", () => {
+    expect(sectionHeading("G I D A T E K N O L O Ğ U ( L İ S A N S )")).toBeNull()
+    expect(sectionHeading("A B C")).toBeNull()
+  })
+
+  it("recognizes common certificate heading variants", () => {
+    for (const heading of ["Kurs ve Sertifikalar", "SERTIFICATES", "Sertifika", "Sertifikalarım"]) {
+      expect(sectionHeading(heading), heading).toBe("skills")
+    }
+  })
+
+  it("splits a letter-spaced resume into its sections", () => {
+    const b = segmentResume(
+      [
+        "AYŞE DEMİR",
+        "E Ğ İ T İ M",
+        "2026 - Örnek Üniversitesi, Gıda Mühendisliği",
+        "İ Ş D E N E Y İ M L E R İ",
+        "06.2025-08.2025",
+        "ÖRNEK GIDA - Kalite Güvence Stajyeri",
+        "K U R S V E S E R T İ F İ KA L A R",
+        "12.04.2025 Temel HACCP Eğitimi",
+        "İ L E T İ Ş İ M",
+        "ayse@example.com",
+      ].join("\n"),
+    )
+    expect(b.educationBlock).toContain("Örnek Üniversitesi")
+    expect(b.experienceBlock).toContain("Kalite Güvence Stajyeri")
+    expect(b.experienceBlock).not.toContain("HACCP")
+    expect(b.skillsBlock).toContain("Temel HACCP Eğitimi")
+    expect(b.headerBlock).toContain("ayse@example.com")
+    expect(b.sectionOrder).toEqual(["education", "experience", "skills"])
+  })
+})
+
+describe("segmentResume · dates and wrapped summaries", () => {
+  it("does not take a date range for a phone number", () => {
+    // "23.06.2025-28.07.2025" telefon kalıbına uyuyor, tarih başlık bloğuna gidiyordu.
+    const b = segmentResume(
+      [
+        "AYŞE DEMİR",
+        "İŞ DENEYİMLERİ",
+        "23.06.2025-28.07.2025",
+        "ÖRNEK GIDA - Kalite Güvence Stajyeri",
+        "06.2024 - 08.2024",
+        "BAŞKA GIDA - Üretim Stajyeri",
+        "2021 - 2025",
+        "ÜÇÜNCÜ GIDA - Laborant",
+        "İLETİŞİM",
+        "0541 360 89 41",
+      ].join("\n"),
+    )
+    expect(b.experienceBlock).toContain("23.06.2025-28.07.2025")
+    expect(b.experienceBlock).toContain("06.2024 - 08.2024")
+    expect(b.experienceBlock).toContain("2021 - 2025")
+    expect(b.headerBlock).not.toContain("2025")
+    expect(b.headerBlock).toContain("0541 360 89 41")
+  })
+
+  it("still moves a phone number out of experience", () => {
+    const b = segmentResume(["AYŞE DEMİR", "DENEYİM", "Stajyer", "+90 541 360 89 41"].join("\n"))
+    expect(b.headerBlock).toContain("+90 541 360 89 41")
+    expect(b.experienceBlock).not.toContain("+90")
+  })
+
+  it("keeps the first line of a wrapped untitled summary with the rest", () => {
+    // PDF satır sonu cümleyi kesiyor: ilk satır büyük harfli kurum adlarıyla
+    // dolu olduğu için düz yazı sayılmıyor ve unvana karışıyordu.
+    const b = segmentResume(
+      [
+        "AYŞE DEMİR",
+        "Gıda Mühendisi",
+        "Örnek Üniversitesi Gıda Mühendisliği Bölümünden",
+        "bölüm birincisi olarak mezun oldum, gıda güvenliği ve kalite yönetim",
+        "sistemleri konusunda deneyime sahibim.",
+        "EĞİTİM",
+        "2026 - Örnek Üniversitesi",
+      ].join("\n"),
+    )
+    expect(b.summaryBlock.split("\n")[0]).toBe("Örnek Üniversitesi Gıda Mühendisliği Bölümünden")
+    expect(b.headerBlock).not.toContain("Bölümünden")
+    expect(b.headerBlock).toContain("Gıda Mühendisi")
+  })
+})
+
+describe("segmentResume · certificate region", () => {
+  it("keeps the raw lines under a certificate heading apart from the skill lines", () => {
+    const b = segmentResume(
+      ["AYŞE DEMİR", "BECERİLER", "Python, Excel", "K U R S V E S E R T İ F İ KA L A R", "12.04.2025 EUCONS SERTİFİKA", "Temel HACCP Eğitimi", "DENEYİM", "Stajyer"].join("\n"),
+    )
+    expect(b.certificateRegion.certificates).toBe("12.04.2025 EUCONS SERTİFİKA\nTemel HACCP Eğitimi")
+    expect(b.certificateRegion.skills).toBe("Python, Excel")
+  })
+})

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { canonicalPostingUrl, isAllowedPath, isLoginPath, looksLikeLoginWall } from "@/server/jobPostingFromUrl"
+import { blockedMessage, canonicalPostingUrl, isAllowedPath, isBlockedStatus, isLoginPath, looksLikeLoginWall } from "@/server/jobPostingFromUrl"
 
 describe("isAllowedPath", () => {
   it.each([
@@ -59,5 +59,23 @@ Devam Et seçeneğini tıklayarak, LinkedIn Kullanıcı Anlaşmasını, Gizlilik
     const posting = `Login Experience Engineer — Acme\n\n${"Kimlik doğrulama akışlarını geliştireceksin. ".repeat(60)}`
     expect(looksLikeLoginWall({ text: posting, position: "Login Experience Engineer" })).toBe(false)
     expect(looksLikeLoginWall({ text: "Frontend Geliştirici — Acme\n\nReact deneyimi", position: "Frontend Geliştirici" })).toBe(false)
+  })
+})
+
+describe("site blocks the server (bot protection)", () => {
+  it("treats 401, 403 and 429 as a block, other failures not", () => {
+    for (const status of [401, 403, 429]) expect(isBlockedStatus(status), String(status)).toBe(true)
+    for (const status of [404, 410, 500, 503]) expect(isBlockedStatus(status), String(status)).toBe(false)
+  })
+
+  it("names the site and points to the extension and pasting", () => {
+    const message = blockedMessage("www.kariyer.net")
+    expect(message).toContain("Kariyer.net")
+    expect(message).toContain("uyarla.com.tr/eklenti")
+    expect(message).toMatch(/kopyalayıp yapıştır/)
+  })
+
+  it("uses the bare host for other sites", () => {
+    expect(blockedMessage("www.secretcv.com")).toContain("secretcv.com")
   })
 })
