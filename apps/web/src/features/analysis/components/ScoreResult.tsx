@@ -120,9 +120,6 @@ const IMPORTANCE_LABEL: Record<string, string> = {
  */
 export function ScoreResult({
   result,
-  durationMs,
-  tokenUsage,
-  modelId,
   adapting,
   error,
   onAdapt,
@@ -140,9 +137,6 @@ export function ScoreResult({
   sourceWarning?: { tone: "soft" | "strong"; text: string } | null
   /** İlan metni sekmesi (DOG-133); eski yanıtlarda yok. */
   postingText?: string | null
-  durationMs?: number | null
-  tokenUsage?: number | null
-  modelId?: string | null
   adapting: boolean
   error?: string | null
   onAdapt?: () => void
@@ -456,19 +450,6 @@ export function ScoreResult({
           </CardContent>
         </Card>
       </motion.div>
-
-      <details className="group rounded-xl border bg-card px-5 py-4">
-        <summary className="flex cursor-pointer list-none items-center justify-between text-sm text-muted-foreground">
-          Teknik ayrıntı
-          <ChevronDown className="size-4 transition group-open:rotate-180" aria-hidden />
-        </summary>
-        <p className="mt-3 text-sm text-muted-foreground">
-          {durationMs} ms · {tokenUsage} token · {modelId}
-        </p>
-        <pre className="mt-2 max-h-[32rem] overflow-x-auto rounded-lg border bg-muted/40 p-4 text-xs">
-          {JSON.stringify(result, null, 2)}
-        </pre>
-      </details>
     </div>
   )
 

@@ -594,9 +594,6 @@ export function AnalyzeView() {
           platform={state.platform}
           sourceWarning={state.sourceWarning}
           postingText={state.postingText}
-          durationMs={state.durationMs}
-          tokenUsage={state.tokenUsage}
-          modelId={state.modelId}
           adapting={busy}
           error={error}
           onAdapt={state.analysisId ? () => adapt(state.analysisId!) : undefined}
