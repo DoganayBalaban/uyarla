@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { extractText } from "./extractText.js"
 import { PermanentError } from "../errors.js"
+import { ColumnBreak, Document, Packer, Paragraph, SectionType, TextRun } from "docx"
 
 const fixture = (name: string) =>
   readFileSync(join(import.meta.dirname, "__fixtures__", name))
@@ -88,5 +89,63 @@ describe("extractText · DOCX tables (DOG-60)", () => {
   it("drops empty cells from a row", async () => {
     const text = await extractText(await docxWithTable([[["EĞİTİM VE ÖĞRETİM"], [""]]]), "cv.docx")
     expect(text.split("\n")).toContain("EĞİTİM VE ÖĞRETİM")
+  })
+})
+
+describe("extractText · two-column DOCX section (PDF → Word conversions)", () => {
+  const bullet = (text: string, columnBreak = false) =>
+    new Paragraph({ bullet: { level: 0 }, children: [...(columnBreak ? [new ColumnBreak()] : []), new TextRun(text)] })
+
+  /** Beceriler iki sütunda; sütun sonundan önceki başlık sol sütunun dibinde kalıyor. */
+  async function twoColumnDocx(orphan: string, left: string[], right: string[], after: Paragraph[]) {
+    return Packer.toBuffer(
+      new Document({
+        sections: [
+          { children: [new Paragraph("AYŞE DEMİR"), new Paragraph("SKILLS")] },
+          {
+            properties: { type: SectionType.CONTINUOUS, column: { count: 2, space: 720 } },
+            children: [...left.map((s) => bullet(s)), new Paragraph(orphan), ...right.map((s, i) => bullet(s, i === 0))],
+          },
+          { properties: { type: SectionType.CONTINUOUS }, children: after },
+        ],
+      }),
+    )
+  }
+
+  it("reads the right column before a heading orphaned at the bottom of the left column", async () => {
+    const text = await extractText(
+      await twoColumnDocx("EXPERIENCE", ["Metin Analizi", "Etkili İletişim"], ["Web Tasarımı (HTML/CSS)", "MS Office"], [
+        new Paragraph("Türkçe Öğretmeni\tEki 2025 – Şub 2026"),
+        bullet("Ders materyalleri hazırladı ve dört temel dil becerisini geliştirdi."),
+      ]),
+      "cv.docx",
+    )
+    const lines = text.split("\n")
+    expect(lines.indexOf("MS Office")).toBeLessThan(lines.indexOf("EXPERIENCE"))
+    expect(lines.indexOf("Web Tasarımı (HTML/CSS)")).toBeLessThan(lines.indexOf("EXPERIENCE"))
+    expect(lines.indexOf("EXPERIENCE")).toBeLessThan(lines.findIndex((l) => l.startsWith("Türkçe Öğretmeni")))
+  })
+
+  it("leaves a heading that introduces a differently shaped right column where it is", async () => {
+    // Sol sütunda eğitim kayıtları (madde değil), sağda beceri maddeleri: başlık sağ sütuna ait.
+    const doc = await Packer.toBuffer(
+      new Document({
+        sections: [
+          {
+            properties: { column: { count: 2, space: 720 } },
+            children: [
+              new Paragraph("EDUCATION"),
+              new Paragraph("Örnek Üniversitesi 2021–2025"),
+              new Paragraph("Lisans | Türk Dili"),
+              new Paragraph("SKILLS"),
+              bullet("Metin Analizi", true),
+              bullet("MS Office"),
+            ],
+          },
+        ],
+      }),
+    )
+    const lines = (await extractText(doc, "cv.docx")).split("\n")
+    expect(lines.indexOf("SKILLS")).toBeLessThan(lines.indexOf("Metin Analizi"))
   })
 })

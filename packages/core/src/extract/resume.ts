@@ -15,8 +15,8 @@ import {
 } from "../schemas/resume.js"
 import type { ResumeProfile, SkillLines } from "../schemas/resume.js"
 import { parseHeader } from "./header.js"
-import { segmentResume, stripLeadingHeading } from "./segment.js"
-import { flattenSkillLines, skillGroups } from "./skills.js"
+import { segmentResume, stripLeadingHeading, type CodeSegments } from "./segment.js"
+import { flattenSkillLines, separateCertificateLines, skillGroups } from "./skills.js"
 import {
   EDUCATION_PROMPT,
   EXPERIENCE_PROMPT,
@@ -31,7 +31,9 @@ const EMPTY_SKILLS = { skills: [], languages: [], certifications: [] }
  * Satır transkripsiyonunu profilin beklediği düz beceri listesine çevirir.
  * "Hangisi beceri" kararı kodda veriliyor, modelde değil (K-19).
  */
-function flatten(lines: SkillLines) {
+function flatten(transcribed: SkillLines, region: CodeSegments["certificateRegion"]) {
+  // Sertifika başlığının altındaki satırlar beceri değil.
+  const lines = separateCertificateLines(transcribed, region)
   const groups = skillGroups(lines)
   return {
     skills: flattenSkillLines(lines),
@@ -84,6 +86,7 @@ export async function extractResumeProfile(
       projectsBlock: "",
       otherSections: [],
       sectionOrder: undefined,
+      certificateRegion: { certificates: "", skills: "" },
     }
   } else {
     blocks = segmentResume(rawText)
@@ -137,7 +140,7 @@ export async function extractResumeProfile(
     summary: stripLeadingHeading(blocks.summaryBlock).replace(/\s*\n\s*/g, " ").trim() || null,
     experience: experience ? ExperienceListSchema.parse(experience.data).experience : [],
     education: education ? EducationListSchema.parse(education.data).education : [],
-    ...(skills ? flatten(SkillLinesSchema.parse(skills.data)) : EMPTY_SKILLS),
+    ...(skills ? flatten(SkillLinesSchema.parse(skills.data), blocks.certificateRegion) : EMPTY_SKILLS),
     projects: projects ? ProjectListSchema.parse(projects.data).projects : [],
     // Yorumlanmadan, olduğu gibi (DOG-105).
     otherSections: blocks.otherSections,
@@ -160,7 +163,10 @@ export async function extractResumeProfile(
 // 6: Beceri bloğuna düşen başlıksız iş kaydı deneyime taşınıyor (DOG-109).
 // 7: Düzeyiyle yazılmış dil ("B1 seviye İngilizce") beceri sayılmıyor.
 // 8: Adın altındaki başlıksız özet ve "Sertifikalar ve Eğitimler" başlığı (DOG-166).
-const RESUME_PARSER_REVISION = 8
+// 9: Harf aralıklı ve "ı"lı başlıklar, tarihin telefon sanılması, DOCX'te sol
+//    sütunun dibinde kalan başlık, sertifika başlığı altındaki satırlar ve
+//    40 karakteri aşan büyük harfli beceri adları.
+const RESUME_PARSER_REVISION = 9
 
 /**
  * Kayıtlı bir CV'nin ayrıştırılmış profili, aynı anahtarla üretildiyse yeniden

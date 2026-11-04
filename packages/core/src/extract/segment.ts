@@ -29,13 +29,22 @@ export interface CodeSegments extends ResumeSegments {
    * bulunamadıysa yok: sıra bilinmiyor.
    */
   sectionOrder: StructuredSection[] | undefined
+  /**
+   * Beceri bloğunun ham satırları, sertifika başlığının altında olanlar ve
+   * olmayanlar diye ayrılmış (başlık satırları hariç). Beceri çıkarıcısının
+   * çıktısında hangi satırın sertifika olduğu buna bakılarak belirleniyor:
+   * model başlık satırını her zaman geri yazmıyor (skills.ts).
+   */
+  certificateRegion: { certificates: string; skills: string }
 }
 
 /** Başlık satırı bu uzunluğu aşmaz; aşıyorsa içerik satırıdır. */
 const MAX_HEADING_LENGTH = 60
 
+// "sertificates": Türkçe ile İngilizcenin karıştığı yaygın yazım hatası; CV'de
+// böyle yazınca sertifikalar deneyim bloğuna düşüp kayboluyordu.
 const LANGUAGE_OR_CERTIFICATE =
-  /^(certifications?|certificates|sertifikalar|sertifikalar belgeler|belgeler|languages|diller|yabancı diller?|kurslar|courses|(sertifikalar|sertifika) (ve )?(eğitimler|kurslar)|(eğitimler|kurslar) (ve )?sertifikalar|licenses (and )?certifications|certifications? (and )?(training|courses))$/
+  /^(certifications?|certificates|sertificates|sertifika|sertifikalar|sertifikalarım|sertifikalar belgeler|belgeler|languages|diller|yabancı diller?|kurslar|courses|(sertifikalar|sertifika) (ve )?(eğitimler|kurslar)|(eğitimler|kurslar|kurs) (ve )?sertifikalar|licenses (and )?certifications|certifications? (and )?(training|courses))$/
 
 const PATTERNS: Array<[ResumeSection, RegExp]> = [
   [
@@ -49,7 +58,7 @@ const PATTERNS: Array<[ResumeSection, RegExp]> = [
     /^(professional|career|personal)\s+(summary|profile|statement)$/,
   ],
   ["experience", /^((work|professional|relevant)\s+)?(experience|employment|history)$/],
-  ["experience", /^(iş\s+)?(deneyim|deneyimler|deneyimi|tecrübe|tecrübeler)$/],
+  ["experience", /^(iş\s+)?(deneyim|deneyimler|deneyimleri|deneyimi|tecrübe|tecrübeler|tecrübeleri)$/],
   ["experience", /^(profesyonel deneyim|çalışma deneyimi|iş tecrübesi|kariyer geçmişi)$/],
   // Projeler kendi bloğunda (DOG-105). Önceden deneyime gidiyordu, ama
   // deneyim çıkarıcısı kurumu olmayan projeleri kayıt saymıyor ve atıyordu.
@@ -89,6 +98,49 @@ const CONTACT =
 const IGNORED =
   /^(additional|references|referanslar|hobbies|ilgi alanları|awards|honors|ödüller|volunteer|gönüllü çalışmalar|publications|yayınlar|interests)$/
 
+/**
+ * Kalıplar okunaklı olsun diye Türkçe yazılıyor, ama normalizeText "ı"yı
+ * "i"ye çeviriyor: "ı" içeren kalıp ("iş deneyimleri" değil ama "yabancı
+ * diller", "ilgi alanları") hiç eşleşmiyordu. Karşılaştırma katlanmış
+ * biçimle yapılıyor.
+ */
+const fold = (pattern: RegExp) => new RegExp(pattern.source.replace(/ı/g, "i"), pattern.flags)
+
+/** Kalıbın boşluksuz biçimi: harf aralıklı başlıklar kelime sınırını taşımıyor. */
+const squeeze = (pattern: RegExp) => new RegExp(pattern.source.replace(/\\s[+*]?| /g, ""), pattern.flags)
+
+/** Sıra önemli: ilk eşleşen kazanır. */
+const RULES: Array<{ section: ResumeSection; pattern: RegExp; squeezed: RegExp }> = (
+  [["ignore", IGNORED], ["header", CONTACT], ...PATTERNS] as Array<[ResumeSection, RegExp]>
+).map(([section, pattern]) => ({ section, pattern: fold(pattern), squeezed: squeeze(fold(pattern)) }))
+
+/** Yalnızca sertifika ve kurs başlıkları; diller hariç. */
+const CERTIFICATE =
+  /^(certifications?|certificates|sertificates|sertifika|sertifikalar|sertifikalarım|sertifikalar belgeler|belgeler|kurslar|courses|(sertifikalar|sertifika) (ve )?(eğitimler|kurslar)|(eğitimler|kurslar|kurs) (ve )?sertifikalar|licenses (and )?certifications|certifications? (and )?(training|courses))$/
+const CERTIFICATE_RULE = { pattern: fold(CERTIFICATE), squeezed: squeeze(fold(CERTIFICATE)) }
+
+const LANGUAGE_OR_CERTIFICATE_RULE = { pattern: fold(LANGUAGE_OR_CERTIFICATE), squeezed: squeeze(fold(LANGUAGE_OR_CERTIFICATE)) }
+
+/**
+ * Harf aralıklı yazılmış satır mı: "İ Ş D E N E Y İ M L E R İ". Tasarım
+ * şablonları (Canva) başlıkları böyle veriyor; PDF'te harfler tek boşlukla
+ * ayrılıyor, kelime sınırı kayboluyor. En az dört parça ve çoğu tek harf
+ * olmalı: "A B C" gibi kısaltmalar ya da baş harfler sayılmıyor.
+ */
+function isLetterSpaced(line: string): boolean {
+  const parts = line.split(/\s+/).filter(Boolean)
+  if (parts.length < 4) return false
+  return parts.filter((p) => p.length === 1).length >= parts.length * 0.7
+}
+
+/** Satır verilen kurala uyuyor mu; harf aralıklıysa boşluksuz biçimle. */
+function matchesRule(clean: string, rule: { pattern: RegExp; squeezed: RegExp }): boolean {
+  const n = normalizeText(clean)
+  if (!n) return false
+  if (isLetterSpaced(clean)) return rule.squeezed.test(n.replace(/\s+/g, ""))
+  return rule.pattern.test(n)
+}
+
 export function segmentResume(rawText: string): CodeSegments {
   const lineItems = rawText.split("\n")
   const blockList: Record<ResumeSection, string[]> = {
@@ -107,6 +159,9 @@ export function segmentResume(rawText: string): CodeSegments {
   // beceri bloğuna gidiyor ama CV'de çoğu zaman ayrı yerdeler (cv-c'de
   // eğitimden önce). Beceri başlığı hiç yoksa onların yeri kullanılıyor.
   let languagesAt: number | null = null
+  // Beceri bloğundaki satırların hangi başlığın altında olduğu.
+  let underCertificateHeading = false
+  const regionLines = { certificates: [] as string[], skills: [] as string[] }
 
   // İlk başlıktan önceki satırlar ad, unvan ve iletişim bilgisidir ve kendi
   // bloğuna gidiyor. Sprint 1'de özete karışıyorlardı; skor özeti
@@ -117,6 +172,11 @@ export function segmentResume(rawText: string): CodeSegments {
   const push = (line: string) => {
     if (active === "ignore") others.at(-1)?.lines.push(line)
     else blockList[active].push(line)
+  }
+  /** İçerik satırı; beceri bloğundaysa bölgesi de kaydediliyor. */
+  const pushContent = (line: string) => {
+    if (active === "skills" && line.trim()) regionLines[underCertificateHeading ? "certificates" : "skills"].push(line.trim())
+    push(line)
   }
 
   // İki sütunlu şablonlarda metin iç içe geçiyor (DOG-107): "HAKKIMDA"
@@ -142,6 +202,14 @@ export function segmentResume(rawText: string): CodeSegments {
     // Adın altındaki başlıksız özet paragrafı (DOG-166): başlık bloğunda
     // kalınca unvan satırına karışıyor, "özet yok" deniyordu.
     if (t && active === "header" && !headingFound && !seekingSummary && blockList.header.some((l) => l.trim()) && isProse(t)) {
+      // Küçük harfle başlayan paragraf önceki satırın devamı: PDF satır sonu
+      // cümleyi kesmiş, ilk satır kurum adlarıyla dolu olduğu için düz yazı
+      // sayılmamış. O satır da özete geçiyor.
+      let previous = blockList.header.length - 1
+      while (previous >= 0 && !blockList.header[previous]!.trim()) previous--
+      if (previous > 0 && /^\p{Ll}/u.test(t) && opensSentence(blockList.header[previous]!.trim())) {
+        blockList.summary.push(...blockList.header.splice(previous, 1))
+      }
       blockList.summary.push(line)
       lastSummaryLine = t
       seekingSummary = true
@@ -157,7 +225,7 @@ export function segmentResume(rawText: string): CodeSegments {
       }
       seekingSummary = false
     }
-    push(line)
+    pushContent(line)
   }
 
   /** Başlık satırında özet aramasının durumunu günceller. */
@@ -190,6 +258,7 @@ export function segmentResume(rawText: string): CodeSegments {
       if (section) {
         active = section
         headingFound = true
+        underCertificateHeading = section === "skills" && isCertificateHeading(lineItem)
         if (section === "skills" && isLanguageOrCertificate(lineItem)) languagesAt ??= order.length
         else if (section !== "summary" && !order.includes(section)) order.push(section)
       }
@@ -218,6 +287,7 @@ export function segmentResume(rawText: string): CodeSegments {
       skillsBlock: full,
       otherSections: [],
       sectionOrder: undefined,
+      certificateRegion: { certificates: "", skills: "" },
     }
   }
 
@@ -241,6 +311,7 @@ export function segmentResume(rawText: string): CodeSegments {
       !order.includes("skills") && languagesAt !== null
         ? [...order.slice(0, languagesAt), "skills", ...order.slice(languagesAt)]
         : order,
+    certificateRegion: { certificates: regionLines.certificates.join("\n"), skills: regionLines.skills.join("\n") },
   }
 }
 
@@ -272,19 +343,20 @@ function headingKind(lineItem: string): ResumeSection | null {
   const clean = lineItem.trim()
   if (!clean || clean.length > MAX_HEADING_LENGTH) return null
 
-  const n = normalizeText(clean)
-  if (!n) return null
-  if (IGNORED.test(n)) return "ignore"
-  if (CONTACT.test(n)) return "header"
+  return RULES.find((rule) => matchesRule(clean, rule))?.section ?? null
+}
 
-  for (const [section, pattern] of PATTERNS) {
-    if (pattern.test(n)) return section
-  }
-  return null
+/**
+ * Satır bir sertifika ya da kurs başlığı mı. Beceri çıkarıcısının çıktısında
+ * bu başlığın altındaki satırlar sertifikadır (skills.ts).
+ */
+export function isCertificateHeading(lineItem: string): boolean {
+  const clean = lineItem.trim()
+  return clean.length > 0 && clean.length <= MAX_HEADING_LENGTH && matchesRule(clean, CERTIFICATE_RULE)
 }
 
 function isLanguageOrCertificate(lineItem: string): boolean {
-  return LANGUAGE_OR_CERTIFICATE.test(normalizeText(lineItem.trim()))
+  return matchesRule(lineItem.trim(), LANGUAGE_OR_CERTIFICATE_RULE)
 }
 
 const BULLET = /^[•\-*▪–●◦]/
@@ -312,11 +384,24 @@ function isProse(t: string): boolean {
   return words.filter((w) => /^\p{Ll}/u.test(w)).length * 2 >= words.length
 }
 
+/**
+ * Kesilmiş bir cümlenin ilk satırı olabilir mi: en az beş kelime, ayraçsız,
+ * iletişim bilgisi değil ve cümle sonu işaretiyle bitmiyor. Ad satırı
+ * (bloğun ilki) çağıran tarafından dışarıda tutuluyor.
+ */
+function opensSentence(t: string): boolean {
+  if (BULLET.test(t) || /[·|•]/.test(t) || /[.!?:]$/.test(t) || isContactLine(t)) return false
+  return t.split(/\s+/).filter((w) => /\p{L}/u.test(w)).length >= 5
+}
+
 /** Önceki satır cümle ortasında bittiyse ya da yeni bir düz yazı cümlesiyse paragraf sürüyor. */
 function continuesParagraph(t: string, previous: string): boolean {
   if (BULLET.test(t)) return false
   return !/[.!?]$/.test(previous) || startsParagraph(t)
 }
+
+/** Gün.ay.yıl, ay.yıl ve yıl aralığı: "23.06.2025", "06/2024", "2021 - 2025". */
+const DATE_ANY = /\b(\d{1,2}[./]){1,2}(19|20)\d{2}\b|\b(19|20)\d{2}\s*[-–]\s*(19|20)\d{2}\b/g
 
 const EMAIL_ANY = /[\w.+-]+@[\w-]+(\.[\w-]+)+/g
 // Anonimleştirilmiş CV'lerde rakamlar X: "+90 5XX XXX XX XX".
@@ -330,7 +415,10 @@ const CONTACT_LABEL = /\b(e-?posta|e-?mail|tel|telefon|phone|gsm|cep|linkedin|gi
  * adresi bir projenin ya da şirketin olabilir.
  */
 function isContactLine(t: string): boolean {
-  const personal = /[\w.+-]+@[\w-]+\.[\w-]+/.test(t) || /\+?\d[\dX\s().-]{8,}[\dX]/.test(t) || /linkedin\.com\/in\//i.test(t)
+  // Tarihler telefon kalıbına uyuyor ("23.06.2025-28.07.2025", "2021 - 2025");
+  // telefon aranmadan önce atılıyor, yoksa deneyimin tarihleri başlığa gidiyordu.
+  const withoutDates = t.replace(DATE_ANY, " ")
+  const personal = /[\w.+-]+@[\w-]+\.[\w-]+/.test(t) || /\+?\d[\dX\s().-]{8,}[\dX]/.test(withoutDates) || /linkedin\.com\/in\//i.test(t)
   if (!personal) return false
   const rest = t
     .replace(EMAIL_ANY, "")
