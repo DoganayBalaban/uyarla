@@ -84,5 +84,23 @@ export const LOGIN_REQUIRED = {
     "Bu sayfa giriş istiyor, ilanı göremedik. İlanın herkese açık sayfasının bağlantısını dene ya da ilan metnini kopyalayıp yapıştır.",
 }
 
+/**
+ * Site isteği sunucumuzdan geldiği için mi reddetti. Kariyer.net'in önünde
+ * bot koruması (PerimeterX) var: veri merkezi IP'lerinden gelen istekleri
+ * 403 ile geri çeviriyor, aynı ilan tarayıcıda açılıyor. Korumayı aşmaya
+ * çalışmıyoruz; kullanıcıyı tarayıcıda çalışan eklentiye yönlendiriyoruz.
+ */
+export function isBlockedStatus(status: number): boolean {
+  return status === 401 || status === 403 || status === 429
+}
+
+const SITE_NAMES: Record<string, string> = { "kariyer.net": "Kariyer.net", "linkedin.com": "LinkedIn" }
+
+export function blockedMessage(hostname: string): string {
+  const host = hostname.toLowerCase().replace(/^www\./, "")
+  const site = SITE_NAMES[host] ?? host
+  return `${site} ilanı sunucumuzdan açmamıza izin vermedi. İlan sayfasındayken Uyarla tarayıcı eklentisiyle tek tıkla aktarabilir (uyarla.com.tr/eklenti) ya da ilan metnini kopyalayıp yapıştırabilirsin.`
+}
+
 // Çıkarma kodu core'da: tarayıcı eklentisi de kullanıyor (DOG-70).
 export { extractPostingText, htmlToText, type ExtractedPosting } from "@uyarla/core/jobPosting/extract"

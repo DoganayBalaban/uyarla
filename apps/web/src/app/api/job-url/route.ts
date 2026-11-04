@@ -5,9 +5,11 @@ import { firstIssue } from "@/lib/validation"
 import { authErrorResponse } from "@/server/authz"
 import {
   LOGIN_REQUIRED,
+  blockedMessage,
   canonicalPostingUrl,
   extractPostingText,
   isAllowedPath,
+  isBlockedStatus,
   isLoginPath,
   looksLikeLoginWall,
 } from "@/server/jobPostingFromUrl"
@@ -77,6 +79,13 @@ export async function POST(request: Request) {
       response = null
     }
 
+    if (response && !response.ok) {
+      // Hangi sitenin neden açılmadığı görünsün: önceden 502 izsiz dönüyordu.
+      console.warn("[api/job-url] site yanıtı", { host: url.hostname, status: response.status })
+      if (isBlockedStatus(response.status)) {
+        return NextResponse.json({ error: blockedMessage(url.hostname), code: "blocked" }, { status: 502 })
+      }
+    }
     if (!response || !response.ok) {
       return NextResponse.json(
         {
