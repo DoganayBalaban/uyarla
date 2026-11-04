@@ -29,6 +29,8 @@ describe("ScoreResult", () => {
     expect(html).toContain("Eksik · 1")
     // K2: düşük skor "işe uygun değilim" diye okunuyordu.
     expect(html).toContain("işe uygunluğunu değil")
+    // Ham JSON ve model ayrıntısı kullanıcıya gösterilmiyor.
+    expect(html).not.toContain("Teknik ayrıntı")
   })
 
   it("draws conditions and language levels in their own box, outside the counts (DOG-115)", () => {
