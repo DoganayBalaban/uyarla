@@ -23,7 +23,7 @@ export function PlanCardBody({
   return (
     <div className={cn("relative flex h-full flex-col rounded-card border bg-card p-5 transition", popular ? "border-brand-blue ring-2 ring-brand-blue/25" : "border-border")}>
       {popular && (
-        <span className="absolute -top-3 left-5 rounded-full bg-brand-blue px-2.5 py-0.5 text-xs font-semibold text-white">
+        <span className="absolute -top-3 left-5 rounded-full bg-brand-blue px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
           En popüler{saving !== null ? ` · %${saving} tasarruf` : ""}
         </span>
       )}

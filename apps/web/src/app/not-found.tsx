@@ -21,7 +21,7 @@ export default function NotFound() {
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/analyze"
-            className="rounded-button bg-brand-blue px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-blue/90"
+            className="rounded-button bg-brand-blue px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-brand-blue/90"
           >
             CV'ni analiz et
           </Link>
