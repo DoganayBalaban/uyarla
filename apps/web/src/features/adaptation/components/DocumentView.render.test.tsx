@@ -29,6 +29,13 @@ describe("posting terms on the adaptation screen (DOG-92)", () => {
     expect(html).not.toContain("vurgula")
   })
 
+  it("renders a CV without skills (no TDZ on languages/certifications)", () => {
+    const noSkills = { ...outline, skills: [] }
+    expect(() =>
+      renderToStaticMarkup(<DocumentView document={{ before: noSkills, after: noSkills }} draft={{ bullets: [], omitted: [] }} />),
+    ).not.toThrow()
+  })
+
   it("edit button stays the same when not editing", () => {
     expect(renderToStaticMarkup(<EditText text="React" busy={false} onSave={async () => null} terms={terms} />)).toContain("Düzenle")
   })

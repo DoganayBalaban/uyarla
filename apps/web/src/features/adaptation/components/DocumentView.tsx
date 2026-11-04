@@ -92,6 +92,9 @@ export function DocumentView({
   ]
   const hiddenKeys = new Set(mode === "before" ? [] : (document.after.hiddenSections ?? []))
   const educationRows = (mode === "before" ? document.before.education : document.after.education) ?? []
+  // `present` bunları okuyor; aşağıda tanımlanırlarsa TDZ hatası (Sentry 158607205).
+  const languages = (mode === "before" ? document.before.languages : document.after.languages) ?? []
+  const certifications = (mode === "before" ? document.before.certifications : document.after.certifications) ?? []
   const present: SectionKind[] = order.filter(
     (k) =>
       !hiddenKeys.has(k) &&
@@ -105,8 +108,6 @@ export function DocumentView({
   )
   const titleOf = (k: string) =>
     (mode === "before" ? document.before.sectionTitles : document.after.sectionTitles)?.[k] ?? SECTION_LABEL[k as SectionKind] ?? k
-  const languages = (mode === "before" ? document.before.languages : document.after.languages) ?? []
-  const certifications = (mode === "before" ? document.before.certifications : document.after.certifications) ?? []
   // Maddenin taşınabileceği yerler (DOG-92): görünen işler ve projeler.
   const targets: Array<{ label: string; where: BulletWhere }> = [
     ...(hiddenKeys.has("experience") ? [] : s.experience.map((j, i) => ({ label: [j.title, j.company].filter(Boolean).join(" · "), where: { experienceIndex: i } }))),
