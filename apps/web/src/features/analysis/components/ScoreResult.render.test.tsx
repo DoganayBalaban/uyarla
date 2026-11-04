@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 import { ScoreResult, type ScoreResultView } from "@/features/analysis/components/ScoreResult"
+import { scoreParts } from "@/features/analysis/scoreParts"
 
 /** Duman testi: sonuç ekranı soft gereksinimleri ayrı blokta çiziyor (DOG-103). */
 const req = (text: string, type: string, status: "matched" | "missing") => ({
@@ -25,12 +26,21 @@ describe("ScoreResult", () => {
     const html = renderToStaticMarkup(<ScoreResult result={result} adapting={false} />)
     expect(html).toContain("Mülakatta anlaşılacaklar")
     expect(html).toContain("İlandaki unvan CV&#x27;nde geçmiyor")
-    expect(html).toContain("Hepsi · 2")
-    expect(html).toContain("Eksik · 1")
+    expect(html).toContain("Hepsi 2")
+    expect(html).toContain("Eksik 1")
     // K2: düşük skor "işe uygun değilim" diye okunuyordu.
     expect(html).toContain("işe uygunluğunu değil")
     // Ham JSON ve model ayrıntısı kullanıcıya gösterilmiyor.
     expect(html).not.toContain("Teknik ayrıntı")
+  })
+
+  it("draws the score as its parts and tells what a missing row would add, only when the parts add up", () => {
+    // Skor, parçalarının toplamı; formülle tutmayan bir skorda şerit çizilmiyor.
+    expect(renderToStaticMarkup(<ScoreResult result={result} adapting={false} />)).not.toContain("Skorun parçaları")
+    const consistent = { ...result, score: scoreParts(result).score }
+    const html = renderToStaticMarkup(<ScoreResult result={consistent} adapting={false} />)
+    expect(html).toContain('aria-label="Skorun parçaları"')
+    expect(html).toMatch(/Karşılanırsa <span class="tabular-nums">\+\d+<\/span> puan/)
   })
 
   it("draws conditions and language levels in their own box, outside the counts (DOG-115)", () => {
@@ -50,8 +60,8 @@ describe("ScoreResult", () => {
     expect(html).toContain("CV&#x27;nde: Excel")
     expect(html).toContain("Kontrol et")
     expect(html).toContain("İngilizce: ilan C1 seviyesi istiyor")
-    expect(html).toContain("Hepsi · 2")
-    expect(html).toContain("Eksik · 1")
+    expect(html).toContain("Hepsi 2")
+    expect(html).toContain("Eksik 1")
   })
 
   it("tells evidence from a remembered fact apart from the CV (DOG-116)", () => {
@@ -98,7 +108,7 @@ describe("ScoreResult", () => {
     const html = renderToStaticMarkup(<ScoreResult result={{ ...result, scoringRevision: undefined }} adapting={false} />)
     expect(html).not.toContain("Mülakatta anlaşılacaklar")
     expect(html).not.toContain("Şartlar")
-    expect(html).toContain("Hepsi · 3")
+    expect(html).toContain("Hepsi 3")
   })
 
   it("shows why a requirement is out and what the user corrected (DOG-90)", () => {
