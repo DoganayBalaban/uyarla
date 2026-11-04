@@ -7,9 +7,10 @@ import { cn } from "@/lib/cn"
  * fade ile geliyor.
  *
  * - default: liste ve pano ekranları (max-w-6xl)
+ * - wide:    çok sütunlu detay ekranları; geniş ekranda kenar boş kalmasın (DOG-176)
  * - narrow:  form, okuma ve ayar ekranları
  */
-const WIDTH = { default: "max-w-6xl", narrow: "max-w-3xl" } as const
+const WIDTH = { default: "max-w-6xl", wide: "max-w-[100rem]", narrow: "max-w-3xl" } as const
 
 export function AppPage({
   title,
