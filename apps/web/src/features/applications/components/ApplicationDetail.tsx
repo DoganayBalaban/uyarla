@@ -60,7 +60,7 @@ export function ApplicationDetail({ analysisId }: { analysisId: string }) {
         <Skeleton className="h-8 w-72" />
         <Skeleton className="h-4 w-48" />
         <Skeleton className="mt-6 h-20 rounded-xl" />
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
           <Skeleton className="h-72 rounded-xl" />
           <Skeleton className="h-72 rounded-xl" />
         </div>
@@ -135,11 +135,14 @@ export function ApplicationView({
 
       <StageTrack card={card} />
 
-      <div className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
         <div className="grid gap-4">
           <ScoreSection card={card} />
-          <MessagesSection card={card} />
-          <InterviewSection card={card} onUpdate={onUpdate} />
+          {/* Çok geniş ekranda mesajlar ve mülakat yan yana; sütun seyrek kalmasın. */}
+          <div className="grid items-start gap-4 2xl:grid-cols-2">
+            <MessagesSection card={card} />
+            <InterviewSection card={card} onUpdate={onUpdate} />
+          </div>
         </div>
         <aside className="grid gap-4 lg:sticky lg:top-20">
           <DatesSection card={card} />
