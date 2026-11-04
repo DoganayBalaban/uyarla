@@ -133,7 +133,7 @@ export function FormAnswersSection({
               type="button"
               onClick={() => void submit()}
               disabled={busy || running || question.trim().length < 5 || (unit !== "none" && !max)}
-              className="ml-auto rounded-button bg-brand-blue px-4 py-2 font-semibold text-white disabled:opacity-50"
+              className="ml-auto rounded-button bg-brand-blue px-4 py-2 font-semibold text-primary-foreground disabled:opacity-50"
             >
               Yanıtla
             </button>

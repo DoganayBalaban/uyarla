@@ -21,13 +21,8 @@
  * aynı değişkenleri okuyor.
  */
 @theme {
-  /* Sabit marka renkleri. Palet "mürekkep + kobalt" (7 Ekim 2026): logo
-     tek renk siyah; metin ve logo mürekkep, tek vurgu kobalt. */
-  --color-brand-blue: #2f4be0;
-  --color-brand-blue-hover: #2238c2;
-  --color-brand-blue-soft: #eef1fe;
-  /* Koyu zeminde okunur kobalt (dark: varyantları). */
-  --color-brand-blue-light: #93a4ff;
+  /* Sabit marka renkleri. Vurgu (eski kobalt `brand-blue`) artık sabit
+     değil, `@theme inline`'da primary'yi izliyor (DOG-174). */
   --color-brand-ink: #111114;
   --color-brand-night: #111114;
   --color-brand-ice: #f5f7ff;
@@ -35,10 +30,6 @@
   --color-brand-green: #16a34a;
   --color-brand-amber: #f59e0b;
   --color-brand-red: #dc2626;
-
-  /* Marka rehberi §9.5: buton 10px, kart 16px. */
-  --radius-button: 10px;
-  --radius-card: 16px;
 
   /* Giriş ekranının görsel paneli. Kullanan yerde `motion-safe:` ile
      açılıyor; hareket azaltmayı seçen kullanıcı durağan görüyor. */
@@ -74,8 +65,17 @@
 @theme inline {
   /* Geist, next/font ile (app/layout.tsx); değişken <html>'de. */
   --font-sans: var(--font-geist), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --font-heading: var(--font-geist), system-ui, -apple-system, sans-serif;
   --font-body: var(--font-geist), system-ui, -apple-system, sans-serif;
+
+  /* Vercel teması (DOG-174): vurgu siyah-beyaz. Eski `brand-blue`
+     sınıfları primary'ye bağlı; açıkta siyah, koyuda beyaz. Üstündeki yazı
+     `text-primary-foreground` olmalı, `text-white` koyuda kayboluyor. */
+  --color-brand-blue: var(--primary);
+  --color-brand-blue-hover: color-mix(in oklab, var(--primary) 85%, var(--background));
+  --color-brand-blue-soft: var(--muted);
+  --color-brand-blue-light: var(--primary);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -109,99 +109,104 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  /* Buton ve kart da temanın 0.5rem ölçeğinde (DOG-174; eskiden 10/16px). */
+  --radius-button: var(--radius);
+  --radius-card: calc(var(--radius) + 4px);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* Renkler 21st.dev'deki Vercel temasından (serafimcloud, DOG-174): nötr
+   griler, vurgu siyah-beyaz. Mavi ve amber yalnızca grafiklerde. */
 :root {
-  --radius: 0.625rem;
+  --radius: 0.5rem;
 
-  --background: #fafaf9;
-  --foreground: #111114;
-  --card: #ffffff;
-  --card-foreground: #111114;
-  --popover: #ffffff;
-  --popover-foreground: #111114;
-  /* Tek vurgu kobalt. */
-  --primary: #2f4be0;
-  --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #6b6b73;
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
-  --destructive: #dc2626;
-  --border: #e7e5e4;
-  --input: #e7e5e4;
-  --ring: #93a4ff;
-  --chart-1: #2f4be0;
-  --chart-2: #6f84f0;
-  --chart-3: #16a34a;
-  --chart-4: #f59e0b;
-  --chart-5: #a1a1aa;
-  --sidebar: #f5f5f4;
-  --sidebar-foreground: #111114;
-  --sidebar-primary: #2f4be0;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e9e9ec;
-  --sidebar-accent-foreground: #111114;
-  --sidebar-border: #e7e5e4;
-  --sidebar-ring: #93a4ff;
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0 0 0);
+  --popover: oklch(0.99 0 0);
+  --popover-foreground: oklch(0 0 0);
+  --primary: oklch(0 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.94 0 0);
+  --secondary-foreground: oklch(0 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.44 0 0);
+  --accent: oklch(0.94 0 0);
+  --accent-foreground: oklch(0 0 0);
+  --destructive: oklch(0.63 0.19 23.03);
+  --border: oklch(0.92 0 0);
+  --input: oklch(0.94 0 0);
+  --ring: oklch(0 0 0);
+  --chart-1: oklch(0.81 0.17 75.35);
+  --chart-2: oklch(0.55 0.22 264.53);
+  --chart-3: oklch(0.72 0 0);
+  --chart-4: oklch(0.92 0 0);
+  --chart-5: oklch(0.56 0 0);
+  --sidebar: oklch(0.99 0 0);
+  --sidebar-foreground: oklch(0 0 0);
+  --sidebar-primary: oklch(0 0 0);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.94 0 0);
+  --sidebar-accent-foreground: oklch(0 0 0);
+  --sidebar-border: oklch(0.94 0 0);
+  --sidebar-ring: oklch(0 0 0);
 
-  /* Tanıtım sayfasının CSS modülü bu adları okuyor. */
-  --brand-blue: var(--color-brand-blue);
+  /* Tanıtım sayfasının CSS modülü bu adları okuyor. Vurgu adları
+     (`--brand-blue*`) primary'yi izliyor, koyuda da kendiliğinden dönüyor. */
+  --brand-blue: var(--primary);
   --brand-night: var(--color-brand-night);
   --brand-ink: var(--color-brand-ink);
-  --brand-blue-hover: var(--color-brand-blue-hover);
-  --brand-blue-soft: var(--color-brand-blue-soft);
-  --brand-blue-light: var(--color-brand-blue-light);
+  --brand-blue-hover: color-mix(in oklab, var(--primary) 85%, var(--background));
+  --brand-blue-soft: var(--muted);
+  --brand-blue-light: var(--primary);
   --brand-ice: var(--color-brand-ice);
   --brand-coral: var(--color-brand-coral);
   --brand-green: var(--color-brand-green);
   --brand-amber: var(--color-brand-amber);
   --brand-red: var(--color-brand-red);
-  --button-radius: var(--radius-button);
-  --card-radius: var(--radius-card);
+  --button-radius: var(--radius);
+  --card-radius: calc(var(--radius) + 4px);
 
   color-scheme: light;
 }
 
 .dark {
-  --background: #0b0b0d;
-  --foreground: #f4f4f5;
-  --card: #141417;
-  --card-foreground: #f4f4f5;
-  --popover: #141417;
-  --popover-foreground: #f4f4f5;
-  /* Koyu zeminde okunur kobalt. */
-  --primary: #5b72ff;
-  --primary-foreground: #ffffff;
-  --secondary: #222226;
-  --secondary-foreground: #f4f4f5;
-  --muted: #222226;
-  --muted-foreground: #a1a1aa;
-  --accent: #222226;
-  --accent-foreground: #f4f4f5;
-  --destructive: #f87171;
-  --border: #2a2a2e;
-  --input: #2a2a2e;
-  --ring: #5b72ff;
-  --chart-1: #5b72ff;
-  --chart-2: #93a4ff;
-  --chart-3: #4ade80;
-  --chart-4: #fbbf24;
-  --chart-5: #71717a;
-  --sidebar: #101012;
-  --sidebar-foreground: #f4f4f5;
-  --sidebar-primary: #5b72ff;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #222226;
-  --sidebar-accent-foreground: #f4f4f5;
-  --sidebar-border: #2a2a2e;
-  --sidebar-ring: #5b72ff;
+  --background: oklch(0 0 0);
+  --foreground: oklch(1 0 0);
+  --card: oklch(0.14 0 0);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0.18 0 0);
+  --popover-foreground: oklch(1 0 0);
+  --primary: oklch(1 0 0);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.25 0 0);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.23 0 0);
+  --muted-foreground: oklch(0.72 0 0);
+  --accent: oklch(0.32 0 0);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.69 0.2 23.91);
+  --border: oklch(0.26 0 0);
+  --input: oklch(0.32 0 0);
+  --ring: oklch(0.72 0 0);
+  --chart-1: oklch(0.81 0.17 75.35);
+  --chart-2: oklch(0.58 0.21 260.84);
+  --chart-3: oklch(0.56 0 0);
+  --chart-4: oklch(0.44 0 0);
+  --chart-5: oklch(0.92 0 0);
+  --sidebar: oklch(0.18 0 0);
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(1 0 0);
+  --sidebar-primary-foreground: oklch(0 0 0);
+  --sidebar-accent: oklch(0.32 0 0);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.32 0 0);
+  --sidebar-ring: oklch(0.72 0 0);
 
   color-scheme: dark;
 }

@@ -113,7 +113,7 @@ export function Navbar() {
               {onLanding && (
                 <Link
                   href="/analyze"
-                  className="hidden rounded-button bg-brand-blue px-4 py-2 text-sm font-semibold text-white no-underline shadow-sm shadow-brand-blue/30 transition hover:bg-brand-blue/90 sm:inline-flex"
+                  className="hidden rounded-button bg-brand-blue px-4 py-2 text-sm font-semibold text-primary-foreground no-underline shadow-sm shadow-brand-blue/30 transition hover:bg-brand-blue/90 sm:inline-flex"
                 >
                   Ücretsiz skorumu gör
                 </Link>
@@ -256,7 +256,7 @@ function AccountMenu({ userName, userEmail, isActive }: { userName: string; user
           (open || isActive) && "bg-background text-foreground",
         )}
       >
-        <span className="grid size-8 place-items-center rounded-full bg-brand-blue font-heading text-sm font-extrabold text-white">
+        <span className="grid size-8 place-items-center rounded-full bg-brand-blue font-heading text-sm font-extrabold text-primary-foreground">
           {initial}
         </span>
         {/* Ad (DOG-50); onboarding'i atlayanda e-posta. Dar ekranda yalnızca baş harf. */}

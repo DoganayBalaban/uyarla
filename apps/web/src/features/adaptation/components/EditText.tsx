@@ -83,7 +83,7 @@ export function EditText({
           type="button"
           onClick={() => void save()}
           disabled={busy || !draft.trim()}
-          className="rounded-button bg-brand-blue px-4 py-1.5 font-semibold text-white disabled:opacity-50"
+          className="rounded-button bg-brand-blue px-4 py-1.5 font-semibold text-primary-foreground disabled:opacity-50"
         >
           Kaydet
         </button>

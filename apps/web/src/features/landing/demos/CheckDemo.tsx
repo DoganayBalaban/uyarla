@@ -88,7 +88,7 @@ export function CheckDemo() {
           onClick={tryDownload}
           aria-disabled={!unlocked}
           className={`inline-flex cursor-pointer items-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold transition-colors ${
-            unlocked ? "bg-brand-blue text-white hover:bg-brand-blue-hover" : "bg-border text-muted-foreground"
+            unlocked ? "bg-brand-blue text-primary-foreground hover:bg-brand-blue-hover" : "bg-border text-muted-foreground"
           }`}
         >
           {unlocked ? <Download size={16} /> : <Lock size={16} />}
