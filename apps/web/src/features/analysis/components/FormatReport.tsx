@@ -1,11 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { ChevronDown, CircleCheck, OctagonAlert, ScanText, TriangleAlert, Wand2 } from "lucide-react"
+import { Check, ChevronDown, CircleCheck, OctagonAlert, TriangleAlert, Wand2 } from "lucide-react"
 import type { FormatFinding, FormatReport } from "@uyarla/core/format/check"
 import { cn } from "@/lib/cn"
 import { fixHint } from "@/features/analysis/formatFixes"
-import { ImpactBadge } from "@/features/analysis/components/ImpactBadge"
 import { TITLE_FINDING_CODES, type ScoreImpact } from "@/features/analysis/scoreImpact"
 
 // Tipler core'dan: web kendi kopyasını tutarsa bir anahtar değiştiğinde
@@ -18,8 +17,9 @@ export type FormatReportView = Pick<FormatReport, "findings" | "passed">
  * DOG-86; ilandan bağımsızlar). Durum renkleri yalnızca durumu
  * anlatıyor ve her zaman bir etiketle birlikte (rehber §9.2).
  *
- * Bulgular 21st.dev'deki "alert" bileşenlerinin desenini izliyor: ikon,
- * başlık, açıklama; seviye sol kenar rengi ve etiketle birlikte.
+ * Analiz raporunun diğer bölümleri gibi kartsız: çizgiyle ayrılan satırlar,
+ * seviye ikonun renginde ve ekran okuyucuya metinle. Skor etkisi rozet
+ * değil, formülden gelen tek cümle.
  */
 export function FormatReportCard({
   report,
@@ -40,40 +40,32 @@ export function FormatReportCard({
   const content = report.findings.filter((b) => b.group === "content")
   const warningCount = report.findings.length - problemCount
 
+  const counts = [
+    problemCount > 0 ? `${problemCount} sorun` : null,
+    warningCount > 0 ? `${warningCount} uyarı` : null,
+    `${report.passed.length} kontrol geçti`,
+  ].filter(Boolean)
+
   return (
-    <section className="rounded-xl border bg-card p-5 shadow-xs sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
-            <ScanText className="size-5" aria-hidden />
-          </span>
-          <div>
-            <h2 className="m-0 text-base font-semibold">
-              CV kontrolü {impact && <ImpactBadge impact={impact} className="ml-1" />}
-            </h2>
-            <p className="m-0 text-sm text-muted-foreground">Başvuru sistemleri CV&apos;ni doğru okuyabilir mi, işe alımcı ne görüyor?</p>
-          </div>
-        </div>
-        <ul className="flex flex-wrap gap-1.5 text-xs font-semibold">
-          {problemCount > 0 && (
-            <li className="rounded-full bg-brand-red/10 px-2.5 py-1 text-brand-red dark:text-[#f87171]">{problemCount} sorun</li>
-          )}
-          {warningCount > 0 && <li className="rounded-full bg-brand-amber/15 px-2.5 py-1 text-brand-amber">{warningCount} uyarı</li>}
-          <li className="rounded-full bg-brand-green/10 px-2.5 py-1 text-brand-green dark:text-[#4ade80]">
-            {report.passed.length} kontrol geçti
-          </li>
-        </ul>
+    <section className="border-t pt-8">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <h2 className="m-0 text-lg font-semibold tracking-tight">CV kontrolü</h2>
+        <p className="m-0 text-sm text-muted-foreground tabular-nums">{counts.join(", ")}</p>
       </div>
+      <p className="m-0 mt-1 max-w-prose text-sm text-muted-foreground">
+        Başvuru sistemleri CV&apos;ni doğru okuyabilir mi, işe alımcı ne görüyor?
+        {impact && ` ${impact.hint}`}
+      </p>
 
       {report.findings.length === 0 ? (
-        <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-          <CircleCheck className="size-4 text-brand-green dark:text-[#4ade80]" aria-hidden />
+        <p className="m-0 mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+          <CircleCheck className="size-4" aria-hidden />
           CV&apos;nde ATS&apos;in okumasını zorlaştıracak ya da işe alımcının gözüne batacak bir sorun bulmadık.
         </p>
       ) : (
         <>
           {readability.length > 0 && (
-            <ul className="mt-5 space-y-2.5">
+            <ul className="m-0 mt-4 list-none divide-y border-y p-0">
               {readability.map((b) => (
                 <FindingItem
                   key={b.code}
@@ -85,16 +77,16 @@ export function FormatReportCard({
             </ul>
           )}
           {content.length > 0 && (
-            <div className="mt-5">
-              <h3 className="m-0 text-sm font-semibold text-muted-foreground">İşe alımcı gözüyle</h3>
-              <ul className="mt-2.5 space-y-2.5">
+            <div className="mt-6">
+              <h3 className="m-0 text-sm font-semibold">İşe alımcı gözüyle</h3>
+              <ul className="m-0 mt-2 list-none divide-y border-y p-0">
                 {content.map((b) => (
                   <FindingItem
-                  key={b.code}
-                  finding={b}
-                  impact={TITLE_FINDING_CODES.includes(b.code) ? titleImpact : null}
-                  action={TITLE_FINDING_CODES.includes(b.code) ? titleAction : null}
-                />
+                    key={b.code}
+                    finding={b}
+                    impact={TITLE_FINDING_CODES.includes(b.code) ? titleImpact : null}
+                    action={TITLE_FINDING_CODES.includes(b.code) ? titleAction : null}
+                  />
                 ))}
               </ul>
             </div>
@@ -108,10 +100,10 @@ export function FormatReportCard({
             Geçen kontroller
             <ChevronDown className="size-4 transition group-open:rotate-180" aria-hidden />
           </summary>
-          <ul className="mt-3 flex flex-wrap gap-2">
+          <ul className="m-0 mt-3 flex list-none flex-wrap gap-x-5 gap-y-1.5 p-0">
             {report.passed.map((g) => (
-              <li key={g} className="inline-flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1 text-xs text-muted-foreground">
-                <CircleCheck className="size-3.5 text-brand-green dark:text-[#4ade80]" aria-hidden />
+              <li key={g} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Check className="size-3.5" aria-hidden />
                 {g}
               </li>
             ))}
@@ -135,23 +127,20 @@ function FindingItem({
   const Icon = isProblem ? OctagonAlert : TriangleAlert
   const hint = fixHint(b.code)
   return (
-    <li
-      className={cn(
-        "flex gap-3 rounded-lg border border-l-4 bg-muted/30 p-3.5",
-        isProblem ? "border-l-brand-red" : "border-l-brand-amber",
-      )}
-    >
+    <li className="flex gap-3 py-4">
       <Icon
         className={cn("mt-0.5 size-4 shrink-0", isProblem ? "text-brand-red dark:text-[#f87171]" : "text-brand-amber")}
         aria-hidden
       />
       <div className="min-w-0">
-        <p className="m-0 font-semibold">
+        <p className="m-0 font-medium">
           <span className="sr-only">{isProblem ? "Sorun: " : "Uyarı: "}</span>
           {b.title}
-          {impact && <ImpactBadge impact={impact} className="ml-2" />}
         </p>
-        <p className="m-0 mt-0.5 text-sm text-muted-foreground">{b.description}</p>
+        <p className="m-0 mt-0.5 max-w-prose text-sm text-muted-foreground">
+          {b.description}
+          {impact && <span className="text-foreground"> {impact.hint}</span>}
+        </p>
         {b.examples && b.examples.length > 0 && (
           <div className="mt-2">
             <p className="m-0 text-xs font-medium">Rakam ekleyebileceğin cümleler:</p>
@@ -181,15 +170,6 @@ function FindingItem({
         )}
         {action}
       </div>
-      <span
-        aria-hidden
-        className={cn(
-          "ml-auto h-fit shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase",
-          isProblem ? "bg-brand-red/10 text-brand-red dark:text-[#f87171]" : "bg-brand-amber/15 text-brand-amber",
-        )}
-      >
-        {isProblem ? "Sorun" : "Uyarı"}
-      </span>
     </li>
   )
 }

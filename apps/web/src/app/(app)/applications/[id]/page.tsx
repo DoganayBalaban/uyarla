@@ -3,11 +3,11 @@ import { ApplicationDetail } from "@/features/applications/components/Applicatio
 
 export const metadata = { title: "Başvuru · uyarla" }
 
-/** Başvuru detayı (DOG-138). Veri istemcide; sahiplik uçta kontrol ediliyor. */
+/** Başvuru detayı (DOG-138, DOG-176: iki sütun, kenardan kenara). Veri istemcide; sahiplik uçta kontrol ediliyor. */
 export default async function ApplicationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   return (
-    <AppPage width="narrow">
+    <AppPage width="wide">
       <ApplicationDetail analysisId={id} />
     </AppPage>
   )
