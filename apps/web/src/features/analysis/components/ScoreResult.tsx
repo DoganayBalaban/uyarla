@@ -19,7 +19,7 @@ import { FormatReportCard as FormatReport, type FormatReportView } from "@/featu
 import { TitleCorrection } from "@/features/analysis/components/TitleCorrection"
 import { ResultGuide } from "@/features/analysis/components/ResultGuide"
 import { scoreImpacts } from "@/features/analysis/scoreImpact"
-import { ScoreStrip } from "@/features/analysis/components/ScoreStrip"
+import { ScoreBreakdown } from "@/features/analysis/components/ScoreBreakdown"
 import { scoreParts, type ScorePart } from "@/features/analysis/scoreParts"
 import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
 import { scoreStatus } from "@/lib/scoreStatus"
@@ -94,11 +94,10 @@ const IMPORTANCE_LABEL: Record<string, string> = {
  * Analiz sonucunun gösterimi.
  *
  * Üstte skor (rehber §9.5: skor ekranın en büyük öğesi) ve skoru oluşturan
- * parçalar şeridi; altında gereksinimler iki sütunlu defter gibi: solda
- * ilanın istediği, sağda CV'deki karşılığı ya da karşılanırsa kaç puan
- * getireceği. Sonra eksik kavramlar, şartlar, CV kontrolü ve kişisel
- * nitelikler. Kartlar yerine çizgiyle ayrılan bölümler; tek hareket
- * şeridin açılışta dolması.
+ * parçalar: CV'de olanlar ve olmayanlar. Altında gereksinimler iki sütunlu
+ * defter gibi: solda ilanın istediği, sağda CV'deki karşılığı ya da
+ * karşılanırsa kaç puan getireceği. Sonra eksik kavramlar, şartlar, CV
+ * kontrolü ve kişisel nitelikler. Kartlar yerine çizgiyle ayrılan bölümler.
  */
 export function ScoreResult({
   result,
@@ -170,16 +169,16 @@ export function ScoreResult({
     activeFilter === "all" ? true : !excluded && (activeFilter === "missing" ? item.status === "missing" : item.status === "matched"),
   )
 
-  // Skorun parçaları (şerit): formülle aynı toplamı veriyorsa çiziliyor.
+  // Skorun parçaları: formülle aynı toplamı veriyorsa çiziliyor.
   const parts = scoreParts({
     requirements: result.requirements,
     excluded: result.excluded,
     titleMatch: result.titleMatch,
     scoringRevision: result.scoringRevision,
   })
-  const stripParts = parts.score === exclusion.score ? parts.parts : []
-  const gains = new Map(stripParts.flatMap((p) => (p.index === null ? [] : [[p.index, p.gain] as const])))
-  // Şeritten seçilen gereksinim listede kısa bir an vurgulanıyor.
+  const visibleParts = parts.score === exclusion.score ? parts.parts : []
+  const gains = new Map(visibleParts.flatMap((p) => (p.index === null ? [] : [[p.index, p.gain] as const])))
+  // Parçalardan seçilen gereksinim listede kısa bir an vurgulanıyor.
   const [flash, setFlash] = useState<number | null>(null)
   const selectPart = (part: ScorePart) => {
     setTab("report")
@@ -228,7 +227,7 @@ export function ScoreResult({
         </div>
 
         <div className="mt-9">
-          <ScoreStrip parts={stripParts} hint={impacts.requirements.hint} onSelect={selectPart} />
+          <ScoreBreakdown parts={visibleParts} onSelect={selectPart} />
         </div>
 
         <div className="mt-8 grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
@@ -489,9 +488,9 @@ function RequirementRow({
 }: {
   index: number
   item: RequirementResult
-  /** Tamamen karşılanırsa skora eklenecek puan (şeritle aynı hesap). */
+  /** Tamamen karşılanırsa skora eklenecek puan (skorun parçalarıyla aynı hesap). */
   gain: number
-  /** Şeritten seçildi: kısa bir an vurgulu. */
+  /** Skorun parçalarından seçildi: kısa bir an vurgulu. */
   flash?: boolean
   /** İlan metni sekmesinde bu gereksinimin terimlerini vurgular (DOG-133). */
   onShowInPosting?: () => void

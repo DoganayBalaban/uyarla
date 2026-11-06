@@ -35,7 +35,7 @@ describe("ScoreResult", () => {
   })
 
   it("draws the score as its parts and tells what a missing row would add, only when the parts add up", () => {
-    // Skor, parçalarının toplamı; formülle tutmayan bir skorda şerit çizilmiyor.
+    // Skor, parçalarının toplamı; formülle tutmayan bir skorda parçalar çizilmiyor.
     expect(renderToStaticMarkup(<ScoreResult result={result} adapting={false} />)).not.toContain("Skorun parçaları")
     const consistent = { ...result, score: scoreParts(result).score }
     const html = renderToStaticMarkup(<ScoreResult result={consistent} adapting={false} />)

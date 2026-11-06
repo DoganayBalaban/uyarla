@@ -3,9 +3,9 @@ import { isGenericRequirement } from "@uyarla/core/score/score"
 import type { Requirement } from "@uyarla/core/schemas/job"
 
 /**
- * Skorun parçaları (analiz raporu şeridi): her gereksinim ve unvan, formüldeki
- * ağırlığı kadar yer kaplıyor, karşılanma oranı kadar doluyor. Toplam core'un
- * weightedScore'uyla aynı; ekran formülde olmayan bir şey çizmiyor.
+ * Skorun parçaları (analiz raporu): her gereksinim ve unvan, formüldeki ağırlığı
+ * ve karşılanma oranıyla. Toplam core'un weightedScore'uyla aynı; ekran formülde
+ * olmayan bir şey çizmiyor.
  */
 export interface ScorePart {
   /** Gereksinimin sonuçtaki sırası; unvan için null. */
@@ -76,5 +76,16 @@ export function scoreParts(result: {
   return {
     parts: raw.map((p) => ({ ...p, gain: Math.round(((p.weight * (1 - p.credit)) / total) * 100) })),
     score: Math.round((sum / total) * 100),
+  }
+}
+
+/**
+ * CV'de olanlar ve olmayanlar. Kısmi eşleşme olanlarda, tamların ardından;
+ * olmayanlar en çok puan getirenden başlıyor.
+ */
+export function groupParts(parts: ScorePart[]): { met: ScorePart[]; missing: ScorePart[] } {
+  return {
+    met: parts.filter((p) => p.credit > 0).sort((a, b) => b.credit - a.credit),
+    missing: parts.filter((p) => p.credit === 0).sort((a, b) => b.gain - a.gain),
   }
 }
