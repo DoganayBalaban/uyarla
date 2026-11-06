@@ -1,5 +1,5 @@
 import { analysisProfile } from "@uyarla/core/adapt/facts"
-import { declareTargets, type DeclarationInput, type DeclareTarget } from "@uyarla/core/adapt/declarations"
+import { declarableTerms, declareTargets, type DeclarationInput, type DeclareTarget } from "@uyarla/core/adapt/declarations"
 import { normalizeText } from "@uyarla/core/normalize/turkish"
 import type { ResumeProfile } from "@uyarla/core/schemas/resume"
 
@@ -9,14 +9,13 @@ import type { ResumeProfile } from "@uyarla/core/schemas/resume"
  */
 export function checkDeclaration(
   input: DeclarationInput,
-  requirement: { requirement: { text: string; type: string }; missingConcepts: string[] },
+  requirement: { requirement: { type: string; concepts?: ReadonlyArray<{ term: string }> }; missingConcepts?: readonly string[] },
   profile: ResumeProfile,
 ): "ok" | "wrong_kind" | "unknown_term" | "unknown_target" {
   if (input.kind !== requirement.requirement.type) return "wrong_kind"
   if (input.kind === "skill") {
     // Serbest metin kabul edilmiyor: beceriye yalnızca ilanın sorduğu terim girer.
-    const concepts = requirement.missingConcepts.length > 0 ? requirement.missingConcepts : [requirement.requirement.text]
-    const allowed = new Set(concepts.map(normalizeText))
+    const allowed = new Set(declarableTerms(requirement).map(normalizeText))
     return input.terms.every((term) => allowed.has(normalizeText(term))) ? "ok" : "unknown_term"
   }
   if (input.kind === "experience") {

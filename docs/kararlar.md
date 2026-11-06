@@ -4010,7 +4010,10 @@ Eski ilanlarda `category` yok; yeniden çıkarılınca gelir.
 - **Geri alınca ilk skora dönülmüyor.** Beyan alanı boşalsa da skor yeniden hesaplanıyor; eski formüllü analizde gereksinimler güncel formülle hesaplandığı için ilk skora dönmek parçalarla çelişirdi.
 - **Uyarlama başlayınca kilit.** Analiz başına tek uyarlama var; beyan değişirse taslaktaki madde kimlikleri bozulurdu. Sonrası için uyarlama ekranındaki "AI ile yaz" duruyor.
 - **Düğme çıkmayan yerler.** Unvan (CV'de yazan bir gerçek), hiç iş ya da proje olmayan deneyim satırı, örnek rapor.
-- **Birden çok eksik kavramda seçim.** Tek tık, adayın bilmediği kavramı da yazardı.
+- **Birden çok terimde seçim.** Tek tık, adayın bilmediği kavramı da yazardı. Seçenek grubu ("Jest / Cypress") bu yüzden üyelerine açılıyor; üyelerden biri grubu karşılıyor.
+- **Eklenebilecek terim gereksinimin kavramlarından geliyor (`declarableTerms`), `missingConcepts`'ten değil.** O listede süre notu da var; beceri olarak yazılırsa adayın eksiği CV'ye geçerdi. Temiz terim yoksa (yalnızca özette bulunan kavram, cümle gibi okunan kavram) düğme çıkmıyor; gereksinim cümlesi beceri olarak yazılmıyor.
+- **"Sen ekledin" içeriğe bakıyor.** Beyanlı satırın kanıtı CV'nin kendisinden olabilir; beyan edilen beceri başka bir gereksinimi de karşılayabilir.
+- **İstekler sırayla.** Sonucu değiştiren PATCH'ler ve uyarlama başlatma istemcide tek kuyrukta; sonucu bütün olarak yazdıkları için üst üste binince beyan kayboluyordu. Sunucuda sürüm kontrolü yok: iki ayrı sekme hâlâ birbirini ezebilir.
 - **Cümle analizde LLM'den geçmiyor.** CV'ye olduğu gibi giriyor; uyarlamada diğer maddeler gibi yeniden yazılabilir.
 
 **Bilinen sınır:** "En az 3 yıl" gibi süre şartları CV'deki işlerin süresinden hesaplanıyor; cümle eklemek süreyi artırmıyor. Satır "Eklendi, CV'ne girecek; bu şart skoru değiştirmedi" diyor, puan garantisi verilmiyor.

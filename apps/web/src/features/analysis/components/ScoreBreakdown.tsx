@@ -205,8 +205,12 @@ function PartRow({
   )
 }
 
-/** Unvan CV'de yazan bir gerçek; cümlenin yazılacağı iş yoksa deneyim de eklenemiyor. */
+/**
+ * Unvan CV'de yazan bir gerçek. Cümlenin yazılacağı iş yoksa deneyim, temiz terim
+ * yoksa beceri eklenemiyor.
+ */
 function canDeclare(part: ScorePart, targets: DeclareTarget[]): boolean {
-  if (part.type === "skill" || part.type === "education") return true
-  return part.type === "experience" && targets.length > 0
+  if (part.type === "skill") return part.missing.length > 0
+  if (part.type === "experience") return targets.length > 0
+  return part.type === "education"
 }

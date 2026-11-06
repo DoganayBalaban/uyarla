@@ -1,3 +1,4 @@
+import { declarableTerms } from "@uyarla/core/adapt/declarations"
 import { scoringConfigFor } from "@uyarla/core/score/config"
 import { isGenericRequirement } from "@uyarla/core/score/score"
 import type { Requirement } from "@uyarla/core/schemas/job"
@@ -14,7 +15,7 @@ export interface ScorePart {
   kind: "must" | "nice" | "generic" | "title"
   /** Gereksinimin türü; "Bende var" formunu bu seçiyor (K-114). */
   type: Requirement["type"] | "title"
-  /** Karşılanmayan kavramlar; yoksa gereksinimin metni. Unvanda boş. */
+  /** "Bende var" ile eklenebilecek terimler (core declarableTerms). Boşsa beceri eklenemiyor. */
   missing: string[]
   /** Formüldeki ağırlık. */
   weight: number
@@ -61,7 +62,7 @@ export function scoreParts(result: {
       label: r.requirement.text,
       kind: generic && weight < importanceWeight ? "generic" : must ? "must" : "nice",
       type: r.requirement.type as Requirement["type"],
-      missing: r.missingConcepts?.length ? r.missingConcepts : [r.requirement.text],
+      missing: declarableTerms(r),
       weight,
       credit: Math.max(0, Math.min(1, r.confidence)),
     }

@@ -84,6 +84,7 @@ import {
 } from "@/features/analysis/api"
 import { analyzeFormSchema, jobUrlSchema, type AnalyzeFormValues } from "@/features/analysis/schema"
 import { startAdaptation } from "@/features/adaptation/api"
+import { createSerialQueue } from "@/features/analysis/serialQueue"
 import { apiErrorBody, apiErrorMessage, apiStatus } from "@/lib/api"
 
 
@@ -401,9 +402,12 @@ export function AnalyzeView() {
   }
 
   /** Gereksinimi işaretler ya da şartını düzeltir (DOG-90). */
+  // Sonucu değiştiren istekler ve uyarlama sırayla: üst üste binince beyan kayboluyor.
+  const [enqueue] = useState(createSerialQueue)
+
   async function changeRequirement(analysisId: string, index: number, change: RequirementAction) {
     try {
-      const { result } = await updateRequirement(analysisId, index, change)
+      const { result } = await enqueue(() => updateRequirement(analysisId, index, change))
       setState((s) => (s ? { ...s, result } : s))
       queryClient.setQueryData<AnalysisResponse>(analysisQueryKey(analysisId), (d) => (d ? { ...d, result } : d))
       // Pano skoru değişti.
@@ -417,7 +421,7 @@ export function AnalyzeView() {
   /** İlan unvanını düzeltir (DOG-134); hata mesajıyla reddeder, form gösteriyor. */
   async function changePosition(analysisId: string, position: string | null) {
     try {
-      const { result } = await updatePosition(analysisId, position)
+      const { result } = await enqueue(() => updatePosition(analysisId, position))
       setState((s) => (s ? { ...s, result } : s))
       queryClient.setQueryData<AnalysisResponse>(analysisQueryKey(analysisId), (d) => (d ? { ...d, result } : d))
       void queryClient.invalidateQueries({ queryKey: applicationsQueryKey })
@@ -431,7 +435,7 @@ export function AnalyzeView() {
     setBusy(true)
     let parsed: { error?: string; code?: string }
     try {
-      const { adaptationId } = await startAdaptation(analysisId)
+      const { adaptationId } = await enqueue(() => startAdaptation(analysisId))
       // Hak harcandı: üst menüdeki rozet ve Hesabım güncellensin.
       void queryClient.invalidateQueries({ queryKey: billingStatusKey })
       // Uyarlama başladı: "Bende var" kilitlensin (K-114).

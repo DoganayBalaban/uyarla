@@ -77,6 +77,45 @@ function applyDeclaration(profile: ResumeProfile, declaration: Declaration): Res
   }
 }
 
+const MAX_TERM_LENGTH = 60
+const MAX_TERM_WORDS = 5
+const SENTENCE_BREAK = /[.!?;:]\s/
+
+const OPTION_SEPARATOR = " / "
+
+const isCleanTerm = (term: string) =>
+  term.length > 0 && term.length <= MAX_TERM_LENGTH && term.split(/\s+/).length <= MAX_TERM_WORDS && !SENTENCE_BREAK.test(term)
+
+/**
+ * Bir beceri gereksiniminde adayın ekleyebileceği terimler.
+ *
+ * `missingConcepts` değil gereksinimin kavramları esas: süre notu ("En az 3 yıl
+ * deneyim (CV'de ~1 yıl)") o listede ama kavram değil, beceri olarak yazılırsa
+ * adayın eksiğini CV'sine geçirir. Seçenek grubu ("Jest / Cypress") üyelerine
+ * açılıyor; tek tık bilmediği seçeneği de yazmasın. Temiz terim yoksa liste boş
+ * ve düğme çıkmıyor: gereksinim cümlesi beceri olarak yazılmıyor.
+ */
+export function declarableTerms(item: {
+  requirement: { concepts?: ReadonlyArray<{ term: string }> }
+  missingConcepts?: readonly string[]
+}): string[] {
+  const missing = new Set(item.missingConcepts ?? [])
+  const seen = new Set<string>()
+  const terms: string[] = []
+  for (const { term } of item.requirement.concepts ?? []) {
+    if (!missing.has(term)) continue
+    const members = term.split(OPTION_SEPARATOR).map((t) => t.trim())
+    if (!members.every(isCleanTerm)) continue
+    for (const member of members) {
+      const key = normalizeText(member)
+      if (seen.has(key)) continue
+      seen.add(key)
+      terms.push(member)
+    }
+  }
+  return terms
+}
+
 /** Gereksinim başına bir beyan: yenisi eskisinin yerine geçiyor. */
 export function upsertDeclaration(list: readonly Declaration[], next: Declaration): Declaration[] {
   return [...removeDeclaration(list, next.requirementIndex), next]
@@ -86,14 +125,25 @@ export function removeDeclaration(list: readonly Declaration[], requirementIndex
   return list.filter((d) => d.requirementIndex !== requirementIndex)
 }
 
-/** Beyanın kendi gereksinimi karşılandıysa kanıtı "sen ekledin" diye işaretler. */
+/** Beyandan profile giren metinler, kanıtın `matchText`'iyle karşılaştırılacak biçimde. */
+function declaredTexts(declaration: Declaration): string[] {
+  if (declaration.kind === "skill") return declaration.terms
+  if (declaration.kind === "experience") return [declaration.text]
+  return [`${declaration.school}, ${declaration.field}`]
+}
+
+/**
+ * Beyandan gelen kanıtı "sen ekledin" diye işaretler. Satıra değil içeriğe
+ * bakıyor: beyanlı satırın kanıtı CV'nin kendisinden olabilir, beyan edilen
+ * beceri de başka bir gereksinimi karşılayabilir.
+ */
 export function markDeclarationEvidence(result: ScoreResult, declarations: readonly Declaration[]): ScoreResult {
   if (declarations.length === 0) return result
-  const declared = new Set(declarations.map((d) => d.requirementIndex))
+  const declared = new Set(declarations.flatMap(declaredTexts).map(normalizeText))
   return {
     ...result,
-    requirements: result.requirements.map((r, i) =>
-      declared.has(i) && r.evidence ? { ...r, evidence: { ...r.evidence, declared: true } } : r,
+    requirements: result.requirements.map((r) =>
+      r.evidence && declared.has(normalizeText(r.evidence.matchText)) ? { ...r, evidence: { ...r.evidence, declared: true } } : r,
     ),
   }
 }

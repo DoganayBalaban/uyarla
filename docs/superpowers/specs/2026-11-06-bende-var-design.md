@@ -42,7 +42,7 @@ Kararlar kullanıcının: gösterim C seçeneği, kalıcılık yok. Ayrıntılar
 
 | Satır türü | Davranış |
 |---|---|
-| `skill` | Tek tık. Eksik kavram birden çoksa önce hangileri seçiliyor |
+| `skill` | Tek tık. Eklenebilecek terim birden çoksa önce hangileri seçiliyor. Temiz terim yoksa düğme yok |
 | `experience` | Form: hangi iş ya da proje (seçim) + bir cümle |
 | `education` | Form: okul + bölüm |
 | Unvan | Düğme yok: unvan CV'de yazan bir gerçek |
@@ -101,9 +101,11 @@ de `correct` dalındaki yeniden hesabı kullanıyor (`scoreProfile` +
 `markFactEvidence`). Beyanlar güncellenmiş `result`, sonra `analysisProfile`.
 
 Girdi denetimi `parseAnalysisPatch` içinde:
-- `skill`: `terms` 1–10 terim, her biri en çok 60 karakter. Terimler
-  gereksinimin `missingConcepts` listesinden olmalı, serbest metin kabul
-  edilmiyor. Liste boşsa gereksinim metni kullanılıyor.
+- `skill`: `terms` 1–10 terim, her biri en çok 60 karakter. Terimler core
+  `declarableTerms`'ten olmalı, serbest metin kabul edilmiyor: eksik kalan
+  kavramlar, seçenek grubu ("Jest / Cypress") üyelerine açılmış halde. Süre notu
+  ve cümle gibi okunan kavram giremez. Temiz terim yoksa düğme çıkmıyor;
+  gereksinim metni beceri olarak yazılmıyor.
 - `experience`: `text` 10–200 karakter, `target` profilde var olmalı.
 - `education`: `school` ve `field` 2–120 karakter.
 - Türü uymayan beyan 422.

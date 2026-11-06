@@ -67,6 +67,11 @@ describe("ScoreBreakdown", () => {
     expect(html(part(null, "İlandaki unvan: X", 0, 15, "title"), declare)).not.toContain("Bende var")
   })
 
+  it("shows no button on a skill row with nothing clean to add", () => {
+    expect(html(part(0, "TypeScript ile modern arayüz geliştirme", 0.75, 4, "skill", []), declare)).not.toContain("Bende var")
+    expect(html(part(0, "TypeScript ile modern arayüz geliştirme", 0.75, 4, "skill", []), { ...declare, locked: true })).not.toContain("Uyarlama ekranından")
+  })
+
   it("shows no button on a met row", () => {
     expect(html(part(0, "React", 1, 0), declare)).not.toContain("Bende var")
   })

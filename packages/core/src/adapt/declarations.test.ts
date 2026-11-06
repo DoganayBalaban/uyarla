@@ -6,6 +6,7 @@ import { scoreProfile } from "../score/live.js"
 import type { ScoreResult } from "../score/score.js"
 import { analysisProfile } from "./facts.js"
 import {
+  declarableTerms,
   declareTargets,
   markDeclarationEvidence,
   removeDeclaration,
@@ -83,18 +84,65 @@ describe("removeDeclaration", () => {
 })
 
 describe("markDeclarationEvidence", () => {
-  it("marks evidence only on the declared requirement when it matched", () => {
-    const scored = {
-      requirements: [
-        { status: "matched", evidence: { text: "HTML", matchText: "HTML", kind: "skill", sourceRef: null } },
-        { status: "missing", evidence: null },
-        { status: "matched", evidence: { text: "React", matchText: "React", kind: "skill", sourceRef: null } },
-      ],
-    } as unknown as ScoreResult
-    const out = markDeclarationEvidence(scored, [skill(0, ["HTML"]), skill(1, ["Go"])])
+  const evidence = (matchText: string, kind = "skill", sourceRef: string | null = null) => ({ text: matchText, matchText, kind, sourceRef })
+  const scored = (...items: Array<ReturnType<typeof evidence> | null>) =>
+    ({ requirements: items.map((e) => ({ status: e ? "matched" : "missing", evidence: e })) }) as unknown as ScoreResult
+
+  it("marks the evidence that came from the declared skill, on any requirement", () => {
+    const out = markDeclarationEvidence(scored(evidence("HTML"), null, evidence("html")), [skill(0, ["HTML"])])
     expect(out.requirements[0]!.evidence?.declared).toBe(true)
     expect(out.requirements[1]!.evidence).toBeNull()
-    expect(out.requirements[2]!.evidence?.declared).toBeUndefined()
+    expect(out.requirements[2]!.evidence?.declared).toBe(true)
+  })
+
+  it("leaves the CV's own evidence alone on a declared row", () => {
+    const out = markDeclarationEvidence(scored(evidence("React")), [skill(0, ["Svelte"])])
+    expect(out.requirements[0]!.evidence?.declared).toBeUndefined()
+  })
+
+  it("recognises a declared sentence and a declared school", () => {
+    const out = markDeclarationEvidence(scored(evidence("Paneli React ile yaptım", "bullet"), evidence("Marmara, İşletme", "education")), [
+      experience(0, { section: "experience", index: 0 }, "Paneli React ile yaptım"),
+      education(1, "Marmara", "İşletme"),
+    ])
+    expect(out.requirements.map((r) => r.evidence?.declared)).toEqual([true, true])
+  })
+})
+
+describe("declarableTerms", () => {
+  const item = (concepts: Array<{ term: string; synonyms: string[] }>, missingConcepts?: string[]) => ({
+    requirement: { concepts },
+    missingConcepts,
+  })
+  const c = (term: string, synonyms: string[] = []) => ({ term, synonyms })
+
+  it("offers only the concepts still missing", () => {
+    expect(declarableTerms(item([c("Google Ads"), c("Meta")], ["Meta"]))).toEqual(["Meta"])
+  })
+
+  it("splits an option group, so one click cannot claim every option", () => {
+    expect(declarableTerms(item([c("Jest / Cypress", ["Jest", "Cypress"])], ["Jest / Cypress"]))).toEqual(["Jest", "Cypress"])
+  })
+
+  it("never offers the duration note", () => {
+    expect(declarableTerms(item([c("React")], ["React", "En az 3 yıl deneyim (CV'de ~1 yıl)"]))).toEqual(["React"])
+    expect(declarableTerms(item([c("React")], ["En az 3 yıl deneyim (CV'de ~1 yıl)"]))).toEqual([])
+  })
+
+  it("offers nothing instead of the requirement text when no concept is missing", () => {
+    expect(declarableTerms(item([c("TypeScript")], []))).toEqual([])
+  })
+
+  it("survives records saved without missing concepts", () => {
+    expect(declarableTerms(item([c("TypeScript")]))).toEqual([])
+    expect(declarableTerms({ requirement: {} })).toEqual([])
+  })
+
+  it("drops a concept that reads like a sentence", () => {
+    const junk = "LangChain / LangGraph / agent/orchestration frameworks. You / built with them / hit their limits"
+    expect(declarableTerms(item([c(junk), c("Python")], [junk, "Python"]))).toEqual(["Python"])
+    const long = "modern frontend araçlarıyla ölçeklenebilir kullanıcı arayüzü geliştirme pratikleri"
+    expect(declarableTerms(item([c(long)], [long]))).toEqual([])
   })
 })
 
@@ -129,6 +177,15 @@ describe("beyandan skora ve belgeye (K-114)", () => {
     expect((await statuses({}))[0]).toBe("missing")
     expect((await statuses({ declarations: [skill(0, ["HTML"])] }))[0]).toBe("matched")
     expect((await statuses({ declarations: removeDeclaration([skill(0, ["HTML"])], 0) }))[0]).toBe("missing")
+  })
+
+  it("lets one member satisfy an option group", async () => {
+    const options: JobPostingData = {
+      ...posting,
+      requirements: [{ text: "Jest veya Cypress", type: "skill", importance: "must", concepts: [{ term: "Jest / Cypress", synonyms: ["Jest", "Cypress"] }] }],
+    }
+    const scored = await scoreProfile({ profile: analysisProfile(profile, { declarations: [skill(0, ["Jest"])] }), posting: options }, embedding)
+    expect(scored.requirements[0]!.status).toBe("matched")
   })
 
   it("reaches the document even when the CV groups its skills", () => {

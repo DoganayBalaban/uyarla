@@ -9,7 +9,10 @@ const profile = {
   projects: [],
 } as unknown as ResumeProfile
 
-const missing = (missingConcepts: string[], text = "HTML bilgisi", type = "skill") => ({ requirement: { text, type }, missingConcepts })
+const missing = (missingConcepts: string[], text = "HTML bilgisi", type = "skill") => ({
+  requirement: { text, type, concepts: missingConcepts.map((term) => ({ term, synonyms: [] })) },
+  missingConcepts,
+})
 
 describe("checkDeclaration", () => {
   it("allows a skill term only from the missing concepts", () => {
@@ -17,8 +20,17 @@ describe("checkDeclaration", () => {
     expect(checkDeclaration({ kind: "skill", terms: ["Rust"] }, missing(["HTML"]), profile)).toBe("unknown_term")
   })
 
-  it("falls back to the requirement text when no concept is missing", () => {
-    expect(checkDeclaration({ kind: "skill", terms: ["HTML bilgisi"] }, missing([]), profile)).toBe("ok")
+  it("never writes the requirement text or a duration note as a skill", () => {
+    expect(checkDeclaration({ kind: "skill", terms: ["HTML bilgisi"] }, missing([]), profile)).toBe("unknown_term")
+    const note = "En az 3 yıl deneyim (CV'de ~1 yıl)"
+    const withNote = { ...missing(["React"]), missingConcepts: ["React", note] }
+    expect(checkDeclaration({ kind: "skill", terms: [note] }, withNote, profile)).toBe("unknown_term")
+  })
+
+  it("takes one option of a group, not the group itself", () => {
+    const group = missing(["Jest / Cypress"])
+    expect(checkDeclaration({ kind: "skill", terms: ["Jest"] }, group, profile)).toBe("ok")
+    expect(checkDeclaration({ kind: "skill", terms: ["Jest / Cypress"] }, group, profile)).toBe("unknown_term")
   })
 
   it("matches the form to the requirement type", () => {

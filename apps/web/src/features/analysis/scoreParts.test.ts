@@ -67,14 +67,14 @@ describe("scoreParts: ekleme için alanlar (K-114)", () => {
   it("carries the requirement type and its missing concepts", () => {
     const { parts } = scoreParts({
       requirements: [
-        { ...req("Google Ads ve Meta", "must", "skill", 0.5), missingConcepts: ["Meta"] },
-        req("HTML bilgisi", "must", "skill", 0),
+        { ...req("Google Ads ve Meta", "must", "skill", 0.5, [{ term: "Google Ads", synonyms: [] }, { term: "Meta", synonyms: [] }]), missingConcepts: ["Meta"] },
+        { ...req("Özetinde geçen beceri", "must", "skill", 0.75), missingConcepts: [] },
       ],
       titleMatch: { level: "none", position: "Uzman" },
       scoringRevision: 3,
     })
     expect(parts[0]).toMatchObject({ type: "skill", missing: ["Meta"] })
-    expect(parts[1]).toMatchObject({ type: "skill", missing: ["HTML bilgisi"] })
+    expect(parts[1]).toMatchObject({ type: "skill", missing: [] })
     expect(parts.at(-1)).toMatchObject({ type: "title", missing: [] })
   })
 })
