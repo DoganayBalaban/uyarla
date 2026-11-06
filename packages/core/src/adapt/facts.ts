@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { normalizeText } from "../normalize/turkish.js"
 import { AdaptationDraftSchema } from "../schemas/adaptation.js"
+import { DeclarationSchema, withDeclarations } from "./declarations.js"
 import type { Requirement } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
 import type { ScoreResult } from "../score/score.js"
@@ -124,15 +125,17 @@ export function withFacts(
 }
 
 /**
- * Bir analizin gördüğü profil: CV sürümünün profili ve analize katılan
- * olgular. Analizden sonraki her adım (uyarlama, düzeltilmiş skor, indirme)
+ * Bir analizin gördüğü profil: CV sürümünün profili, analize katılan olgular
+ * ve adayın o analizde eklediği beyanlar (K-114). Analizden sonraki her adım (uyarlama, düzeltilmiş skor, indirme)
  * bunu kullanmalı; yoksa madde kimlikleri kayar ve skor başka bir profile
  * göre hesaplanır.
  */
 export function analysisProfile(profile: ResumeProfile, result: unknown): ResumeProfile {
-  const facts = (result as { facts?: unknown } | null)?.facts
-  const parsed = z.array(RememberedFactSchema).safeParse(facts ?? [])
-  return parsed.success ? withFacts(profile, parsed.data).profile : profile
+  const stored = result as { facts?: unknown; declarations?: unknown } | null
+  const parsed = z.array(RememberedFactSchema).safeParse(stored?.facts ?? [])
+  const withRemembered = parsed.success ? withFacts(profile, parsed.data).profile : profile
+  const declarations = z.array(DeclarationSchema).safeParse(stored?.declarations ?? [])
+  return declarations.success ? withDeclarations(withRemembered, declarations.data) : withRemembered
 }
 
 /**

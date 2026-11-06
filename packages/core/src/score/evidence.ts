@@ -41,6 +41,8 @@ export interface Evidence {
    * CV'de yok. adapt/facts.ts markFactEvidence işaretliyor.
    */
   fact?: boolean
+  /** Kanıt adayın bu analizde eklediği beyandan (K-114); yüklenen CV'de yok. */
+  declared?: boolean
 }
 
 export function collectEvidence(profile: ResumeProfile): Evidence[] {
