@@ -1171,6 +1171,8 @@ ama amacını daha iyi koruyoruz; sapma gerekçesiyle birlikte kayıtlı.
 
 **Tarih:** 25 Eylül 2026 · **Durum:** Geçerli · **Kapsam:** Sprint 2
 
+> K-114 ile değişti: adayın kendi eklediği beceri kümeye girebiliyor. Modelin beceri eklememesi aynen geçerli.
+
 Yol haritası §6.2 "özet, deneyim maddeleri ve **yetenekleri** yeniden yazma"
 diyor. Beceriler yeniden yazılmayacak; ilana göre sıralanacak ve bu sıralama
 kodda yapılacak.
@@ -2736,6 +2738,8 @@ sunucusunu durdurup `.next`'i silerek derle.
 
 **Tarih:** 18 Ekim 2026 · **Durum:** Geçerli · **Kapsam:** DOG-90 (son adım)
 
+> K-114 ile değişti: aday artık analizde beyan ekleyebiliyor. "CV hakkında beyan alınmıyor" yalnızca şart düzeltme için geçerli.
+
 **Karar** (ayrıntı: `docs/superpowers/specs/2026-10-18-dog-90-kapanis-design.md`):
 - **Kalıcı hariç tutma:** `ExcludedConcept` tablosu (kullanıcı × kavram
   anahtarı). Bir gereksinim, bütün kavramları listedeyse sonraki analizlerde
@@ -3992,3 +3996,23 @@ Eski ilanlarda `category` yok; yeniden çıkarılınca gelir.
 - Gece bölümü (Dürüstlük) iki temada da koyu kalıyor. Oradaki simgeler beyaz zeminde, ışımalar beyaz. Son çağrı kartı açıkta gece rengi, koyuda kenarlı kart.
 - Grafikler Vercel'in sırasıyla: amber, mavi, griler.
 - Kapsam dışı kalanlar: e-posta şablonlarındaki kobalt ve eklentinin kendi düğmesi.
+
+## K-114 · "Bende var": aday analizde eksik gereksinimi ekliyor
+
+**Tarih:** 6 Kasım 2026 · **Durum:** Geçerli · **Kapsam:** Analiz raporu, uyarlama
+
+**Bağlam:** Aday bir şeyi biliyor ama basit bulduğu için CV'ye yazmamış (örnek: HTML); sırf bu yüzden puanı düşüyordu. "CV'mde var ama bulunamamış" bildirimi yalnızca kayıt tutuyor (K-69). Uyarlamadaki "AI ile yaz" da skoru analiz ekranında değiştirmiyor.
+
+**Karar:** Eksik ya da kısmi satırda "Bende var" düğmesi var. Beyan yalnızca o analizde kalıyor: `result.declarations`. Sonraki analize, CV sürümüne ve olgu hafızasına (K-75) gitmiyor; veritabanı göçü yok. Tasarım: `docs/superpowers/specs/2026-11-06-bende-var-design.md`.
+- **Tür belirliyor.** Beceride tek tık, deneyimde hangi iş ya da proje ve bir cümle, eğitimde okul ve bölüm. Tek tıklık deneyim, görüşmede savunulamayacak dayanaksız bir iddia olurdu (K-37).
+- **Uydurma sınırı kaymadı.** Bilgiyi model değil aday veriyor. Beceri terimi ilanın eksik kavramlarından seçiliyor, serbest metin yok. Cümle `sourceRef` olarak kaynağa giriyor; K-28 kontrolleri modelin yazımını ona karşı sınıyor.
+- **Puan elle verilmiyor.** `analysisProfile` beyanları uyguluyor, skor aynı formülle yeniden hesaplanıyor. `result.score` ilk skor olarak kalıyor (K-69).
+- **Geri alınca ilk skora dönülmüyor.** Beyan alanı boşalsa da skor yeniden hesaplanıyor; eski formüllü analizde gereksinimler güncel formülle hesaplandığı için ilk skora dönmek parçalarla çelişirdi.
+- **Uyarlama başlayınca kilit.** Analiz başına tek uyarlama var; beyan değişirse taslaktaki madde kimlikleri bozulurdu. Sonrası için uyarlama ekranındaki "AI ile yaz" duruyor.
+- **Düğme çıkmayan yerler.** Unvan (CV'de yazan bir gerçek), hiç iş ya da proje olmayan deneyim satırı, örnek rapor.
+- **Birden çok eksik kavramda seçim.** Tek tık, adayın bilmediği kavramı da yazardı.
+- **Cümle analizde LLM'den geçmiyor.** CV'ye olduğu gibi giriyor; uyarlamada diğer maddeler gibi yeniden yazılabilir.
+
+**Bilinen sınır:** "En az 3 yıl" gibi süre şartları CV'deki işlerin süresinden hesaplanıyor; cümle eklemek süreyi artırmıyor. Satır "Eklendi, CV'ne girecek; bu şart skoru değiştirmedi" diyor, puan garantisi verilmiyor.
+
+**Vaat metinleri:** Rapordaki cümle "senin eklediklerin dışında olmayan bir şey eklemiyoruz" oldu. E-posta, başvuru kontrolü, takip paneli ve tanıtım metinleri değişmedi: onlar uyarlamanın kendi davranışını anlatıyor ve bu doğru kalıyor.

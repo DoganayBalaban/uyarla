@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest"
+import { toDocumentModel } from "../document/model.js"
+import type { JobPostingData } from "../schemas/job.js"
 import type { ResumeProfile } from "../schemas/resume.js"
+import { scoreProfile } from "../score/live.js"
 import type { ScoreResult } from "../score/score.js"
+import { analysisProfile } from "./facts.js"
 import {
   declareTargets,
   markDeclarationEvidence,
@@ -100,5 +104,36 @@ describe("declareTargets", () => {
       { section: "experience", index: 0, label: "Acme · Geliştirici" },
       { section: "projects", index: 0, label: "Bitirme" },
     ])
+  })
+})
+
+describe("beyandan skora ve belgeye (K-114)", () => {
+  const posting: JobPostingData = {
+    position: "Geliştirici",
+    company: null,
+    seniority: null,
+    language: "tr",
+    requirements: [
+      { text: "HTML bilgisi", type: "skill", importance: "must", concepts: [{ term: "HTML", synonyms: [] }] },
+      { text: "React", type: "skill", importance: "must", concepts: [{ term: "React", synonyms: [] }] },
+    ],
+  }
+  // Her metin kendi yönünde: anlamsal eşleşme olmasın, sonucu yalnızca kelime belirlesin.
+  const embedding = {
+    embed: async (texts: string[]) => texts.map((_, i) => texts.map((__, j) => (i === j ? 1 : 0))),
+  }
+  const statuses = async (result: unknown) =>
+    (await scoreProfile({ profile: analysisProfile(profile, result), posting }, embedding)).requirements.map((r) => r.status)
+
+  it("turns a missing skill into a match, and undoing brings it back", async () => {
+    expect((await statuses({}))[0]).toBe("missing")
+    expect((await statuses({ declarations: [skill(0, ["HTML"])] }))[0]).toBe("matched")
+    expect((await statuses({ declarations: removeDeclaration([skill(0, ["HTML"])], 0) }))[0]).toBe("missing")
+  })
+
+  it("reaches the document even when the CV groups its skills", () => {
+    const grouped = { ...profile, skills: ["React"], skillGroups: [{ name: "Frontend", items: ["React"] }] }
+    const model = toDocumentModel(analysisProfile(grouped, { declarations: [skill(0, ["HTML"])] }))
+    expect(JSON.stringify(model)).toContain("HTML")
   })
 })

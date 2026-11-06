@@ -34,6 +34,12 @@ describe("ScoreResult", () => {
     expect(html).not.toContain("Teknik ayrıntı")
   })
 
+  it("tells that only what the user added goes beyond the CV (K-114)", () => {
+    expect(renderToStaticMarkup(<ScoreResult result={result} adapting={false} />)).toContain(
+      "senin eklediklerin dışında olmayan bir şey eklemiyoruz",
+    )
+  })
+
   it("draws the score as its parts and tells what a missing row would add, only when the parts add up", () => {
     // Skor, parçalarının toplamı; formülle tutmayan bir skorda parçalar çizilmiyor.
     expect(renderToStaticMarkup(<ScoreResult result={result} adapting={false} />)).not.toContain("Skorun parçaları")

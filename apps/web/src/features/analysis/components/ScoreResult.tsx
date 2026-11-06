@@ -263,7 +263,7 @@ export function ScoreResult({
                 (DOG-103). Skor CV ile ilanın örtüşmesi; çerçeve bunu söylüyor. */}
             <p className="m-0 mt-3 text-sm text-muted-foreground">
               {missing > 0
-                ? "Bu skor CV'nin ilanla ne kadar örtüştüğünü ölçer, işe uygunluğunu değil. Uyarladığımızda eksikleri deneyiminin izin verdiği ölçüde görünür kılıyoruz; olmayan bir şeyi eklemiyoruz."
+                ? "Bu skor CV'nin ilanla ne kadar örtüştüğünü ölçer, işe uygunluğunu değil. Uyarladığımızda eksikleri deneyiminin izin verdiği ölçüde görünür kılıyoruz; senin eklediklerin dışında olmayan bir şey eklemiyoruz."
                 : "CV'n bu ilanın istediklerini karşılıyor. Yine de anlatımı ilanın diline yaklaştırabilirsin."}
             </p>
             {(result.facts?.length ?? 0) > 0 && (
