@@ -12,6 +12,10 @@ export interface ScorePart {
   index: number | null
   label: string
   kind: "must" | "nice" | "generic" | "title"
+  /** Gereksinimin türü; "Bende var" formunu bu seçiyor (K-114). */
+  type: Requirement["type"] | "title"
+  /** Karşılanmayan kavramlar; yoksa gereksinimin metni. Unvanda boş. */
+  missing: string[]
   /** Formüldeki ağırlık. */
   weight: number
   /** 0–1: karşılanma oranı (kısmi eşleşme ara değer). */
@@ -23,6 +27,7 @@ export interface ScorePart {
 interface PartInput {
   requirement: { text: string; importance: string; type: string; concepts?: Array<{ term: string }> }
   confidence: number
+  missingConcepts?: string[]
 }
 
 const TITLE_CREDIT: Record<string, number> = { exact: 1, partial: 0.5, none: 0 }
@@ -55,6 +60,8 @@ export function scoreParts(result: {
       index,
       label: r.requirement.text,
       kind: generic && weight < importanceWeight ? "generic" : must ? "must" : "nice",
+      type: r.requirement.type as Requirement["type"],
+      missing: r.missingConcepts?.length ? r.missingConcepts : [r.requirement.text],
       weight,
       credit: Math.max(0, Math.min(1, r.confidence)),
     }
@@ -65,6 +72,8 @@ export function scoreParts(result: {
       index: null,
       label: `İlandaki unvan: ${result.titleMatch.position}`,
       kind: "title",
+      type: "title",
+      missing: [],
       weight: cfg.titleWeight,
       credit: TITLE_CREDIT[result.titleMatch.level] ?? 0,
     })

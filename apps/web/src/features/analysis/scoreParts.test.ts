@@ -63,8 +63,24 @@ describe("scoreParts", () => {
   })
 })
 
+describe("scoreParts: ekleme için alanlar (K-114)", () => {
+  it("carries the requirement type and its missing concepts", () => {
+    const { parts } = scoreParts({
+      requirements: [
+        { ...req("Google Ads ve Meta", "must", "skill", 0.5), missingConcepts: ["Meta"] },
+        req("HTML bilgisi", "must", "skill", 0),
+      ],
+      titleMatch: { level: "none", position: "Uzman" },
+      scoringRevision: 3,
+    })
+    expect(parts[0]).toMatchObject({ type: "skill", missing: ["Meta"] })
+    expect(parts[1]).toMatchObject({ type: "skill", missing: ["HTML bilgisi"] })
+    expect(parts.at(-1)).toMatchObject({ type: "title", missing: [] })
+  })
+})
+
 describe("groupParts", () => {
-  const part = (label: string, credit: number, gain: number): ScorePart => ({ index: 0, label, kind: "must", weight: 2, credit, gain })
+  const part = (label: string, credit: number, gain: number): ScorePart => ({ index: 0, label, kind: "must", type: "skill", missing: [label], weight: 2, credit, gain })
 
   it("counts a partial match as present, like the report's headline", () => {
     const { met, missing } = groupParts([part("Tam", 1, 0), part("Kısmi", 0.5, 6), part("Yok", 0, 12)])

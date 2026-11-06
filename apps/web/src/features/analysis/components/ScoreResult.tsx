@@ -19,6 +19,7 @@ import { FormatReportCard as FormatReport, type FormatReportView } from "@/featu
 import { TitleCorrection } from "@/features/analysis/components/TitleCorrection"
 import { ResultGuide } from "@/features/analysis/components/ResultGuide"
 import { scoreImpacts } from "@/features/analysis/scoreImpact"
+import type { Declaration, DeclareTarget } from "@uyarla/core/adapt/declarations"
 import { ScoreBreakdown } from "@/features/analysis/components/ScoreBreakdown"
 import { scoreParts, type ScorePart } from "@/features/analysis/scoreParts"
 import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
@@ -51,8 +52,11 @@ export interface RequirementResult {
   status: "matched" | "missing"
   confidence: number
   method: string | null
-  /** `fact`: kanıt daha önce anlatılan bir deneyimden (DOG-116), yüklenen CV'de yok. */
-  evidence: { text: string; kind: string; fact?: boolean } | null
+  /**
+   * `fact`: kanıt daha önce anlatılan bir deneyimden (DOG-116), yüklenen CV'de
+   * yok. `declared`: aday bu analizde ekledi (K-114), o da CV'de yok.
+   */
+  evidence: { text: string; kind: string; fact?: boolean; declared?: boolean } | null
   /** Eksik kavramlar; eski kayıtlarda yok (DOG-90 sayımı için). */
   missingConcepts?: string[]
 }
@@ -71,6 +75,8 @@ export interface ScoreResultView {
   exclusions?: Record<number, ExclusionMark>
   /** "CV'mde var" bildirimleri; skoru değiştirmiyor (DOG-90). */
   reports?: RequirementReport[]
+  /** "Bende var" beyanları (K-114): yalnızca bu analizde. */
+  declarations?: Declaration[]
   /** İlanın düzeltilmiş şartları (DOG-90). */
   corrections?: Record<number, RequirementCorrection>
   /** İlanın düzeltilmiş unvanı (DOG-134); titleMatch bununla. */
@@ -106,6 +112,7 @@ export function ScoreResult({
   onAdapt,
   adaptNote,
   onRequirementChange,
+  declareContext,
   onPositionChange,
   platform,
   sourceWarning,
@@ -127,6 +134,8 @@ export function ScoreResult({
   onRequirementChange?: (requirementIndex: number, change: RequirementAction) => Promise<void>
   /** İlan unvanını düzeltir (DOG-134); null düzeltmeyi kaldırıyor. */
   onPositionChange?: (position: string | null) => Promise<void>
+  /** "Bende var" için (K-114); yoksa düğme çıkmıyor. */
+  declareContext?: { locked: boolean; targets: DeclareTarget[] }
 }) {
   const reducedMotion = useReducedMotion() ?? false
   const [activeFilter, setFilter] = useState<FilterBar>("all")
@@ -227,7 +236,15 @@ export function ScoreResult({
         </div>
 
         <div className="mt-9">
-          <ScoreBreakdown parts={visibleParts} onSelect={selectPart} />
+          <ScoreBreakdown
+            parts={visibleParts}
+            onSelect={selectPart}
+            declare={
+              onRequirementChange && declareContext
+                ? { ...declareContext, declarations: result.declarations ?? [], onChange: onRequirementChange }
+                : undefined
+            }
+          />
         </div>
 
         <div className="mt-8 grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
@@ -412,7 +429,7 @@ export function ScoreResult({
                   {item.requirement.text}
                   {item.status === "matched" && item.evidence && (
                     <span className="block text-muted-foreground">
-                      {item.evidence.fact ? "Anlattığın deneyimde" : "CV'nde"}: {item.evidence.text}
+                      {item.evidence.declared ? "Sen ekledin" : item.evidence.fact ? "Anlattığın deneyimde" : "CV'nde"}: {item.evidence.text}
                     </span>
                   )}
                 </span>
@@ -589,11 +606,13 @@ function RequirementRow({
         {item.evidence ? (
           <p className="m-0 text-muted-foreground">
             <span className="line-clamp-3 text-foreground/80">{item.evidence.text}</span>
-            {item.evidence.fact && (
+            {item.evidence.declared ? (
+              <span className="mt-0.5 block text-xs">Sen ekledin; yüklediğin CV&apos;de yok, uyarladığın CV&apos;ye eklenir.</span>
+            ) : item.evidence.fact ? (
               <span className="mt-0.5 block text-xs">
                 Daha önce anlattığın deneyimden; yüklediğin CV&apos;de yok, uyarladığın CV&apos;ye eklenir.
               </span>
-            )}
+            ) : null}
           </p>
         ) : (
           <p className="m-0 text-muted-foreground">Görünmüyor</p>

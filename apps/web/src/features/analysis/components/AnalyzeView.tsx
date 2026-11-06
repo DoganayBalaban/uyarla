@@ -91,6 +91,14 @@ type PostingTab = "text" | "link" | "sample"
 /** CV'nin nasıl verileceği: dosya ya da yapıştırılan metin (DOG-101). */
 type ResumeInput = "file" | "text"
 
+const REQUIREMENT_ERRORS: Partial<Record<RequirementAction["action"], string>> = {
+  correct: "Yeniden hesaplayamadık. Birazdan tekrar dener misin?",
+  declare: "Ekleyemedik. Birazdan tekrar dener misin?",
+  undeclare: "Geri alamadık. Birazdan tekrar dener misin?",
+}
+const requirementError = (change: RequirementAction) =>
+  REQUIREMENT_ERRORS[change.action] ?? "İşaretleyemedik. Birazdan tekrar dener misin?"
+
 function StepHeading({ number, heading, hint }: { number: number; heading: string; hint: string }) {
   return (
     <div className="mb-4 flex items-start gap-3">
@@ -401,7 +409,7 @@ export function AnalyzeView() {
       // Pano skoru değişti.
       void queryClient.invalidateQueries({ queryKey: applicationsQueryKey })
     } catch {
-      setError(change.action === "correct" ? "Yeniden hesaplayamadık. Birazdan tekrar dener misin?" : "İşaretleyemedik. Birazdan tekrar dener misin?")
+      setError(requirementError(change))
       throw new Error("requirement change failed")
     }
   }
@@ -426,6 +434,8 @@ export function AnalyzeView() {
       const { adaptationId } = await startAdaptation(analysisId)
       // Hak harcandı: üst menüdeki rozet ve Hesabım güncellensin.
       void queryClient.invalidateQueries({ queryKey: billingStatusKey })
+      // Uyarlama başladı: "Bende var" kilitlensin (K-114).
+      void queryClient.invalidateQueries({ queryKey: analysisQueryKey(analysisId) })
       router.push(`/adapt/${adaptationId}`)
       return
     } catch (error) {
@@ -600,6 +610,7 @@ export function AnalyzeView() {
           adaptNote={adaptNote}
           onRequirementChange={state.analysisId ? (index, change) => changeRequirement(state.analysisId!, index, change) : undefined}
           onPositionChange={state.analysisId ? (position) => changePosition(state.analysisId!, position) : undefined}
+          declareContext={state.declare}
         />
       </AppPage>
     )
