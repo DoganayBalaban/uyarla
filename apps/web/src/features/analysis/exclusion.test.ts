@@ -26,6 +26,11 @@ describe("applyExclusions", () => {
     expect(v.excludedCount).toBe(0)
   })
 
+  it("recomputes once declarations exist, and keeps the first score otherwise (K-114)", () => {
+    expect(applyExclusions({ ...base, score: 90 }).score).toBe(90)
+    expect(applyExclusions({ ...base, score: 90, declarations: [] }).score).toBe(33)
+  })
+
   it("recomputes the score without marked requirements and leaves them out of counts", () => {
     const v = applyExclusions({ ...base, excluded: [2] })
     expect(v.score).toBe(50)

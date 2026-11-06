@@ -62,6 +62,8 @@ export function applyExclusions<T extends RequirementResult & { missingConcepts?
   corrections?: Record<number, unknown>
   /** Unvan düzeltmesi (DOG-134): titleMatch yeniden hesaplanmış, skor da. */
   positionCorrection?: string
+  /** "Bende var" beyanları (K-114): gereksinimler yeniden hesaplanmış, skor da. */
+  declarations?: unknown[]
 }): ExclusionView<T> {
   const skip = new Set(result.excluded ?? [])
   const unscored: readonly string[] = scoringConfigFor(result.scoringRevision).unscoredTypes
@@ -94,7 +96,10 @@ export function applyExclusions<T extends RequirementResult & { missingConcepts?
     // İşaret yoksa analizin kendi skoru; yeniden hesaplamak yuvarlama farkı
     // bile olsa ilk skoru oynatmasın.
     score:
-      skip.size > 0 || Object.keys(result.corrections ?? {}).length > 0 || !!result.positionCorrection
+      skip.size > 0 ||
+      Object.keys(result.corrections ?? {}).length > 0 ||
+      !!result.positionCorrection ||
+      result.declarations !== undefined
         ? adjustedScore(result.requirements, [...skip], { title: result.titleMatch, revision: result.scoringRevision })
         : result.score,
     excludedCount: skip.size,

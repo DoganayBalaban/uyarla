@@ -2,6 +2,7 @@ import { prisma } from "@uyarla/db"
 import { NextResponse } from "next/server"
 import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 import { analysisErrorMessage } from "@/server/analysisErrorMessage"
+import { declareContext } from "@/server/declarations"
 import { analyzeQueue } from "@/server/queue"
 import { detectPlatform } from "@/features/analysis/platforms"
 import { classifyPostingSource, postingSourceWarning } from "@/features/analysis/postingSource"
@@ -26,7 +27,11 @@ export async function GET(
       const analysis = analysisId
         ? await prisma.analysis.findUnique({
             where: { id: analysisId },
-            include: { jobPosting: { select: { sourceUrl: true, rawText: true } } },
+            include: {
+              jobPosting: { select: { sourceUrl: true, rawText: true } },
+              resumeVersion: { select: { profile: true } },
+              adaptation: { select: { id: true } },
+            },
           })
         : null
 
@@ -45,6 +50,7 @@ export async function GET(
         durationMs: analysis?.durationMs ?? null,
         tokenUsage: analysis?.tokenUsage ?? null,
         // İlan adresinden tanınan platform (DOG-95); ipuçları istemcide.
+        declare: analysis ? declareContext(analysis) : undefined,
         platform: detectPlatform(analysis?.jobPosting.sourceUrl),
         // Bilinmeyen ya da taklit alan adında uyarı (DOG-125).
         sourceWarning: postingSourceWarning(classifyPostingSource(analysis?.jobPosting.sourceUrl)),
