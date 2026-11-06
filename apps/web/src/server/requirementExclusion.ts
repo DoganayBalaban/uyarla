@@ -1,3 +1,4 @@
+import type { DeclarationInput } from "@uyarla/core/adapt/declarations"
 import type { ExclusionMark, ExclusionReason, RequirementCorrection, RequirementReport } from "@uyarla/core/score/exclusions"
 import { adjustedScore } from "@/features/analysis/exclusion"
 
@@ -15,6 +16,12 @@ const MAX_YEARS = 40
 const MAX_TERMS = 8
 const MAX_TERM_LENGTH = 80
 const MAX_POSITION_LENGTH = 120
+const MAX_DECLARED_TERMS = 10
+const MAX_DECLARED_TERM_LENGTH = 60
+const MIN_DECLARED_TEXT = 10
+const MAX_DECLARED_TEXT = 200
+const MIN_DECLARED_NAME = 2
+const MAX_DECLARED_NAME = 120
 
 export type AnalysisPatch =
   | { action: "exclude"; requirementIndex: number; reason: ExclusionReason; always: boolean }
@@ -22,6 +29,9 @@ export type AnalysisPatch =
   | { action: "correct"; requirementIndex: number; minYears?: number | null; terms?: string[] | null }
   /** İlan unvanının düzeltmesi (DOG-134); null düzeltmeyi kaldırıyor. */
   | { action: "position"; position: string | null }
+  /** "Bende var" (K-114): gereksinime beyan ekler ya da kaldırır. */
+  | { action: "declare"; requirementIndex: number; declaration: DeclarationInput }
+  | { action: "undeclare"; requirementIndex: number }
 
 /** PATCH /api/analysis/[id] gövdesi; geçersizse null. Eski `{ requirementIndex, excluded }` gövdesi de geçerli. */
 export function parseAnalysisPatch(body: unknown): AnalysisPatch | null {
@@ -48,6 +58,12 @@ export function parseAnalysisPatch(body: unknown): AnalysisPatch | null {
   }
 
   if (b.action === "include") return { action: "include", requirementIndex: index }
+  if (b.action === "undeclare") return { action: "undeclare", requirementIndex: index }
+
+  if (b.action === "declare") {
+    const declaration = parseDeclaration(b.declaration)
+    return declaration ? { action: "declare", requirementIndex: index, declaration } : null
+  }
 
   if (b.action === "exclude") {
     if (!REASONS.includes(b.reason as ExclusionReason)) return null
@@ -73,6 +89,41 @@ export function parseAnalysisPatch(body: unknown): AnalysisPatch | null {
       } else return null
     }
     return "minYears" in out || "terms" in out ? out : null
+  }
+
+  return null
+}
+
+const trimmed = (value: unknown, min: number, max: number): string | null => {
+  if (typeof value !== "string") return null
+  const text = value.trim()
+  return text.length >= min && text.length <= max ? text : null
+}
+
+function parseDeclaration(value: unknown): DeclarationInput | null {
+  if (!value || typeof value !== "object") return null
+  const d = value as Record<string, unknown>
+
+  if (d.kind === "skill") {
+    if (!Array.isArray(d.terms) || d.terms.length === 0 || d.terms.length > MAX_DECLARED_TERMS) return null
+    const terms = d.terms.map((t) => trimmed(t, 1, MAX_DECLARED_TERM_LENGTH))
+    return terms.every((t) => t !== null) ? { kind: "skill", terms: terms as string[] } : null
+  }
+
+  if (d.kind === "experience") {
+    const text = trimmed(d.text, MIN_DECLARED_TEXT, MAX_DECLARED_TEXT)
+    const target = d.target as { section?: unknown; index?: unknown } | null | undefined
+    const section = target?.section
+    const index = target?.index
+    if (!text || (section !== "experience" && section !== "projects")) return null
+    if (typeof index !== "number" || !Number.isInteger(index) || index < 0) return null
+    return { kind: "experience", target: { section, index }, text }
+  }
+
+  if (d.kind === "education") {
+    const school = trimmed(d.school, MIN_DECLARED_NAME, MAX_DECLARED_NAME)
+    const field = trimmed(d.field, MIN_DECLARED_NAME, MAX_DECLARED_NAME)
+    return school && field ? { kind: "education", school, field } : null
   }
 
   return null
@@ -148,10 +199,14 @@ export function scoreWithExclusions(
     scoringRevision?: number
     corrections?: Record<number, unknown>
     positionCorrection?: string
+    declarations?: unknown[]
   },
   excluded: readonly number[],
 ): number {
-  const corrected = Object.keys(result.corrections ?? {}).length > 0 || !!result.positionCorrection
+  // Beyan alanı boşalsa da kalıyor: gereksinimler bir kez yeniden hesaplandı,
+  // ilk skora dönmek eski formüllü analizde parçalarla çelişirdi.
+  const corrected =
+    Object.keys(result.corrections ?? {}).length > 0 || !!result.positionCorrection || result.declarations !== undefined
   if (excluded.length === 0 && !corrected) return result.score
   return adjustedScore(result.requirements, excluded, { title: result.titleMatch, revision: result.scoringRevision })
 }

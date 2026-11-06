@@ -1,17 +1,22 @@
+import { declarableTerms } from "@uyarla/core/adapt/declarations"
 import { scoringConfigFor } from "@uyarla/core/score/config"
 import { isGenericRequirement } from "@uyarla/core/score/score"
 import type { Requirement } from "@uyarla/core/schemas/job"
 
 /**
- * Skorun parçaları (analiz raporu şeridi): her gereksinim ve unvan, formüldeki
- * ağırlığı kadar yer kaplıyor, karşılanma oranı kadar doluyor. Toplam core'un
- * weightedScore'uyla aynı; ekran formülde olmayan bir şey çizmiyor.
+ * Skorun parçaları (analiz raporu): her gereksinim ve unvan, formüldeki ağırlığı
+ * ve karşılanma oranıyla. Toplam core'un weightedScore'uyla aynı; ekran formülde
+ * olmayan bir şey çizmiyor.
  */
 export interface ScorePart {
   /** Gereksinimin sonuçtaki sırası; unvan için null. */
   index: number | null
   label: string
   kind: "must" | "nice" | "generic" | "title"
+  /** Gereksinimin türü; "Bende var" formunu bu seçiyor (K-114). */
+  type: Requirement["type"] | "title"
+  /** "Bende var" ile eklenebilecek terimler (core declarableTerms). Boşsa beceri eklenemiyor. */
+  missing: string[]
   /** Formüldeki ağırlık. */
   weight: number
   /** 0–1: karşılanma oranı (kısmi eşleşme ara değer). */
@@ -23,6 +28,7 @@ export interface ScorePart {
 interface PartInput {
   requirement: { text: string; importance: string; type: string; concepts?: Array<{ term: string }> }
   confidence: number
+  missingConcepts?: string[]
 }
 
 const TITLE_CREDIT: Record<string, number> = { exact: 1, partial: 0.5, none: 0 }
@@ -55,6 +61,8 @@ export function scoreParts(result: {
       index,
       label: r.requirement.text,
       kind: generic && weight < importanceWeight ? "generic" : must ? "must" : "nice",
+      type: r.requirement.type as Requirement["type"],
+      missing: declarableTerms(r),
       weight,
       credit: Math.max(0, Math.min(1, r.confidence)),
     }
@@ -65,6 +73,8 @@ export function scoreParts(result: {
       index: null,
       label: `İlandaki unvan: ${result.titleMatch.position}`,
       kind: "title",
+      type: "title",
+      missing: [],
       weight: cfg.titleWeight,
       credit: TITLE_CREDIT[result.titleMatch.level] ?? 0,
     })
@@ -76,5 +86,16 @@ export function scoreParts(result: {
   return {
     parts: raw.map((p) => ({ ...p, gain: Math.round(((p.weight * (1 - p.credit)) / total) * 100) })),
     score: Math.round((sum / total) * 100),
+  }
+}
+
+/**
+ * CV'de olanlar ve olmayanlar. Kısmi eşleşme olanlarda, tamların ardından;
+ * olmayanlar en çok puan getirenden başlıyor.
+ */
+export function groupParts(parts: ScorePart[]): { met: ScorePart[]; missing: ScorePart[] } {
+  return {
+    met: parts.filter((p) => p.credit > 0).sort((a, b) => b.credit - a.credit),
+    missing: parts.filter((p) => p.credit === 0).sort((a, b) => b.gain - a.gain),
   }
 }

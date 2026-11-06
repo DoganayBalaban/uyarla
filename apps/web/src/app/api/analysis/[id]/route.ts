@@ -4,10 +4,12 @@ import { authErrorResponse, ensureOwner, getSession } from "@/server/authz"
 import { conceptKey, correctPosting, positionInPosting } from "@uyarla/core/score/exclusions"
 import { scoreProfile } from "@uyarla/core/score/live"
 import { analysisProfile, markFactEvidence } from "@uyarla/core/adapt/facts"
+import { markDeclarationEvidence, removeDeclaration, upsertDeclaration, type Declaration } from "@uyarla/core/adapt/declarations"
 import type { ScoreResult } from "@uyarla/core/score/score"
 import type { JobPostingData } from "@uyarla/core/schemas/job"
 import type { ResumeProfile } from "@uyarla/core/schemas/resume"
 import { cachedEmbedding } from "@/server/adaptationDecision"
+import { checkDeclaration, declareContext } from "@/server/declarations"
 import { detectPlatform } from "@/features/analysis/platforms"
 import { classifyPostingSource, postingSourceWarning } from "@/features/analysis/postingSource"
 import {
@@ -39,7 +41,11 @@ export async function GET(
   try {
     const analysis = await prisma.analysis.findUnique({
       where: { id },
-      include: { jobPosting: { select: { sourceUrl: true, rawText: true } } },
+      include: {
+        jobPosting: { select: { sourceUrl: true, rawText: true } },
+        resumeVersion: { select: { profile: true } },
+        adaptation: { select: { id: true } },
+      },
     })
     ensureOwner(analysis?.userId ?? null, await getSession())
 
@@ -56,6 +62,7 @@ export async function GET(
       durationMs: analysis!.durationMs,
       tokenUsage: analysis!.tokenUsage,
       // İlan adresinden tanınan platform (DOG-95); ipuçları istemcide.
+      declare: declareContext(analysis!),
       platform: detectPlatform(analysis!.jobPosting.sourceUrl),
       // Bilinmeyen ya da taklit alan adında uyarı (DOG-125).
       sourceWarning: postingSourceWarning(classifyPostingSource(analysis!.jobPosting.sourceUrl)),
@@ -95,7 +102,7 @@ export async function PATCH(
   try {
     const analysis = await prisma.analysis.findUnique({
       where: { id },
-      include: { jobPosting: true, resumeVersion: true },
+      include: { jobPosting: true, resumeVersion: true, adaptation: { select: { id: true } } },
     })
     ensureOwner(analysis?.userId ?? null, await getSession())
     if (analysis!.status !== "done" || !analysis!.result) {
@@ -105,6 +112,11 @@ export async function PATCH(
     const result = analysis!.result as unknown as StoredResult
     if (patch.action !== "position" && patch.requirementIndex >= result.requirements.length) {
       return NextResponse.json({ error: "Gereksinim bulunamadı." }, { status: 404 })
+    }
+
+    // Analiz başına tek uyarlama var; taslak bu beyanlarla kuruldu.
+    if ((patch.action === "declare" || patch.action === "undeclare") && analysis!.adaptation) {
+      return NextResponse.json({ error: "Uyarlama başladıktan sonra eklenemiyor." }, { status: 409 })
     }
 
     let updated: StoredResult
@@ -124,7 +136,7 @@ export async function PATCH(
           return NextResponse.json({ error: "Bu şart düzeltilemiyor." }, { status: 422 })
         }
         corrections = mergeCorrection(result.corrections, patch.requirementIndex, patch)
-      } else {
+      } else if (patch.action === "position") {
         // İlanın düzeltmesi, CV hakkında beyan değil: unvan ilanda geçmeli.
         if (patch.position !== null && !positionInPosting(analysis!.jobPosting.rawText, patch.position)) {
           return NextResponse.json({ error: "Bu unvan ilan metninde geçmiyor." }, { status: 422 })
@@ -133,12 +145,24 @@ export async function PATCH(
       }
       const stored = (analysis!.resumeVersion?.profile ?? null) as ResumeProfile | null
       if (!stored) return NextResponse.json({ error: "Bu analizin CV'si bulunamadı." }, { status: 409 })
-      // Analize katılan olgular (DOG-116) yeniden hesapta da kanıt.
-      const profile = analysisProfile(stored, result)
+      let declarations = result.declarations
+      if (patch.action === "declare") {
+        const verdict = checkDeclaration(patch.declaration, result.requirements[patch.requirementIndex]!, analysisProfile(stored, result))
+        if (verdict !== "ok") return NextResponse.json({ error: "Bu gereksinime eklenemiyor." }, { status: 422 })
+        const declaration = { ...patch.declaration, requirementIndex: patch.requirementIndex, at: new Date().toISOString() }
+        declarations = upsertDeclaration(declarations ?? [], declaration)
+      } else if (patch.action === "undeclare") {
+        declarations = removeDeclaration(declarations ?? [], patch.requirementIndex)
+      }
+      // Analize katılan olgular (DOG-116) ve beyanlar (K-114) yeniden hesapta da kanıt.
+      const profile = analysisProfile(stored, { ...result, declarations })
 
-      const fresh = markFactEvidence(
-        await scoreProfile({ profile, posting: correctPosting(posting, corrections, position) }, cachedEmbedding()),
-        result.facts ?? [],
+      const fresh = markDeclarationEvidence(
+        markFactEvidence(
+          await scoreProfile({ profile, posting: correctPosting(posting, corrections, position) }, cachedEmbedding()),
+          result.facts ?? [],
+        ),
+        declarations ?? [],
       )
       updated = {
         ...result,
@@ -149,6 +173,7 @@ export async function PATCH(
         scoringRevision: fresh.scoringRevision,
         corrections,
         positionCorrection: position ?? undefined,
+        ...(declarations ? { declarations } : {}),
       }
     }
 
@@ -172,7 +197,7 @@ export async function PATCH(
   }
 }
 
-type StoredResult = ScoreResult & { format?: unknown }
+type StoredResult = ScoreResult & { format?: unknown; declarations?: Declaration[] }
 
 function postingOf(row: { position: string; company: string | null; seniority: string | null; language: string; requirements: unknown }): JobPostingData {
   return {

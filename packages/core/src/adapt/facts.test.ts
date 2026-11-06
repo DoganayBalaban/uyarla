@@ -110,6 +110,12 @@ describe("analysisProfile", () => {
     expect(analysisProfile(profile, { facts: [{ id: 1 }] })).toBe(profile)
     expect(analysisProfile(profile, null)).toBe(profile)
   })
+
+  it("applies declarations after facts and ignores bad ones", () => {
+    const declared = { requirementIndex: 0, kind: "skill", terms: ["HTML"], at: "2026-11-06T00:00:00.000Z" }
+    expect(analysisProfile(profile, { declarations: [declared] }).skills).toContain("HTML")
+    expect(analysisProfile(profile, { declarations: [{ kind: "x" }] })).toBe(profile)
+  })
 })
 
 describe("markFactEvidence", () => {
