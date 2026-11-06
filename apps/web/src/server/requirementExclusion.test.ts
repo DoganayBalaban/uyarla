@@ -36,10 +36,56 @@ describe("scoreWithExclusions (DOG-90, ikinci adım)", () => {
     expect(scoreWithExclusions(result, [])).toBe(33)
   })
 
+  it("recomputes once declarations exist, even after the last one is undone", () => {
+    // Yeniden hesap güncel formülle; ilk skora dönmek parçalarla çelişirdi.
+    expect(scoreWithExclusions({ ...result, declarations: [] }, [])).toBe(33)
+    expect(scoreWithExclusions({ ...result, score: 40, declarations: [] }, [])).toBe(33)
+    expect(scoreWithExclusions({ ...result, score: 40 }, [])).toBe(40)
+  })
+
   it("is the adjusted score the dashboard and board show", () => {
     expect(scoreWithExclusions(result, [2])).toBe(50)
     // Unvan da sonucun formülüyle katılıyor (DOG-103).
     expect(scoreWithExclusions({ ...result, titleMatch: { level: "none" } }, [2])).toBe(33)
+  })
+})
+
+describe("parseAnalysisPatch: beyan (K-114)", () => {
+  const target = { section: "experience", index: 0 }
+
+  it("accepts a declaration and trims it", () => {
+    expect(parseAnalysisPatch({ action: "declare", requirementIndex: 1, declaration: { kind: "skill", terms: [" HTML "] } })).toEqual({
+      action: "declare",
+      requirementIndex: 1,
+      declaration: { kind: "skill", terms: ["HTML"] },
+    })
+    expect(
+      parseAnalysisPatch({ action: "declare", requirementIndex: 1, declaration: { kind: "experience", target, text: "  Paneli React ile yaptım " } }),
+    ).toEqual({ action: "declare", requirementIndex: 1, declaration: { kind: "experience", target, text: "Paneli React ile yaptım" } })
+    expect(
+      parseAnalysisPatch({ action: "declare", requirementIndex: 1, declaration: { kind: "education", school: " Marmara ", field: "İşletme" } }),
+    ).toEqual({ action: "declare", requirementIndex: 1, declaration: { kind: "education", school: "Marmara", field: "İşletme" } })
+  })
+
+  it("accepts an undo", () => {
+    expect(parseAnalysisPatch({ action: "undeclare", requirementIndex: 2 })).toEqual({ action: "undeclare", requirementIndex: 2 })
+  })
+
+  it.each([
+    [{ kind: "skill", terms: [] }],
+    [{ kind: "skill", terms: Array(11).fill("a") }],
+    [{ kind: "skill", terms: ["a".repeat(61)] }],
+    [{ kind: "skill", terms: ["   "] }],
+    [{ kind: "experience", target, text: "   kısa   " }],
+    [{ kind: "experience", target, text: "a".repeat(201) }],
+    [{ kind: "experience", target: { section: "other", index: 0 }, text: "Paneli React ile yaptım" }],
+    [{ kind: "experience", target: { section: "experience", index: -1 }, text: "Paneli React ile yaptım" }],
+    [{ kind: "education", school: "A", field: "İşletme" }],
+    [{ kind: "education", school: "Marmara", field: "a".repeat(121) }],
+    [{ kind: "other" }],
+    [null],
+  ])("rejects %j", (declaration) => {
+    expect(parseAnalysisPatch({ action: "declare", requirementIndex: 0, declaration })).toBeNull()
   })
 })
 

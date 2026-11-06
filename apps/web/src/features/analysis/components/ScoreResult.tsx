@@ -19,7 +19,8 @@ import { FormatReportCard as FormatReport, type FormatReportView } from "@/featu
 import { TitleCorrection } from "@/features/analysis/components/TitleCorrection"
 import { ResultGuide } from "@/features/analysis/components/ResultGuide"
 import { scoreImpacts } from "@/features/analysis/scoreImpact"
-import { ScoreStrip } from "@/features/analysis/components/ScoreStrip"
+import type { Declaration, DeclareTarget } from "@uyarla/core/adapt/declarations"
+import { ScoreBreakdown } from "@/features/analysis/components/ScoreBreakdown"
 import { scoreParts, type ScorePart } from "@/features/analysis/scoreParts"
 import { isPartial, partialNote, summarizeRequirements } from "@/features/analysis/requirementSummary"
 import { scoreStatus } from "@/lib/scoreStatus"
@@ -51,8 +52,11 @@ export interface RequirementResult {
   status: "matched" | "missing"
   confidence: number
   method: string | null
-  /** `fact`: kanıt daha önce anlatılan bir deneyimden (DOG-116), yüklenen CV'de yok. */
-  evidence: { text: string; kind: string; fact?: boolean } | null
+  /**
+   * `fact`: kanıt daha önce anlatılan bir deneyimden (DOG-116), yüklenen CV'de
+   * yok. `declared`: aday bu analizde ekledi (K-114), o da CV'de yok.
+   */
+  evidence: { text: string; kind: string; fact?: boolean; declared?: boolean } | null
   /** Eksik kavramlar; eski kayıtlarda yok (DOG-90 sayımı için). */
   missingConcepts?: string[]
 }
@@ -71,6 +75,8 @@ export interface ScoreResultView {
   exclusions?: Record<number, ExclusionMark>
   /** "CV'mde var" bildirimleri; skoru değiştirmiyor (DOG-90). */
   reports?: RequirementReport[]
+  /** "Bende var" beyanları (K-114): yalnızca bu analizde. */
+  declarations?: Declaration[]
   /** İlanın düzeltilmiş şartları (DOG-90). */
   corrections?: Record<number, RequirementCorrection>
   /** İlanın düzeltilmiş unvanı (DOG-134); titleMatch bununla. */
@@ -94,11 +100,10 @@ const IMPORTANCE_LABEL: Record<string, string> = {
  * Analiz sonucunun gösterimi.
  *
  * Üstte skor (rehber §9.5: skor ekranın en büyük öğesi) ve skoru oluşturan
- * parçalar şeridi; altında gereksinimler iki sütunlu defter gibi: solda
- * ilanın istediği, sağda CV'deki karşılığı ya da karşılanırsa kaç puan
- * getireceği. Sonra eksik kavramlar, şartlar, CV kontrolü ve kişisel
- * nitelikler. Kartlar yerine çizgiyle ayrılan bölümler; tek hareket
- * şeridin açılışta dolması.
+ * parçalar: CV'de olanlar ve olmayanlar. Altında gereksinimler iki sütunlu
+ * defter gibi: solda ilanın istediği, sağda CV'deki karşılığı ya da
+ * karşılanırsa kaç puan getireceği. Sonra eksik kavramlar, şartlar, CV
+ * kontrolü ve kişisel nitelikler. Kartlar yerine çizgiyle ayrılan bölümler.
  */
 export function ScoreResult({
   result,
@@ -107,6 +112,7 @@ export function ScoreResult({
   onAdapt,
   adaptNote,
   onRequirementChange,
+  declareContext,
   onPositionChange,
   platform,
   sourceWarning,
@@ -128,6 +134,8 @@ export function ScoreResult({
   onRequirementChange?: (requirementIndex: number, change: RequirementAction) => Promise<void>
   /** İlan unvanını düzeltir (DOG-134); null düzeltmeyi kaldırıyor. */
   onPositionChange?: (position: string | null) => Promise<void>
+  /** "Bende var" için (K-114); yoksa düğme çıkmıyor. */
+  declareContext?: { locked: boolean; targets: DeclareTarget[] }
 }) {
   const reducedMotion = useReducedMotion() ?? false
   const [activeFilter, setFilter] = useState<FilterBar>("all")
@@ -170,16 +178,16 @@ export function ScoreResult({
     activeFilter === "all" ? true : !excluded && (activeFilter === "missing" ? item.status === "missing" : item.status === "matched"),
   )
 
-  // Skorun parçaları (şerit): formülle aynı toplamı veriyorsa çiziliyor.
+  // Skorun parçaları: formülle aynı toplamı veriyorsa çiziliyor.
   const parts = scoreParts({
     requirements: result.requirements,
     excluded: result.excluded,
     titleMatch: result.titleMatch,
     scoringRevision: result.scoringRevision,
   })
-  const stripParts = parts.score === exclusion.score ? parts.parts : []
-  const gains = new Map(stripParts.flatMap((p) => (p.index === null ? [] : [[p.index, p.gain] as const])))
-  // Şeritten seçilen gereksinim listede kısa bir an vurgulanıyor.
+  const visibleParts = parts.score === exclusion.score ? parts.parts : []
+  const gains = new Map(visibleParts.flatMap((p) => (p.index === null ? [] : [[p.index, p.gain] as const])))
+  // Parçalardan seçilen gereksinim listede kısa bir an vurgulanıyor.
   const [flash, setFlash] = useState<number | null>(null)
   const selectPart = (part: ScorePart) => {
     setTab("report")
@@ -228,7 +236,15 @@ export function ScoreResult({
         </div>
 
         <div className="mt-9">
-          <ScoreStrip parts={stripParts} hint={impacts.requirements.hint} onSelect={selectPart} />
+          <ScoreBreakdown
+            parts={visibleParts}
+            onSelect={selectPart}
+            declare={
+              onRequirementChange && declareContext
+                ? { ...declareContext, declarations: result.declarations ?? [], onChange: onRequirementChange }
+                : undefined
+            }
+          />
         </div>
 
         <div className="mt-8 grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
@@ -247,7 +263,7 @@ export function ScoreResult({
                 (DOG-103). Skor CV ile ilanın örtüşmesi; çerçeve bunu söylüyor. */}
             <p className="m-0 mt-3 text-sm text-muted-foreground">
               {missing > 0
-                ? "Bu skor CV'nin ilanla ne kadar örtüştüğünü ölçer, işe uygunluğunu değil. Uyarladığımızda eksikleri deneyiminin izin verdiği ölçüde görünür kılıyoruz; olmayan bir şeyi eklemiyoruz."
+                ? "Bu skor CV'nin ilanla ne kadar örtüştüğünü ölçer, işe uygunluğunu değil. Uyarladığımızda eksikleri deneyiminin izin verdiği ölçüde görünür kılıyoruz; senin eklediklerin dışında olmayan bir şey eklemiyoruz."
                 : "CV'n bu ilanın istediklerini karşılıyor. Yine de anlatımı ilanın diline yaklaştırabilirsin."}
             </p>
             {(result.facts?.length ?? 0) > 0 && (
@@ -413,7 +429,7 @@ export function ScoreResult({
                   {item.requirement.text}
                   {item.status === "matched" && item.evidence && (
                     <span className="block text-muted-foreground">
-                      {item.evidence.fact ? "Anlattığın deneyimde" : "CV'nde"}: {item.evidence.text}
+                      {item.evidence.declared ? "Sen ekledin" : item.evidence.fact ? "Anlattığın deneyimde" : "CV'nde"}: {item.evidence.text}
                     </span>
                   )}
                 </span>
@@ -489,9 +505,9 @@ function RequirementRow({
 }: {
   index: number
   item: RequirementResult
-  /** Tamamen karşılanırsa skora eklenecek puan (şeritle aynı hesap). */
+  /** Tamamen karşılanırsa skora eklenecek puan (skorun parçalarıyla aynı hesap). */
   gain: number
-  /** Şeritten seçildi: kısa bir an vurgulu. */
+  /** Skorun parçalarından seçildi: kısa bir an vurgulu. */
   flash?: boolean
   /** İlan metni sekmesinde bu gereksinimin terimlerini vurgular (DOG-133). */
   onShowInPosting?: () => void
@@ -590,11 +606,13 @@ function RequirementRow({
         {item.evidence ? (
           <p className="m-0 text-muted-foreground">
             <span className="line-clamp-3 text-foreground/80">{item.evidence.text}</span>
-            {item.evidence.fact && (
+            {item.evidence.declared ? (
+              <span className="mt-0.5 block text-xs">Sen ekledin; yüklediğin CV&apos;de yok, uyarladığın CV&apos;ye eklenir.</span>
+            ) : item.evidence.fact ? (
               <span className="mt-0.5 block text-xs">
                 Daha önce anlattığın deneyimden; yüklediğin CV&apos;de yok, uyarladığın CV&apos;ye eklenir.
               </span>
-            )}
+            ) : null}
           </p>
         ) : (
           <p className="m-0 text-muted-foreground">Görünmüyor</p>

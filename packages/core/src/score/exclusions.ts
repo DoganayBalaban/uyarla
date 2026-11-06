@@ -12,7 +12,8 @@ import type { JobPostingData, Requirement } from "../schemas/job.js"
 
 /**
  * İşaretin nedeni. `found_in_cv` hariç tutmuyor, yalnızca bildirim: kanıtı
- * olmayan bir şeyi skordan silmek uydurmanın skor tarafı olurdu.
+ * olmayan bir şeyi skordan silmek uydurmanın skor tarafı olurdu. Adayın kendi
+ * beyanı ayrı bir yol: "Bende var" (K-114, adapt/declarations.ts).
  */
 export type ExclusionReason = "not_in_posting" | "irrelevant" | "found_in_cv"
 

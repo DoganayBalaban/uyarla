@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { api, apiStatus } from "@/lib/api"
 import type { ExclusionReason } from "@uyarla/core/score/exclusions"
+import type { DeclarationInput, DeclareTarget } from "@uyarla/core/adapt/declarations"
 import type { ScoreResultView } from "@/features/analysis/components/ScoreResult"
 import type { PlatformId } from "@/features/analysis/platforms"
 
@@ -23,6 +24,8 @@ export interface AnalysisResponse {
   sourceWarning?: { tone: "soft" | "strong"; text: string } | null
   /** İlanın kullanıcının yapıştırdığı metni (DOG-133). */
   postingText?: string | null
+  /** "Bende var" için: uyarlama başladı mı, cümle hangi işe yazılabilir (K-114). */
+  declare?: { locked: boolean; targets: DeclareTarget[] }
 }
 
 export interface PostingFromUrl {
@@ -57,6 +60,8 @@ export type RequirementAction =
   | { action: "exclude"; reason: ExclusionReason; always: boolean }
   | { action: "include" }
   | { action: "correct"; minYears?: number | null; terms?: string[] | null }
+  | { action: "declare"; declaration: DeclarationInput }
+  | { action: "undeclare" }
 
 export async function updateRequirement(
   analysisId: string,

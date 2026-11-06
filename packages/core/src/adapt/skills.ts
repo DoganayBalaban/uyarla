@@ -5,7 +5,8 @@ import type { ScoreResult } from "../score/score.js"
  * Becerileri ilana göre sıralar.
  *
  * Küme değişmez: hiçbir beceri eklenmez, hiçbiri silinmez. Bu yüzden uydurma
- * riski sıfırdır ve doğrulamaya tabi değildir (K-27).
+ * riski sıfırdır ve doğrulamaya tabi değildir (K-27). Adayın "Bende var" ile
+ * eklediği beceri (K-114) buraya profilin kendi becerisi olarak geliyor.
  *
  * Sıra: önce `must` gereksinimi karşılayanlar, sonra `nice` karşılayanlar,
  * sonra kalanlar özgün sıralarıyla. ATS tarayıcıları listenin başındaki

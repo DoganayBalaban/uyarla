@@ -84,12 +84,21 @@ import {
 } from "@/features/analysis/api"
 import { analyzeFormSchema, jobUrlSchema, type AnalyzeFormValues } from "@/features/analysis/schema"
 import { startAdaptation } from "@/features/adaptation/api"
+import { createSerialQueue } from "@/features/analysis/serialQueue"
 import { apiErrorBody, apiErrorMessage, apiStatus } from "@/lib/api"
 
 
 type PostingTab = "text" | "link" | "sample"
 /** CV'nin nasıl verileceği: dosya ya da yapıştırılan metin (DOG-101). */
 type ResumeInput = "file" | "text"
+
+const REQUIREMENT_ERRORS: Partial<Record<RequirementAction["action"], string>> = {
+  correct: "Yeniden hesaplayamadık. Birazdan tekrar dener misin?",
+  declare: "Ekleyemedik. Birazdan tekrar dener misin?",
+  undeclare: "Geri alamadık. Birazdan tekrar dener misin?",
+}
+const requirementError = (change: RequirementAction) =>
+  REQUIREMENT_ERRORS[change.action] ?? "İşaretleyemedik. Birazdan tekrar dener misin?"
 
 function StepHeading({ number, heading, hint }: { number: number; heading: string; hint: string }) {
   return (
@@ -393,15 +402,18 @@ export function AnalyzeView() {
   }
 
   /** Gereksinimi işaretler ya da şartını düzeltir (DOG-90). */
+  // Sonucu değiştiren istekler ve uyarlama sırayla: üst üste binince beyan kayboluyor.
+  const [enqueue] = useState(createSerialQueue)
+
   async function changeRequirement(analysisId: string, index: number, change: RequirementAction) {
     try {
-      const { result } = await updateRequirement(analysisId, index, change)
+      const { result } = await enqueue(() => updateRequirement(analysisId, index, change))
       setState((s) => (s ? { ...s, result } : s))
       queryClient.setQueryData<AnalysisResponse>(analysisQueryKey(analysisId), (d) => (d ? { ...d, result } : d))
       // Pano skoru değişti.
       void queryClient.invalidateQueries({ queryKey: applicationsQueryKey })
     } catch {
-      setError(change.action === "correct" ? "Yeniden hesaplayamadık. Birazdan tekrar dener misin?" : "İşaretleyemedik. Birazdan tekrar dener misin?")
+      setError(requirementError(change))
       throw new Error("requirement change failed")
     }
   }
@@ -409,7 +421,7 @@ export function AnalyzeView() {
   /** İlan unvanını düzeltir (DOG-134); hata mesajıyla reddeder, form gösteriyor. */
   async function changePosition(analysisId: string, position: string | null) {
     try {
-      const { result } = await updatePosition(analysisId, position)
+      const { result } = await enqueue(() => updatePosition(analysisId, position))
       setState((s) => (s ? { ...s, result } : s))
       queryClient.setQueryData<AnalysisResponse>(analysisQueryKey(analysisId), (d) => (d ? { ...d, result } : d))
       void queryClient.invalidateQueries({ queryKey: applicationsQueryKey })
@@ -423,9 +435,11 @@ export function AnalyzeView() {
     setBusy(true)
     let parsed: { error?: string; code?: string }
     try {
-      const { adaptationId } = await startAdaptation(analysisId)
+      const { adaptationId } = await enqueue(() => startAdaptation(analysisId))
       // Hak harcandı: üst menüdeki rozet ve Hesabım güncellensin.
       void queryClient.invalidateQueries({ queryKey: billingStatusKey })
+      // Uyarlama başladı: "Bende var" kilitlensin (K-114).
+      void queryClient.invalidateQueries({ queryKey: analysisQueryKey(analysisId) })
       router.push(`/adapt/${adaptationId}`)
       return
     } catch (error) {
@@ -600,6 +614,7 @@ export function AnalyzeView() {
           adaptNote={adaptNote}
           onRequirementChange={state.analysisId ? (index, change) => changeRequirement(state.analysisId!, index, change) : undefined}
           onPositionChange={state.analysisId ? (position) => changePosition(state.analysisId!, position) : undefined}
+          declareContext={state.declare}
         />
       </AppPage>
     )
