@@ -9,11 +9,22 @@ import {
   TabStopType,
   TextRun,
 } from "docx"
+import { documentHeader } from "./header.js"
 import { linkParts, type TextPart } from "./links.js"
 import type { DocumentEntry, DocumentModel } from "./model.js"
+import { CV_STYLE, docxColor } from "./style.js"
 
-/** Marka rehberi §9.3: CV çıktısında marka fontu değil sistem fontu. */
+/**
+ * Marka rehberi §9.3: CV çıktısında marka fontu değil sistem fontu. PDF'teki
+ * Carlito Calibri ile aynı ölçüde; LibreOffice Calibri yerine Carlito açıyor.
+ */
 const FONT = "Calibri"
+const { color: C, size: SIZE, space: SPACE } = CV_STYLE
+/** Punto → yarım punto (docx boyutu) ve twip (docx aralığı). */
+const half = (pt: number) => Math.round(pt * 2)
+const twip = (pt: number) => Math.round(pt * 20)
+/** Gövde satır aralığı: punto + ek boşluk, 240'lık birimde (otomatik). */
+const BODY_LINE = Math.round(240 * ((SIZE.body * 1.22 + CV_STYLE.lineGap) / (SIZE.body * 1.22)))
 
 /**
  * ATS dostu DOCX (spec §9).
@@ -26,17 +37,30 @@ const FONT = "Calibri"
  * üreteç ucuz (K-29).
  */
 export async function renderDocx(model: DocumentModel): Promise<Buffer> {
+  const header = documentHeader(model.contact, model.language)
   const paragraphs: Paragraph[] = [
     new Paragraph({
-      children: [new TextRun({ text: model.name, bold: true, size: 44, font: FONT })],
+      children: [new TextRun({ text: model.name, bold: true, size: half(SIZE.name), font: FONT, color: docxColor(C.ink) })],
     }),
   ]
 
-  if (model.contact) {
+  if (header.title) {
     paragraphs.push(
       new Paragraph({
-        spacing: { before: 40 },
-        children: runs(linkParts(model.contact, { bareDomains: true }), { size: 19, color: "444444" }),
+        spacing: { before: twip(SPACE.afterName) },
+        children: [new TextRun({ text: header.title, size: half(SIZE.title), font: FONT, color: docxColor(C.soft) })],
+      }),
+    )
+  }
+
+  if (header.contacts.length > 0) {
+    const parts = header.contacts.flatMap((part, i) =>
+      i === 0 ? [part] : [{ text: CV_STYLE.contactSeparator, href: null, color: C.faint }, part],
+    )
+    paragraphs.push(
+      new Paragraph({
+        spacing: { before: twip(SPACE.afterTitle) },
+        children: runs(parts, { size: half(SIZE.contact), color: C.soft }),
       }),
     )
   }
@@ -44,8 +68,8 @@ export async function renderDocx(model: DocumentModel): Promise<Buffer> {
   if (model.summary) {
     paragraphs.push(
       new Paragraph({
-        spacing: { before: 160 },
-        children: runs(linkParts(model.summary), { size: 20 }),
+        spacing: { before: twip(SPACE.afterHeader), line: BODY_LINE },
+        children: runs(linkParts(model.summary), { size: half(SIZE.body), color: C.ink }),
       }),
     )
   }
@@ -53,12 +77,21 @@ export async function renderDocx(model: DocumentModel): Promise<Buffer> {
   for (const section of model.sections) {
     paragraphs.push(
       new Paragraph({
-        spacing: { before: 280, after: 80 },
+        spacing: { before: twip(SPACE.section), after: twip(SPACE.afterRule) },
         keepNext: true,
         // Alt kenarlık, tablo değil: bölüm ayracı ATS'in metin katmanını
         // etkilemeden çiziliyor.
-        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: "999999", space: 2 } },
-        children: [new TextRun({ text: section.title, bold: true, size: 22, font: FONT, characterSpacing: 12 })],
+        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: docxColor(C.rule), space: 2 } },
+        children: [
+          new TextRun({
+            text: section.title,
+            bold: true,
+            size: half(SIZE.heading),
+            font: FONT,
+            color: docxColor(C.ink),
+            characterSpacing: twip(CV_STYLE.headingTracking),
+          }),
+        ],
       }),
     )
 
@@ -66,23 +99,31 @@ export async function renderDocx(model: DocumentModel): Promise<Buffer> {
       if (entry.heading || entry.organization || entry.date) {
         paragraphs.push(entryHeader(entry, i > 0))
       }
-      for (const line of entry.lines) {
+      entry.lines.forEach((line, li) => {
         paragraphs.push(
           new Paragraph({
             bullet: { level: 0 },
-            children: runs(linkParts(line), { size: 20 }),
+            // Başlıksız kayıt (sertifikalar) ikinci kayıtsa üstünde kayıt aralığı.
+            spacing: {
+              before: li === 0 && i > 0 && !(entry.heading || entry.organization || entry.date) ? twip(SPACE.entry) : 0,
+              after: twip(SPACE.bullet),
+              line: BODY_LINE,
+            },
+            children: runs(linkParts(line), { size: half(SIZE.body), color: C.ink }),
           }),
         )
-      }
+      })
     })
 
     for (const row of section.rows ?? []) {
       paragraphs.push(
         new Paragraph({
-          spacing: { after: 40 },
+          spacing: { after: twip(SPACE.bullet), line: BODY_LINE },
           children: [
-            ...(row.label ? [new TextRun({ text: `${row.label}: `, bold: true, size: 20, font: FONT })] : []),
-            ...runs(linkParts(row.text), { size: 20 }),
+            ...(row.label
+              ? [new TextRun({ text: `${row.label}: `, bold: true, size: half(SIZE.body), font: FONT, color: docxColor(C.ink) })]
+              : []),
+            ...runs(linkParts(row.text), { size: half(SIZE.body), color: C.ink }),
           ],
         }),
       )
@@ -92,8 +133,12 @@ export async function renderDocx(model: DocumentModel): Promise<Buffer> {
   const doc = new Document({
     sections: [
       {
-        // PDF ile aynı ~2 cm kenar boşluğu; sağa yaslı tarih bu genişliğe göre.
-        properties: { page: { margin: { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN } } },
+        // PDF ile aynı kenar boşlukları; sağa yaslı tarih bu genişliğe göre.
+        properties: {
+          page: {
+            margin: { top: VERTICAL, bottom: VERTICAL, left: MARGIN, right: MARGIN },
+          },
+        },
         children: paragraphs,
       },
     ],
@@ -101,9 +146,10 @@ export async function renderDocx(model: DocumentModel): Promise<Buffer> {
   return Packer.toBuffer(doc)
 }
 
-/** A4 genişliği (twip) ve ~2 cm kenar boşluğu. */
+/** A4 genişliği (twip) ve kenar boşlukları (stilden). */
 const PAGE_WIDTH = 11906
-const MARGIN = 1134
+const MARGIN = twip(CV_STYLE.margin.side)
+const VERTICAL = twip(CV_STYLE.margin.vertical)
 
 /**
  * Kayıt başlığı (DOG-106): kalın unvan, yanında kurum, tarih sağdaki sekme
@@ -112,15 +158,18 @@ const MARGIN = 1134
  */
 function entryHeader(entry: DocumentEntry, spaced: boolean): Paragraph {
   const children: ParagraphChild[] = []
-  if (entry.heading) children.push(new TextRun({ text: entry.heading, bold: true, size: 21, font: FONT }))
+  if (entry.heading) {
+    children.push(new TextRun({ text: entry.heading, bold: true, size: half(SIZE.entry), font: FONT, color: docxColor(C.ink) }))
+  }
   if (entry.organization) {
-    children.push(new TextRun({ text: `${entry.heading ? " · " : ""}${entry.organization}`, size: 21, font: FONT }))
+    if (entry.heading) children.push(new TextRun({ text: " · ", size: half(SIZE.entry), font: FONT, color: docxColor(C.faint) }))
+    children.push(new TextRun({ text: entry.organization, size: half(SIZE.entry), font: FONT, color: docxColor(C.soft) }))
   }
   if (entry.date) {
-    children.push(new TextRun({ children: [new Tab(), entry.date], size: 19, font: FONT, color: "555555" }))
+    children.push(new TextRun({ children: [new Tab(), entry.date], size: half(SIZE.meta), font: FONT, color: docxColor(C.soft) }))
   }
   return new Paragraph({
-    spacing: { before: spaced ? 140 : 0, after: 20 },
+    spacing: { before: spaced ? twip(SPACE.entry) : 0, after: twip(SPACE.afterEntryHeader) },
     keepNext: true,
     tabStops: [{ type: TabStopType.RIGHT, position: PAGE_WIDTH - 2 * MARGIN }],
     children,
@@ -128,13 +177,10 @@ function entryHeader(entry: DocumentEntry, spaced: boolean): Paragraph {
 }
 
 /** Parçaları koşulara çevirir; bağlantılar tıklanabilir (DOG-106). */
-function runs(parts: TextPart[], style: { size: number; color?: string }): ParagraphChild[] {
-  return parts.map((part) =>
-    part.href
-      ? new ExternalHyperlink({
-          link: part.href,
-          children: [new TextRun({ text: part.text, size: style.size, font: FONT, color: "1F4E9C" })],
-        })
-      : new TextRun({ text: part.text, size: style.size, font: FONT, color: style.color }),
-  )
+function runs(parts: Array<TextPart & { color?: string }>, style: { size: number; color: string }): ParagraphChild[] {
+  return parts.map((part) => {
+    // Bağlantı ayrı renkte değil (PDF ile aynı); tıklanabilirlik köprüde.
+    const run = new TextRun({ text: part.text, size: style.size, font: FONT, color: docxColor(part.color ?? style.color) })
+    return part.href ? new ExternalHyperlink({ link: part.href, children: [run] }) : run
+  })
 }

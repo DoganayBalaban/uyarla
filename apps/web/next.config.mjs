@@ -106,7 +106,8 @@ export default {
    * dizinine (`apps/web`) göre yazılıyor — Next'in beklediği biçim bu.
    * Çıktıda dosyalar izleme köküne göre yerleşiyor: `packages/fonts/ttf/`.
    *
-   * LICENSE de dahil: DejaVu yeniden dağıtılıyor, lisansı yanında gitmeli.
+   * Lisanslar da dahil (LICENSE, OFL-Carlito.txt): fontlar yeniden dağıtılıyor,
+   * lisansları yanında gitmeli.
    */
   outputFileTracingIncludes: {
     "/api/adapt/[id]/download": ["../../packages/fonts/ttf/**"],

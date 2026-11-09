@@ -38,6 +38,8 @@ export interface DocumentSection {
  * birbirinden ayrışması demek olurdu.
  */
 export interface DocumentModel {
+  /** CV'nin dili; başlık ayrıştırması (header.ts) ve büyük harf çevrimi buna göre. */
+  language: Language
   name: string
   contact: string | null
   summary: string | null
@@ -90,7 +92,8 @@ export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions
     d && /[\p{L}\p{N}]/u.test(d) ? d.replace(UNICODE_DASH, "-") : null
   const range = (start: string | null | undefined, end: string | null | undefined) => {
     const [s, e] = [clean(start), clean(end)]
-    return s && e ? `${s} - ${e}` : e || s || null
+    const r = s && e ? `${s} - ${e}` : e || s || null
+    return r && ongoingInLanguage(r, language)
   }
 
   // Bölümler türüne göre kuruluyor, sonra CV'deki sıraya diziliyor.
@@ -163,6 +166,18 @@ export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions
   }
   if (skillSections.length > 0) built.skills = skillSections
 
+  // Madde sonu noktalaması CV'nin çoğunluğuna uyuyor: kullanıcının ya da
+  // uyarlamanın eklediği tek noktasız madde belgede göze batıyordu.
+  const bullets = [...(built.experience ?? []), ...(built.projects ?? [])].flatMap((s) => s.entries.flatMap((e) => e.lines))
+  // Soru, ünlem, iki nokta ve üç noktayla biten maddeler sayıma girmiyor: tercih değil, içerik.
+  const counted = bullets.filter((l) => !/[!?:;…]$|\.\.$/.test(l))
+  const endWithPeriod = counted.filter((l) => l.endsWith(".")).length * 2 >= counted.length
+  for (const kind of ["experience", "projects"] as const) {
+    for (const section of built[kind] ?? []) {
+      for (const entry of section.entries) entry.lines = entry.lines.map((l) => withEnding(l, endWithPeriod))
+    }
+  }
+
   const sections = sectionOrder(profile, options).flatMap((kind) => built[kind] ?? [])
 
   // Şemada karşılığı olmayan bölümler sonda, CV'deki adlarıyla ve olduğu
@@ -175,6 +190,7 @@ export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions
   }
 
   return {
+    language,
     // Adsız belge üretmiyoruz: başlıksız bir CV ATS'te kimliksiz kalır.
     name: profile.fullName?.trim() || "İsimsiz",
     contact: profile.headline,
@@ -186,6 +202,27 @@ export function toDocumentModel(profile: ResumeProfile, options: DocumentOptions
     summary: profile.summary?.replace(/\s*\n\s*/g, " ").trim() || null,
     sections,
   }
+}
+
+/**
+ * Süren işin bitişi CV'nin dilinde (CV biçimi, 9 Kasım 2026): Türkçe CV'de
+ * "Mart 2023 - Present" yazıyordu. Yalnızca öbür dildeki kelime
+ * çevriliyor; "halen" ya da "Günümüz" adayın seçimi, dokunulmuyor.
+ */
+const ONGOING: Record<Language, { foreign: RegExp; word: string }> = {
+  tr: { foreign: /\b(?:present|current|now|ongoing)\b/i, word: "Günümüz" },
+  en: { foreign: /(?:günümüz|halen|hâlâ|devam ediyor)/iu, word: "Present" },
+}
+
+function ongoingInLanguage(range: string, language: Language): string {
+  const { foreign, word } = ONGOING[language]
+  return range.replace(foreign, word)
+}
+
+/** Madde sonuna nokta ekler ya da kaldırır; soru, ünlem, iki nokta ve noktalı virgüle dokunmuyor. */
+function withEnding(line: string, period: boolean): string {
+  if (period) return /[.!?:;…]$/.test(line) ? line : `${line}.`
+  return line.replace(/(?<!\.)\.$/, "")
 }
 
 /** Kısa çizgi dışındaki tireler: ‐ ‑ ‒ – — ― ve eksi işareti. */
