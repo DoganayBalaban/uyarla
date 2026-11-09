@@ -130,6 +130,39 @@ describe("toDocumentModel · language", () => {
   })
 })
 
+describe("toDocumentModel · consistency (CV biçimi)", () => {
+  const job = (endDate: string, bullets: string[]) => ({
+    company: "Acme",
+    title: "Geliştirici",
+    startDate: "2023",
+    endDate,
+    bullets: bullets.map((text) => ({ text, sourceRef: text })),
+  })
+
+  it("writes an ongoing end date in the resume's language, leaving the candidate's own word", () => {
+    const tr = toDocumentModel({ ...resumeProfile, experience: [job("Present", ["a"])] })
+    expect(tr.sections[0]!.entries[0]!.date).toBe("2023 - Günümüz")
+    expect(toDocumentModel(resumeProfile).sections[0]!.entries[0]!.date).toBe("2022-01 - halen")
+    const en = toDocumentModel({
+      ...resumeProfile,
+      summary: "Frontend developer with four years of experience building web applications for clients.",
+      experience: [job("Günümüz", ["Built the dashboard with React and reduced load time by forty percent"])],
+    })
+    expect(en.sections[0]!.entries[0]!.date).toBe("2023 - Present")
+  })
+
+  it("ends every job bullet the way most of them end", () => {
+    const most = toDocumentModel({ ...resumeProfile, experience: [job("2024", ["Bir.", "İki.", "Üç"])] })
+    expect(most.sections[0]!.entries[0]!.lines).toEqual(["Bir.", "İki.", "Üç."])
+    const few = toDocumentModel({ ...resumeProfile, experience: [job("2024", ["Bir", "İki", "Üç."])] })
+    expect(few.sections[0]!.entries[0]!.lines).toEqual(["Bir", "İki", "Üç"])
+    // Soru, iki nokta ve üç noktaya dokunulmuyor; sertifikalar cümle değil.
+    const mixed = toDocumentModel({ ...resumeProfile, experience: [job("2024", ["Bir.", "Araçlar:", "Devamı…"])] })
+    expect(mixed.sections[0]!.entries[0]!.lines).toEqual(["Bir.", "Araçlar:", "Devamı…"])
+    expect(most.sections.at(-1)!.entries[0]!.lines).toEqual(["AWS Cloud Practitioner"])
+  })
+})
+
 describe("toDocumentModel · projects and other sections (DOG-105)", () => {
   const withProjects: ResumeProfile = {
     ...resumeProfile,
@@ -153,7 +186,8 @@ describe("toDocumentModel · projects and other sections (DOG-105)", () => {
       heading: "Yeni Nesil Asistan",
       organization: "Bitirme projesi",
       date: "2026",
-      lines: ["RAG ile kurumsal belge asistanı geliştirdim."],
+      // Madde sonu CV'nin çoğunluğuna uyuyor: deneyim maddeleri noktasız.
+      lines: ["RAG ile kurumsal belge asistanı geliştirdim"],
     })
     expect(m.sections[1]!.entries[1]).toMatchObject({ heading: "AI Workflow Platform", organization: null, date: null })
   })

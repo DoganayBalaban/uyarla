@@ -7,6 +7,7 @@ import { PDFParse } from "pdf-parse"
 import { renderPdf } from "./pdf.js"
 
 const model: DocumentModel = {
+  language: "tr",
   name: "Elif Yılmaz",
   contact: "Frontend Geliştirici",
   summary: "React odaklı geliştirici",

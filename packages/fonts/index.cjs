@@ -31,7 +31,7 @@ const { dirname, join } = require("node:path")
 const TARGET_DIR = join("packages", "fonts", "ttf")
 
 /** Varlığı sınanan dosya; dizin adı tek başına yeterli kanıt değil. */
-const MARKER_FILE = "DejaVuSans.ttf"
+const MARKER_FILE = "Carlito-Regular.ttf"
 
 /**
  * Font dizinini bulur.
@@ -87,11 +87,16 @@ function fontPaths() {
   const dir = fontDir()
   const paths = {
     /**
-     * DejaVu Sans. pdfkit'in gömülü Helvetica'sı WinAnsi kodlaması kullanıyor
-     * ve ş/ğ/ı/İ orada yok; ölçümde "Geliştirici" → "Geli ÷F— ici" çıkıyordu.
+     * CV gövdesi: Carlito (OFL). pdfkit'in gömülü Helvetica'sı WinAnsi
+     * kodlaması kullanıyor ve ş/ğ/ı/İ orada yok; ölçümde "Geliştirici" →
+     * "Geli ÷F— ici" çıkıyordu. Carlito Calibri ile aynı ölçüde: DOCX
+     * Calibri'yle açıldığında PDF ile aynı yerden satır kırıyor. Önceki
+     * DejaVu Sans geniş ve eski duruyordu (CV biçimi, 9 Kasım 2026).
      */
-    regular: join(dir, "DejaVuSans.ttf"),
-    bold: join(dir, "DejaVuSans-Bold.ttf"),
+    regular: join(dir, "Carlito-Regular.ttf"),
+    bold: join(dir, "Carlito-Bold.ttf"),
+    /** Paylaşım görseli (opengraph-image) DejaVu'da kaldı; CV değişikliği onu oynatmasın. */
+    ogBold: join(dir, "DejaVuSans-Bold.ttf"),
   }
 
   for (const filePath of Object.values(paths)) {
