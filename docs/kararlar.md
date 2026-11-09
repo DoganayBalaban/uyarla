@@ -4019,3 +4019,22 @@ Eski ilanlarda `category` yok; yeniden çıkarılınca gelir.
 **Bilinen sınır:** "En az 3 yıl" gibi süre şartları CV'deki işlerin süresinden hesaplanıyor; cümle eklemek süreyi artırmıyor. Satır "Eklendi, CV'ne girecek; bu şart skoru değiştirmedi" diyor, puan garantisi verilmiyor.
 
 **Vaat metinleri:** Rapordaki cümle "senin eklediklerin dışında olmayan bir şey eklemiyoruz" oldu. E-posta, başvuru kontrolü, takip paneli ve tanıtım metinleri değişmedi: onlar uyarlamanın kendi davranışını anlatıyor ve bu doğru kalıyor.
+
+## K-115 · CV çıktısının biçimi: yapılandırılmış başlık, tek stil, Carlito
+
+**Tarih:** 9 Kasım 2026 · **Durum:** Geçerli · **Kapsam:** DOG-178
+
+**Bağlam:** Kullanıcı uyarlanmış CV'yi "özensiz, yapıştırılmış gibi" buldu. Altı yerel uyarlamada ölçüldü:
+- Başlık satırı ham basılıyordu: üç ayraç (`|`, `·`, `•`), çift boşluk, "GitHub:" gibi etiketler, unvanla iletişim aynı satırda.
+- PDF DejaVu Sans'tı, DOCX Calibri; iki dosya birbirine benzemiyordu.
+- Türkçe CV'de "Present", maddelerin bir kısmı noktalı bir kısmı noktasızdı.
+- PDF ve DOCX aralıkları ayrı ayrı, elle tutuluyordu.
+
+**Karar:**
+- Başlık `header.ts` ile ayrışıyor: unvan satırı ve iletişim satırı (konum önde, tek ayraç). Kurallı ve kayıpsız: tanınmayan parça unvan sayılıyor; bağlantı etiketi düşüyor, bağlantı olmayan etiket ("Medium: @ad") kalıyor. Tamamı büyük harfli unvan normal yazıma çevriliyor, kısa kelimeler kısaltma sayılıyor (AI, SEO).
+- Stil `style.ts`'de tek yerde; PDF punto, DOCX yarım punto/twip olarak aynı değerleri kullanıyor. Bağlantılar ayrı renkte değil, belge tek renk ailesinde.
+- PDF yazı tipi Carlito (OFL): Calibri ile aynı ölçüde, DOCX ile aynı yerden satır kırıyor. Paylaşım görseli DejaVu'da kaldı.
+- Modelde: süren işin bitişi CV'nin dilinde (yalnızca öbür dildeki kelime çevriliyor, "halen" kalıyor); iş ve proje maddelerinin sonu çoğunluğa uyuyor (soru, iki nokta, üç nokta sayıma girmiyor).
+- Bölüm başlığı harf aralığı 0,6'da kaldı: 1,1'de metin katmanı "D E N E Y İ M" okunuyor, ATS bölümü bulamıyor.
+
+**Kapsam dışı:** "Bende var" beyanlarının CV'nin dilinde yazılmaması (İngilizce CV'de Türkçe madde) ayrı iş; birden çok şablon.

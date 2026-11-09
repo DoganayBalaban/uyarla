@@ -5,6 +5,7 @@ import { renderDocx } from "./docx.js"
 import { renderPdf } from "./pdf.js"
 
 const model: DocumentModel = {
+  language: "tr",
   name: "Elif Yılmaz",
   contact: "Frontend Geliştirici",
   summary: "React odaklı geliştirici",

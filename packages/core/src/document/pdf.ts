@@ -1,16 +1,12 @@
 import { fontPaths } from "@uyarla/fonts"
 import PDFDocument from "pdfkit"
+import { documentHeader } from "./header.js"
 import { linkParts, type TextPart } from "./links.js"
 import type { DocumentEntry, DocumentModel } from "./model.js"
+import { CV_STYLE } from "./style.js"
 
-/** ~2 cm kenar boşluğu. */
-const MARGIN = 56
-const TEXT = "#000"
-const MUTED = "#444"
-const LINK = "#1f4e9c"
-/** Sıkı yerleşimde dikey aralıkların çarpanı ve üst/alt kenar boşluğu (~1,3 cm). */
-const COMPACT_SPACING = 0.55
-const COMPACT_VERTICAL_MARGIN = 36
+const { color: C, size: SIZE, space: SPACE } = CV_STYLE
+const MARGIN = CV_STYLE.margin.side
 
 /**
  * ATS dostu tek sütunlu PDF (spec §9).
@@ -66,8 +62,8 @@ function withoutKerning(doc: Doc): void {
 
 async function layoutPdf(model: DocumentModel, options: PdfOptions): Promise<{ buffer: Buffer; pages: number }> {
   const fontList = fontPaths()
-  const scale = options.compact ? COMPACT_SPACING : 1
-  const vertical = options.compact ? COMPACT_VERTICAL_MARGIN : MARGIN
+  const k = options.compact ? CV_STYLE.compactSpacing : 1
+  const vertical = options.compact ? CV_STYLE.margin.compactVertical : CV_STYLE.margin.vertical
   // Varsayılan font bizim gövde fontumuz: pdfkit aksi hâlde açılışta kendi
   // Helvetica'sını `#standard-fonts` iç importuyla yüklüyor. Üretimde Sentry'nin
   // modül kancası o importu çözemiyor ve indirme 500 veriyordu (15 Ekim 2026);
@@ -86,46 +82,57 @@ async function layoutPdf(model: DocumentModel, options: PdfOptions): Promise<{ b
   const fragments: Buffer[] = []
   doc.on("data", (fragment: Buffer) => fragments.push(fragment))
   const finished = new Promise<void>((resolve) => doc.on("end", () => resolve()))
+  const width = doc.page.width - 2 * MARGIN
 
-  doc.font("kalin").fontSize(22).text(model.name)
-  if (model.contact) {
-    doc.moveDown(0.15)
-    writeParts(doc, linkParts(model.contact, { bareDomains: true }), { font: "govde", size: 9.5, color: MUTED })
+  // Başlık: ad, unvan satırı, iletişim satırı (header.ts).
+  const header = documentHeader(model.contact, model.language)
+  doc.font("kalin").fontSize(SIZE.name).fillColor(C.ink).text(model.name, MARGIN, doc.y, { width, characterSpacing: -0.2 })
+  if (header.title) {
+    doc.y += SPACE.afterName
+    doc.font("govde").fontSize(SIZE.title).fillColor(C.soft).text(header.title, MARGIN, doc.y, { width })
+  }
+  if (header.contacts.length > 0) {
+    doc.y += SPACE.afterTitle
+    const separated = header.contacts.flatMap((part, i) =>
+      i === 0 ? [part] : [{ text: CV_STYLE.contactSeparator, href: null, faint: true }, part],
+    )
+    writeParts(doc, separated, { font: "govde", size: SIZE.contact, color: C.soft })
   }
 
   if (model.summary) {
-    doc.moveDown(0.8 * scale)
-    writeParts(doc, linkParts(model.summary), { font: "govde", size: 10, color: TEXT })
+    doc.y += SPACE.afterHeader * k
+    writeParts(doc, linkParts(model.summary), { font: "govde", size: SIZE.body, color: C.ink })
   }
 
   for (const section of model.sections) {
     keepWithNext(doc, 60)
-    doc.moveDown(1 * scale).font("kalin").fontSize(11).fillColor(TEXT).text(section.title, MARGIN, doc.y, { characterSpacing: 0.6 })
+    doc.y += SPACE.section * k
+    doc
+      .font("kalin")
+      .fontSize(SIZE.heading)
+      .fillColor(C.ink)
+      .text(section.title, MARGIN, doc.y, { width, characterSpacing: CV_STYLE.headingTracking })
 
     // İnce bir çizgi; grafik değil, bölüm ayracı. Metin katmanını
     // etkilemiyor, ATS tarafında görünmez.
-    doc
-      .moveTo(MARGIN, doc.y + 2)
-      .lineTo(doc.page.width - MARGIN, doc.y + 2)
-      .strokeColor("#999")
-      .lineWidth(0.5)
-      .stroke()
-    doc.moveDown(0.5 * scale)
+    const ruleY = doc.y + 2.5
+    doc.moveTo(MARGIN, ruleY).lineTo(MARGIN + width, ruleY).strokeColor(C.rule).lineWidth(0.6).stroke()
+    doc.y = ruleY + SPACE.afterRule * k
 
-    for (const entry of section.entries) {
-      if (entry.heading || entry.organization || entry.date) writeEntryHeader(doc, entry)
-      for (const line of entry.lines) writeBullet(doc, line, scale)
-      doc.moveDown(0.5 * scale)
-    }
+    section.entries.forEach((entry, i) => {
+      if (i > 0) doc.y += SPACE.entry * k
+      if (entry.heading || entry.organization || entry.date) writeEntryHeader(doc, entry, k)
+      for (const line of entry.lines) writeBullet(doc, line, k)
+    })
 
     for (const row of section.rows ?? []) {
       const parts = linkParts(row.text)
       writeParts(doc, row.label ? [{ text: `${row.label}: `, href: null, bold: true }, ...parts] : parts, {
         font: "govde",
-        size: 10,
-        color: TEXT,
+        size: SIZE.body,
+        color: C.ink,
       })
-      doc.moveDown(0.25 * scale)
+      doc.y += SPACE.bullet * k
     }
   }
 
@@ -147,7 +154,7 @@ function keepWithNext(doc: Doc, height: number) {
  */
 function writeParts(
   doc: Doc,
-  parts: Array<TextPart & { bold?: boolean }>,
+  parts: Array<TextPart & { bold?: boolean; faint?: boolean; soft?: boolean }>,
   style: { font: "govde" | "kalin"; size: number; color: string; x?: number; y?: number; width?: number },
 ) {
   const x = style.x ?? MARGIN
@@ -156,12 +163,14 @@ function writeParts(
     doc
       .font(part.bold ? "kalin" : style.font)
       .fontSize(style.size)
-      .fillColor(part.href ? LINK : style.color)
-    const options = { width, continued: i < parts.length - 1, link: part.href ?? undefined }
+      // Bağlantı ayrı renkte değil: belge tek renk ailesinde, tıklanabilirlik
+      // metin katmanında (DOG-106).
+      .fillColor(part.faint ? C.faint : part.soft ? C.soft : style.color)
+    const options = { width, continued: i < parts.length - 1, link: part.href ?? undefined, lineGap: CV_STYLE.lineGap }
     if (i === 0) doc.text(part.text, x, style.y ?? doc.y, options)
     else doc.text(part.text, options)
   })
-  doc.fillColor(TEXT)
+  doc.fillColor(C.ink)
   doc.x = MARGIN
 }
 
@@ -170,38 +179,40 @@ function writeParts(
  * aynı satırda. Tek sütun: tarih ayrı bir sütun değil, satırın sağ ucu;
  * metin katmanında unvan · kurum · tarih sırasıyla okunuyor.
  */
-function writeEntryHeader(doc: Doc, entry: DocumentEntry) {
+function writeEntryHeader(doc: Doc, entry: DocumentEntry, k: number) {
   keepWithNext(doc, 40)
   const y = doc.y
   const fullWidth = doc.page.width - 2 * MARGIN
-  doc.font("govde").fontSize(9.5)
-  const dateWidth = entry.date ? doc.widthOfString(entry.date) + 12 : 0
+  doc.font("govde").fontSize(SIZE.meta)
+  const dateWidth = entry.date ? doc.widthOfString(entry.date) + 14 : 0
 
-  const parts: Array<TextPart & { bold?: boolean }> = []
+  const parts: Array<TextPart & { bold?: boolean; faint?: boolean; soft?: boolean }> = []
   if (entry.heading) parts.push({ text: entry.heading, href: null, bold: true })
-  if (entry.organization) parts.push({ text: `${entry.heading ? " · " : ""}${entry.organization}`, href: null })
-  if (parts.length > 0) writeParts(doc, parts, { font: "govde", size: 10.5, color: TEXT, y, width: fullWidth - dateWidth })
+  if (entry.organization) {
+    if (entry.heading) parts.push({ text: " · ", href: null, faint: true })
+    parts.push({ text: entry.organization, href: null, soft: true })
+  }
+  if (parts.length > 0) writeParts(doc, parts, { font: "govde", size: SIZE.entry, color: C.ink, y, width: fullWidth - dateWidth })
   const after = doc.y
 
   if (entry.date) {
-    doc.font("govde").fontSize(9.5).fillColor("#555").text(entry.date, MARGIN, y + 1, { width: fullWidth, align: "right" })
-    doc.fillColor(TEXT)
+    doc.font("govde").fontSize(SIZE.meta).fillColor(C.soft).text(entry.date, MARGIN, y + 1.2, { width: fullWidth, align: "right" })
+    doc.fillColor(C.ink)
   }
   doc.x = MARGIN
-  doc.y = Math.max(after, doc.y)
-  doc.moveDown(0.15)
+  doc.y = Math.max(after, doc.y) + SPACE.afterEntryHeader * k
 }
 
 /** Asılı girintili madde: satır kaydığında metin imin hizasında kalmıyor. */
-function writeBullet(doc: Doc, line: string, scale = 1) {
+function writeBullet(doc: Doc, line: string, k = 1) {
   // İm ile metin aynı y'ye açık konumla yazılıyor; sayfa sonunda im yeni
   // sayfaya taşıp metin eski y'de kalırsa, içinde yalnızca "•" olan bir sayfa
   // ve fazladan bir sayfa çıkıyordu. Maddenin ilk satırı sığmıyorsa önce
   // sayfa çevriliyor.
-  doc.font("govde").fontSize(10)
+  doc.font("govde").fontSize(SIZE.body)
   keepWithNext(doc, doc.currentLineHeight(true) + 2)
   const y = doc.y
-  doc.font("govde").fontSize(10).fillColor(TEXT).text("•", MARGIN + 4, y)
-  writeParts(doc, linkParts(line), { font: "govde", size: 10, color: TEXT, x: MARGIN + 14, y })
-  doc.moveDown(0.1 * scale)
+  doc.fillColor(C.faint).text("•", MARGIN + CV_STYLE.bullet.mark, y)
+  writeParts(doc, linkParts(line), { font: "govde", size: SIZE.body, color: C.ink, x: MARGIN + CV_STYLE.bullet.text, y })
+  doc.y += SPACE.bullet * k
 }

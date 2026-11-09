@@ -12,7 +12,7 @@ export const contentType = "image/png"
  * gömülü fontunda ş/ğ/ı yok, CV çıktısıyla aynı dosya kullanılıyor.
  */
 export default async function OgImage() {
-  const boldFont = await readFile(fontPaths().bold)
+  const boldFont = await readFile(fontPaths().ogBold)
 
   return new ImageResponse(
     (
